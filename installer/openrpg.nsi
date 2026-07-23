@@ -49,7 +49,7 @@ Section "OpenRPG Compiler (rpgc)" SecMain
     WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\openrpg" "NoRepair" 1
 SectionEnd
 
-Section /o "OpenDSPF Display File Compiler (dspfc)" SecDspf
+Section "OpenDSPF Display File Compiler (dspfc)" SecDspf
     SetOutPath "$INSTDIR"
     File "dspfc.exe"
     SetOutPath "$INSTDIR\runtime"

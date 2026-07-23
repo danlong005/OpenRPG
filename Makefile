@@ -98,7 +98,9 @@ $(TARGET): $(OBJS)
 clean:
 	rm -rf $(BUILDDIR) $(TARGET)
 
-DSPF_DIR ?= ../OpenDSPF
+# OpenDSPF is vendored as a git submodule at $(DSPF_DIR). Run
+# `git submodule update --init` if it's empty.
+DSPF_DIR ?= OpenDSPF
 
 install: $(TARGET)
 	install -d $(DESTDIR)$(BINDIR)
@@ -110,7 +112,10 @@ install: $(TARGET)
 	install -m 644 runtime/rpg_json_runtime.h $(DESTDIR)$(DATADIR)/
 	install -m 644 runtime/rpg_csv_runtime.h $(DESTDIR)$(DATADIR)/
 
-install-dspf:
+$(DSPF_DIR)/dspfc:
+	$(MAKE) -C $(DSPF_DIR)
+
+install-dspf: $(DSPF_DIR)/dspfc
 	install -m 755 $(DSPF_DIR)/dspfc $(DESTDIR)$(BINDIR)/dspfc
 	install -d $(DESTDIR)$(DATADIR)
 	install -m 644 $(DSPF_DIR)/runtime/rpg_dspf_runtime.h $(DESTDIR)$(DATADIR)/

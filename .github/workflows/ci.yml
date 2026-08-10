@@ -1,0 +1,130 @@
+name: CI
+
+# Builds rpgc and dspfc from source and runs both test suites on every push,
+# on all three supported platforms — independent of the release process, so
+# regressions are caught immediately instead of at release time.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  # ── Linux ────────────────────────────────────────────────────────────────
+  test-linux:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: recursive
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y flex bison g++ unixodbc-dev unixodbc libsqliteodbc
+
+      - name: Build
+        run: make
+
+      - name: Build OpenDSPF
+        run: make -C OpenDSPF
+
+      - name: Run OpenRPG test suite
+        env:
+          ODBC_FLAGS: -lodbc
+        run: make test
+
+      - name: Run OpenDSPF test suite
+        run: make -C OpenDSPF test
+
+  # ── macOS ────────────────────────────────────────────────────────────────
+  test-macos:
+    runs-on: macos-latest
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: recursive
+
+      - name: Install build dependencies
+        timeout-minutes: 10
+        env:
+          HOMEBREW_NO_AUTO_UPDATE: "1"
+        run: |
+          brew install flex bison unixodbc sqliteodbc
+          # Homebrew installs the sqliteodbc library but does NOT register it with
+          # unixODBC. Register it manually so Driver={SQLite3} works at runtime.
+          DRIVER=$(brew --prefix)/lib/libsqlite3odbc.dylib
+          printf '[SQLite3]\nDescription=SQLite3 ODBC Driver\nDriver=%s\nSetup=%s\n' \
+            "$DRIVER" "$DRIVER" \
+            | ODBCSYSINI=/opt/homebrew/etc odbcinst -i -d -f /dev/stdin
+
+      - name: Build
+        run: make
+
+      - name: Build OpenDSPF
+        run: make -C OpenDSPF
+
+      - name: Run OpenRPG test suite
+        env:
+          ODBCSYSINI: /opt/homebrew/etc
+          ODBC_FLAGS: -I/opt/homebrew/include -L/opt/homebrew/lib -lodbc
+        run: make test
+
+      - name: Run OpenDSPF test suite
+        run: make -C OpenDSPF test
+
+  # ── Windows ──────────────────────────────────────────────────────────────
+  test-windows:
+    runs-on: windows-2025-vs2026
+
+    defaults:
+      run:
+        shell: msys2 {0}
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: recursive
+
+      - uses: msys2/setup-msys2@v2.31.1
+        with:
+          msystem: MINGW64
+          update: true
+          install: >-
+            mingw-w64-x86_64-gcc
+            flex
+            bison
+            make
+            diffutils
+
+      - name: Install SQLite ODBC driver
+        shell: pwsh
+        run: |
+          Invoke-WebRequest -Uri "https://www.ch-werner.de/sqliteodbc/sqliteodbc_w64.exe" -OutFile "$env:TEMP\sqliteodbc_w64.exe" -SkipCertificateCheck
+          Start-Process -Wait -FilePath "$env:TEMP\sqliteodbc_w64.exe" -ArgumentList "/S"
+          # The installer registers as "SQLite3 ODBC Driver"; add alias "SQLite3" so
+          # connection strings using Driver={SQLite3} work
+          $driverKey = "HKLM:\SOFTWARE\ODBC\ODBCINST.INI\SQLite3 ODBC Driver"
+          $dllPath   = (Get-ItemProperty -Path $driverKey -Name Driver).Driver
+          New-Item -Path "HKLM:\SOFTWARE\ODBC\ODBCINST.INI\SQLite3" -Force | Out-Null
+          New-ItemProperty -Path "HKLM:\SOFTWARE\ODBC\ODBCINST.INI\SQLite3" -Name Driver -Value $dllPath -PropertyType String -Force | Out-Null
+          New-ItemProperty -Path "HKLM:\SOFTWARE\ODBC\ODBCINST.INI\SQLite3" -Name Setup  -Value $dllPath -PropertyType String -Force | Out-Null
+          Set-ItemProperty -Path "HKLM:\SOFTWARE\ODBC\ODBCINST.INI\ODBC Drivers" -Name SQLite3 -Value Installed
+
+      - name: Build
+        run: make && make -C OpenDSPF
+
+      - name: Run OpenRPG test suite
+        env:
+          CXX: g++
+          ODBC_FLAGS: -lodbc32
+        run: make test
+
+      - name: Run OpenDSPF test suite
+        run: make -C OpenDSPF test

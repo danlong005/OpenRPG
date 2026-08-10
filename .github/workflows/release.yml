@@ -23,7 +23,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y \
             flex bison g++ \
-            unixodbc-dev \
+            unixodbc-dev unixodbc libsqliteodbc \
             ruby ruby-dev build-essential
           sudo gem install --no-document fpm
 
@@ -32,6 +32,14 @@ jobs:
 
       - name: Build OpenDSPF
         run: make -C OpenDSPF
+
+      - name: Run OpenRPG test suite
+        env:
+          ODBC_FLAGS: -lodbc
+        run: make test
+
+      - name: Run OpenDSPF test suite
+        run: make -C OpenDSPF test
 
       - name: Stage install
         run: sudo make install PREFIX=/usr DESTDIR=/tmp/rpgc-root
@@ -111,13 +119,32 @@ jobs:
           submodules: recursive
 
       - name: Install build dependencies
-        run: brew install flex bison unixodbc
+        timeout-minutes: 10
+        env:
+          HOMEBREW_NO_AUTO_UPDATE: "1"
+        run: |
+          brew install flex bison unixodbc sqliteodbc
+          # Homebrew installs the sqliteodbc library but does NOT register it with
+          # unixODBC. Register it manually so Driver={SQLite3} works at runtime.
+          DRIVER=$(brew --prefix)/lib/libsqlite3odbc.dylib
+          printf '[SQLite3]\nDescription=SQLite3 ODBC Driver\nDriver=%s\nSetup=%s\n' \
+            "$DRIVER" "$DRIVER" \
+            | ODBCSYSINI=/opt/homebrew/etc odbcinst -i -d -f /dev/stdin
 
       - name: Build
         run: make
 
       - name: Build OpenDSPF
         run: make -C OpenDSPF
+
+      - name: Run OpenRPG test suite
+        env:
+          ODBCSYSINI: /opt/homebrew/etc
+          ODBC_FLAGS: -I/opt/homebrew/include -L/opt/homebrew/lib -lodbc
+        run: make test
+
+      - name: Run OpenDSPF test suite
+        run: make -C OpenDSPF test
 
       - name: Stage install
         run: sudo make install DESTDIR=/tmp/rpgc-root
@@ -209,10 +236,36 @@ jobs:
             flex
             bison
             make
+            diffutils
+
+      - name: Install SQLite ODBC driver
+        shell: pwsh
+        run: |
+          Invoke-WebRequest -Uri "https://www.ch-werner.de/sqliteodbc/sqliteodbc_w64.exe" -OutFile "$env:TEMP\sqliteodbc_w64.exe" -SkipCertificateCheck
+          Start-Process -Wait -FilePath "$env:TEMP\sqliteodbc_w64.exe" -ArgumentList "/S"
+          # The installer registers as "SQLite3 ODBC Driver"; add alias "SQLite3" so
+          # connection strings using Driver={SQLite3} work
+          $driverKey = "HKLM:\SOFTWARE\ODBC\ODBCINST.INI\SQLite3 ODBC Driver"
+          $dllPath   = (Get-ItemProperty -Path $driverKey -Name Driver).Driver
+          New-Item -Path "HKLM:\SOFTWARE\ODBC\ODBCINST.INI\SQLite3" -Force | Out-Null
+          New-ItemProperty -Path "HKLM:\SOFTWARE\ODBC\ODBCINST.INI\SQLite3" -Name Driver -Value $dllPath -PropertyType String -Force | Out-Null
+          New-ItemProperty -Path "HKLM:\SOFTWARE\ODBC\ODBCINST.INI\SQLite3" -Name Setup  -Value $dllPath -PropertyType String -Force | Out-Null
+          Set-ItemProperty -Path "HKLM:\SOFTWARE\ODBC\ODBCINST.INI\ODBC Drivers" -Name SQLite3 -Value Installed
 
       - name: Build
         shell: msys2 {0}
         run: make && make -C OpenDSPF
+
+      - name: Run OpenRPG test suite
+        shell: msys2 {0}
+        env:
+          CXX: g++
+          ODBC_FLAGS: -lodbc32
+        run: make test
+
+      - name: Run OpenDSPF test suite
+        shell: msys2 {0}
+        run: make -C OpenDSPF test
 
       - name: Install NSIS
         shell: pwsh

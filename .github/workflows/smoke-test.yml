@@ -51,15 +51,15 @@ jobs:
 
       - name: Download release package
         timeout-minutes: 5
-        run: gh release download "${{ needs.check.outputs.tag }}" --pattern "rpgc-*.pkg"
+        run: gh release download "${{ needs.check.outputs.tag }}" --pattern "openrpg-*.pkg"
         env:
           GH_TOKEN: ${{ github.token }}
 
       - name: Install package
         timeout-minutes: 5
         run: |
-          xattr -cr rpgc-*.pkg
-          sudo installer -pkg rpgc-*.pkg -target /
+          xattr -cr openrpg-*.pkg
+          sudo installer -pkg openrpg-*.pkg -target /
 
       - name: Run tests
         timeout-minutes: 20

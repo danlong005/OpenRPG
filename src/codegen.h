@@ -15,10 +15,16 @@ namespace rpg {
 // DSPF field descriptor (loaded from .dspfd at compile time)
 struct DspfFldInfo {
     std::string name;
+    std::string alias; // ALIAS(name) keyword — RPG-visible variable name,
+                        // if different from the DDS field name itself
     char  dtype = 'A'; // A=char, S=zoned, P=packed, B=binary, F=float
     int   len   = 1;
     int   dec   = 0;
     char  io    = 'O'; // I=input, O=output, B=both, H=hidden
+    // RPG-visible variable name: the alias if the field has one, else its
+    // own DDS name. The generated _buf struct member is always the DDS
+    // name, regardless — only how RPG source refers to the field changes.
+    const std::string& rpgName() const { return alias.empty() ? name : alias; }
 };
 
 struct DspfRecInfo {

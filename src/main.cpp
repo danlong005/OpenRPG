@@ -28,6 +28,21 @@ static std::string dspfd_str(const std::string& src, const std::string& key) {
     return src.substr(pos, end - pos);
 }
 
+// Finds `"<KEYWORD>(<arg>)"` inside a field's raw JSON text (i.e. within its
+// "keywords" array) and returns <arg>. Plain substring search rather than
+// real array-aware parsing, matching this file's existing pragmatic style —
+// low risk of a false match since "ALIAS(" only legitimately appears inside
+// the keywords array for a field that actually has one.
+static std::string dspfd_keywordArg(const std::string& fieldSrc, const std::string& keyword) {
+    std::string pat = keyword + "(";
+    auto pos = fieldSrc.find(pat);
+    if (pos == std::string::npos) return "";
+    pos += pat.size();
+    auto end = fieldSrc.find(')', pos);
+    if (end == std::string::npos) return "";
+    return fieldSrc.substr(pos, end - pos);
+}
+
 static int dspfd_int(const std::string& src, const std::string& key, size_t fromPos = 0) {
     std::string pat = "\"" + key + "\": ";
     auto pos = src.find(pat, fromPos);
@@ -96,6 +111,8 @@ static rpg::DspfFileInfo loadDspfDesc(const std::string& path, const std::string
                 std::string fSrc = recSrc.substr(fOpen, fClose - fOpen + 1);
                 rpg::DspfFldInfo fld;
                 fld.name  = dspfd_str(fSrc, "name");
+                fld.alias = dspfd_keywordArg(fSrc, "ALIAS");
+                for (auto& c : fld.alias) c = (char)toupper((unsigned char)c);
                 std::string type = dspfd_str(fSrc, "type");
                 fld.dtype = type.empty() ? 'A' : (char)toupper((unsigned char)type[0]);
                 fld.len   = dspfd_int(fSrc, "len");

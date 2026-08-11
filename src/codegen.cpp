@@ -1062,12 +1062,12 @@ void CodeGen::visit(DclF& node) {
                 if (f.io == 'H') continue;
                 emitIndent();
                 if ((f.dtype == 'A' || f.dtype == 'L' || f.dtype == 'T' || f.dtype == 'Z')) {
-                    out_ << "std::string " << f.name << "; "
+                    out_ << "std::string " << f.rpgName() << "; "
                          << "// " << rec.name << "." << f.name << "\n";
                 } else if (f.dtype == 'B') {
-                    out_ << "long " << f.name << " = 0;\n";
+                    out_ << "long " << f.rpgName() << " = 0;\n";
                 } else {
-                    out_ << "double " << f.name << " = 0.0;\n";
+                    out_ << "double " << f.rpgName() << " = 0.0;\n";
                 }
             }
         }
@@ -3481,10 +3481,10 @@ void CodeGen::visit(ReadStmt& node) {
                     emitIndent();
                     if ((f.dtype == 'A' || f.dtype == 'L' || f.dtype == 'T' || f.dtype == 'Z')) {
                         out_ << "strncpy(" << bufName << "." << f.name << ", "
-                             << f.name << ".c_str(), " << f.len << "); "
+                             << f.rpgName() << ".c_str(), " << f.len << "); "
                              << bufName << "." << f.name << "[" << f.len << "] = '\\0';\n";
                     } else {
-                        out_ << bufName << "." << f.name << " = " << f.name << ";\n";
+                        out_ << bufName << "." << f.name << " = " << f.rpgName() << ";\n";
                     }
                 }
             }
@@ -3496,10 +3496,10 @@ void CodeGen::visit(ReadStmt& node) {
                     if (f.io == 'H' || f.io == 'O') continue;
                     emitIndent();
                     if ((f.dtype == 'A' || f.dtype == 'L' || f.dtype == 'T' || f.dtype == 'Z')) {
-                        out_ << f.name << " = std::string(" << bufName << "." << f.name
+                        out_ << f.rpgName() << " = std::string(" << bufName << "." << f.name
                              << ", strnlen(" << bufName << "." << f.name << ", " << f.len << "));\n";
                     } else {
-                        out_ << f.name << " = " << bufName << "." << f.name << ";\n";
+                        out_ << f.rpgName() << " = " << bufName << "." << f.name << ";\n";
                     }
                 }
             }
@@ -3662,10 +3662,10 @@ void CodeGen::visit(WriteStmt& node) {
                     emitIndent();
                     if ((f.dtype == 'A' || f.dtype == 'L' || f.dtype == 'T' || f.dtype == 'Z')) {
                         out_ << "strncpy(" << bufName << "." << f.name << ", "
-                             << f.name << ".c_str(), " << f.len << "); "
+                             << f.rpgName() << ".c_str(), " << f.len << "); "
                              << bufName << "." << f.name << "[" << f.len << "] = '\\0';\n";
                     } else {
-                        out_ << bufName << "." << f.name << " = " << f.name << ";\n";
+                        out_ << bufName << "." << f.name << " = " << f.rpgName() << ";\n";
                     }
                 }
             }
@@ -3849,12 +3849,12 @@ void CodeGen::visit(ExfmtStmt& node) {
             if ((f.dtype == 'A' || f.dtype == 'L' || f.dtype == 'T' || f.dtype == 'Z')) {
                 // string → char buf
                 out_ << "strncpy(" << bufName << "." << f.name << ", "
-                     << f.name << ".c_str(), " << f.len << "); "
+                     << f.rpgName() << ".c_str(), " << f.len << "); "
                      << bufName << "." << f.name << "[" << f.len << "] = '\\0';\n";
             } else if (f.dtype == 'B') {
-                out_ << bufName << "." << f.name << " = " << f.name << ";\n";
+                out_ << bufName << "." << f.name << " = " << f.rpgName() << ";\n";
             } else {
-                out_ << bufName << "." << f.name << " = " << f.name << ";\n";
+                out_ << bufName << "." << f.name << " = " << f.rpgName() << ";\n";
             }
         }
     }
@@ -3870,12 +3870,12 @@ void CodeGen::visit(ExfmtStmt& node) {
             if (f.io == 'H' || f.io == 'O') continue; // only copy back input/both
             emitIndent();
             if ((f.dtype == 'A' || f.dtype == 'L' || f.dtype == 'T' || f.dtype == 'Z')) {
-                out_ << f.name << " = std::string(" << bufName << "." << f.name
+                out_ << f.rpgName() << " = std::string(" << bufName << "." << f.name
                      << ", strnlen(" << bufName << "." << f.name << ", " << f.len << "));\n";
             } else if (f.dtype == 'B') {
-                out_ << f.name << " = " << bufName << "." << f.name << ";\n";
+                out_ << f.rpgName() << " = " << bufName << "." << f.name << ";\n";
             } else {
-                out_ << f.name << " = " << bufName << "." << f.name << ";\n";
+                out_ << f.rpgName() << " = " << bufName << "." << f.name << ";\n";
             }
         }
     }

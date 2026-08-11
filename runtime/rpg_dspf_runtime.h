@@ -773,6 +773,38 @@ static void dspf__renderScreen(const DspfJVal& rec,
         mvwprintw(win, row, col, "%s", lits[i]["text"].str().c_str());
     }
 
+    // COLHDG('text'): implicit field label directly above the field, one
+    // row up at the same column — the common case (a subfile column
+    // heading) — but only when the record doesn't already have an explicit
+    // LITERAL at that exact position; an author who placed one there
+    // clearly wants their own text, not this fallback.
+    const DspfJVal& fieldsForHdg = rec["fields"];
+    for (size_t i = 0; i < fieldsForHdg.size(); i++) {
+        if (fieldsForHdg[i]["io"].str() == "H") continue;
+        if (!dspf__condPass(fieldsForHdg[i])) continue;
+        std::string hdg;
+        const DspfJVal& kw = fieldsForHdg[i]["keywords"];
+        for (size_t k = 0; k < kw.size(); k++) {
+            const std::string& s = kw[k].str();
+            if (s.rfind("COLHDG(", 0) != 0) continue;
+            size_t q1 = s.find('\'');
+            size_t q2 = (q1 == std::string::npos) ? std::string::npos : s.find('\'', q1 + 1);
+            if (q1 != std::string::npos && q2 != std::string::npos) hdg = s.substr(q1 + 1, q2 - q1 - 1);
+            break;
+        }
+        if (hdg.empty()) continue;
+        int fRow = fieldsForHdg[i]["row"].num();
+        int fCol = fieldsForHdg[i]["col"].num();
+        int hdgRow = fRow - 1;
+        if (hdgRow < 1) continue; // no room above row 1
+        bool occupied = false;
+        for (size_t li = 0; li < lits.size(); li++) {
+            if (lits[li]["row"].num() == hdgRow && lits[li]["col"].num() == fCol) { occupied = true; break; }
+        }
+        if (occupied) continue;
+        mvwprintw(win, hdgRow - 1 - rowOff, fCol - 1 - colOff, "%s", hdg.c_str());
+    }
+
     // Fields
     const DspfJVal& fields = rec["fields"];
     for (size_t i = 0; i < fields.size(); i++) {

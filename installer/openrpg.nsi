@@ -45,8 +45,12 @@ Section "OpenRPG Compiler (rpgc)" SecMain
     SetOutPath "$INSTDIR\mingw"
     File /r "mingw\*.*"
 
-    ; Add install dir to system PATH
-    nsExec::ExecToStack "powershell -NonInteractive -Command $\"[Environment]::SetEnvironmentVariable('PATH', [Environment]::GetEnvironmentVariable('PATH', 'Machine') + ';$INSTDIR', 'Machine')$\""
+    ; Add install dir to system PATH. Also add mingw\bin: -static doesn't
+    ; fully static-link this toolchain's libc++/libunwind (confirmed on
+    ; real hardware — compiled programs still hit "error while loading
+    ; shared libraries: libunwind.dll"), so programs rpgc compiles need
+    ; that directory reachable via the standard DLL search order.
+    nsExec::ExecToStack "powershell -NonInteractive -Command $\"[Environment]::SetEnvironmentVariable('PATH', [Environment]::GetEnvironmentVariable('PATH', 'Machine') + ';$INSTDIR;$INSTDIR\mingw\bin', 'Machine')$\""
 
     WriteUninstaller "$INSTDIR\uninstall.exe"
 
@@ -84,8 +88,8 @@ Section "Uninstall"
     RMDir /r "$INSTDIR\mingw"
     RMDir "$INSTDIR"
 
-    ; Remove install dir from system PATH
-    nsExec::ExecToStack "powershell -NonInteractive -Command $\"$$p = [Environment]::GetEnvironmentVariable('PATH', 'Machine'); $$p = ($$p -split ';' | Where-Object { $$_ -ne '$INSTDIR' }) -join ';'; [Environment]::SetEnvironmentVariable('PATH', $$p, 'Machine')$\""
+    ; Remove install dir (and mingw\bin) from system PATH
+    nsExec::ExecToStack "powershell -NonInteractive -Command $\"$$p = [Environment]::GetEnvironmentVariable('PATH', 'Machine'); $$p = ($$p -split ';' | Where-Object { $$_ -ne '$INSTDIR' -and $$_ -ne '$INSTDIR\mingw\bin' }) -join ';'; [Environment]::SetEnvironmentVariable('PATH', $$p, 'Machine')$\""
 
     DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\openrpg"
     DeleteRegKey HKLM "Software\openrpg"

@@ -9,12 +9,20 @@ ifeq ($(UNAME_S),Darwin)
     BISON       ?= $(BREW_PREFIX)/opt/bison/bin/bison
     ODBC_CFLAGS ?= -I$(BREW_PREFIX)/include
     ODBC_LIBS   ?= -L$(BREW_PREFIX)/lib -lodbc
-else ifneq (,$(findstring MINGW,$(UNAME_S)))
+else ifneq (,$(MSYSTEM))
+    # MSYSTEM is set by every MSYS2 shell (MINGW64, UCRT64, CLANGARM64, ...) —
+    # more reliable than grepping `uname -s`, which reports a different
+    # prefix per environment (e.g. CLANGARM64_NT-... on Windows ARM64) and
+    # would silently miss anything but literal "MINGW".
     FLEX        ?= flex
     BISON       ?= bison
     ODBC_CFLAGS ?=
     ODBC_LIBS   ?= -lodbc32
-    CXX         := g++
+    ifeq ($(MSYSTEM),CLANGARM64)
+        CXX := clang++
+    else
+        CXX := g++
+    endif
 else
     FLEX        ?= flex
     BISON       ?= bison

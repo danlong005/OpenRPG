@@ -42,6 +42,72 @@ jobs:
       - name: Run OpenDSPF test suite
         run: make -C OpenDSPF test
 
+  # ── Linux ARM64 ──────────────────────────────────────────────────────────
+  test-linux-arm64:
+    runs-on: ubuntu-24.04-arm
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: recursive
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y flex bison g++ unixodbc-dev unixodbc libsqliteodbc
+
+      - name: Build
+        run: make
+
+      - name: Build OpenDSPF
+        run: make -C OpenDSPF
+
+      - name: Run OpenRPG test suite
+        env:
+          ODBC_FLAGS: -lodbc
+        run: make test
+
+      - name: Run OpenDSPF test suite
+        run: make -C OpenDSPF test
+
+  # ── Windows ARM64 ────────────────────────────────────────────────────────
+  # No upstream ARM64 build of the SQLite ODBC driver exists, so SQL/RLA
+  # tests are skipped here rather than failed — everything else runs.
+  test-windows-arm64:
+    runs-on: windows-11-arm
+
+    defaults:
+      run:
+        shell: msys2 {0}
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: recursive
+
+      - uses: msys2/setup-msys2@v2.31.1
+        with:
+          msystem: CLANGARM64
+          update: true
+          install: >-
+            mingw-w64-clang-aarch64-toolchain
+            flex
+            bison
+            make
+            diffutils
+
+      - name: Build
+        run: make && make -C OpenDSPF
+
+      - name: Run OpenRPG test suite
+        env:
+          SKIP_SQL: "1"
+          ODBC_FLAGS: -lodbc32
+        run: make test
+
+      - name: Run OpenDSPF test suite
+        run: make -C OpenDSPF test
+
   # ── External DB smoke tests (Postgres, MySQL) ───────────────────────────────
   # Validates real ODBC connectivity beyond the SQLite path the platform
   # matrix above exercises. Service containers are Linux-only in GH Actions,

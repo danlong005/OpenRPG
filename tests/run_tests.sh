@@ -27,7 +27,12 @@ TMPDIR="/tmp/rpgc_test"
 
 PASS=0
 FAIL=0
+SKIP=0
 FAILURES=""
+
+# SKIP_SQL=1 skips every ODBC-dependent test (run-sql / run-sql-conf modes)
+# instead of failing them — for platforms with no ODBC driver available,
+# e.g. Windows ARM64, where no upstream SQLite ODBC build exists.
 
 mkdir -p "$TMPDIR"
 
@@ -52,6 +57,12 @@ run_test() {
     local extra="$5" # extra compile args (e.g., /tmp/rpgc_test/test48.o)
 
     printf "Test %s: %-35s " "$testnum" "$label"
+
+    if [ "$SKIP_SQL" = "1" ] && [ "${mode#run-sql}" != "$mode" ]; then
+        echo -e "${YELLOW}SKIP${NC} (no ODBC driver on this platform)"
+        SKIP=$((SKIP + 1))
+        return
+    fi
 
     case "$mode" in
         error)
@@ -505,7 +516,11 @@ fi
 
 echo ""
 echo "========================================"
-echo -e "  Results: ${GREEN}${PASS} passed${NC}, ${RED}${FAIL} failed${NC}"
+if [ $SKIP -gt 0 ]; then
+    echo -e "  Results: ${GREEN}${PASS} passed${NC}, ${RED}${FAIL} failed${NC}, ${YELLOW}${SKIP} skipped${NC}"
+else
+    echo -e "  Results: ${GREEN}${PASS} passed${NC}, ${RED}${FAIL} failed${NC}"
+fi
 echo "========================================"
 
 if [ $FAIL -gt 0 ]; then

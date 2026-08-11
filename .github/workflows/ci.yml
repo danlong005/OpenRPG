@@ -42,6 +42,71 @@ jobs:
       - name: Run OpenDSPF test suite
         run: make -C OpenDSPF test
 
+  # ── External DB smoke tests (Postgres, MySQL) ───────────────────────────────
+  # Validates real ODBC connectivity beyond the SQLite path the platform
+  # matrix above exercises. Service containers are Linux-only in GH Actions,
+  # so this runs once rather than per-platform — the point is proving the
+  # SQL/RLA code path against real servers, not re-testing platform coverage.
+  test-external-db:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: rpgtest
+          POSTGRES_PASSWORD: rpgtest
+          POSTGRES_DB: rpgtest
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      mysql:
+        image: mysql:8
+        env:
+          MYSQL_ROOT_PASSWORD: rpgtest
+          MYSQL_DATABASE: rpgtest
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y flex bison g++ unixodbc-dev unixodbc odbc-postgresql odbc-mariadb
+
+      - name: Show registered ODBC drivers
+        run: odbcinst -q -d
+
+      - name: Build
+        run: make
+
+      - name: Run Postgres smoke test
+        env:
+          ODBC_FLAGS: -lodbc
+        run: |
+          ./tests/run_external_db_tests.sh \
+            "Driver={PostgreSQL Unicode};Server=localhost;Port=5432;Database=rpgtest;Uid=rpgtest;Pwd=rpgtest;" \
+            postgres
+
+      - name: Run MySQL smoke test
+        env:
+          ODBC_FLAGS: -lodbc
+        run: |
+          ./tests/run_external_db_tests.sh \
+            "Driver={MariaDB Unicode};Server=127.0.0.1;Port=3306;Database=rpgtest;Uid=root;Pwd=rpgtest;" \
+            mysql
+
   # ── macOS ────────────────────────────────────────────────────────────────
   test-macos:
     runs-on: macos-latest

@@ -175,6 +175,20 @@ queryDspfDescs(const std::string& src_text, const std::string& src_dir) {
 #  define RPGC_DSPF_FLAGS " -lncurses"
 #endif
 
+// Directory for scratch .cpp files generated during compilation.
+// /tmp doesn't exist on Windows, so honor the platform's own temp-dir
+// convention instead of assuming a Unix layout.
+static std::string rpgc_temp_dir() {
+#ifdef _WIN32
+    const char* t = std::getenv("TEMP");
+    if (!t) t = std::getenv("TMP");
+    return t ? std::string(t) : std::string(".");
+#else
+    const char* t = std::getenv("TMPDIR");
+    return t ? std::string(t) : std::string("/tmp");
+#endif
+}
+
 extern FILE* yyin;
 extern rpg::Program* get_parsed_program();
 extern int get_parse_error_count();
@@ -355,7 +369,7 @@ int main(int argc, char* argv[]) {
     if (compile_only) {
         // -c: transpile then compile to object file, do not link
         std::string obj_path = output_file ? output_file : base + ".o";
-        std::string cpp_path = "/tmp/" + base + ".cpp";
+        std::string cpp_path = rpgc_temp_dir() + "/" + base + ".cpp";
         {
             std::ofstream out(cpp_path);
             if (!out) {
@@ -381,7 +395,7 @@ int main(int argc, char* argv[]) {
     if (keep_cpp) {
         cpp_path = base + ".cpp";
     } else {
-        cpp_path = "/tmp/" + base + ".cpp";
+        cpp_path = rpgc_temp_dir() + "/" + base + ".cpp";
     }
 
     {

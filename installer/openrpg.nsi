@@ -36,6 +36,15 @@ Section "OpenRPG Compiler (rpgc)" SecMain
     File "rpg_json_runtime.h"
     File "rpg_csv_runtime.h"
 
+    ; Bundled C++ compiler (llvm-mingw, trimmed) — rpgc/dspfc transpile to
+    ; C++ and shell out to a real compiler to build the final .exe. Part of
+    ; the required section, not a Components-page choice: a user
+    ; unselecting this would silently break every compile with no
+    ; indication why, since rpgc has no way to tell them "you skipped the
+    ; compiler" at that point.
+    SetOutPath "$INSTDIR\mingw"
+    File /r "mingw\*.*"
+
     ; Add install dir to system PATH
     nsExec::ExecToStack "powershell -NonInteractive -Command $\"[Environment]::SetEnvironmentVariable('PATH', [Environment]::GetEnvironmentVariable('PATH', 'Machine') + ';$INSTDIR', 'Machine')$\""
 
@@ -56,20 +65,9 @@ Section "OpenDSPF Display File Compiler (dspfc)" SecDspf
     File "rpg_dspf_runtime.h"
 SectionEnd
 
-Section "Bundled C++ Compiler (recommended)" SecCompiler
-    ; rpgc/dspfc transpile to C++ and shell out to a real compiler to
-    ; produce the final .exe. Without this, that compiler has to already
-    ; be on PATH (MSYS2, MSVC, etc.) — bundling one here means a fresh
-    ; Windows machine needs nothing else installed. Uncheck this only if
-    ; you already have a C++ toolchain and want to skip the extra download.
-    SetOutPath "$INSTDIR\mingw"
-    File /r "mingw\*.*"
-SectionEnd
-
 !insertmacro MUI_FUNCTION_DESCRIPTION_BEGIN
-  !insertmacro MUI_DESCRIPTION_TEXT ${SecMain} "The RPG IV free-format compiler (rpgc). Required."
+  !insertmacro MUI_DESCRIPTION_TEXT ${SecMain} "The RPG IV free-format compiler (rpgc), including the bundled C++ compiler it needs to build programs. Required."
   !insertmacro MUI_DESCRIPTION_TEXT ${SecDspf} "The display file compiler (dspfc) for interactive screen programs. Produces .dspfd descriptors consumed by rpg_dspf_runtime.h."
-  !insertmacro MUI_DESCRIPTION_TEXT ${SecCompiler} "A self-contained C++ compiler (clang) that rpgc/dspfc use to build the programs they compile. Recommended unless you already have MSYS2, MinGW, or another C++ toolchain installed and on PATH."
 !insertmacro MUI_FUNCTION_DESCRIPTION_END
 
 Section "Uninstall"

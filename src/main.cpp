@@ -517,6 +517,14 @@ int main(int argc, char* argv[]) {
     }
 
     std::string cmd = q(rpgc_resolve_cxx()) + " -std=c++17 -I" + q(runtime_dir) + " -I" + q(src_dir);
+#ifdef _WIN32
+    // Statically link the C++ runtime, same as rpgc.exe's own build (see
+    // OpenRPG/Makefile). Without this, a program built with the bundled
+    // clang++ dynamically links against libc++.dll/libunwind.dll/
+    // libwinpthread-1.dll sitting in mingw/bin — which isn't on PATH, so
+    // the compiled program fails to launch with no visible error.
+    cmd += " -static";
+#endif
     if (debug_mode) {
         cmd += " -g -O0";
     }

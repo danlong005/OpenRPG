@@ -17,10 +17,15 @@ TIMEOUT_CMD=""
 if command -v timeout >/dev/null 2>&1; then TIMEOUT_CMD="timeout 30"
 elif command -v gtimeout >/dev/null 2>&1; then TIMEOUT_CMD="gtimeout 30"
 fi
-CXXFLAGS="-std=c++17 -I${RUNTIME_DIR}"
+# Arrays, not strings — RUNTIME_DIR can contain a space (e.g. the default
+# Windows install path "C:\Program Files\openrpg\runtime"), and a plain
+# string later expanded unquoted (needed so -std=c++17 and -I... land as
+# separate argv entries) would let that space split -I<path> into two
+# words, same bug this test harness exists to catch in rpgc itself.
+CXXFLAGS=(-std=c++17 "-I${RUNTIME_DIR}")
 ODBC_FLAGS="${ODBC_FLAGS:--I/opt/homebrew/include -L/opt/homebrew/lib -lodbc}"
 # ODBC_FLAGS appended AFTER the source file so -l flags follow the object (GNU ld ordering)
-CXXFLAGS_SQL="-std=c++17 -I${RUNTIME_DIR}"
+CXXFLAGS_SQL=(-std=c++17 "-I${RUNTIME_DIR}")
 TESTDIR="tests"
 EXPECTED_OUT="$TESTDIR/expected_output"
 TMPDIR="/tmp/rpgc_test"
@@ -93,7 +98,7 @@ run_test() {
                 FAILURES="$FAILURES\n  Test $testnum ($label)"
                 return
             fi
-            if ! "$CXX" $CXXFLAGS -c -o "$TMPDIR/test${testnum}.o" "$TMPDIR/test${testnum}.cpp" 2>"$TMPDIR/test${testnum}_err.txt"; then
+            if ! "$CXX" "${CXXFLAGS[@]}" -c -o "$TMPDIR/test${testnum}.o" "$TMPDIR/test${testnum}.cpp" 2>"$TMPDIR/test${testnum}_err.txt"; then
                 echo -e "${RED}FAIL${NC} (compile failed)"
                 cat "$TMPDIR/test${testnum}_err.txt"
                 FAIL=$((FAIL + 1))
@@ -114,7 +119,7 @@ run_test() {
             fi
 
             # Compile
-            if ! "$CXX" $CXXFLAGS -o "$TMPDIR/test${testnum}" "$TMPDIR/test${testnum}.cpp" $extra 2>"$TMPDIR/test${testnum}_err.txt"; then
+            if ! "$CXX" "${CXXFLAGS[@]}" -o "$TMPDIR/test${testnum}" "$TMPDIR/test${testnum}.cpp" $extra 2>"$TMPDIR/test${testnum}_err.txt"; then
                 echo -e "${RED}FAIL${NC} (compile failed)"
                 cat "$TMPDIR/test${testnum}_err.txt"
                 FAIL=$((FAIL + 1))
@@ -168,7 +173,7 @@ run_test() {
             fi
 
             # Compile with ODBC flags
-            if ! "$CXX" $CXXFLAGS_SQL -o "$TMPDIR/test${testnum}" "$TMPDIR/test${testnum}.cpp" $extra $ODBC_FLAGS 2>"$TMPDIR/test${testnum}_err.txt"; then
+            if ! "$CXX" "${CXXFLAGS_SQL[@]}" -o "$TMPDIR/test${testnum}" "$TMPDIR/test${testnum}.cpp" $extra $ODBC_FLAGS 2>"$TMPDIR/test${testnum}_err.txt"; then
                 echo -e "${RED}FAIL${NC} (compile failed)"
                 cat "$TMPDIR/test${testnum}_err.txt"
                 FAIL=$((FAIL + 1))
@@ -223,7 +228,7 @@ run_test() {
                 return
             fi
 
-            if ! "$CXX" $CXXFLAGS_SQL -o "$TMPDIR/test${testnum}" "$TMPDIR/test${testnum}.cpp" $extra $ODBC_FLAGS 2>"$TMPDIR/test${testnum}_err.txt"; then
+            if ! "$CXX" "${CXXFLAGS_SQL[@]}" -o "$TMPDIR/test${testnum}" "$TMPDIR/test${testnum}.cpp" $extra $ODBC_FLAGS 2>"$TMPDIR/test${testnum}_err.txt"; then
                 echo -e "${RED}FAIL${NC} (compile failed)"
                 cat "$TMPDIR/test${testnum}_err.txt"
                 FAIL=$((FAIL + 1))
@@ -478,7 +483,7 @@ if [ -d "$CUSTOMER_DIR" ]; then
                 FAILURES="$FAILURES\n  Customer: $base"
                 continue
             fi
-            if "$CXX" $CXXFLAGS_SQL -c -o "$TMPDIR/customer_${base}.o" \
+            if "$CXX" "${CXXFLAGS_SQL[@]}" -c -o "$TMPDIR/customer_${base}.o" \
                     "$TMPDIR/customer_${base}.cpp" $ODBC_FLAGS 2>"$_err"; then
                 echo -e "${GREEN}PASS${NC}"
                 PASS=$((PASS + 1))
@@ -497,7 +502,7 @@ if [ -d "$CUSTOMER_DIR" ]; then
                 FAILURES="$FAILURES\n  Customer: $base"
                 continue
             fi
-            if "$CXX" $CXXFLAGS -c -o "$TMPDIR/customer_${base}.o" \
+            if "$CXX" "${CXXFLAGS[@]}" -c -o "$TMPDIR/customer_${base}.o" \
                     "$TMPDIR/customer_${base}.cpp" 2>"$_err"; then
                 echo -e "${GREEN}PASS${NC}"
                 PASS=$((PASS + 1))

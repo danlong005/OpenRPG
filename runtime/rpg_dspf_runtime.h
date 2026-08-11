@@ -33,6 +33,7 @@
 #include <cstring>
 #include <fstream>
 #include <map>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -256,6 +257,24 @@ static bool dspf__hasRecKw(const DspfJVal& rec, const std::string& prefix) {
     const DspfJVal& kw = rec["keywords"];
     for (size_t i = 0; i < kw.size(); i++) {
         if (kw[i].str().rfind(prefix, 0) == 0) return true;
+    }
+    return false;
+}
+
+// CLRL(begline [endline]) — clear only that row range before writing,
+// instead of the whole screen. endline omitted means "to the bottom".
+static bool dspf__parseClrl(const DspfJVal& rec, int& startRow, int& endRow) {
+    const DspfJVal& kw = rec["keywords"];
+    for (size_t i = 0; i < kw.size(); i++) {
+        const std::string& k = kw[i].str();
+        if (k.rfind("CLRL(", 0) == 0) {
+            std::istringstream iss(k.substr(5, k.size() > 6 ? k.size() - 6 : 0));
+            int a = 0, b = 0;
+            if (!(iss >> a) || a < 1) return false;
+            startRow = a;
+            endRow = (iss >> b) ? b : INT_MAX;
+            return true;
+        }
     }
     return false;
 }
@@ -722,8 +741,18 @@ static void dspf__drawWindowBorder(WINDOW* win, const DspfJVal& rec) {
 static void dspf__renderScreen(const DspfJVal& rec,
                                 const std::map<std::string,std::string>& vals,
                                 WINDOW* win, int rowOff, int colOff) {
+    int clrStart, clrEnd;
     if (!dspf__hasRecKw(rec, "OVERLAY") && !dspf__hasRecKw(rec, "NOCLEAR")) {
-        if (win == stdscr) clear();
+        if (dspf__parseClrl(rec, clrStart, clrEnd)) {
+            // Partial clear: only the declared row range, not the whole screen.
+            int maxRows = (win == stdscr) ? LINES : getmaxy(win);
+            int from = std::max(0, clrStart - 1 - rowOff);
+            int to   = std::min(maxRows - 1, clrEnd - 1 - rowOff);
+            for (int r = from; r <= to; r++) {
+                wmove(win, r, 0);
+                wclrtoeol(win);
+            }
+        } else if (win == stdscr) clear();
         else werase(win);
     }
     if (win != stdscr) dspf__drawWindowBorder(win, rec);

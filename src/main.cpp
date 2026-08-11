@@ -146,6 +146,7 @@ queryDspfDescs(const std::string& src_text, const std::string& src_dir) {
 
 #ifdef _WIN32
 #  include <direct.h>
+#  include <windows.h>
 #  define rpgc_realpath(p,b) _fullpath(b, p, PATH_MAX)
 #  define rpgc_mkdir(p)      _mkdir(p)
 #else
@@ -404,10 +405,30 @@ int main(int argc, char* argv[]) {
     };
 
     std::string runtime_dir;
+#ifdef _WIN32
+    // 0) Ask the OS for our own running executable path. argv[0] is NOT
+    // reliable for this on Windows: PowerShell passes the fully-resolved
+    // path when it finds rpgc via PATH, but cmd.exe (and anything built on
+    // it, like the VS Developer Command Prompt) passes back just the bare
+    // typed name with no path at all, silently skipping step 1 below.
+    {
+        char buf[MAX_PATH];
+        DWORD len = GetModuleFileNameA(nullptr, buf, MAX_PATH);
+        if (len > 0 && len < MAX_PATH) {
+            std::string exe_path(buf, len);
+            size_t sl = exe_path.find_last_of("/\\");
+            if (sl != std::string::npos) {
+                std::string bin_dir = exe_path.substr(0, sl);
+                if (dir_exists(bin_dir + "/runtime"))
+                    runtime_dir = bin_dir + "/runtime";
+            }
+        }
+    }
+#endif
     // 1) Relative to the rpgc binary (e.g. ./runtime when run from source tree)
     std::string self(argv[0]);
     size_t last_slash = self.find_last_of("/\\");
-    if (last_slash != std::string::npos) {
+    if (runtime_dir.empty() && last_slash != std::string::npos) {
         std::string bin_dir = self.substr(0, last_slash);
         if (dir_exists(bin_dir + "/runtime"))
             runtime_dir = bin_dir + "/runtime";

@@ -85,12 +85,14 @@ jobs:
         run: sudo apt-get install -y unixodbc unixodbc-dev libsqliteodbc
 
       - name: Download release package
-        run: gh release download "${{ needs.check.outputs.tag }}" --pattern "rpgc_*.deb"
+        # Both x86_64 and arm64 packages exist in the same release now —
+        # the pattern must pin the architecture or it grabs both.
+        run: gh release download "${{ needs.check.outputs.tag }}" --pattern "rpgc_*_amd64.deb"
         env:
           GH_TOKEN: ${{ github.token }}
 
       - name: Install package
-        run: sudo dpkg -i rpgc_*.deb
+        run: sudo dpkg -i rpgc_*_amd64.deb
 
       - name: Run tests
         run: |
@@ -115,12 +117,14 @@ jobs:
           dnf install -y unixODBC unixODBC-devel sqliteodbc diffutils gh clang
 
       - name: Download release package
-        run: gh release download "${{ needs.check.outputs.tag }}" --repo "${{ github.repository }}" --pattern "rpgc-*.rpm"
+        # Both x86_64 and arm64 packages exist in the same release now —
+        # the pattern must pin the architecture or it grabs both.
+        run: gh release download "${{ needs.check.outputs.tag }}" --repo "${{ github.repository }}" --pattern "rpgc-*.x86_64.rpm"
         env:
           GH_TOKEN: ${{ github.token }}
 
       - name: Install package
-        run: dnf install -y ./rpgc-*.rpm
+        run: dnf install -y ./rpgc-*.x86_64.rpm
 
       - name: Run tests
         run: |
@@ -198,12 +202,12 @@ jobs:
         run: sudo apt-get install -y unixodbc unixodbc-dev libsqliteodbc
 
       - name: Download release package
-        run: gh release download "${{ needs.check.outputs.tag }}" --pattern "rpgc_*.deb"
+        run: gh release download "${{ needs.check.outputs.tag }}" --pattern "rpgc_*_arm64.deb"
         env:
           GH_TOKEN: ${{ github.token }}
 
       - name: Install package
-        run: sudo dpkg -i rpgc_*.deb
+        run: sudo dpkg -i rpgc_*_arm64.deb
 
       - name: Run tests
         run: |
@@ -227,12 +231,12 @@ jobs:
           dnf install -y unixODBC unixODBC-devel sqliteodbc diffutils gh clang
 
       - name: Download release package
-        run: gh release download "${{ needs.check.outputs.tag }}" --repo "${{ github.repository }}" --pattern "rpgc-*.rpm"
+        run: gh release download "${{ needs.check.outputs.tag }}" --repo "${{ github.repository }}" --pattern "rpgc-*.aarch64.rpm"
         env:
           GH_TOKEN: ${{ github.token }}
 
       - name: Install package
-        run: dnf install -y ./rpgc-*.rpm
+        run: dnf install -y ./rpgc-*.aarch64.rpm
 
       - name: Run tests
         run: |

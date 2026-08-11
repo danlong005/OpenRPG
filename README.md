@@ -47,6 +47,8 @@ sudo dnf install ./rpgc-*.rpm
 
 Download `openrpg-<version>-windows-x64.exe` (x86_64) or `openrpg-<version>-windows-arm64.exe` (Windows on ARM, e.g. Surface Pro X, Snapdragon X devices) from the Releases page and run the installer. It adds `rpgc` to your PATH automatically.
 
+**No other prerequisites needed.** The installer bundles a self-contained C++ compiler (a trimmed [llvm-mingw](https://github.com/mstorsjo/llvm-mingw) toolchain) that `rpgc`/`dspfc` use to build the programs they compile, plus a PDCurses build for WORKSTN/display-file programs — you don't need MSYS2, Visual Studio, or anything else installed first. (SQL/RLA features are the one exception: those still need a platform ODBC driver installed separately — see [Database Connectivity](#database-connectivity) below.)
+
 > **ARM64 note:** among the ODBC drivers this guide covers, only Microsoft's ODBC Driver 18 for SQL Server (18.2+) publishes a native ARM64 Windows build. SQLite, PostgreSQL, and MySQL/MariaDB don't — their installers are x86_64-only — so SQL/RLA features against those three aren't available on Windows ARM64 without building a driver from source yourself. See [Database Connectivity](#database-connectivity) below.
 
 ---
@@ -319,6 +321,8 @@ If you generate `.cpp` files with `rpgc -S` and compile them yourself (e.g., in 
 | macOS | `-I$(brew --prefix)/include -L$(brew --prefix)/lib -lodbc` |
 | Linux | `-lodbc` |
 | Windows (MinGW) | `-lodbc32` |
+
+On Windows, the compiler `rpgc` itself uses is bundled with the installer at `<install-dir>\mingw\bin\<x86_64\|aarch64>-w64-mingw32-clang++.exe` (that directory is also on PATH after installing, so `clang++` resolves to it directly) — no separate MinGW/MSYS2 install needed to compile manually either.
 
 ```bash
 # macOS example

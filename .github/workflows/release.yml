@@ -341,6 +341,7 @@ jobs:
             make
             diffutils
             git
+            unzip
 
       - name: Install SQLite ODBC driver
         shell: pwsh
@@ -374,6 +375,26 @@ jobs:
       - name: Install NSIS
         shell: pwsh
         run: choco install nsis --no-progress -y
+
+      # Bundled compiler: end users shouldn't need MSYS2/MSVC/anything else
+      # installed just to run rpgc. Pinned to a specific llvm-mingw release
+      # so an upstream release can't silently change what we ship — see
+      # scripts/stage-mingw.sh for what gets kept vs. trimmed (~724MB raw
+      # release -> ~290MB). gh needs the outer Windows PATH, which the MSYS2
+      # shell below doesn't inherit, so the download happens here in pwsh.
+      - name: Download bundled compiler toolchain
+        shell: pwsh
+        run: gh release download 20260616 --repo mstorsjo/llvm-mingw --pattern "llvm-mingw-20260616-ucrt-x86_64.zip" -O llvm-mingw.zip
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Stage bundled compiler toolchain
+        shell: msys2 {0}
+        run: bash scripts/stage-mingw.sh llvm-mingw.zip x86_64 installer/mingw
+
+      - name: Build and stage bundled PDCurses
+        shell: msys2 {0}
+        run: bash scripts/build-pdcurses.sh installer/mingw x86_64-w64-mingw32
 
       - name: Stage installer files
         shell: pwsh
@@ -417,6 +438,7 @@ jobs:
             make
             diffutils
             git
+            unzip
 
       - name: Build
         shell: msys2 {0}
@@ -436,6 +458,22 @@ jobs:
       - name: Install NSIS
         shell: pwsh
         run: choco install nsis --no-progress -y
+
+      # Bundled compiler: see the equivalent step in build-windows above for
+      # why this happens in pwsh (gh) followed by msys2 (unzip/find/make).
+      - name: Download bundled compiler toolchain
+        shell: pwsh
+        run: gh release download 20260616 --repo mstorsjo/llvm-mingw --pattern "llvm-mingw-20260616-ucrt-aarch64.zip" -O llvm-mingw.zip
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Stage bundled compiler toolchain
+        shell: msys2 {0}
+        run: bash scripts/stage-mingw.sh llvm-mingw.zip aarch64 installer/mingw
+
+      - name: Build and stage bundled PDCurses
+        shell: msys2 {0}
+        run: bash scripts/build-pdcurses.sh installer/mingw aarch64-w64-mingw32
 
       - name: Stage installer files
         shell: pwsh

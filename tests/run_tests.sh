@@ -93,7 +93,7 @@ run_test() {
                 FAILURES="$FAILURES\n  Test $testnum ($label)"
                 return
             fi
-            if ! $CXX $CXXFLAGS -c -o "$TMPDIR/test${testnum}.o" "$TMPDIR/test${testnum}.cpp" 2>"$TMPDIR/test${testnum}_err.txt"; then
+            if ! "$CXX" $CXXFLAGS -c -o "$TMPDIR/test${testnum}.o" "$TMPDIR/test${testnum}.cpp" 2>"$TMPDIR/test${testnum}_err.txt"; then
                 echo -e "${RED}FAIL${NC} (compile failed)"
                 cat "$TMPDIR/test${testnum}_err.txt"
                 FAIL=$((FAIL + 1))
@@ -114,7 +114,7 @@ run_test() {
             fi
 
             # Compile
-            if ! $CXX $CXXFLAGS -o "$TMPDIR/test${testnum}" "$TMPDIR/test${testnum}.cpp" $extra 2>"$TMPDIR/test${testnum}_err.txt"; then
+            if ! "$CXX" $CXXFLAGS -o "$TMPDIR/test${testnum}" "$TMPDIR/test${testnum}.cpp" $extra 2>"$TMPDIR/test${testnum}_err.txt"; then
                 echo -e "${RED}FAIL${NC} (compile failed)"
                 cat "$TMPDIR/test${testnum}_err.txt"
                 FAIL=$((FAIL + 1))
@@ -168,7 +168,7 @@ run_test() {
             fi
 
             # Compile with ODBC flags
-            if ! $CXX $CXXFLAGS_SQL -o "$TMPDIR/test${testnum}" "$TMPDIR/test${testnum}.cpp" $extra $ODBC_FLAGS 2>"$TMPDIR/test${testnum}_err.txt"; then
+            if ! "$CXX" $CXXFLAGS_SQL -o "$TMPDIR/test${testnum}" "$TMPDIR/test${testnum}.cpp" $extra $ODBC_FLAGS 2>"$TMPDIR/test${testnum}_err.txt"; then
                 echo -e "${RED}FAIL${NC} (compile failed)"
                 cat "$TMPDIR/test${testnum}_err.txt"
                 FAIL=$((FAIL + 1))
@@ -223,7 +223,7 @@ run_test() {
                 return
             fi
 
-            if ! $CXX $CXXFLAGS_SQL -o "$TMPDIR/test${testnum}" "$TMPDIR/test${testnum}.cpp" $extra $ODBC_FLAGS 2>"$TMPDIR/test${testnum}_err.txt"; then
+            if ! "$CXX" $CXXFLAGS_SQL -o "$TMPDIR/test${testnum}" "$TMPDIR/test${testnum}.cpp" $extra $ODBC_FLAGS 2>"$TMPDIR/test${testnum}_err.txt"; then
                 echo -e "${RED}FAIL${NC} (compile failed)"
                 cat "$TMPDIR/test${testnum}_err.txt"
                 FAIL=$((FAIL + 1))
@@ -478,7 +478,7 @@ if [ -d "$CUSTOMER_DIR" ]; then
                 FAILURES="$FAILURES\n  Customer: $base"
                 continue
             fi
-            if $CXX $CXXFLAGS_SQL -c -o "$TMPDIR/customer_${base}.o" \
+            if "$CXX" $CXXFLAGS_SQL -c -o "$TMPDIR/customer_${base}.o" \
                     "$TMPDIR/customer_${base}.cpp" $ODBC_FLAGS 2>"$_err"; then
                 echo -e "${GREEN}PASS${NC}"
                 PASS=$((PASS + 1))
@@ -497,7 +497,7 @@ if [ -d "$CUSTOMER_DIR" ]; then
                 FAILURES="$FAILURES\n  Customer: $base"
                 continue
             fi
-            if $CXX $CXXFLAGS -c -o "$TMPDIR/customer_${base}.o" \
+            if "$CXX" $CXXFLAGS -c -o "$TMPDIR/customer_${base}.o" \
                     "$TMPDIR/customer_${base}.cpp" 2>"$_err"; then
                 echo -e "${GREEN}PASS${NC}"
                 PASS=$((PASS + 1))

@@ -56,9 +56,20 @@ Section "OpenDSPF Display File Compiler (dspfc)" SecDspf
     File "rpg_dspf_runtime.h"
 SectionEnd
 
+Section "Bundled C++ Compiler (recommended)" SecCompiler
+    ; rpgc/dspfc transpile to C++ and shell out to a real compiler to
+    ; produce the final .exe. Without this, that compiler has to already
+    ; be on PATH (MSYS2, MSVC, etc.) — bundling one here means a fresh
+    ; Windows machine needs nothing else installed. Uncheck this only if
+    ; you already have a C++ toolchain and want to skip the extra download.
+    SetOutPath "$INSTDIR\mingw"
+    File /r "mingw\*.*"
+SectionEnd
+
 !insertmacro MUI_FUNCTION_DESCRIPTION_BEGIN
   !insertmacro MUI_DESCRIPTION_TEXT ${SecMain} "The RPG IV free-format compiler (rpgc). Required."
   !insertmacro MUI_DESCRIPTION_TEXT ${SecDspf} "The display file compiler (dspfc) for interactive screen programs. Produces .dspfd descriptors consumed by rpg_dspf_runtime.h."
+  !insertmacro MUI_DESCRIPTION_TEXT ${SecCompiler} "A self-contained C++ compiler (clang) that rpgc/dspfc use to build the programs they compile. Recommended unless you already have MSYS2, MinGW, or another C++ toolchain installed and on PATH."
 !insertmacro MUI_FUNCTION_DESCRIPTION_END
 
 Section "Uninstall"
@@ -72,6 +83,7 @@ Section "Uninstall"
     Delete "$INSTDIR\runtime\rpg_dspf_runtime.h"
     Delete "$INSTDIR\uninstall.exe"
     RMDir "$INSTDIR\runtime"
+    RMDir /r "$INSTDIR\mingw"
     RMDir "$INSTDIR"
 
     ; Remove install dir from system PATH

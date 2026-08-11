@@ -205,16 +205,51 @@ static int rpgc_system(const std::string& cmd) {
 // by cmd.exe/the shell, and the compiler sees a nonsensical fragment.
 static std::string q(const std::string& s) { return "\"" + s + "\""; }
 
-// Resolve which C++ compiler to invoke for the generated code. Prefer the
-// one this rpgc binary was built with (RPGC_CXX) since it's guaranteed to
-// exist in that build's own toolchain, but fall back to the other major
-// compiler if that's what's actually on the user's PATH instead — e.g. on
-// Windows, where MinGW GCC and LLVM/Clang are installed independently of
-// whichever one happened to build rpgc.exe itself. RPGC_CXX_OVERRIDE (or
-// the conventional CXX) lets the user force a specific compiler/path.
+#ifdef _WIN32
+// Directory containing the currently running rpgc.exe. argv[0] is NOT
+// reliable for this on Windows — see the runtime_dir lookup below, which
+// hits the same shell-dependent problem — so ask the OS directly.
+static std::string rpgc_own_exe_dir() {
+    char buf[MAX_PATH];
+    DWORD len = GetModuleFileNameA(nullptr, buf, MAX_PATH);
+    if (len == 0 || len >= MAX_PATH) return "";
+    std::string exe_path(buf, len);
+    size_t sl = exe_path.find_last_of("/\\");
+    return sl != std::string::npos ? exe_path.substr(0, sl) : "";
+}
+#endif
+
+// Resolve which C++ compiler to invoke for the generated code.
+//
+// On Windows, check for a toolchain bundled alongside rpgc.exe itself first
+// (installer/mingw/bin/<triple>-clang++.exe) — the whole point of bundling
+// one is that end users shouldn't need anything external at all.
+//
+// Otherwise, prefer the compiler this rpgc binary was built with (RPGC_CXX)
+// since it's guaranteed to exist in that build's own toolchain, but fall
+// back to the other major compiler if that's what's actually on the user's
+// PATH instead — e.g. a from-source Windows build, where MinGW GCC and
+// LLVM/Clang are installed independently of whichever one happened to
+// build rpgc.exe itself. RPGC_CXX_OVERRIDE (or the conventional CXX) lets
+// the user force a specific compiler/path, ahead of everything else.
 static std::string rpgc_resolve_cxx() {
     if (const char* env = std::getenv("RPGC_CXX_OVERRIDE")) return env;
     if (const char* env = std::getenv("CXX")) return env;
+
+#ifdef _WIN32
+    {
+        std::string own_dir = rpgc_own_exe_dir();
+        if (!own_dir.empty()) {
+#  if defined(_M_ARM64) || defined(__aarch64__)
+            std::string bundled = own_dir + "/mingw/bin/aarch64-w64-mingw32-clang++.exe";
+#  else
+            std::string bundled = own_dir + "/mingw/bin/x86_64-w64-mingw32-clang++.exe";
+#  endif
+            struct stat st;
+            if (stat(bundled.c_str(), &st) == 0) return bundled;
+        }
+    }
+#endif
 
     auto on_path = [](const std::string& cxx) {
 #ifdef _WIN32
@@ -412,17 +447,9 @@ int main(int argc, char* argv[]) {
     // it, like the VS Developer Command Prompt) passes back just the bare
     // typed name with no path at all, silently skipping step 1 below.
     {
-        char buf[MAX_PATH];
-        DWORD len = GetModuleFileNameA(nullptr, buf, MAX_PATH);
-        if (len > 0 && len < MAX_PATH) {
-            std::string exe_path(buf, len);
-            size_t sl = exe_path.find_last_of("/\\");
-            if (sl != std::string::npos) {
-                std::string bin_dir = exe_path.substr(0, sl);
-                if (dir_exists(bin_dir + "/runtime"))
-                    runtime_dir = bin_dir + "/runtime";
-            }
-        }
+        std::string bin_dir = rpgc_own_exe_dir();
+        if (!bin_dir.empty() && dir_exists(bin_dir + "/runtime"))
+            runtime_dir = bin_dir + "/runtime";
     }
 #endif
     // 1) Relative to the rpgc binary (e.g. ./runtime when run from source tree)

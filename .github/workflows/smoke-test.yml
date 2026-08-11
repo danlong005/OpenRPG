@@ -140,18 +140,19 @@ jobs:
     runs-on: windows-2025
     needs: check
 
-    defaults:
-      run:
-        shell: msys2 {0}
+    # Deliberately no msys2/setup-msys2 step and no `defaults: shell: msys2`
+    # here — this job exists to prove the installer works on a genuinely
+    # bare Windows machine with nothing preinstalled, which is exactly what
+    # earlier versions of this test did NOT do (it pre-installed a compiler
+    # via MSYS2 and pointed rpgc at it, and installed to a space-free
+    # C:\openrpg specifically to dodge a quoting bug rather than catch it —
+    # neither reflects what an end user's machine looks like). Steps use
+    # `shell: bash`, which resolves to Git Bash — present by default on
+    # GitHub-hosted Windows runners, unlike MSYS2's isolated shell — so gh
+    # and the installed rpgc.exe are both reachable without extra setup.
 
     steps:
       - uses: actions/checkout@v6
-
-      - uses: msys2/setup-msys2@v2.31.1
-        with:
-          msystem: MINGW64
-          update: true
-          install: mingw-w64-x86_64-gcc diffutils
 
       - name: Install SQLite ODBC driver
         shell: pwsh
@@ -176,17 +177,20 @@ jobs:
       - name: Install OpenRPG
         shell: pwsh
         run: |
+          # No /D override — installs to the real default $PROGRAMFILES64\openrpg,
+          # which contains a space. That's exactly the case that broke every
+          # compile before rpgc quoted its compiler command line.
           $exe = Get-Item "openrpg-*-windows-x64.exe"
-          # /D overrides install dir — use a space-free path so MSYS2 -I flags work
-          Start-Process -Wait -FilePath $exe.FullName -ArgumentList "/S /D=C:\openrpg"
+          Start-Process -Wait -FilePath $exe.FullName -ArgumentList "/S"
 
       - name: Run tests
+        shell: bash
         run: |
-          export PATH="/c/openrpg:$PATH"
+          export PATH="/c/Program Files/openrpg:$PATH"
           RPGC=rpgc \
-          RUNTIME_DIR="/c/openrpg/runtime" \
+          RUNTIME_DIR="/c/Program Files/openrpg/runtime" \
           ODBC_FLAGS="-lodbc32" \
-          CXX=g++ \
+          CXX="/c/Program Files/openrpg/mingw/bin/x86_64-w64-mingw32-clang++.exe" \
           bash tests/run_tests.sh
 
   # ── Linux ARM64 .deb ─────────────────────────────────────────────────────
@@ -254,18 +258,14 @@ jobs:
     runs-on: windows-11-arm
     needs: check
 
-    defaults:
-      run:
-        shell: msys2 {0}
+    # See smoke-windows above for why there's no MSYS2 setup here — this is
+    # exactly the class of machine (fresh Windows ARM64, nothing
+    # preinstalled) where the DLL/tmp-path/wrong-compiler/quoting bugs were
+    # actually found, none of which the old MSYS2-preinstalled version of
+    # this job could have caught.
 
     steps:
       - uses: actions/checkout@v6
-
-      - uses: msys2/setup-msys2@v2.31.1
-        with:
-          msystem: CLANGARM64
-          update: true
-          install: mingw-w64-clang-aarch64-toolchain diffutils
 
       - name: Download release installer
         shell: pwsh
@@ -276,14 +276,17 @@ jobs:
       - name: Install OpenRPG
         shell: pwsh
         run: |
+          # No /D override — installs to the real default $PROGRAMFILES64\openrpg,
+          # which contains a space.
           $exe = Get-Item "openrpg-*-windows-arm64.exe"
-          # /D overrides install dir — use a space-free path so MSYS2 -I flags work
-          Start-Process -Wait -FilePath $exe.FullName -ArgumentList "/S /D=C:\openrpg"
+          Start-Process -Wait -FilePath $exe.FullName -ArgumentList "/S"
 
       - name: Run tests
+        shell: bash
         run: |
-          export PATH="/c/openrpg:$PATH"
+          export PATH="/c/Program Files/openrpg:$PATH"
           RPGC=rpgc \
-          RUNTIME_DIR="/c/openrpg/runtime" \
+          RUNTIME_DIR="/c/Program Files/openrpg/runtime" \
           SKIP_SQL=1 \
+          CXX="/c/Program Files/openrpg/mingw/bin/aarch64-w64-mingw32-clang++.exe" \
           bash tests/run_tests.sh

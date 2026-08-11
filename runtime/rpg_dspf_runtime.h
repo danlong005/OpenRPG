@@ -873,7 +873,78 @@ struct DspfEditField {
     int  row, col, len;
     std::string name;
     std::string val;
+    bool touched = false; // operator keyed into this field (MDT-like — see CHANGE)
 };
+
+// Extracts the response-indicator number from a keyword's stored text, e.g.
+// "CHANGE(*IN67 'FLDX was changed')" or "BLANKS(67)" -> 67. Returns -1 if
+// `kw` isn't this keyword or has no parseable indicator.
+static int dspf__parseIndFromKw(const std::string& kw, const std::string& prefix) {
+    if (kw.rfind(prefix, 0) != 0) return -1;
+    std::string inner = kw.substr(prefix.size());
+    if (inner.rfind("*IN", 0) == 0) inner = inner.substr(3);
+    try { return std::stoi(inner); } catch (...) { return -1; }
+}
+
+// CHANGE(ind ['text']) / BLANKS(ind ['text']) response indicators, computed
+// once input is committed (Enter, F-key, or PAGEUP/PAGEDOWN) — never on a
+// failed-validation retry, matching real MDT semantics where these persist
+// across redisplays until the record actually passes back to the program.
+// Applied into the caller's indicator array via dspf_apply_out_indicators().
+static std::vector<int> g_dspf_out_set_indicators;
+static std::vector<int> g_dspf_out_clear_indicators;
+
+static void dspf__computeChangeBlanks(const DspfJVal& rec, const std::vector<DspfEditField>& ef) {
+    g_dspf_out_set_indicators.clear();
+    g_dspf_out_clear_indicators.clear();
+
+    bool anyTouched = false;
+    for (const auto& f : ef) if (f.touched) anyTouched = true;
+
+    // Record-level CHANGE: any input-capable field in the record was keyed
+    // into. Explicitly cleared when not, since MDT resets on every fresh
+    // screen paint (this runtime always redraws fresh — no PUTRETAIN) —
+    // otherwise a prior pass's "on" would wrongly stick around.
+    const DspfJVal& recKw = rec["keywords"];
+    for (size_t i = 0; i < recKw.size(); i++) {
+        int ind = dspf__parseIndFromKw(recKw[i].str(), "CHANGE(");
+        if (ind < 0) continue;
+        if (anyTouched) g_dspf_out_set_indicators.push_back(ind);
+        else g_dspf_out_clear_indicators.push_back(ind);
+    }
+
+    const DspfJVal& fields = rec["fields"];
+    for (const auto& f : ef) {
+        const DspfJVal& kw = fields[f.recIdx]["keywords"];
+        for (size_t k = 0; k < kw.size(); k++) {
+            const std::string& s = kw[k].str();
+            int changeInd = dspf__parseIndFromKw(s, "CHANGE(");
+            if (changeInd >= 0) {
+                if (f.touched) g_dspf_out_set_indicators.push_back(changeInd);
+                else g_dspf_out_clear_indicators.push_back(changeInd);
+                continue;
+            }
+            int blanksInd = dspf__parseIndFromKw(s, "BLANKS(");
+            if (blanksInd >= 0) {
+                // "Blank" = nothing keyed, or only spaces — mirrors real
+                // hardware's all-blank/all-null display test.
+                bool isBlank = f.val.find_first_not_of(' ') == std::string::npos;
+                if (isBlank) g_dspf_out_set_indicators.push_back(blanksInd);
+                else g_dspf_out_clear_indicators.push_back(blanksInd);
+            }
+        }
+    }
+}
+
+// Overlays the indicators computed by dspf__computeChangeBlanks onto the
+// caller's indicator array — called once per EXFMT, right after the
+// existing single-exit-indicator handling so CHANGE/BLANKS indicators
+// (which can land anywhere in 1-99) aren't wiped out by it.
+inline void dspf_apply_out_indicators(bool* inds, int count) {
+    int n = (count < 100) ? count : 100;
+    for (int ind : g_dspf_out_set_indicators)   if (ind >= 0 && ind < n) inds[ind] = true;
+    for (int ind : g_dspf_out_clear_indicators) if (ind >= 0 && ind < n) inds[ind] = false;
+}
 
 static int dspf__inputLoop(const DspfJVal& rec,
                             std::map<std::string,std::string>& vals,
@@ -921,6 +992,7 @@ static int dspf__inputLoop(const DspfJVal& rec,
             int fnum = ch - KEY_F(0);
             std::string key = "F" + std::to_string(fnum);
             for (auto& f : ef) vals[f.name] = f.val;
+            dspf__computeChangeBlanks(rec, ef);
             const DspfJVal& keys = rec["keys"];
             for (size_t i = 0; i < keys.size(); i++) {
                 if (keys[i]["key"].str() == key)
@@ -941,6 +1013,7 @@ static int dspf__inputLoop(const DspfJVal& rec,
             for (size_t i = 0; i < keys.size(); i++) {
                 if (keys[i]["key"].str() == key) {
                     for (auto& f : ef) vals[f.name] = f.val;
+                    dspf__computeChangeBlanks(rec, ef);
                     return keys[i]["indicator"].num();
                 }
             }
@@ -968,6 +1041,7 @@ static int dspf__inputLoop(const DspfJVal& rec,
                 continue;
             }
             for (auto& f : ef) vals[f.name] = f.val;
+            dspf__computeChangeBlanks(rec, ef);
             return 0;
         }
 
@@ -987,6 +1061,7 @@ static int dspf__inputLoop(const DspfJVal& rec,
         if (ch == KEY_BACKSPACE || ch == 127 || ch == 8) {
             if (!f.val.empty()) {
                 f.val.pop_back();
+                f.touched = true;
                 int pair = dspf__colorPair(fields[f.recIdx]);
                 attr_t ext = dspf__fieldAttrs(fields[f.recIdx]);
                 wattron(win, COLOR_PAIR(pair) | ext | A_REVERSE);
@@ -998,6 +1073,7 @@ static int dspf__inputLoop(const DspfJVal& rec,
 
         if (isprint(ch) && (int)f.val.size() < f.len) {
             f.val += (char)ch;
+            f.touched = true;
             int pair = dspf__colorPair(fields[f.recIdx]);
             attr_t ext = dspf__fieldAttrs(fields[f.recIdx]);
             wattron(win, COLOR_PAIR(pair) | ext | A_REVERSE);

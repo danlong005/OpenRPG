@@ -3884,6 +3884,9 @@ void CodeGen::visit(ExfmtStmt& node) {
     emitIndent(); out_ << "for (int __i = 1; __i <= 24; ++__i) rpg_indicators[__i] = false;\n";
     emitIndent(); out_ << "if (__dspf_key >= 1 && __dspf_key <= 99) "
                        << "rpg_indicators[__dspf_key] = true;\n";
+    // CHANGE/BLANKS response indicators — can land anywhere in 1-99, so
+    // applied after the block above rather than folded into it.
+    emitIndent(); out_ << "dspf_apply_out_indicators(rpg_indicators, 100);\n";
     uses_indicators_ = true;
 
     indent_--; emitIndent(); out_ << "}\n";

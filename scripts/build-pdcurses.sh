@@ -15,6 +15,12 @@ set -euo pipefail
 MINGW_DIR="${1:?usage: build-pdcurses.sh <mingw-dir> <target-triple>}"
 TARGET_TRIPLE="${2:?usage: build-pdcurses.sh <mingw-dir> <target-triple>}"
 
+# Resolve to an absolute path — `make -C` below changes the working
+# directory to the cloned PDCurses tree, so a relative MINGW_DIR (as passed
+# by release.yml: "installer/mingw") would silently stop resolving to
+# anything once make is running from inside that temp directory instead.
+MINGW_DIR="$(cd "$MINGW_DIR" && pwd)"
+
 # Pinned so an upstream change can't silently alter what we ship.
 PDCURSES_TAG="PDCurses_3_6"
 

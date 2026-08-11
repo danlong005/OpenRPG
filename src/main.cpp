@@ -182,6 +182,37 @@ queryDspfDescs(const std::string& src_text, const std::string& src_dir) {
 #  define RPGC_DSPF_FLAGS " -lncurses"
 #endif
 
+// Resolve which C++ compiler to invoke for the generated code. Prefer the
+// one this rpgc binary was built with (RPGC_CXX) since it's guaranteed to
+// exist in that build's own toolchain, but fall back to the other major
+// compiler if that's what's actually on the user's PATH instead — e.g. on
+// Windows, where MinGW GCC and LLVM/Clang are installed independently of
+// whichever one happened to build rpgc.exe itself. RPGC_CXX_OVERRIDE (or
+// the conventional CXX) lets the user force a specific compiler/path.
+static std::string rpgc_resolve_cxx() {
+    if (const char* env = std::getenv("RPGC_CXX_OVERRIDE")) return env;
+    if (const char* env = std::getenv("CXX")) return env;
+
+    auto on_path = [](const std::string& cxx) {
+#ifdef _WIN32
+        std::string cmd = "where " + cxx + " >nul 2>nul";
+#else
+        std::string cmd = "command -v " + cxx + " >/dev/null 2>&1";
+#endif
+        return system(cmd.c_str()) == 0;
+    };
+
+#if defined(__clang__)
+    const char* other = "g++";
+#else
+    const char* other = "clang++";
+#endif
+
+    if (on_path(RPGC_CXX)) return RPGC_CXX;
+    if (on_path(other))    return other;
+    return RPGC_CXX; // neither found; let the real compile invocation surface the error
+}
+
 // Directory for scratch .cpp files generated during compilation.
 // /tmp doesn't exist on Windows, so honor the platform's own temp-dir
 // convention instead of assuming a Unix layout.
@@ -386,7 +417,7 @@ int main(int argc, char* argv[]) {
             }
             out << cpp_code;
         }
-        std::string cmd = std::string(RPGC_CXX) + " -std=c++17 -I" + runtime_dir + " -I" + src_dir +
+        std::string cmd = rpgc_resolve_cxx() + " -std=c++17 -I" + runtime_dir + " -I" + src_dir +
                           " -c -o " + obj_path + " " + cpp_path;
         int rc = system(cmd.c_str());
         std::remove(cpp_path.c_str());
@@ -415,7 +446,7 @@ int main(int argc, char* argv[]) {
         out << cpp_code;
     }
 
-    std::string cmd = std::string(RPGC_CXX) + " -std=c++17 -I" + runtime_dir + " -I" + src_dir;
+    std::string cmd = rpgc_resolve_cxx() + " -std=c++17 -I" + runtime_dir + " -I" + src_dir;
     if (debug_mode) {
         cmd += " -g -O0";
     }

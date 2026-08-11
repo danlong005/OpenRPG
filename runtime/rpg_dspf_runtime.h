@@ -287,6 +287,53 @@ static bool dspf__isProtected(const DspfJVal& rec) {
 }
 
 // =============================================================================
+// ERRSFL — message subfile for validation errors
+// =============================================================================
+//
+// Real DDS: SFLMSGRCD(nn) on a SFLCTL record reserves screen row nn onward
+// to display the record's message subfile; ERRSFL enables routing that
+// record's error indications there. On IBM i the message subfile is fed
+// from the job's program message queue (SNDPGMMSG); OpenDSPF has no such
+// queue, so this accumulates the validation-error text dspf__validateField
+// already produces — same observable effect (a scrollable, growing list of
+// error messages instead of only ever showing the single latest one) using
+// what's actually available here. Global rather than per-record, matching
+// a program message queue's own scope.
+
+static std::vector<std::string> g_dspf_errsfl_messages;
+
+// Row (1-based) SFLMSGRCD(nn) reserves for message display, or 0 if the
+// record doesn't specify one.
+static int dspf__sflMsgRcdRow(const DspfJVal& rec) {
+    const DspfJVal& kw = rec["keywords"];
+    for (size_t i = 0; i < kw.size(); i++) {
+        const std::string& k = kw[i].str();
+        if (k.rfind("SFLMSGRCD(", 0) == 0) {
+            try { return std::stoi(k.substr(10)); } catch (...) {}
+        }
+    }
+    return 0;
+}
+
+// Appends a message to the message subfile and redraws the reserved area,
+// scrolled to show as many of the most recent messages as fit.
+static void dspf__errsflShow(const DspfJVal& rec, const std::string& msg) {
+    g_dspf_errsfl_messages.push_back(msg);
+    int row = dspf__sflMsgRcdRow(rec);
+    if (row <= 0) row = (LINES > 24) ? 24 : LINES;
+    int maxLines = LINES - row + 1;
+    if (maxLines < 1) maxLines = 1;
+    int start = (int)g_dspf_errsfl_messages.size() - maxLines;
+    if (start < 0) start = 0;
+    attron(A_REVERSE);
+    for (int i = start; i < (int)g_dspf_errsfl_messages.size(); i++) {
+        mvprintw(row - 1 + (i - start), 0, "%-*s", COLS, g_dspf_errsfl_messages[i].c_str());
+    }
+    attroff(A_REVERSE);
+    refresh();
+}
+
+// =============================================================================
 // Field validation — VALUES / RANGE / COMP keywords
 // =============================================================================
 
@@ -823,7 +870,9 @@ static int dspf__inputLoop(const DspfJVal& rec,
             }
             if (badIdx >= 0) {
                 beep();
-                if (LINES > 24) {
+                if (dspf__hasRecKw(rec, "ERRSFL")) {
+                    dspf__errsflShow(rec, errMsg);
+                } else if (LINES > 24) {
                     attron(A_REVERSE);
                     mvprintw(24, 0, "%-*s", COLS, errMsg.c_str());
                     attroff(A_REVERSE);

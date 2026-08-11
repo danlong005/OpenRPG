@@ -861,6 +861,24 @@ static int dspf__inputLoop(const DspfJVal& rec,
             return fnum;
         }
 
+        // PAGEUP/PAGEDOWN as exit keys on a plain (non-subfile) record — the
+        // subfile control-record loop already uses these same ncurses codes
+        // for scrolling (dspf__sflExfmt); here there's nothing to scroll, so
+        // they only do anything if the record actually declares
+        // KEY PAGEUP/PAGEDOWN INDICATOR(nn) (DDS ROLLDOWN/ROLLUP respectively
+        // in fixed-format). Otherwise a no-op, unlike unmapped F-keys.
+        if (ch == KEY_PPAGE || ch == KEY_NPAGE) {
+            std::string key = (ch == KEY_PPAGE) ? "PAGEUP" : "PAGEDOWN";
+            const DspfJVal& keys = rec["keys"];
+            for (size_t i = 0; i < keys.size(); i++) {
+                if (keys[i]["key"].str() == key) {
+                    for (auto& f : ef) vals[f.name] = f.val;
+                    return keys[i]["indicator"].num();
+                }
+            }
+            continue;
+        }
+
         if (ch == '\n' || ch == '\r' || ch == KEY_ENTER) {
             int badIdx = -1;
             std::string errMsg;

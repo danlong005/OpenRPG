@@ -31,7 +31,7 @@ jobs:
         run: make PREFIX=/usr
 
       - name: Build OpenDSPF
-        run: make -C OpenDSPF
+        run: make -C OpenDSPF VERSION=${GITHUB_REF_NAME#v}
 
       - name: Run OpenRPG test suite
         env:
@@ -131,7 +131,7 @@ jobs:
         run: make PREFIX=/usr
 
       - name: Build OpenDSPF
-        run: make -C OpenDSPF
+        run: make -C OpenDSPF VERSION=${GITHUB_REF_NAME#v}
 
       - name: Run OpenRPG test suite
         env:
@@ -238,7 +238,7 @@ jobs:
         run: make
 
       - name: Build OpenDSPF
-        run: make -C OpenDSPF
+        run: make -C OpenDSPF VERSION=${GITHUB_REF_NAME#v}
 
       - name: Run OpenRPG test suite
         env:
@@ -357,7 +357,7 @@ jobs:
 
       - name: Build
         shell: msys2 {0}
-        run: make && make -C OpenDSPF
+        run: make && make -C OpenDSPF VERSION=${GITHUB_REF_NAME#v}
 
       - name: Run OpenRPG test suite
         shell: msys2 {0}
@@ -418,7 +418,7 @@ jobs:
 
       - name: Build
         shell: msys2 {0}
-        run: make && make -C OpenDSPF
+        run: make && make -C OpenDSPF VERSION=${GITHUB_REF_NAME#v}
 
       - name: Run OpenRPG test suite
         shell: msys2 {0}

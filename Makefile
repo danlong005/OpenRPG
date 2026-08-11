@@ -18,6 +18,10 @@ else ifneq (,$(MSYSTEM))
     BISON       ?= bison
     ODBC_CFLAGS ?=
     ODBC_LIBS   ?= -lodbc32
+    # Static-link the C++ runtime so rpgc.exe doesn't depend on MSYS2's
+    # libc++.dll/libstdc++-6.dll/libwinpthread-1.dll being present on the
+    # target machine — the NSIS installer only ships the exe itself.
+    LDFLAGS     ?= -static
     ifeq ($(MSYSTEM),CLANGARM64)
         CXX := clang++
     else
@@ -101,7 +105,7 @@ $(BUILDDIR)/parser.o: $(BUILDDIR)/parser.cpp $(SRCDIR)/ast.h
 	$(CXX) $(CXXFLAGS) -I$(SRCDIR) -I$(BUILDDIR) -c -o $@ $<
 
 $(TARGET): $(OBJS)
-	$(CXX) $(CXXFLAGS) $(ODBC_CFLAGS) -o $@ $^ $(ODBC_LIBS)
+	$(CXX) $(CXXFLAGS) $(ODBC_CFLAGS) -o $@ $^ $(LDFLAGS) $(ODBC_LIBS)
 
 clean:
 	rm -rf $(BUILDDIR) $(TARGET)

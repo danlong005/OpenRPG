@@ -138,6 +138,13 @@ static DspfJVal dspf__parseJSON(const std::string& src) {
 // Buffer helpers — walk buffer using descriptor to extract / apply field values
 // =============================================================================
 
+// Field types stored as char[len+1] in the generated _buf struct (codegen's
+// cppFieldType default case) rather than long/double — "A" plus the
+// date/time/timestamp types, which have no numeric representation.
+static bool dspf__isCharType(const std::string& type) {
+    return type == "A" || type == "L" || type == "T" || type == "Z";
+}
+
 static std::map<std::string,std::string>
 dspf__extractFields(const DspfJVal& rec, const void* buf) {
     std::map<std::string,std::string> m;
@@ -151,7 +158,7 @@ dspf__extractFields(const DspfJVal& rec, const void* buf) {
         int dec  = fields[i]["dec"].num();
         std::string io = fields[i]["io"].str();
         if (io == "H") { // advance pointer but skip value
-            if (type == "A") p += (len + 1);
+            if (dspf__isCharType(type)) p += (len + 1);
             else if (type == "B") p += sizeof(long);
             else p += sizeof(double);
             continue;
@@ -160,7 +167,7 @@ dspf__extractFields(const DspfJVal& rec, const void* buf) {
         // share one buffer slot — only the first occurrence advances the pointer.
         if (seen.count(name)) continue;
         seen[name] = true;
-        if (type == "A") {
+        if (dspf__isCharType(type)) {
             std::string val(p, strnlen(p, (size_t)len));
             while (!val.empty() && val.back() == ' ') val.pop_back();
             m[name] = val;
@@ -190,14 +197,14 @@ static void dspf__applyFields(const DspfJVal& rec,
         int len = fields[i]["len"].num();
         std::string io = fields[i]["io"].str();
         if (io == "H") {
-            if (type == "A") p += (len + 1);
+            if (dspf__isCharType(type)) p += (len + 1);
             else if (type == "B") p += sizeof(long);
             else p += sizeof(double);
             continue;
         }
         if (seen.count(name)) continue; // duplicate display entry — shares first slot
         seen[name] = true;
-        if (type == "A") {
+        if (dspf__isCharType(type)) {
             auto it = vals.find(name);
             if (it != vals.end()) {
                 size_t clen = std::min((int)it->second.size(), len);
@@ -655,7 +662,7 @@ static attr_t dspf__fieldAttrs(const DspfJVal& field) {
 // Apply EDTCDE/EDTWRD formatting to a numeric field value string.
 static std::string dspf__formatField(const DspfJVal& field, const std::string& raw) {
     std::string type = field["type"].str();
-    if (type == "A") return raw; // not numeric
+    if (dspf__isCharType(type)) return raw; // not numeric
     int len = field["len"].num();
     int dec = field["dec"].num();
     double numVal = 0.0;

@@ -1061,7 +1061,7 @@ void CodeGen::visit(DclF& node) {
             for (const DspfFldInfo& f : rec.fields) {
                 if (f.io == 'H') continue;
                 emitIndent();
-                if (f.dtype == 'A') {
+                if ((f.dtype == 'A' || f.dtype == 'L' || f.dtype == 'T' || f.dtype == 'Z')) {
                     out_ << "std::string " << f.name << "; "
                          << "// " << rec.name << "." << f.name << "\n";
                 } else if (f.dtype == 'B') {
@@ -3479,7 +3479,7 @@ void CodeGen::visit(ReadStmt& node) {
                 for (const DspfFldInfo& f : rci->fields) {
                     if (f.io == 'H') continue;
                     emitIndent();
-                    if (f.dtype == 'A') {
+                    if ((f.dtype == 'A' || f.dtype == 'L' || f.dtype == 'T' || f.dtype == 'Z')) {
                         out_ << "strncpy(" << bufName << "." << f.name << ", "
                              << f.name << ".c_str(), " << f.len << "); "
                              << bufName << "." << f.name << "[" << f.len << "] = '\\0';\n";
@@ -3495,7 +3495,7 @@ void CodeGen::visit(ReadStmt& node) {
                 for (const DspfFldInfo& f : rci->fields) {
                     if (f.io == 'H' || f.io == 'O') continue;
                     emitIndent();
-                    if (f.dtype == 'A') {
+                    if ((f.dtype == 'A' || f.dtype == 'L' || f.dtype == 'T' || f.dtype == 'Z')) {
                         out_ << f.name << " = std::string(" << bufName << "." << f.name
                              << ", strnlen(" << bufName << "." << f.name << ", " << f.len << "));\n";
                     } else {
@@ -3660,7 +3660,7 @@ void CodeGen::visit(WriteStmt& node) {
                 for (const DspfFldInfo& f : rci->fields) {
                     if (f.io == 'H') continue;
                     emitIndent();
-                    if (f.dtype == 'A') {
+                    if ((f.dtype == 'A' || f.dtype == 'L' || f.dtype == 'T' || f.dtype == 'Z')) {
                         out_ << "strncpy(" << bufName << "." << f.name << ", "
                              << f.name << ".c_str(), " << f.len << "); "
                              << bufName << "." << f.name << "[" << f.len << "] = '\\0';\n";
@@ -3846,7 +3846,7 @@ void CodeGen::visit(ExfmtStmt& node) {
         for (const DspfFldInfo& f : rci->fields) {
             if (f.io == 'H') continue;
             emitIndent();
-            if (f.dtype == 'A') {
+            if ((f.dtype == 'A' || f.dtype == 'L' || f.dtype == 'T' || f.dtype == 'Z')) {
                 // string → char buf
                 out_ << "strncpy(" << bufName << "." << f.name << ", "
                      << f.name << ".c_str(), " << f.len << "); "
@@ -3869,7 +3869,7 @@ void CodeGen::visit(ExfmtStmt& node) {
         for (const DspfFldInfo& f : rci->fields) {
             if (f.io == 'H' || f.io == 'O') continue; // only copy back input/both
             emitIndent();
-            if (f.dtype == 'A') {
+            if ((f.dtype == 'A' || f.dtype == 'L' || f.dtype == 'T' || f.dtype == 'Z')) {
                 out_ << f.name << " = std::string(" << bufName << "." << f.name
                      << ", strnlen(" << bufName << "." << f.name << ", " << f.len << "));\n";
             } else if (f.dtype == 'B') {

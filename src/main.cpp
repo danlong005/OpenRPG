@@ -182,6 +182,22 @@ queryDspfDescs(const std::string& src_text, const std::string& src_dir) {
 #  define RPGC_DSPF_FLAGS " -lncurses"
 #endif
 
+// system() on Windows runs the command via `cmd.exe /C <command>`, which has
+// a documented quirk: unless the command line is *exactly* one quoted
+// executable name, cmd.exe's fallback parsing strips only the very first and
+// very last quote characters in the whole string rather than honoring the
+// individual quoted segments — corrupting a command with multiple quoted
+// paths (like the ones q() produces below) into garbage. Wrapping the whole
+// command in one more pair of quotes makes that stripping remove exactly the
+// wrapper, leaving the real quoting underneath intact.
+static int rpgc_system(const std::string& cmd) {
+#ifdef _WIN32
+    return system(("\"" + cmd + "\"").c_str());
+#else
+    return system(cmd.c_str());
+#endif
+}
+
 // Quote a path for interpolation into a system() command line. Without this,
 // any path containing a space — e.g. the default Windows install location
 // "C:\Program Files\openrpg\runtime" — gets split into separate arguments
@@ -425,7 +441,7 @@ int main(int argc, char* argv[]) {
         }
         std::string cmd = q(rpgc_resolve_cxx()) + " -std=c++17 -I" + q(runtime_dir) + " -I" + q(src_dir) +
                           " -c -o " + q(obj_path) + " " + q(cpp_path);
-        int rc = system(cmd.c_str());
+        int rc = rpgc_system(cmd);
         std::remove(cpp_path.c_str());
         delete program;
         return rc == 0 ? 0 : 1;
@@ -464,7 +480,7 @@ int main(int argc, char* argv[]) {
     }
     cmd += " -o " + q(exe_path) + " " + q(cpp_path);
     for (const auto& obj : extra_objs) cmd += " " + q(obj);
-    int rc = system(cmd.c_str());
+    int rc = rpgc_system(cmd);
 
     if (!keep_cpp) {
         std::remove(cpp_path.c_str());

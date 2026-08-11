@@ -182,6 +182,12 @@ queryDspfDescs(const std::string& src_text, const std::string& src_dir) {
 #  define RPGC_DSPF_FLAGS " -lncurses"
 #endif
 
+// Quote a path for interpolation into a system() command line. Without this,
+// any path containing a space — e.g. the default Windows install location
+// "C:\Program Files\openrpg\runtime" — gets split into separate arguments
+// by cmd.exe/the shell, and the compiler sees a nonsensical fragment.
+static std::string q(const std::string& s) { return "\"" + s + "\""; }
+
 // Resolve which C++ compiler to invoke for the generated code. Prefer the
 // one this rpgc binary was built with (RPGC_CXX) since it's guaranteed to
 // exist in that build's own toolchain, but fall back to the other major
@@ -417,8 +423,8 @@ int main(int argc, char* argv[]) {
             }
             out << cpp_code;
         }
-        std::string cmd = rpgc_resolve_cxx() + " -std=c++17 -I" + runtime_dir + " -I" + src_dir +
-                          " -c -o " + obj_path + " " + cpp_path;
+        std::string cmd = q(rpgc_resolve_cxx()) + " -std=c++17 -I" + q(runtime_dir) + " -I" + q(src_dir) +
+                          " -c -o " + q(obj_path) + " " + q(cpp_path);
         int rc = system(cmd.c_str());
         std::remove(cpp_path.c_str());
         delete program;
@@ -446,7 +452,7 @@ int main(int argc, char* argv[]) {
         out << cpp_code;
     }
 
-    std::string cmd = rpgc_resolve_cxx() + " -std=c++17 -I" + runtime_dir + " -I" + src_dir;
+    std::string cmd = q(rpgc_resolve_cxx()) + " -std=c++17 -I" + q(runtime_dir) + " -I" + q(src_dir);
     if (debug_mode) {
         cmd += " -g -O0";
     }
@@ -456,8 +462,8 @@ int main(int argc, char* argv[]) {
     if (is_dspf) {
         cmd += RPGC_DSPF_FLAGS;
     }
-    cmd += " -o " + exe_path + " " + cpp_path;
-    for (const auto& obj : extra_objs) cmd += " " + obj;
+    cmd += " -o " + q(exe_path) + " " + q(cpp_path);
+    for (const auto& obj : extra_objs) cmd += " " + q(obj);
     int rc = system(cmd.c_str());
 
     if (!keep_cpp) {

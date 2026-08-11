@@ -10,25 +10,27 @@ Pre-built packages are available on the [Releases](../../releases) page.
 
 ### macOS
 
-Download `rpgc-<version>.pkg` from the Releases page. The `unixodbc` library must be present before installing:
+Download `openrpg-<version>.pkg` from the Releases page — it bundles both `rpgc` and `dspfc`. The `unixodbc` library must be present before installing:
 
 ```bash
 brew install unixodbc
 ```
+
+Apple Silicon (arm64) only — GitHub's hosted macOS runners dropped Intel support, so there's no x86_64 build.
 
 If you plan to use SQL or RLA features, see [Database Connectivity — macOS](#macos) for the additional SQLite driver registration step.
 
 Because OpenRPG is not code-signed with an Apple Developer certificate, macOS Gatekeeper will block the installer. Clear the quarantine flag before opening it:
 
 ```bash
-xattr -cr ~/Downloads/rpgc-*.pkg
+xattr -cr ~/Downloads/openrpg-*.pkg
 ```
 
 Then double-click the `.pkg` to install. This puts `rpgc` on your PATH system-wide.
 
 ### Linux
 
-Download the `.deb` (Debian/Ubuntu) or `.rpm` (RHEL/Fedora) from the Releases page. The packages declare their ODBC dependencies, so the package manager will pull them in automatically.
+Download the `.deb` (Debian/Ubuntu) or `.rpm` (RHEL/Fedora) from the Releases page — each is available for both x86_64 (`amd64`/`x86_64`) and ARM64 (`arm64`/`aarch64`, e.g. AWS Graviton, Raspberry Pi). The packages declare their ODBC dependencies, so the package manager will pull them in automatically.
 
 **Debian/Ubuntu:**
 ```bash
@@ -43,7 +45,9 @@ sudo dnf install ./rpgc-*.rpm
 
 ### Windows
 
-Download `openrpg-<version>-windows-x64.exe` from the Releases page and run the installer. It adds `rpgc` to your PATH automatically.
+Download `openrpg-<version>-windows-x64.exe` (x86_64) or `openrpg-<version>-windows-arm64.exe` (Windows on ARM, e.g. Surface Pro X, Snapdragon X devices) from the Releases page and run the installer. It adds `rpgc` to your PATH automatically.
+
+> **ARM64 note:** among the ODBC drivers this guide covers, only Microsoft's ODBC Driver 18 for SQL Server (18.2+) publishes a native ARM64 Windows build. SQLite, PostgreSQL, and MySQL/MariaDB don't — their installers are x86_64-only — so SQL/RLA features against those three aren't available on Windows ARM64 without building a driver from source yourself. See [Database Connectivity](#database-connectivity) below.
 
 ---
 
@@ -146,6 +150,8 @@ sudo dnf install unixODBC unixODBC-devel sqliteodbc
 ```
 
 #### Windows
+
+> x86_64 only — the ch-werner installer has no ARM64 build. On Windows ARM64, SQLite via ODBC isn't available unless you compile the driver yourself.
 
 Download and run the SQLite ODBC installer from [www.ch-werner.de/sqliteodbc](https://www.ch-werner.de/sqliteodbc/) (`sqliteodbc_w64.exe` for 64-bit).
 
@@ -300,6 +306,8 @@ The full source is in [`examples/pg_employees.sqlrpgle`](examples/pg_employees.s
 
 > For RHEL/Fedora, substitute the equivalent `dnf` package name (e.g. `psqlodbc` → `postgresql-odbc`).
 
+> **Windows ARM64:** of the drivers above, only SQL Server's Microsoft ODBC Driver (18.2+) ships a native ARM64 build. SQLite, PostgreSQL, and MySQL/MariaDB are x86_64-only on Windows.
+
 ---
 
 ### Compiling SQL Programs Manually
@@ -392,8 +400,11 @@ brew install flex bison
 # Linux (Debian/Ubuntu)
 sudo apt install flex bison g++
 
-# Windows — use MSYS2 MINGW64 shell
+# Windows (x86_64) — use MSYS2 MINGW64 shell
 pacman -S mingw-w64-x86_64-gcc mingw-w64-x86_64-flex mingw-w64-x86_64-bison make
+
+# Windows (ARM64) — use MSYS2 CLANGARM64 shell (no native gcc for this target)
+pacman -S mingw-w64-clang-aarch64-toolchain flex bison make
 ```
 
 ```bash

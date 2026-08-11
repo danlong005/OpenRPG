@@ -184,3 +184,102 @@ jobs:
           ODBC_FLAGS="-lodbc32" \
           CXX=g++ \
           bash tests/run_tests.sh
+
+  # ── Linux ARM64 .deb ─────────────────────────────────────────────────────
+  smoke-deb-arm64:
+    name: Linux ARM64 (.deb)
+    runs-on: ubuntu-24.04-arm
+    needs: check
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install ODBC dependencies
+        run: sudo apt-get install -y unixodbc unixodbc-dev libsqliteodbc
+
+      - name: Download release package
+        run: gh release download "${{ needs.check.outputs.tag }}" --pattern "rpgc_*.deb"
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Install package
+        run: sudo dpkg -i rpgc_*.deb
+
+      - name: Run tests
+        run: |
+          RPGC=rpgc \
+          RUNTIME_DIR=/usr/share/rpgc/runtime \
+          ODBC_FLAGS="-lodbc" \
+          bash tests/run_tests.sh
+
+  # ── Linux ARM64 .rpm ─────────────────────────────────────────────────────
+  smoke-rpm-arm64:
+    name: Linux ARM64 (.rpm)
+    runs-on: ubuntu-24.04-arm
+    container: fedora:latest
+    needs: check
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install ODBC dependencies
+        run: |
+          dnf install -y unixODBC unixODBC-devel sqliteodbc diffutils gh clang
+
+      - name: Download release package
+        run: gh release download "${{ needs.check.outputs.tag }}" --repo "${{ github.repository }}" --pattern "rpgc-*.rpm"
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Install package
+        run: dnf install -y ./rpgc-*.rpm
+
+      - name: Run tests
+        run: |
+          RPGC=rpgc \
+          RUNTIME_DIR=/usr/share/rpgc/runtime \
+          ODBC_FLAGS="-lodbc" \
+          CXX=clang++ \
+          bash tests/run_tests.sh
+
+  # ── Windows ARM64 .exe ───────────────────────────────────────────────────
+  # No upstream ARM64 SQLite ODBC driver exists, so SQL/RLA tests are
+  # skipped here rather than failed — see tests/run_tests.sh SKIP_SQL.
+  smoke-windows-arm64:
+    name: Windows ARM64 (.exe)
+    runs-on: windows-11-arm
+    needs: check
+
+    defaults:
+      run:
+        shell: msys2 {0}
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: msys2/setup-msys2@v2.31.1
+        with:
+          msystem: CLANGARM64
+          update: true
+          install: mingw-w64-clang-aarch64-toolchain diffutils
+
+      - name: Download release installer
+        shell: pwsh
+        run: gh release download "${{ needs.check.outputs.tag }}" --pattern "openrpg-*-windows-arm64.exe"
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Install OpenRPG
+        shell: pwsh
+        run: |
+          $exe = Get-Item "openrpg-*-windows-arm64.exe"
+          # /D overrides install dir — use a space-free path so MSYS2 -I flags work
+          Start-Process -Wait -FilePath $exe.FullName -ArgumentList "/S /D=C:\openrpg"
+
+      - name: Run tests
+        run: |
+          export PATH="/c/openrpg:$PATH"
+          RPGC=rpgc \
+          RUNTIME_DIR="/c/openrpg/runtime" \
+          SKIP_SQL=1 \
+          bash tests/run_tests.sh

@@ -109,6 +109,109 @@ jobs:
             dspfc_*.deb
             dspfc-*.rpm
 
+  # ── Linux ARM64: build .deb and .rpm ────────────────────────────────────
+  build-linux-arm64:
+    runs-on: ubuntu-24.04-arm
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: recursive
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            flex bison g++ \
+            unixodbc-dev unixodbc libsqliteodbc \
+            ruby ruby-dev build-essential
+          sudo gem install --no-document fpm
+
+      - name: Build
+        run: make PREFIX=/usr
+
+      - name: Build OpenDSPF
+        run: make -C OpenDSPF
+
+      - name: Run OpenRPG test suite
+        env:
+          ODBC_FLAGS: -lodbc
+        run: make test
+
+      - name: Run OpenDSPF test suite
+        run: make -C OpenDSPF test
+
+      - name: Stage install
+        run: sudo make install PREFIX=/usr DESTDIR=/tmp/rpgc-root
+
+      - name: Stage OpenDSPF install
+        run: sudo make -C OpenDSPF install PREFIX=/usr DESTDIR=/tmp/dspfc-root
+
+      # fpm auto-detects the runner's architecture (arm64/aarch64) and
+      # includes it in the output filename, so these never collide with
+      # the x86_64 packages from build-linux in the same release.
+      - name: Package .deb
+        run: |
+          VERSION=${GITHUB_REF_NAME#v}
+          fpm -s dir -t deb \
+              -n rpgc -v "$VERSION" \
+              --description "RPG IV compiler — run RPG programs on Linux without IBM i" \
+              --url "https://github.com/${{ github.repository }}" \
+              --maintainer "${{ github.repository_owner }}" \
+              --license MIT \
+              --depends unixodbc \
+              --depends unixodbc-dev \
+              --deb-recommends dspfc \
+              -C /tmp/rpgc-root \
+              usr/
+
+      - name: Package .rpm
+        run: |
+          VERSION=${GITHUB_REF_NAME#v}
+          fpm -s dir -t rpm \
+              -n rpgc -v "$VERSION" \
+              --description "RPG IV compiler — run RPG programs on Linux without IBM i" \
+              --url "https://github.com/${{ github.repository }}" \
+              --maintainer "${{ github.repository_owner }}" \
+              --license MIT \
+              --depends unixODBC \
+              --depends unixODBC-devel \
+              -C /tmp/rpgc-root \
+              usr/
+
+      - name: Package dspfc .deb
+        run: |
+          VERSION=${GITHUB_REF_NAME#v}
+          fpm -s dir -t deb \
+              -n dspfc -v "$VERSION" \
+              --description "Display file compiler for OpenRPG interactive screen programs" \
+              --url "https://github.com/${{ github.repository }}" \
+              --maintainer "${{ github.repository_owner }}" \
+              --license MIT \
+              -C /tmp/dspfc-root \
+              usr/
+
+      - name: Package dspfc .rpm
+        run: |
+          VERSION=${GITHUB_REF_NAME#v}
+          fpm -s dir -t rpm \
+              -n dspfc -v "$VERSION" \
+              --description "Display file compiler for OpenRPG interactive screen programs" \
+              --url "https://github.com/${{ github.repository }}" \
+              --maintainer "${{ github.repository_owner }}" \
+              --license MIT \
+              -C /tmp/dspfc-root \
+              usr/
+
+      - name: Upload packages to release
+        uses: softprops/action-gh-release@v3
+        with:
+          files: |
+            rpgc_*.deb
+            rpgc-*.rpm
+            dspfc_*.deb
+            dspfc-*.rpm
+
   # ── macOS: build .dmg ───────────────────────────────────────────────────
   build-macos:
     runs-on: macos-latest
@@ -289,3 +392,68 @@ jobs:
         uses: softprops/action-gh-release@v3
         with:
           files: installer/openrpg-*-windows-x64.exe
+
+  # ── Windows ARM64: build NSIS installer ──────────────────────────────────
+  # No upstream ARM64 build of the SQLite ODBC driver exists, so the SQL/RLA
+  # test suite is skipped here (see tests/run_tests.sh SKIP_SQL) rather than
+  # installing a driver that doesn't exist for this platform.
+  build-windows-arm64:
+    runs-on: windows-11-arm
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: recursive
+
+      - uses: msys2/setup-msys2@v2.31.1
+        with:
+          msystem: CLANGARM64
+          update: true
+          install: >-
+            mingw-w64-clang-aarch64-toolchain
+            flex
+            bison
+            make
+            diffutils
+
+      - name: Build
+        shell: msys2 {0}
+        run: make && make -C OpenDSPF
+
+      - name: Run OpenRPG test suite
+        shell: msys2 {0}
+        env:
+          SKIP_SQL: "1"
+          ODBC_FLAGS: -lodbc32
+        run: make test
+
+      - name: Run OpenDSPF test suite
+        shell: msys2 {0}
+        run: make -C OpenDSPF test
+
+      - name: Install NSIS
+        shell: pwsh
+        run: choco install nsis --no-progress -y
+
+      - name: Stage installer files
+        shell: pwsh
+        run: |
+          Copy-Item rpgc.exe installer\ -ErrorAction Stop
+          Copy-Item runtime\*.h installer\ -ErrorAction Stop
+          Copy-Item OpenDSPF\dspfc.exe installer\ -ErrorAction Stop
+          Copy-Item OpenDSPF\runtime\rpg_dspf_runtime.h installer\ -ErrorAction Stop
+
+      - name: Build installer
+        shell: pwsh
+        run: |
+          $VERSION = "${{ github.ref_name }}".TrimStart("v")
+          & "C:\Program Files (x86)\NSIS\makensis.exe" /DVERSION=$VERSION installer\openrpg.nsi
+          # The .nsi hardcodes "-windows-x64" in its OutFile; rename rather
+          # than parameterize the shared script since the payload (rpgc.exe/
+          # dspfc.exe) is the only thing that's actually arch-specific here.
+          Rename-Item "installer\openrpg-$VERSION-windows-x64.exe" "openrpg-$VERSION-windows-arm64.exe"
+
+      - name: Upload installer
+        uses: softprops/action-gh-release@v3
+        with:
+          files: installer/openrpg-*-windows-arm64.exe

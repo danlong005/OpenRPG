@@ -340,6 +340,7 @@ jobs:
             bison
             make
             diffutils
+            git
 
       - name: Install SQLite ODBC driver
         shell: pwsh
@@ -415,6 +416,7 @@ jobs:
             bison
             make
             diffutils
+            git
 
       - name: Build
         shell: msys2 {0}

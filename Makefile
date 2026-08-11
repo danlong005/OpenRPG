@@ -57,7 +57,7 @@ OBJS := $(BUILDDIR)/lexer.o \
         $(BUILDDIR)/extdesc.o \
         $(BUILDDIR)/main.o
 
-VERSION := $(shell git describe --tags --always 2>/dev/null || echo "dev")
+VERSION ?= $(shell git describe --tags --always 2>/dev/null || echo "dev")
 CXXFLAGS += -DRPGC_VERSION='"$(VERSION)"'
 
 PREFIX  ?= /usr/local

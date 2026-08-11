@@ -162,7 +162,14 @@ queryDspfDescs(const std::string& src_text, const std::string& src_dir) {
 #endif
 
 #ifdef _WIN32
-#  define RPGC_CXX       "g++"
+   // MSYS2's CLANGARM64 toolchain (used to build rpgc.exe for Windows ARM64)
+   // has no g++ at all — invoke whichever compiler actually built this
+   // binary so the generated C++ is compiled with a toolchain that exists.
+#  if defined(__clang__)
+#    define RPGC_CXX     "clang++"
+#  else
+#    define RPGC_CXX     "g++"
+#  endif
 #  define RPGC_ODBC_FLAGS " -lodbc32"
 #  define RPGC_DSPF_FLAGS " -lpdcurses"
 #elif defined(__APPLE__)

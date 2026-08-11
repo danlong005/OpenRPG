@@ -286,6 +286,111 @@ static bool dspf__isProtected(const DspfJVal& rec) {
     return false;
 }
 
+// =============================================================================
+// Field validation — VALUES / RANGE / COMP keywords
+// =============================================================================
+
+static std::string dspf__trimSpaces(const std::string& s) {
+    size_t a = s.find_first_not_of(' ');
+    if (a == std::string::npos) return "";
+    size_t b = s.find_last_not_of(' ');
+    return s.substr(a, b - a + 1);
+}
+
+// Splits a keyword's parenthesized content into whitespace-separated tokens,
+// honoring single-quoted strings (with '' escaping) as one token each —
+// e.g. "'A' 'B' 'C'" -> {"A","B","C"}, "1 100" -> {"1","100"}.
+static std::vector<std::string> dspf__splitValueList(const std::string& inner) {
+    std::vector<std::string> out;
+    size_t i = 0;
+    while (i < inner.size()) {
+        while (i < inner.size() && inner[i] == ' ') i++;
+        if (i >= inner.size()) break;
+        if (inner[i] == '\'') {
+            std::string tok;
+            size_t j = i + 1;
+            while (j < inner.size()) {
+                if (inner[j] == '\'' && j + 1 < inner.size() && inner[j+1] == '\'') { tok += '\''; j += 2; }
+                else if (inner[j] == '\'') { j++; break; }
+                else { tok += inner[j]; j++; }
+            }
+            out.push_back(tok);
+            i = j;
+        } else {
+            size_t j = i;
+            while (j < inner.size() && inner[j] != ' ') j++;
+            out.push_back(inner.substr(i, j - i));
+            i = j;
+        }
+    }
+    return out;
+}
+
+// Numeric comparison when both sides parse fully as numbers; falls back to
+// lexicographic string comparison otherwise (character fields, VALUES lists
+// of non-numeric codes, etc).
+static int dspf__compareValues(const std::string& a, const std::string& b) {
+    char* enda = nullptr; char* endb = nullptr;
+    double da = strtod(a.c_str(), &enda);
+    double db = strtod(b.c_str(), &endb);
+    bool numA = enda != a.c_str() && *enda == '\0' && !a.empty();
+    bool numB = endb != b.c_str() && *endb == '\0' && !b.empty();
+    if (numA && numB) return (da < db) ? -1 : (da > db) ? 1 : 0;
+    int c = a.compare(b);
+    return (c < 0) ? -1 : (c > 0) ? 1 : 0;
+}
+
+// Validates a submitted field value against its VALUES/RANGE/COMP keywords
+// (IBM i DDS field validation, enforced here since dspfc has no access to
+// the caller's runtime once the buffer is returned). Returns an empty
+// string if valid, or a user-facing error message if not.
+static std::string dspf__validateField(const DspfJVal& field, const std::string& rawVal) {
+    std::string val = dspf__trimSpaces(rawVal);
+    const std::string& name = field["name"].str();
+    const DspfJVal& kw = field["keywords"];
+
+    for (size_t i = 0; i < kw.size(); i++) {
+        const std::string& k = kw[i].str();
+
+        if (k.rfind("VALUES(", 0) == 0) {
+            std::string inner = k.substr(7, k.size() > 8 ? k.size() - 8 : 0);
+            std::vector<std::string> allowed = dspf__splitValueList(inner);
+            bool ok = false;
+            for (auto& a : allowed) {
+                if (dspf__compareValues(val, a) == 0) { ok = true; break; }
+            }
+            if (!ok) return name + ": value not valid";
+        } else if (k.rfind("RANGE(", 0) == 0) {
+            std::string inner = k.substr(6, k.size() > 7 ? k.size() - 7 : 0);
+            std::vector<std::string> bounds = dspf__splitValueList(inner);
+            if (bounds.size() == 2 &&
+                (dspf__compareValues(val, bounds[0]) < 0 ||
+                 dspf__compareValues(val, bounds[1]) > 0)) {
+                return name + ": value not in range";
+            }
+        } else if (k.rfind("COMP(", 0) == 0) {
+            std::string inner = k.substr(5, k.size() > 6 ? k.size() - 6 : 0);
+            std::vector<std::string> parts = dspf__splitValueList(inner);
+            if (parts.size() == 2) {
+                std::string op = parts[0];
+                for (auto& c : op) c = (char)toupper((unsigned char)c);
+                int cmp = dspf__compareValues(val, parts[1]);
+                bool ok = true;
+                if      (op == "EQ") ok = (cmp == 0);
+                else if (op == "NE") ok = (cmp != 0);
+                else if (op == "LT") ok = (cmp <  0);
+                else if (op == "NL") ok = (cmp >= 0);
+                else if (op == "LE") ok = (cmp <= 0);
+                else if (op == "GT") ok = (cmp >  0);
+                else if (op == "NG") ok = (cmp <= 0);
+                else if (op == "GE") ok = (cmp >= 0);
+                if (!ok) return name + ": value fails comparison";
+            }
+        }
+    }
+    return "";
+}
+
 // Extract WINDOW parameters from a record. Returns true if the record is a window record.
 static bool dspf__isWindow(const DspfJVal& rec, int& winRow, int& winCol, int& winH, int& winW) {
     if (!rec.has("window")) return false;
@@ -710,6 +815,23 @@ static int dspf__inputLoop(const DspfJVal& rec,
         }
 
         if (ch == '\n' || ch == '\r' || ch == KEY_ENTER) {
+            int badIdx = -1;
+            std::string errMsg;
+            for (size_t i = 0; i < ef.size(); i++) {
+                std::string msg = dspf__validateField(fields[ef[i].recIdx], ef[i].val);
+                if (!msg.empty()) { badIdx = (int)i; errMsg = msg; break; }
+            }
+            if (badIdx >= 0) {
+                beep();
+                if (LINES > 24) {
+                    attron(A_REVERSE);
+                    mvprintw(24, 0, "%-*s", COLS, errMsg.c_str());
+                    attroff(A_REVERSE);
+                    refresh();
+                }
+                cur = badIdx;
+                continue;
+            }
             for (auto& f : ef) vals[f.name] = f.val;
             return 0;
         }
@@ -746,7 +868,7 @@ static int dspf__inputLoop(const DspfJVal& rec,
             wattron(win, COLOR_PAIR(pair) | ext | A_REVERSE);
             mvwprintw(win, f.row, f.col, "%-*s", f.len, f.val.c_str());
             wattroff(win, COLOR_PAIR(pair) | ext | A_REVERSE);
-            if ((int)f.val.size() >= f.len) {
+            if ((int)f.val.size() >= f.len && dspf__hasRecKw(fields[f.recIdx], "AUTO")) {
                 cur = (cur + 1) % (int)ef.size();
                 wrefresh(win);
             }

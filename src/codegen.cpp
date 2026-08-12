@@ -3749,6 +3749,49 @@ void CodeGen::visit(WriteStmt& node) {
 }
 
 void CodeGen::visit(UpdateStmt& node) {
+    // Check if this is an UPDATE to a WORKSTN (display file) subfile
+    // record format. Unlike DISK/RLA UPDATE (which needs a key), this
+    // targets whatever row READC most recently returned — dspf_update()
+    // tracks that implicitly, matching real DDS's "current record"
+    // semantics. No indicator/key handling needed: UPDATE is silent.
+    {
+        DclF* dclf = nullptr;
+        std::string fname;
+        for (auto& [fn, df] : file_defs_) {
+            if (df->usage != "WORKSTN") continue;
+            auto dit = dspf_descs_.find(fn);
+            if (dit == dspf_descs_.end()) continue;
+            if (dit->second.recIdx.count(node.filename)) { dclf = df; fname = fn; break; }
+        }
+        if (dclf) {
+            const DspfFileInfo* dfi = dspf_descs_.count(fname) ? &dspf_descs_[fname] : nullptr;
+            const DspfRecInfo*  rci = nullptr;
+            if (dfi) {
+                auto rit = dfi->recIdx.find(node.filename);
+                if (rit != dfi->recIdx.end()) rci = &dfi->records[rit->second];
+            }
+            std::string bufName = node.filename + "_buf_";
+            emitIndent(); out_ << "{\n"; indent_++;
+            if (rci) {
+                for (const DspfFldInfo& f : rci->fields) {
+                    emitIndent();
+                    if ((f.dtype == 'A' || f.dtype == 'L' || f.dtype == 'T' || f.dtype == 'Z')) {
+                        out_ << "strncpy(" << bufName << "." << f.name << ", "
+                             << f.rpgName() << ".c_str(), " << f.len << "); "
+                             << bufName << "." << f.name << "[" << f.len << "] = '\\0';\n";
+                    } else {
+                        out_ << bufName << "." << f.name << " = " << f.rpgName() << ";\n";
+                    }
+                }
+            }
+            emitIndent(); out_ << "dspf_set_indicators(rpg_indicators, 100);\n";
+            emitIndent(); out_ << "dspf_update(\"" << node.filename << "\", &" << bufName << ");\n";
+            indent_--; emitIndent(); out_ << "}\n";
+            return;
+        }
+    }
+
+    // Disk / RLA UPDATE
     auto it = ext_file_descs_.find(node.filename);
     if (it == ext_file_descs_.end()) {
         emitIndent(); out_ << "// UPDATE " << node.filename << " — no schema\n"; return;

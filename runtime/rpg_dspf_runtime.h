@@ -305,6 +305,35 @@ static bool dspf__isProtected(const DspfJVal& rec) {
     return false;
 }
 
+// SFLNXTCHG (record-level, on the SFL record): true when in effect for
+// *this* UPDATE call — bare SFLNXTCHG means always; SFLNXTCHG(*INxx)
+// means only when that indicator is on (the real-world case: the program
+// turns it on right before an UPDATE that should force-remark a row).
+static bool dspf__sflNxtChgActive(const DspfJVal& rec) {
+    const DspfJVal& kw = rec["keywords"];
+    for (size_t i = 0; i < kw.size(); i++) {
+        const std::string& k = kw[i].str();
+        if (k == "SFLNXTCHG") return true;
+        if (k.rfind("SFLNXTCHG(", 0) == 0) {
+            std::string inner = k.substr(10, k.size() > 11 ? k.size() - 11 : 0);
+            bool neg = (!inner.empty() && (inner[0]=='N' || inner[0]=='n'));
+            if (neg) inner = inner.substr(1);
+            int ind = 0;
+            if (inner.rfind("*IN", 0) == 0) {
+                try { ind = std::stoi(inner.substr(3)); } catch (...) {}
+            } else {
+                try { ind = std::stoi(inner); } catch (...) {}
+            }
+            if (ind >= 0 && ind < 100) {
+                bool on = g_dspf_indicators[ind];
+                return neg ? !on : on;
+            }
+            return true;
+        }
+    }
+    return false;
+}
+
 // =============================================================================
 // ERRSFL — message subfile for validation errors
 // =============================================================================
@@ -1110,6 +1139,20 @@ static std::map<std::string, int> g_dspf_sfl_page;   // sflctl name → 0-based 
 // than silently vanish (this runtime has no MDT-reset-on-rewrite model).
 static std::map<std::string, std::set<int>> g_dspf_sfl_changed;
 
+// The RRN most recently returned by dspf_readc() for a given SFL record —
+// mirrors real DDS's implicit "current record" pointer, which UPDATE
+// targets without taking an RRN parameter itself.
+static std::map<std::string, int> g_dspf_sfl_current_rrn;
+
+// Rows UPDATE+SFLNXTCHG force-marked as changed, staged separately from
+// g_dspf_sfl_changed — real DDS makes such a row visible to READC only
+// starting the *next* redisplay, not immediately within the same READC
+// loop that called UPDATE (that loop is what's processing the record
+// SFLNXTCHG just remarked; folding it straight back into the queue it's
+// currently draining would spin forever). Merged into g_dspf_sfl_changed
+// at the top of the next dspf__sflExfmt call.
+static std::map<std::string, std::set<int>> g_dspf_sfl_pending_nxtchg;
+
 // A single editable cell within a SFLCTL screen — either one of the
 // control record's own input-capable fields (rowIdx == -1) or one
 // input-capable field within a currently-visible subfile row. Unified so
@@ -1131,6 +1174,14 @@ struct DspfSflEditField {
 static int dspf__sflExfmt(const char* ctlName, const DspfJVal& ctl, void* ctlBuf) {
     std::string sflName = ctl["sfl"].str();
     int sflpag = ctl["sflpag"].num(); if (sflpag <= 0) sflpag = 10;
+
+    // Rows UPDATE+SFLNXTCHG staged since the last redisplay become visible
+    // to READC starting now — this is that boundary.
+    {
+        auto& pending = g_dspf_sfl_pending_nxtchg[sflName];
+        for (int rrn : pending) g_dspf_sfl_changed[sflName].insert(rrn);
+        pending.clear();
+    }
 
     // Locate the SFL record definition in the global descriptor
     const DspfJVal* sflRec = nullptr;
@@ -1590,7 +1641,27 @@ inline int dspf_readc(const char* recname, void* recbuf) {
     auto& rows = g_dspf_subfiles[recname];
     if (rrn < 1 || rrn > (int)rows.size()) return 0;
     dspf__applyFields(*rec, rows[rrn - 1].fields, recbuf);
+    g_dspf_sfl_current_rrn[recname] = rrn; // UPDATE's implicit target
     return rrn;
+}
+
+// UPDATE recordname — rewrites the subfile row most recently returned by
+// READC for this record with the program's current buffer values. If
+// SFLNXTCHG is in effect for this call (bare, or its conditioning
+// indicator is on), the row is force-remarked as changed even though the
+// operator didn't touch it, so the next READC pass (after the subfile is
+// redisplayed) returns it again — the real-world "reject a program-
+// detected error and make the operator look at it again" loop.
+inline void dspf_update(const char* recname, const void* recbuf) {
+    const DspfJVal* rec = dspf__findRec(recname);
+    if (!rec) return;
+    auto rit = g_dspf_sfl_current_rrn.find(recname);
+    if (rit == g_dspf_sfl_current_rrn.end()) return; // nothing READC'd yet
+    int rrn = rit->second;
+    auto& rows = g_dspf_subfiles[recname];
+    if (rrn < 1 || rrn > (int)rows.size()) return;
+    rows[rrn - 1].fields = dspf__extractFields(*rec, recbuf);
+    if (dspf__sflNxtChgActive(*rec)) g_dspf_sfl_pending_nxtchg[recname].insert(rrn);
 }
 
 inline void dspf_close() {

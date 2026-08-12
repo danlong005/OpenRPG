@@ -792,13 +792,21 @@ static void dspf__renderScreen(const DspfJVal& rec,
     }
     if (win != stdscr) dspf__drawWindowBorder(win, rec);
 
-    // Literals
+    // Literals — dspf__colorPair/dspf__fieldAttrs just read a "keywords"
+    // array, so they work on a literal's JSON shape as-is; COLOR(...)/
+    // DSPATR(...) already parsed onto literals identically to fields
+    // (LITERAL reuses the same generic keyword grammar as FIELD), they
+    // just were never applied here.
     const DspfJVal& lits = rec["literals"];
     for (size_t i = 0; i < lits.size(); i++) {
         if (!dspf__condPass(lits[i])) continue;
         int row = lits[i]["row"].num() - 1 - rowOff;
         int col = lits[i]["col"].num() - 1 - colOff;
+        int pair   = dspf__colorPair(lits[i]);
+        attr_t ext = dspf__fieldAttrs(lits[i]);
+        wattron(win, COLOR_PAIR(pair) | ext);
         mvwprintw(win, row, col, "%s", lits[i]["text"].str().c_str());
+        wattroff(win, COLOR_PAIR(pair) | ext);
     }
 
     // COLHDG('text'): implicit field label directly above the field, one

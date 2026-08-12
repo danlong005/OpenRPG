@@ -113,6 +113,10 @@ static rpg::DspfFileInfo loadDspfDesc(const std::string& path, const std::string
                 fld.name  = dspfd_str(fSrc, "name");
                 fld.alias = dspfd_keywordArg(fSrc, "ALIAS");
                 for (auto& c : fld.alias) c = (char)toupper((unsigned char)c);
+                fld.dftval = dspfd_keywordArg(fSrc, "DFTVAL");
+                if (fld.dftval.size() >= 2 && fld.dftval.front() == '\'' && fld.dftval.back() == '\'') {
+                    fld.dftval = fld.dftval.substr(1, fld.dftval.size() - 2);
+                }
                 std::string type = dspfd_str(fSrc, "type");
                 fld.dtype = type.empty() ? 'A' : (char)toupper((unsigned char)type[0]);
                 fld.len   = dspfd_int(fSrc, "len");

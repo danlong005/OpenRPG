@@ -46,6 +46,26 @@ static std::string stripOuterParens(const std::string& s) {
     return s;
 }
 
+// Escapes a raw string for embedding as a C++ string literal — same
+// escaping StringLiteral's own codegen uses, factored out here so
+// DFTVAL('text') can produce an identical literal for a flat variable's
+// initializer.
+static std::string cppEscape(const std::string& s) {
+    std::ostringstream o;
+    for (unsigned char c : s) {
+        if (c == '"')       o << "\\\"";
+        else if (c == '\\') o << "\\\\";
+        else if (c == '\n') o << "\\n";
+        else if (c == '\r') o << "\\r";
+        else if (c == '\t') o << "\\t";
+        else if (c < 0x20 || c == 0x7f)
+            o << "\\x" << std::hex << std::setw(2) << std::setfill('0')
+              << static_cast<int>(c) << std::dec;
+        else                o << static_cast<char>(c);
+    }
+    return o.str();
+}
+
 void CodeGen::emitLineDirective(int line) {
     if (debug_mode_ && line > 0 && !source_file_.empty()) {
         out_ << "#line " << line << " \"" << source_file_ << "\"\n";
@@ -1067,13 +1087,22 @@ void CodeGen::visit(DclF& node) {
                 // needs to be readable after EXFMT to know which row was
                 // selected).
                 emitIndent();
+                // DFTVAL('text') seeds the field's initial value — its
+                // displayed content before the program ever sets it, on
+                // both a normal record and (since a subfile row's stored
+                // fields come from whatever the flat var held at WRITE
+                // time) a subfile row too.
                 if ((f.dtype == 'A' || f.dtype == 'L' || f.dtype == 'T' || f.dtype == 'Z')) {
-                    out_ << "std::string " << f.rpgName() << "; "
-                         << "// " << rec.name << "." << f.name << "\n";
+                    out_ << "std::string " << f.rpgName() << " = \"" << cppEscape(f.dftval)
+                         << "\"; // " << rec.name << "." << f.name << "\n";
                 } else if (f.dtype == 'B') {
-                    out_ << "long " << f.rpgName() << " = 0;\n";
+                    long dv = 0;
+                    if (!f.dftval.empty()) { try { dv = std::stol(f.dftval); } catch (...) {} }
+                    out_ << "long " << f.rpgName() << " = " << dv << ";\n";
                 } else {
-                    out_ << "double " << f.rpgName() << " = 0.0;\n";
+                    double dv = 0.0;
+                    if (!f.dftval.empty()) { try { dv = std::stod(f.dftval); } catch (...) {} }
+                    out_ << "double " << f.rpgName() << " = " << dv << ";\n";
                 }
             }
         }

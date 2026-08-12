@@ -17,6 +17,8 @@ struct DspfFldInfo {
     std::string name;
     std::string alias; // ALIAS(name) keyword — RPG-visible variable name,
                         // if different from the DDS field name itself
+    std::string dftval; // DFTVAL('text') keyword — the flat RPG variable's
+                         // initial value (quotes already stripped)
     char  dtype = 'A'; // A=char, S=zoned, P=packed, B=binary, F=float
     int   len   = 1;
     int   dec   = 0;

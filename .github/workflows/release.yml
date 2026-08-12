@@ -374,7 +374,14 @@ jobs:
 
       - name: Install NSIS
         shell: pwsh
-        run: choco install nsis --no-progress -y
+        run: |
+          for ($i = 1; $i -le 5; $i++) {
+            choco install nsis --no-progress -y
+            if ($LASTEXITCODE -eq 0) { break }
+            if ($i -eq 5) { throw "choco install nsis failed after 5 attempts" }
+            Write-Host "choco install nsis failed (attempt $i/5), retrying in 30s..."
+            Start-Sleep -Seconds 30
+          }
 
       # Bundled compiler: end users shouldn't need MSYS2/MSVC/anything else
       # installed just to run rpgc. Pinned to a specific llvm-mingw release
@@ -457,7 +464,14 @@ jobs:
 
       - name: Install NSIS
         shell: pwsh
-        run: choco install nsis --no-progress -y
+        run: |
+          for ($i = 1; $i -le 5; $i++) {
+            choco install nsis --no-progress -y
+            if ($LASTEXITCODE -eq 0) { break }
+            if ($i -eq 5) { throw "choco install nsis failed after 5 attempts" }
+            Write-Host "choco install nsis failed (attempt $i/5), retrying in 30s..."
+            Start-Sleep -Seconds 30
+          }
 
       # Bundled compiler: see the equivalent step in build-windows above for
       # why this happens in pwsh (gh) followed by msys2 (unzip/find/make).

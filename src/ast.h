@@ -150,6 +150,16 @@ public:
     void accept(ASTVisitor& visitor) override;
 };
 
+// READC recordname; — subfile-only: pops the next operator-modified
+// subfile row (ascending relative record number) into recordname's own
+// buffer. %EOF(recordname) reports when there are none left.
+class ReadcStmt : public Statement {
+public:
+    std::string recordname;
+    explicit ReadcStmt(std::string recordname);
+    void accept(ASTVisitor& visitor) override;
+};
+
 class ReadeStmt : public Statement {
 public:
     std::vector<std::unique_ptr<Expression>> keys;
@@ -790,6 +800,7 @@ public:
     virtual void visit(CallpStmt& node) = 0;
     virtual void visit(ChainStmt& node) = 0;
     virtual void visit(ReadStmt& node) = 0;
+    virtual void visit(ReadcStmt& node) = 0;
     virtual void visit(ReadeStmt& node) = 0;
     virtual void visit(ReadpStmt& node) = 0;
     virtual void visit(ReadpeStmt& node) = 0;

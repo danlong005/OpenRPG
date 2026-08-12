@@ -108,6 +108,7 @@ public:
     void visit(CallpStmt& node) override;
     void visit(ChainStmt& node) override;
     void visit(ReadStmt& node) override;
+    void visit(ReadcStmt& node) override;
     void visit(ReadeStmt& node) override;
     void visit(ReadpStmt& node) override;
     void visit(ReadpeStmt& node) override;

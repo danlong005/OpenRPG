@@ -203,6 +203,9 @@ ReadStmt::ReadStmt(std::string f, std::string e)
     : filename(std::move(f)), extender(std::move(e)) {}
 void ReadStmt::accept(ASTVisitor& v) { v.visit(*this); }
 
+ReadcStmt::ReadcStmt(std::string r) : recordname(std::move(r)) {}
+void ReadcStmt::accept(ASTVisitor& v) { v.visit(*this); }
+
 ReadeStmt::ReadeStmt(std::vector<std::unique_ptr<Expression>> k, std::string f, std::string e)
     : keys(std::move(k)), filename(std::move(f)), extender(std::move(e)) {}
 void ReadeStmt::accept(ASTVisitor& v) { v.visit(*this); }

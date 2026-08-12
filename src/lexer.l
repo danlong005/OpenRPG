@@ -252,6 +252,7 @@ static void parse_ctlopt(const char* text) {
     return KW_READ_EXT;
 }
 "EXFMT"             { return KW_EXFMT; }
+"READC"             { return KW_READC; }
 "READ"              { return KW_READ; }
 "CHAIN("[EHMNRP]+")" {
     char *p = strchr(yytext, '(') + 1;

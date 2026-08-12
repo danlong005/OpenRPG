@@ -1058,6 +1058,9 @@ void CodeGen::visit(DclF& node) {
             emitIndent();
             out_ << rec.name << "_buf " << rec.name << "_buf_ = {}; "
                  << "// record format buffer\n";
+            emitIndent();
+            out_ << "bool " << rec.name << "_eof = false; "
+                 << "// %EOF(" << rec.name << ") — meaningful after READC\n";
             for (const DspfFldInfo& f : rec.fields) {
                 if (f.io == 'H') continue;
                 emitIndent();
@@ -3526,6 +3529,54 @@ void CodeGen::visit(ReadStmt& node) {
     emitIndent(); out_ << node.filename << "_eof   = (__rla_rc == SQL_NO_DATA);\n";
     emitIndent(); out_ << node.filename << "_found = (__rla_rc == SQL_SUCCESS || __rla_rc == SQL_SUCCESS_WITH_INFO);\n";
     emitRlaCopyBack(node.filename, desc, node.filename + "_scroll", "__rla_rc");
+    indent_--; emitIndent(); out_ << "}\n";
+}
+
+void CodeGen::visit(ReadcStmt& node) {
+    // READC only makes sense against a WORKSTN subfile record format —
+    // find it the same way the WORKSTN branch of READ does.
+    DclF* dclf = nullptr;
+    std::string fname;
+    for (auto& [fn, df] : file_defs_) {
+        if (df->usage != "WORKSTN") continue;
+        auto dit = dspf_descs_.find(fn);
+        if (dit == dspf_descs_.end()) continue;
+        if (dit->second.recIdx.count(node.recordname)) { dclf = df; fname = fn; break; }
+    }
+    if (!dclf) {
+        emitIndent(); out_ << "// READC " << node.recordname << " — no WORKSTN record format found\n";
+        return;
+    }
+
+    const DspfFileInfo* dfi = dspf_descs_.count(fname) ? &dspf_descs_[fname] : nullptr;
+    const DspfRecInfo*  rci = nullptr;
+    if (dfi) {
+        auto rit = dfi->recIdx.find(node.recordname);
+        if (rit != dfi->recIdx.end()) rci = &dfi->records[rit->second];
+    }
+    std::string bufName = node.recordname + "_buf_";
+    emitIndent(); out_ << "{\n"; indent_++;
+    emitIndent(); out_ << "int __dspf_rrn = dspf_readc(\"" << node.recordname
+                       << "\", &" << bufName << ");\n";
+    emitIndent(); out_ << node.recordname << "_eof = (__dspf_rrn == 0);\n";
+    // Unlike a normal EXFMT/READ copy-back (input/both fields only — the
+    // program already knows what it output), READC copies every
+    // non-hidden field: the row's OUTPUT fields (e.g. a key like CUSTNO)
+    // are how the program identifies *which* row's OPTION was touched.
+    if (rci) {
+        emitIndent(); out_ << "if (__dspf_rrn != 0) {\n"; indent_++;
+        for (const DspfFldInfo& f : rci->fields) {
+            if (f.io == 'H') continue;
+            emitIndent();
+            if ((f.dtype == 'A' || f.dtype == 'L' || f.dtype == 'T' || f.dtype == 'Z')) {
+                out_ << f.rpgName() << " = std::string(" << bufName << "." << f.name
+                     << ", strnlen(" << bufName << "." << f.name << ", " << f.len << "));\n";
+            } else {
+                out_ << f.rpgName() << " = " << bufName << "." << f.name << ";\n";
+            }
+        }
+        indent_--; emitIndent(); out_ << "}\n";
+    }
     indent_--; emitIndent(); out_ << "}\n";
 }
 

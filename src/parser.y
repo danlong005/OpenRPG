@@ -168,7 +168,7 @@ static rpg::FuncCall* make_func(const char* name, std::vector<rpg::Expression*>*
 %token KW_FOR_EACH KW_IN KW_XML_INTO KW_DATA_INTO KW_DATA_GEN KW_SND_MSG
 %token KW_STAR_INFO KW_STAR_DIAG KW_STAR_ESCAPE KW_TYPE
 %token KW_STAR_ALLOC KW_STAR_KEEP
-%token KW_READ KW_READE KW_READP KW_READPE KW_CHAIN KW_WRITE KW_UPDATE KW_DELETE KW_SETLL KW_SETGT KW_EXFMT
+%token KW_READ KW_READC KW_READE KW_READP KW_READPE KW_CHAIN KW_WRITE KW_UPDATE KW_DELETE KW_SETLL KW_SETGT KW_EXFMT
 %token <sval> KW_READ_EXT KW_READE_EXT KW_READP_EXT KW_READPE_EXT KW_CHAIN_EXT
 %token <sval> KW_WRITE_EXT KW_UPDATE_EXT KW_DELETE_EXT
 %token <sval> IDENTIFIER
@@ -186,7 +186,7 @@ static rpg::FuncCall* make_func(const char* name, std::vector<rpg::Expression*>*
 %type <stmt> dcl_proc_stmt dcl_pr_stmt dcl_ds_stmt dcl_enum_stmt
 %type <stmt> monitor_stmt begsr_stmt exsr_stmt exec_sql_stmt xml_into_stmt
 %type <stmt> in_da_stmt out_da_stmt unlock_da_stmt data_into_stmt data_gen_stmt snd_msg_stmt
-%type <stmt> chain_stmt read_stmt reade_stmt readp_stmt readpe_stmt
+%type <stmt> chain_stmt read_stmt readc_stmt reade_stmt readp_stmt readpe_stmt
 %type <stmt> write_stmt update_stmt delete_stmt setll_stmt setgt_stmt exfmt_stmt
 %type <expr> expression or_expr and_expr not_expr comparison_expr additive_expr multiplicative_expr power_expr unary_expr postfix_expr primary_expr eval_target
 %type <expr_list> arg_list call_arg_list call_args_opt rla_keys rla_key_list
@@ -289,6 +289,7 @@ statement:
     | unlock_da_stmt { $$ = $1; SET_LINE($$); }
     | chain_stmt   { $$ = $1; SET_LINE($$); }
     | read_stmt    { $$ = $1; SET_LINE($$); }
+    | readc_stmt   { $$ = $1; SET_LINE($$); }
     | reade_stmt   { $$ = $1; SET_LINE($$); }
     | readp_stmt   { $$ = $1; SET_LINE($$); }
     | readpe_stmt  { $$ = $1; SET_LINE($$); }
@@ -411,6 +412,13 @@ read_stmt:
     | KW_READ_EXT IDENTIFIER SEMICOLON {
         $$ = new rpg::ReadStmt($2, $1);
         free($1); free($2);
+    }
+    ;
+
+readc_stmt:
+    KW_READC IDENTIFIER SEMICOLON {
+        $$ = new rpg::ReadcStmt($2);
+        free($2);
     }
     ;
 

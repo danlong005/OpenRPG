@@ -33,6 +33,7 @@
 #include <cstring>
 #include <fstream>
 #include <map>
+#include <set>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -430,15 +431,21 @@ static std::string dspf__validateField(const DspfJVal& field, const std::string&
             std::vector<std::string> allowed = dspf__splitValueList(inner);
             bool ok = false;
             for (auto& a : allowed) {
-                if (dspf__compareValues(val, a) == 0) { ok = true; break; }
+                // Trim the allowed-list token too, not just `val` — otherwise
+                // an explicit VALUES('...' ' ') blank-allowed token (a
+                // single quoted space, meaning "leaving this field blank is
+                // OK") can never match, since a genuinely blank/untouched
+                // submission always trims down to "" while the token stays
+                // literally " ".
+                if (dspf__compareValues(val, dspf__trimSpaces(a)) == 0) { ok = true; break; }
             }
             if (!ok) return name + ": value not valid";
         } else if (k.rfind("RANGE(", 0) == 0) {
             std::string inner = k.substr(6, k.size() > 7 ? k.size() - 7 : 0);
             std::vector<std::string> bounds = dspf__splitValueList(inner);
             if (bounds.size() == 2 &&
-                (dspf__compareValues(val, bounds[0]) < 0 ||
-                 dspf__compareValues(val, bounds[1]) > 0)) {
+                (dspf__compareValues(val, dspf__trimSpaces(bounds[0])) < 0 ||
+                 dspf__compareValues(val, dspf__trimSpaces(bounds[1])) > 0)) {
                 return name + ": value not in range";
             }
         } else if (k.rfind("COMP(", 0) == 0) {
@@ -447,7 +454,7 @@ static std::string dspf__validateField(const DspfJVal& field, const std::string&
             if (parts.size() == 2) {
                 std::string op = parts[0];
                 for (auto& c : op) c = (char)toupper((unsigned char)c);
-                int cmp = dspf__compareValues(val, parts[1]);
+                int cmp = dspf__compareValues(val, dspf__trimSpaces(parts[1]));
                 bool ok = true;
                 if      (op == "EQ") ok = (cmp == 0);
                 else if (op == "NE") ok = (cmp != 0);
@@ -1103,6 +1110,28 @@ static std::map<std::string, std::vector<DspfSflRow>> g_dspf_subfiles;
 static std::map<std::string, int> g_dspf_sfl_cursor; // sflctl name → 1-based RRN
 static std::map<std::string, int> g_dspf_sfl_page;   // sflctl name → 0-based page offset
 
+// Rows the operator typed into during a subfile pass — keyed by SFL record
+// name, values are 1-based RRNs. Drained by READC in ascending order,
+// matching real IBM i's "read changed records in relative-record-number
+// order" behavior. Not cleared between EXFMT passes: if a program doesn't
+// drain it via READC before the next EXFMT, entries just accumulate rather
+// than silently vanish (this runtime has no MDT-reset-on-rewrite model).
+static std::map<std::string, std::set<int>> g_dspf_sfl_changed;
+
+// A single editable cell within a SFLCTL screen — either one of the
+// control record's own input-capable fields (rowIdx == -1) or one
+// input-capable field within a currently-visible subfile row. Unified so
+// Tab/typing/validation can walk one combined list instead of juggling
+// two separate ones.
+struct DspfSflEditField {
+    int rowIdx;      // -1 = control-record field; else 0-based row in g_dspf_subfiles
+    int fieldRecIdx; // index into ctl["fields"] (rowIdx==-1) or sflRec["fields"]
+    int screenRow, col, len;
+    std::string name;
+    std::string val;
+    bool touched = false;
+};
+
 // =============================================================================
 // Subfile EXFMT — render scrollable table and handle navigation
 // =============================================================================
@@ -1197,9 +1226,119 @@ static int dspf__sflExfmt(const char* ctlName, const DspfJVal& ctl, void* ctlBuf
 
     render();
 
+    // ── Editable fields: the control record's own input-capable fields,
+    // plus (appended after) each currently-visible row's input-capable
+    // fields — e.g. a per-row OPTION column, the classic "type 1/2/4 next
+    // to a row" subfile pattern. Every subfile row shares the same field
+    // template, so either every row has the same editable fields or none
+    // do; there's no per-row variation to worry about.
+    std::vector<DspfSflEditField> combined;
+    {
+        const DspfJVal& cf = ctl["fields"];
+        std::map<std::string,bool> seen;
+        for (size_t i = 0; i < cf.size(); i++) {
+            std::string io = cf[i]["io"].str();
+            if (io != "I" && io != "B") continue;
+            if (!dspf__condPass(cf[i])) continue;
+            std::string fname = cf[i]["name"].str();
+            if (seen.count(fname)) continue;
+            seen[fname] = true;
+            DspfSflEditField e;
+            e.rowIdx = -1;
+            e.fieldRecIdx = (int)i;
+            e.screenRow = cf[i]["row"].num() - 1;
+            e.col = cf[i]["col"].num() - 1;
+            e.len = cf[i]["len"].num(); if (e.len == 0) e.len = 1;
+            e.name = fname;
+            auto it = ctlVals.find(e.name);
+            e.val = (it != ctlVals.end()) ? it->second : "";
+            if ((int)e.val.size() > e.len) e.val.resize(e.len);
+            combined.push_back(e);
+        }
+    }
+    int ctlCount = (int)combined.size();
+
+    auto fieldDefFor = [&](const DspfSflEditField& e) -> const DspfJVal& {
+        return (e.rowIdx == -1) ? ctl["fields"][e.fieldRecIdx] : (*sflRec)["fields"][e.fieldRecIdx];
+    };
+
+    // Writes every combined entry's current (possibly in-progress) value
+    // back to its real store — ctlVals for control fields, the row's own
+    // map for row fields — and queues touched rows for READC. Called
+    // before scrolling away from the current page (so in-progress typing
+    // isn't lost) and before returning to the caller.
+    auto commitCombined = [&]() {
+        for (auto& e : combined) {
+            if (e.rowIdx == -1) {
+                ctlVals[e.name] = e.val;
+            } else {
+                rows[e.rowIdx].fields[e.name] = e.val;
+                if (e.touched) g_dspf_sfl_changed[sflName].insert(e.rowIdx + 1);
+            }
+        }
+    };
+
+    // Rebuilds just the row-field portion of `combined` for whatever page
+    // is now visible, reloading each field's value from its row's store
+    // (so a prior commitCombined()'s writes round-trip back in).
+    auto rebuildRowPortion = [&]() {
+        combined.resize(ctlCount);
+        if (!sflRec || numRows == 0) return;
+        const DspfJVal& sf = (*sflRec)["fields"];
+        int endPage = std::min(numRows, pageOff + sflpag);
+        for (int i = pageOff; i < endPage; i++) {
+            int screenRow = sflBaseRow + (i - pageOff);
+            for (size_t fi = 0; fi < sf.size(); fi++) {
+                std::string io = sf[fi]["io"].str();
+                if (io != "I" && io != "B") continue;
+                if (!dspf__condPass(sf[fi])) continue;
+                DspfSflEditField e;
+                e.rowIdx = i;
+                e.fieldRecIdx = (int)fi;
+                e.screenRow = screenRow;
+                e.col = sf[fi]["col"].num() - 1;
+                e.len = sf[fi]["len"].num(); if (e.len == 0) e.len = 1;
+                e.name = sf[fi]["name"].str();
+                auto it = rows[i].fields.find(e.name);
+                e.val = (it != rows[i].fields.end()) ? it->second : "";
+                if ((int)e.val.size() > e.len) e.val.resize(e.len);
+                combined.push_back(e);
+            }
+        }
+    };
+    rebuildRowPortion();
+
+    int cur = 0;
+
+    // Relocates `cur` to the given (0-based) row's first editable field,
+    // if the row has one — since every row shares the same field
+    // template, this either finds one on every call or none ever.
+    auto focusRow = [&](int rowIdx0based) {
+        for (int i = ctlCount; i < (int)combined.size(); i++) {
+            if (combined[i].rowIdx == rowIdx0based) { cur = i; return; }
+        }
+        if (cur >= (int)combined.size()) cur = combined.empty() ? 0 : (int)combined.size() - 1;
+    };
+    focusRow(cursor - 1);
+
+    auto redrawFocused = [&]() {
+        if (combined.empty()) return;
+        const DspfSflEditField& e = combined[cur];
+        const DspfJVal& fdef = fieldDefFor(e);
+        int pair = dspf__colorPair(fdef);
+        attr_t ext = dspf__fieldAttrs(fdef);
+        attron(COLOR_PAIR(pair) | ext | A_REVERSE);
+        mvprintw(e.screenRow, e.col, "%-*s", e.len, e.val.c_str());
+        attroff(COLOR_PAIR(pair) | ext | A_REVERSE);
+    };
+
     while (true) {
-        // Position cursor at start of current row
-        if (numRows > 0 && sflRec) {
+        if (!combined.empty()) {
+            const DspfSflEditField& e = combined[cur];
+            int cx = e.col + (int)e.val.size();
+            if (cx >= e.col + e.len) cx = e.col + e.len - 1;
+            move(e.screenRow, cx);
+        } else if (numRows > 0 && sflRec) {
             const DspfJVal& sf = (*sflRec)["fields"];
             if (sf.size() > 0) {
                 int screenRow = sflBaseRow + (cursor - 1 - pageOff);
@@ -1213,6 +1352,7 @@ static int dspf__sflExfmt(const char* ctlName, const DspfJVal& ctl, void* ctlBuf
         if (ch >= KEY_F(1) && ch <= KEY_F(24)) {
             int fnum = ch - KEY_F(0);
             std::string key = "F" + std::to_string(fnum);
+            commitCombined();
             ctlVals["SFLRCDNBR"] = std::to_string(cursor);
             dspf__applyFields(ctl, ctlVals, ctlBuf);
             const DspfJVal& keys = ctl["keys"];
@@ -1223,9 +1363,65 @@ static int dspf__sflExfmt(const char* ctlName, const DspfJVal& ctl, void* ctlBuf
         }
 
         if (ch == '\n' || ch == '\r' || ch == KEY_ENTER) {
+            int badIdx = -1;
+            std::string errMsg;
+            for (size_t i = 0; i < combined.size(); i++) {
+                std::string msg = dspf__validateField(fieldDefFor(combined[i]), combined[i].val);
+                if (!msg.empty()) { badIdx = (int)i; errMsg = msg; break; }
+            }
+            if (badIdx >= 0) {
+                beep();
+                if (dspf__hasRecKw(ctl, "ERRSFL")) {
+                    dspf__errsflShow(ctl, errMsg);
+                } else if (LINES > 24) {
+                    attron(A_REVERSE);
+                    mvprintw(24, 0, "%-*s", COLS, errMsg.c_str());
+                    attroff(A_REVERSE);
+                    refresh();
+                }
+                cur = badIdx;
+                if (combined[cur].rowIdx != -1) { cursor = combined[cur].rowIdx + 1; render(); }
+                continue;
+            }
+            commitCombined();
             ctlVals["SFLRCDNBR"] = std::to_string(cursor);
             dspf__applyFields(ctl, ctlVals, ctlBuf);
             return 0;
+        }
+
+        if (ch == '\t') {
+            if (!combined.empty()) {
+                cur = (cur + 1) % (int)combined.size();
+                if (combined[cur].rowIdx != -1 && combined[cur].rowIdx != cursor - 1) {
+                    cursor = combined[cur].rowIdx + 1;
+                    render();
+                }
+            }
+            continue;
+        }
+        if (ch == KEY_BTAB) {
+            if (!combined.empty()) {
+                cur = (cur - 1 + (int)combined.size()) % (int)combined.size();
+                if (combined[cur].rowIdx != -1 && combined[cur].rowIdx != cursor - 1) {
+                    cursor = combined[cur].rowIdx + 1;
+                    render();
+                }
+            }
+            continue;
+        }
+        if (ch == KEY_HOME) { if (!combined.empty()) cur = 0; continue; }
+        if (ch == KEY_END)  { if (!combined.empty()) cur = (int)combined.size() - 1; continue; }
+
+        if (!combined.empty()) {
+            DspfSflEditField& e = combined[cur];
+            if (ch == KEY_BACKSPACE || ch == 127 || ch == 8) {
+                if (!e.val.empty()) { e.val.pop_back(); e.touched = true; redrawFocused(); }
+                continue;
+            }
+            if (isprint(ch) && (int)e.val.size() < e.len) {
+                e.val += (char)ch; e.touched = true; redrawFocused();
+                continue;
+            }
         }
 
         if (numRows == 0) continue;
@@ -1233,23 +1429,31 @@ static int dspf__sflExfmt(const char* ctlName, const DspfJVal& ctl, void* ctlBuf
         if (ch == KEY_UP) {
             if (cursor > 1) {
                 cursor--;
-                if (cursor - 1 < pageOff) pageOff = std::max(0, pageOff - 1);
+                bool pageChanged = false;
+                if (cursor - 1 < pageOff) { pageOff = std::max(0, pageOff - 1); pageChanged = true; }
+                if (pageChanged) { commitCombined(); rebuildRowPortion(); }
+                focusRow(cursor - 1);
                 render();
             }
         } else if (ch == KEY_DOWN) {
             if (cursor < numRows) {
                 cursor++;
-                if (cursor - 1 >= pageOff + sflpag) pageOff++;
+                bool pageChanged = false;
+                if (cursor - 1 >= pageOff + sflpag) { pageOff++; pageChanged = true; }
+                if (pageChanged) { commitCombined(); rebuildRowPortion(); }
+                focusRow(cursor - 1);
                 render();
             }
         } else if (ch == KEY_PPAGE) {
             pageOff = std::max(0, pageOff - sflpag);
             cursor  = pageOff + 1;
+            commitCombined(); rebuildRowPortion(); focusRow(cursor - 1);
             render();
         } else if (ch == KEY_NPAGE) {
             if (pageOff + sflpag < numRows) {
                 pageOff += sflpag;
                 cursor   = pageOff + 1;
+                commitCombined(); rebuildRowPortion(); focusRow(cursor - 1);
                 render();
             }
         }
@@ -1374,6 +1578,27 @@ inline void dspf_write(const char* recname, const void* recbuf) {
 
 inline int dspf_read(const char* recname, void* recbuf) {
     return dspf_exfmt(recname, recbuf);
+}
+
+// READC (Read Changed): pops the next touched subfile row (ascending RRN)
+// into the SFL record's own buffer — mirrors real IBM i's "process rows
+// the operator typed into" loop. Returns the 1-based RRN read, or 0 when
+// there are none left (the caller sets its own <recname>_eof from that).
+// Unlike a normal EXFMT read-back (which only copies input/both fields —
+// the program already knows what it output), this copies every non-hidden
+// field: the row's OUTPUT fields (e.g. a key like CUSTNO) are how the
+// program identifies *which* row's OPTION was touched.
+inline int dspf_readc(const char* recname, void* recbuf) {
+    const DspfJVal* rec = dspf__findRec(recname);
+    if (!rec) return 0;
+    auto& changed = g_dspf_sfl_changed[recname];
+    if (changed.empty()) return 0;
+    int rrn = *changed.begin();
+    changed.erase(changed.begin());
+    auto& rows = g_dspf_subfiles[recname];
+    if (rrn < 1 || rrn > (int)rows.size()) return 0;
+    dspf__applyFields(*rec, rows[rrn - 1].fields, recbuf);
+    return rrn;
 }
 
 inline void dspf_close() {

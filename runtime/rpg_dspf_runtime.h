@@ -157,15 +157,12 @@ dspf__extractFields(const DspfJVal& rec, const void* buf) {
         std::string type = fields[i]["type"].str();
         int len  = fields[i]["len"].num();
         int dec  = fields[i]["dec"].num();
-        std::string io = fields[i]["io"].str();
-        if (io == "H") { // advance pointer but skip value
-            if (dspf__isCharType(type)) p += (len + 1);
-            else if (type == "B") p += sizeof(long);
-            else p += sizeof(double);
-            continue;
-        }
         // Duplicate display entries (same field, different conditioning/attributes)
         // share one buffer slot — only the first occurrence advances the pointer.
+        // HIDDEN ("H") fields carry a real value through the buffer just like any
+        // other usage — "hidden" only means not rendered (see dspf__renderScreen),
+        // not "no data transfer"; the classic SFLRCDNBR HIDDEN pattern depends on
+        // its value actually reaching the buffer.
         if (seen.count(name)) continue;
         seen[name] = true;
         if (dspf__isCharType(type)) {
@@ -196,13 +193,8 @@ static void dspf__applyFields(const DspfJVal& rec,
         std::string name = fields[i]["name"].str();
         std::string type = fields[i]["type"].str();
         int len = fields[i]["len"].num();
-        std::string io = fields[i]["io"].str();
-        if (io == "H") {
-            if (dspf__isCharType(type)) p += (len + 1);
-            else if (type == "B") p += sizeof(long);
-            else p += sizeof(double);
-            continue;
-        }
+        // HIDDEN ("H") fields carry a real value through the buffer just like any
+        // other usage — see the matching note in dspf__extractFields above.
         if (seen.count(name)) continue; // duplicate display entry — shares first slot
         seen[name] = true;
         if (dspf__isCharType(type)) {

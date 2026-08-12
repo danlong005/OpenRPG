@@ -1062,7 +1062,10 @@ void CodeGen::visit(DclF& node) {
             out_ << "bool " << rec.name << "_eof = false; "
                  << "// %EOF(" << rec.name << ") — meaningful after READC\n";
             for (const DspfFldInfo& f : rec.fields) {
-                if (f.io == 'H') continue;
+                // HIDDEN fields still get a flat variable — "hidden" only
+                // means not rendered, not "no data" (e.g. SFLRCDNBR HIDDEN
+                // needs to be readable after EXFMT to know which row was
+                // selected).
                 emitIndent();
                 if ((f.dtype == 'A' || f.dtype == 'L' || f.dtype == 'T' || f.dtype == 'Z')) {
                     out_ << "std::string " << f.rpgName() << "; "
@@ -3480,7 +3483,6 @@ void CodeGen::visit(ReadStmt& node) {
             emitIndent(); out_ << "{\n"; indent_++;
             if (rci) {
                 for (const DspfFldInfo& f : rci->fields) {
-                    if (f.io == 'H') continue;
                     emitIndent();
                     if ((f.dtype == 'A' || f.dtype == 'L' || f.dtype == 'T' || f.dtype == 'Z')) {
                         out_ << "strncpy(" << bufName << "." << f.name << ", "
@@ -3496,7 +3498,7 @@ void CodeGen::visit(ReadStmt& node) {
                                << node.filename << "\", &" << bufName << ");\n";
             if (rci) {
                 for (const DspfFldInfo& f : rci->fields) {
-                    if (f.io == 'H' || f.io == 'O') continue;
+                    if (f.io == 'O') continue; // only copy back input/both/hidden
                     emitIndent();
                     if ((f.dtype == 'A' || f.dtype == 'L' || f.dtype == 'T' || f.dtype == 'Z')) {
                         out_ << f.rpgName() << " = std::string(" << bufName << "." << f.name
@@ -3559,14 +3561,14 @@ void CodeGen::visit(ReadcStmt& node) {
     emitIndent(); out_ << "int __dspf_rrn = dspf_readc(\"" << node.recordname
                        << "\", &" << bufName << ");\n";
     emitIndent(); out_ << node.recordname << "_eof = (__dspf_rrn == 0);\n";
-    // Unlike a normal EXFMT/READ copy-back (input/both fields only — the
-    // program already knows what it output), READC copies every
-    // non-hidden field: the row's OUTPUT fields (e.g. a key like CUSTNO)
-    // are how the program identifies *which* row's OPTION was touched.
+    // Unlike a normal EXFMT/READ copy-back (input/both/hidden fields only —
+    // the program already knows what it output), READC copies every
+    // field, including OUTPUT: the row's OUTPUT fields (e.g. a key like
+    // CUSTNO) are how the program identifies *which* row's OPTION was
+    // touched.
     if (rci) {
         emitIndent(); out_ << "if (__dspf_rrn != 0) {\n"; indent_++;
         for (const DspfFldInfo& f : rci->fields) {
-            if (f.io == 'H') continue;
             emitIndent();
             if ((f.dtype == 'A' || f.dtype == 'L' || f.dtype == 'T' || f.dtype == 'Z')) {
                 out_ << f.rpgName() << " = std::string(" << bufName << "." << f.name
@@ -3709,7 +3711,6 @@ void CodeGen::visit(WriteStmt& node) {
             emitIndent(); out_ << "{\n"; indent_++;
             if (rci) {
                 for (const DspfFldInfo& f : rci->fields) {
-                    if (f.io == 'H') continue;
                     emitIndent();
                     if ((f.dtype == 'A' || f.dtype == 'L' || f.dtype == 'T' || f.dtype == 'Z')) {
                         out_ << "strncpy(" << bufName << "." << f.name << ", "
@@ -3892,10 +3893,10 @@ void CodeGen::visit(ExfmtStmt& node) {
 
     emitIndent(); out_ << "{\n"; indent_++;
 
-    // Copy flat RPG variables → buffer struct (output and both fields)
+    // Copy flat RPG variables → buffer struct (output, both, and hidden
+    // fields — hidden still carries a real value, just isn't rendered)
     if (rci) {
         for (const DspfFldInfo& f : rci->fields) {
-            if (f.io == 'H') continue;
             emitIndent();
             if ((f.dtype == 'A' || f.dtype == 'L' || f.dtype == 'T' || f.dtype == 'Z')) {
                 // string → char buf
@@ -3915,10 +3916,11 @@ void CodeGen::visit(ExfmtStmt& node) {
     emitIndent(); out_ << "int __dspf_key = dspf_exfmt(\""
                        << node.format << "\", &" << bufName << ");\n";
 
-    // Copy buffer struct → flat RPG variables (input and both fields)
+    // Copy buffer struct → flat RPG variables (input, both, and hidden
+    // fields — e.g. SFLRCDNBR HIDDEN needs to be readable after EXFMT)
     if (rci) {
         for (const DspfFldInfo& f : rci->fields) {
-            if (f.io == 'H' || f.io == 'O') continue; // only copy back input/both
+            if (f.io == 'O') continue; // only copy back input/both/hidden
             emitIndent();
             if ((f.dtype == 'A' || f.dtype == 'L' || f.dtype == 'T' || f.dtype == 'Z')) {
                 out_ << f.rpgName() << " = std::string(" << bufName << "." << f.name

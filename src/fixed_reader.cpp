@@ -180,16 +180,18 @@ static void handleDSpecLine(Program* program, DSpecState& state,
     int decimals = decStr.empty() ? 0 : atoi(decStr.c_str());
     int toLen = toLenStr.empty() ? 0 : atoi(toLenStr.c_str());
     std::string keywordTail = extractCol(line, DSpec::KeywordTail);
+    auto kw = rpg::parseKeywordList(keywordTail);
 
     if (defType == "DS") {
         auto* ds = new DclDS(upper(name));
         ds->line = lineNo;
-        auto kw = rpg::parseKeywordList(keywordTail);
         if (kw.count("QUALIFIED")) ds->qualified = true;
         auto it = kw.find("LIKEDS");
         if (it != kw.end()) ds->like_ds = upper(it->second);
         it = kw.find("EXTNAME");
         if (it != kw.end()) ds->extname = it->second;
+        it = kw.find("DIM");
+        if (it != kw.end() && !it->second.empty()) ds->dim = atoi(it->second.c_str());
         program->statements.emplace_back(ds);
         state.currentDS = ds;
         return;
@@ -231,6 +233,15 @@ static void handleDSpecLine(Program* program, DSpecState& state,
         return;
     }
 
+    // VARYING{(2|4)} (SC09-2508 ch.15 "VARYING{(2|4)}"): a keyword-tail-only
+    // keyword ("not used in a free-form definition" — free-format spells
+    // this via the VARCHAR(n) type keyword instead) that flips an otherwise
+    // fixed-length character field to variable-length. Applies uniformly to
+    // standalone fields and DS subfields — same rule either way, per the
+    // manual. The optional (2|4) length-prefix-size parameter isn't modeled
+    // here, matching free-format VARCHAR(n)'s own lack of that distinction.
+    if (type == RPGType::CHAR && kw.count("VARYING")) type = RPGType::VARCHAR;
+
     int length  = isNumericType(type) ? 0 : toLen;
     int digits  = isNumericType(type) ? toLen : 0;
 
@@ -241,11 +252,26 @@ static void handleDSpecLine(Program* program, DSpecState& state,
         f.length = length;
         f.digits = digits;
         f.decimals = decimals;
+        auto it = kw.find("OVERLAY");
+        if (it != kw.end() && !it->second.empty()) {
+            std::string val = it->second;
+            size_t colon = val.find(':');
+            if (colon == std::string::npos) {
+                f.overlay_field = upper(val);
+            } else {
+                f.overlay_field = upper(trim(val.substr(0, colon)));
+                std::string posStr = trim(val.substr(colon + 1));
+                if (!posStr.empty()) f.overlay_pos = atoi(posStr.c_str());
+            }
+        }
+        it = kw.find("POS");
+        if (it != kw.end() && !it->second.empty()) f.pos = atoi(it->second.c_str());
+        it = kw.find("LIKEDS");
+        if (it != kw.end()) f.likeds = upper(it->second);
         state.currentDS->fields.push_back(f);
     } else {
         auto* n = new DclS(upper(name), type, length, digits, decimals);
         n->line = lineNo;
-        auto kw = rpg::parseKeywordList(keywordTail);
         auto it = kw.find("LIKE");
         if (it != kw.end()) n->like_var = upper(it->second);
         it = kw.find("DIM");

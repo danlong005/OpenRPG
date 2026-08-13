@@ -500,6 +500,27 @@ run_test "118" "Fixed-format H+F+D+C DISK CHAIN" "$TESTDIR/test118_fixed_rla_cha
 # fixed-format frontend.
 run_test "119" "Fixed-format /free syntax error" "$TESTDIR/test119_fixed_free_error.rpgle" "error"
 
+# ── Fixed-format frontend Phase 2: D-spec depth (VARCHAR, DS DIM, OVERLAY) ──
+# 120: VARYING on a standalone field — VARCHAR starts empty (%LEN=0),
+# plain CHAR starts space-padded to its declared length (%LEN=length).
+run_test "120" "Fixed-format VARCHAR standalone" "$TESTDIR/test120_fixed_varchar.rpgle" "run"
+
+# 121: VARYING on a DS subfield — round-trip assign/read-back check (DS
+# subfield CHAR/VARCHAR have no differentiated codegen behavior currently,
+# true for free-format too, so this confirms parsing + usability only).
+run_test "121" "Fixed-format VARCHAR DS subfield" "$TESTDIR/test121_fixed_varchar_subfield.rpgle" "run"
+
+# 122: DISK CHAIN with a real VARCHAR key field — closes the loop on the
+# gap Phase 1's test118 worked around with an integer key.
+run_test "122" "Fixed-format VARCHAR DISK CHAIN key" "$TESTDIR/test122_fixed_rla_chain_varchar.rpgle" "run-sql-conf"
+
+# 123: DIM(n) array of DS on a fixed-format D-spec DS line.
+run_test "123" "Fixed-format DIM(n) array of DS" "$TESTDIR/test123_fixed_ds_dim.rpgle" "run"
+
+# 124: per-subfield OVERLAY(field)/OVERLAY(field:pos) and POS(n) — fixed-
+# format analogue of test62_overlay_pos.rpgle (identical C-spec logic).
+run_test "124" "Fixed-format subfield OVERLAY/POS" "$TESTDIR/test124_fixed_overlay.rpgle" "run"
+
 # ── Customer / drop-in tests ─────────────────────────────────────────────
 # Drop any .rpgle or .sqlrpgle file into tests/customer/ and it will be
 # compile-tested automatically — no registration or expected output needed.

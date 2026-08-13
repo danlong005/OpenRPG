@@ -161,6 +161,33 @@ gated — `**FREE` was never a hard mode switch here either.
   engineering, deferred rather than rejected; revisit as a later phase
   if there's demand
 
+### Fixed-Format Source Support — Phase 2 (D-spec depth) ✅
+Closes D-spec gaps left basic in Phase 1 — all pure fixed-format *parsing*
+gaps (same thesis as Phase 1: the AST/codegen already supported every one
+of these via the free-format grammar, so `fixed_reader.cpp` is the only
+file this phase touches). Motivated by a concrete pain point Phase 1 hit in
+its own testing: test118's DISK `CHAIN` needed an integer key instead of
+the natural `VARCHAR` key, since fixed-format D-spec had no way to declare
+one.
+- `VARYING{(2|4)}` keyword-tail keyword → `RPGType::VARCHAR` (standalone
+  fields and DS subfields) — verified against SC09-2508's `VARYING{(2|4)}`
+  entry: keyword-tail only, "not used in a free-form definition" (that's
+  what `VARCHAR(n)` is for), applies uniformly regardless of standalone-
+  vs-subfield context. Test122 rebuilds Phase 1's test118 DISK `CHAIN`
+  milestone with a real `VARCHAR` key, closing that gap.
+- `DIM(n)` on a `DclDS` itself (array of DS elements, e.g. `items(1).qty`)
+- Per-subfield `OVERLAY(field)`, `OVERLAY(field:pos)`, `POS(n)`, `LIKEDS(name)`
+- **Found but out of scope**: per-subfield `LIKE(...)` and per-subfield
+  `DIM(...)` (an array *within* one subfield) have no grammar support in
+  free-format either, and `DSField` has no fields to hold them — extending
+  these would mean growing the free-format language surface itself, not
+  just this frontend. Deferred as a follow-on, not silently dropped.
+- Tests 120-124. Note: DS-subfield `CHAR` vs `VARCHAR` currently has no
+  differentiated codegen behavior in this compiler (true for free-format
+  DS subfields too — confirmed by code search, not a fixed-format-specific
+  gap) — test121 is a round-trip check, not a type-distinction check like
+  test120's standalone-field version.
+
 ### ~~Fixed-Format File I/O~~ — Not Planned
 ~~Native record format / INFSR / legacy PLIST-based file I/O~~
 
@@ -426,3 +453,8 @@ member's C-spec to host modern free-format statements.
 | 117 | Fixed-format: H+D+C(/free) hello world |
 | 118 | Fixed-format: H+F+D+C DISK CHAIN, full Phase 1 milestone |
 | 119 | Fixed-format: syntax error inside /free |
+| 120 | Fixed-format: VARCHAR standalone field (VARYING) |
+| 121 | Fixed-format: VARCHAR DS subfield (VARYING) |
+| 122 | Fixed-format: DISK CHAIN with a VARCHAR key |
+| 123 | Fixed-format: DIM(n) array of DS |
+| 124 | Fixed-format: subfield OVERLAY/POS |

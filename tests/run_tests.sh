@@ -268,6 +268,23 @@ echo "  RPG Compiler Test Suite"
 echo "========================================"
 echo ""
 
+# Standalone unit check for src/fixed_columns.h's extractCol() — not an
+# RPG program, compiled and run directly (bypasses rpgc entirely, since
+# this tests a compiler-internals header). Catches column-number
+# transcription bugs before any fixed-format parsing logic depends on
+# them; see tests/test_fixed_columns.cpp for what it checks.
+printf "%-45s " "fixed_columns: extractCol() column data"
+if "$CXX" -std=c++17 -Isrc -o "$TMPDIR/test_fixed_columns" tests/test_fixed_columns.cpp 2>"$TMPDIR/fixed_columns_err.txt" \
+    && "$TMPDIR/test_fixed_columns" >"$TMPDIR/fixed_columns_out.txt" 2>&1; then
+    echo -e "\033[0;32mPASS\033[0m"
+    PASS=$((PASS + 1))
+else
+    echo -e "\033[0;31mFAIL\033[0m"
+    cat "$TMPDIR/fixed_columns_err.txt" "$TMPDIR/fixed_columns_out.txt" 2>/dev/null | sed 's/^/    /'
+    FAIL=$((FAIL + 1))
+    FAILURES="$FAILURES\n  fixed_columns: extractCol() column data"
+fi
+
 # Tests 01-10: Core language
 run_test "01" "Hello World" "$TESTDIR/test01_hello.rpgle" "run"
 run_test "02" "Arithmetic" "$TESTDIR/test02_arithmetic.rpgle" "run"

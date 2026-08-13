@@ -4,6 +4,7 @@
 #include <cstdio>
 #include <string>
 #include "ast.h"
+#include "keyword_list.h"
 #include "parser.h"
 
 static char* process_rpg_string(const char* text) {
@@ -100,64 +101,32 @@ char ctlopt_datfmt[64] = {0};
 char ctlopt_timfmt[64] = {0};
 bool ctlopt_nomain = false;
 
+// Thin wrapper over the generic rpg::parseKeywordList() (keyword_list.h)
+// — shared with H-spec's fixed-format keyword-list content, which is the
+// same "KEYWORD(value)..." vocabulary without CTL-OPT's own wrapper. Only
+// 4 keys are semantically meaningful here (see TODO.md's "CTL-OPT
+// Keywords (all accepted/ignored)" list for the rest); values are stored
+// uppercased, matching this function's pre-existing behavior.
 static void parse_ctlopt(const char* text) {
     ctlopt_nomain = false;
     ctlopt_main_proc[0] = '\0';
     ctlopt_datfmt[0] = '\0';
     ctlopt_timfmt[0] = '\0';
 
-    std::string s(text);
-    // Uppercase for matching
-    std::string upper = s;
-    for (auto& c : upper) c = toupper(c);
+    auto kw = rpg::parseKeywordList(text);
+    if (kw.count("NOMAIN")) ctlopt_nomain = true;
 
-    // Check NOMAIN
-    if (upper.find("NOMAIN") != std::string::npos) {
-        ctlopt_nomain = true;
-    }
-
-    // Extract MAIN(procname)
-    auto pos = upper.find("MAIN(");
-    if (pos != std::string::npos && (pos == 0 || upper[pos-1] != 'O')) {
-        // Make sure it's not NOMAIN
-        if (pos < 2 || upper.substr(pos-2, 2) != "NO") {
-            size_t start = pos + 5;
-            size_t end = upper.find(')', start);
-            if (end != std::string::npos) {
-                std::string name = upper.substr(start, end - start);
-                // Trim whitespace
-                while (!name.empty() && name.front() == ' ') name.erase(name.begin());
-                while (!name.empty() && name.back() == ' ') name.pop_back();
-                strncpy(ctlopt_main_proc, name.c_str(), sizeof(ctlopt_main_proc) - 1);
-            }
-        }
-    }
-
-    // Extract DATFMT(fmt)
-    pos = upper.find("DATFMT(");
-    if (pos != std::string::npos) {
-        size_t start = pos + 7;
-        size_t end = upper.find(')', start);
-        if (end != std::string::npos) {
-            std::string fmt = upper.substr(start, end - start);
-            while (!fmt.empty() && fmt.front() == ' ') fmt.erase(fmt.begin());
-            while (!fmt.empty() && fmt.back() == ' ') fmt.pop_back();
-            strncpy(ctlopt_datfmt, fmt.c_str(), sizeof(ctlopt_datfmt) - 1);
-        }
-    }
-
-    // Extract TIMFMT(fmt)
-    pos = upper.find("TIMFMT(");
-    if (pos != std::string::npos) {
-        size_t start = pos + 7;
-        size_t end = upper.find(')', start);
-        if (end != std::string::npos) {
-            std::string fmt = upper.substr(start, end - start);
-            while (!fmt.empty() && fmt.front() == ' ') fmt.erase(fmt.begin());
-            while (!fmt.empty() && fmt.back() == ' ') fmt.pop_back();
-            strncpy(ctlopt_timfmt, fmt.c_str(), sizeof(ctlopt_timfmt) - 1);
-        }
-    }
+    auto setUpper = [](char* dst, size_t dstSize, const std::string& val) {
+        std::string upper = val;
+        for (auto& c : upper) c = (char)toupper((unsigned char)c);
+        strncpy(dst, upper.c_str(), dstSize - 1);
+    };
+    auto it = kw.find("MAIN");
+    if (it != kw.end()) setUpper(ctlopt_main_proc, sizeof(ctlopt_main_proc), it->second);
+    it = kw.find("DATFMT");
+    if (it != kw.end()) setUpper(ctlopt_datfmt, sizeof(ctlopt_datfmt), it->second);
+    it = kw.find("TIMFMT");
+    if (it != kw.end()) setUpper(ctlopt_timfmt, sizeof(ctlopt_timfmt), it->second);
 }
 %}
 

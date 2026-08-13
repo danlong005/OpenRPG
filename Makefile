@@ -46,6 +46,7 @@ SRCS := $(BUILDDIR)/lexer.cpp \
         $(SRCDIR)/sql_utils.cpp \
         $(SRCDIR)/conf.cpp \
         $(SRCDIR)/extdesc.cpp \
+        $(SRCDIR)/keyword_list.cpp \
         $(SRCDIR)/main.cpp
 
 OBJS := $(BUILDDIR)/lexer.o \
@@ -55,6 +56,7 @@ OBJS := $(BUILDDIR)/lexer.o \
         $(BUILDDIR)/sql_utils.o \
         $(BUILDDIR)/conf.o \
         $(BUILDDIR)/extdesc.o \
+        $(BUILDDIR)/keyword_list.o \
         $(BUILDDIR)/main.o
 
 VERSION ?= $(shell git describe --tags --always 2>/dev/null || echo "dev")
@@ -78,7 +80,10 @@ $(BUILDDIR)/parser.cpp $(BUILDDIR)/parser.h: $(SRCDIR)/parser.y | $(BUILDDIR)
 $(BUILDDIR)/lexer.cpp: $(SRCDIR)/lexer.l $(BUILDDIR)/parser.h | $(BUILDDIR)
 	$(FLEX) -o $@ $<
 
-$(BUILDDIR)/lexer.o: $(BUILDDIR)/lexer.cpp
+$(BUILDDIR)/lexer.o: $(BUILDDIR)/lexer.cpp $(SRCDIR)/keyword_list.h
+	$(CXX) $(CXXFLAGS) -I$(SRCDIR) -I$(BUILDDIR) -c -o $@ $<
+
+$(BUILDDIR)/keyword_list.o: $(SRCDIR)/keyword_list.cpp $(SRCDIR)/keyword_list.h
 	$(CXX) $(CXXFLAGS) -I$(SRCDIR) -I$(BUILDDIR) -c -o $@ $<
 
 HDRS := $(SRCDIR)/ast.h $(SRCDIR)/codegen.h $(BUILDDIR)/parser.h

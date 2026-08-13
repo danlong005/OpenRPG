@@ -137,6 +137,26 @@
 ### Record Level Access (via ODBC) ✅
 DCL-F, CHAIN, READ, WRITE, UPDATE, DELETE, SETLL, SETGT, READE — implemented via ODBC (Tests 103-108)
 
+### Fixed-Format Source Support — Phase 1 (in progress)
+A second, column-based frontend alongside free-format — real legacy RPG is
+often still fixed-format H/F/D/C specs, sometimes with C-spec logic already
+modernized into `/free`...`/end-free` blocks while H/F/D stay fixed-format
+(a common incremental-modernization pattern). The AST and codegen are
+already format-agnostic, so this is purely a new *parsing* frontend — every
+existing language feature becomes reachable from fixed-format source once
+it builds the same AST nodes, no codegen changes needed.
+- H-spec (control options — MAIN/NOMAIN/DATFMT/TIMFMT, same as CTL-OPT)
+- F-spec (externally-described DISK/WORKSTN files)
+- D-spec (standalone fields; basic non-OCCURS DS/subfields)
+- C-spec via `/free`...`/end-free` only — the block body is parsed by the
+  *existing* free-format lexer/parser unchanged (re-invoked via flex's
+  `yy_scan_string`), not a new C-spec grammar
+- **Deliberately excluded from Phase 1** (see "Legacy / Fixed-Format"
+  below for what's rejected outright vs. deferred): traditional fixed-
+  column C-spec, extended-factor-2 C-spec, I-specs, O-specs — all real
+  engineering, deferred rather than rejected; revisit as a later phase
+  if there's demand
+
 ### ~~Fixed-Format File I/O~~ — Not Planned
 ~~Native record format / INFSR / legacy PLIST-based file I/O~~
 
@@ -259,8 +279,20 @@ These features are IBM i-specific, legacy, or otherwise not applicable:
 ### Legacy / Fixed-Format
 - RPG cycle processing (detail calc, total calc, LR indicator)
 - CTDATA, ALT(array), OCCURS/%OCCUR
-- /FREE, /END-FREE
 - All fixed-format opcodes (ADD, SUB, MULT, DIV, MOVE, COMP, GOTO, TAG, CALL, PARM, PLIST, etc.)
+  — traditional fixed-column and extended-factor-2 C-spec syntax stay
+  unsupported; genuinely new opcode semantics, not just new syntax for
+  existing ones
+- I-specs, O-specs (fixed-format record I/O) — deferred, not rejected
+  outright; see "Fixed-Format Source Support" above. Real shops
+  overwhelmingly use externally-described files, so this covers little
+  missed value for a lot of engineering (two full column layouts each,
+  program- vs. externally-described, with cross-line state)
+
+Note: `/FREE`...`/END-FREE` itself is *not* rejected — see "Fixed-Format
+Source Support" above. What's rejected here is reviving the RPG cycle and
+legacy fixed-column opcode semantics, not the ability for a fixed-format
+member's C-spec to host modern free-format statements.
 
 ### Indicator Types (beyond *IN01-*IN99, *INLR)
 - *INKx, *INHx, *INOx, *INLx, *INUx, *INRT, *INMR, *IN array

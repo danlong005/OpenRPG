@@ -48,6 +48,7 @@ SRCS := $(BUILDDIR)/lexer.cpp \
         $(SRCDIR)/extdesc.cpp \
         $(SRCDIR)/keyword_list.cpp \
         $(SRCDIR)/fixed_reader.cpp \
+        $(SRCDIR)/fixed_cspec.cpp \
         $(SRCDIR)/main.cpp
 
 OBJS := $(BUILDDIR)/lexer.o \
@@ -59,6 +60,7 @@ OBJS := $(BUILDDIR)/lexer.o \
         $(BUILDDIR)/extdesc.o \
         $(BUILDDIR)/keyword_list.o \
         $(BUILDDIR)/fixed_reader.o \
+        $(BUILDDIR)/fixed_cspec.o \
         $(BUILDDIR)/main.o
 
 VERSION ?= $(shell git describe --tags --always 2>/dev/null || echo "dev")
@@ -111,7 +113,10 @@ $(BUILDDIR)/main.o: $(SRCDIR)/main.cpp $(SRCDIR)/ast.h $(SRCDIR)/codegen.h $(SRC
 $(BUILDDIR)/parser.o: $(BUILDDIR)/parser.cpp $(SRCDIR)/ast.h $(SRCDIR)/free_bridge.h
 	$(CXX) $(CXXFLAGS) -I$(SRCDIR) -I$(BUILDDIR) -c -o $@ $<
 
-$(BUILDDIR)/fixed_reader.o: $(SRCDIR)/fixed_reader.cpp $(SRCDIR)/fixed_reader.h $(SRCDIR)/fixed_columns.h $(SRCDIR)/free_bridge.h $(SRCDIR)/keyword_list.h $(SRCDIR)/ast.h
+$(BUILDDIR)/fixed_reader.o: $(SRCDIR)/fixed_reader.cpp $(SRCDIR)/fixed_reader.h $(SRCDIR)/fixed_columns.h $(SRCDIR)/fixed_cspec.h $(SRCDIR)/free_bridge.h $(SRCDIR)/keyword_list.h $(SRCDIR)/ast.h
+	$(CXX) $(CXXFLAGS) -I$(SRCDIR) -I$(BUILDDIR) -c -o $@ $<
+
+$(BUILDDIR)/fixed_cspec.o: $(SRCDIR)/fixed_cspec.cpp $(SRCDIR)/fixed_cspec.h $(SRCDIR)/fixed_columns.h $(SRCDIR)/free_bridge.h
 	$(CXX) $(CXXFLAGS) -I$(SRCDIR) -I$(BUILDDIR) -c -o $@ $<
 
 $(TARGET): $(OBJS)

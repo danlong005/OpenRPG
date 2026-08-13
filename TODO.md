@@ -188,6 +188,82 @@ one.
   gap) — test121 is a round-trip check, not a type-distinction check like
   test120's standalone-field version.
 
+### Fixed-Format Source Support — Next Steps (ranked by real-world necessity)
+Goal shifted from "cover the common cases" (Phases 1-2) to **accepting most
+real fixed-format RPG IV source**, not just H/F/D specs paired with already-
+modernized `/free` C-spec logic. Ranked by how much real legacy source each
+item unblocks, most-needed first:
+
+**1. Traditional / extended-factor-2 fixed-column C-spec ✅ (V1).**
+Implemented via a **transpile-and-bridge** design, not a new grammar:
+`src/fixed_cspec.h/.cpp` transpiles each native C-spec line (Factor1/
+Opcode/Factor2/Result, or Extended Factor 2's whole-expression style) into
+its exact free-form-equivalent text, buffers a contiguous run of them
+exactly like an implicit `/free` block, and flushes through the *same*
+`parse_free_block()` bridge Phase 1 already built for explicit
+`/free`...`/end-free` — zero new AST nodes, zero new bison grammar, no
+hand-rolled expression parser. Verified against SC09-2508 (p.559-567:
+Traditional Syntax, Extended Factor 2 Syntax, continuation rules) —
+citations live in `fixed_columns.h`'s `CSpec` namespace.
+- **V1 opcode set** (Tests 125-134): bare — `ELSE`/`ENDDO`/`ENDFOR`/
+  `ENDIF`/`ENDMON`/`ENDSL`/`ENDSR`/`ITER`/`LEAVE`/`LEAVESR`/`OTHER`/
+  `SELECT`/`MONITOR`; extended-factor-2 — `IF`/`ELSEIF`/`DOW`/`DOU`/
+  `WHEN`/`EVAL`/`EVALR`/`EVAL-CORR`/`RETURN`/`CALLP`/`FOR`/`FOR-EACH`/
+  `ON-ERROR`; traditional Factor1/Factor2/Result — `BEGSR`/`EXSR`/
+  `CLEAR`/`RESET`/`DSPLY`/`SORTA`. Extended-Factor-2 continuation across
+  physical lines works (Test 133); native C-spec freely mixes with
+  explicit `/free` blocks in the same file (Test 134).
+- **Rejected, not silently dropped** (clear, distinct compile errors —
+  Tests 135-138): non-blank control level (RPG-cycle-only, `L0`/`L1-L9`/
+  `LR`/`AN`/`OR`), non-blank conditioning indicators (positions 9-11 —
+  real, but deferred, see below), resulting indicators/inline field
+  length (free-form drops these too, so this isn't a new gap), any opcode
+  outside the V1 set — with a distinct message for known-but-deferred
+  opcodes (e.g. `CHAIN`) vs. never-planned legacy ones (e.g. `ADD`).
+- **Deferred fast-follow** (known opcodes, not wired yet): RLA opcodes
+  `CHAIN`/`READ`/`READP`/`READE`/`READPE`/`WRITE`/`UPDATE`/`DELETE`/
+  `SETLL`/`SETGT` (each needs its own traditional-field verification
+  pass); `ON-EXIT`/`ON-EXCP`; `XML-INTO`/`XML-SAX`/`DATA-INTO`/
+  `DATA-GEN`/`SND-MSG`; conditioning indicators (positions 9-11 — real
+  and independent of the cycle, would wrap the transpiled statement in
+  `IF {N}*INnn; ... ENDIF;`); `EXEC SQL` in fixed columns (architecturally
+  distinct — the SQL capture is a dedicated lexer `<SQL>` start-condition,
+  not a column-mapped opcode, so it doesn't fit this transpile model
+  cleanly). Traditional *legacy* opcodes (`ADD`/`SUB`/`MOVE`/`GOTO`/etc.)
+  remain item #3 below, untouched by this V1 pass.
+
+**2. `/COPY`/`/INCLUDE` outside `/free` blocks.** Currently unimplemented
+in `fixed_reader.cpp` entirely (zero references, confirmed by code
+search) — a `/COPY` line at the top of a fixed-format H/F/D-spec block
+hits column-6 spec-type dispatch and fails to compile. Splitting D-specs
+across shared copybook members is extremely common in real shops. Already
+works *inside* `/free` blocks today via the existing flex buffer-stack
+bridge, but not at the D/F/H-spec level. Needs a fixed-format-native
+mechanism — splice the copy member's physical lines into the outer
+reader's own line stream before spec-type dispatch — rather than reusing
+the free-format lexer's buffer-stack approach, which is flex-specific and
+not available to `fixed_reader.cpp`'s plain line-array driver.
+
+**3. Traditional legacy opcodes (MOVE, ADD, SUB, MULT, DIV, COMP,
+GOTO/TAG, CALL/PARM/PLIST).** For genuinely old, pre-modern-opcode fixed-
+format source. Distinct from #1: #1 targets shops writing modern opcodes
+in column form; this targets shops that never left MOVE/ADD/GOTO-style
+code. Larger and riskier than #1 — GOTO/TAG has no direct structured-code
+AST equivalent and needs real design work, not just a new parser. Still
+does not revive the RPG cycle itself (detail/total calc, LR-driven
+implicit read loop) — that stays rejected regardless of this item's fate.
+
+**4. I-specs / O-specs (program-described file I/O).** Lower priority —
+real shops overwhelmingly use externally-described (DDS-defined) files,
+which RLA (Tests 103-108) already covers. Two full column layouts
+(program- vs. externally-described) with cross-line continuation state,
+for comparatively little missed real-world coverage.
+
+**5. Per-subfield `LIKE(...)`/`DIM(...)`.** Small, low-priority polish;
+found during Phase 2. Would also require extending the free-format
+grammar itself (not just `fixed_reader.cpp`), since neither exists at the
+subfield level in free-format either.
+
 ### ~~Fixed-Format File I/O~~ — Not Planned
 ~~Native record format / INFSR / legacy PLIST-based file I/O~~
 
@@ -308,17 +384,20 @@ These features are IBM i-specific, legacy, or otherwise not applicable:
 - VARYING, CCSID(n), DTAARA, PERRCD, EXTFMT
 
 ### Legacy / Fixed-Format
-- RPG cycle processing (detail calc, total calc, LR indicator)
+- RPG cycle processing (detail calc, total calc, LR indicator) — rejected
+  outright, independent of any fixed-format C-spec work below
 - CTDATA, ALT(array), OCCURS/%OCCUR
-- All fixed-format opcodes (ADD, SUB, MULT, DIV, MOVE, COMP, GOTO, TAG, CALL, PARM, PLIST, etc.)
-  — traditional fixed-column and extended-factor-2 C-spec syntax stay
-  unsupported; genuinely new opcode semantics, not just new syntax for
-  existing ones
+- Traditional/extended-factor-2 fixed-column C-spec (modern opcodes in
+  column form) and truly legacy opcodes (ADD, SUB, MULT, DIV, MOVE, COMP,
+  GOTO, TAG, CALL, PARM, PLIST, etc.) are **no longer rejected outright** —
+  see "Fixed-Format Source Support — Next Steps" above, ranked #1 and #3
+  respectively, now that the goal is accepting most real fixed-format
+  source rather than just the common cases
 - I-specs, O-specs (fixed-format record I/O) — deferred, not rejected
-  outright; see "Fixed-Format Source Support" above. Real shops
-  overwhelmingly use externally-described files, so this covers little
-  missed value for a lot of engineering (two full column layouts each,
-  program- vs. externally-described, with cross-line state)
+  outright; see "Fixed-Format Source Support" above (ranked #4). Real
+  shops overwhelmingly use externally-described files, so this covers
+  little missed value for a lot of engineering (two full column layouts
+  each, program- vs. externally-described, with cross-line state)
 
 Note: `/FREE`...`/END-FREE` itself is *not* rejected — see "Fixed-Format
 Source Support" above. What's rejected here is reviving the RPG cycle and
@@ -458,3 +537,17 @@ member's C-spec to host modern free-format statements.
 | 122 | Fixed-format: DISK CHAIN with a VARCHAR key |
 | 123 | Fixed-format: DIM(n) array of DS |
 | 124 | Fixed-format: subfield OVERLAY/POS |
+| 125 | Fixed C-spec: IF/ELSEIF/ELSE/ENDIF |
+| 126 | Fixed C-spec: DOW/DOU/ENDDO |
+| 127 | Fixed C-spec: FOR/ENDFOR (TO/DOWNTO/BY) |
+| 128 | Fixed C-spec: SELECT/WHEN/OTHER/ENDSL |
+| 129 | Fixed C-spec: BEGSR/EXSR/ENDSR |
+| 130 | Fixed C-spec: EVAL/EVALR/CALLP/RETURN/LEAVE/ITER |
+| 131 | Fixed C-spec: CLEAR/RESET/DSPLY/SORTA |
+| 132 | Fixed C-spec: MONITOR/ON-ERROR/ENDMON |
+| 133 | Fixed C-spec: Extended-Factor-2 continuation across lines |
+| 134 | Fixed C-spec: mixed with an explicit /free block |
+| 135 | Fixed C-spec: reject non-blank control level |
+| 136 | Fixed C-spec: reject conditioning indicator |
+| 137 | Fixed C-spec: reject deferred opcode (CHAIN) with distinct message |
+| 138 | Fixed C-spec: reject legacy opcode (ADD) |

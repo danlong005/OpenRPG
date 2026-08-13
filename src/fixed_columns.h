@@ -68,6 +68,23 @@ namespace DSpec {
     inline constexpr ColSpec KeywordTail {"KeywordTail", 44, 80, "SC09-2508 ch.15: positions 44-80, continuable"};
 }
 
+namespace CSpec {
+    // C-spec (Calculation) — traditional and extended-factor-2 layouts share
+    // the same column positions (SC09-2508 "Calculation Specifications",
+    // p.559 Table 125 "Operation Codes in Traditional Syntax" and p.565
+    // "Extended Factor 2 Syntax"); which fields apply depends on the opcode.
+    inline constexpr ColSpec ControlLevel {"ControlLevel", 7,   8, "SC09-2508 p.560: positions 7-8 (blank or SR here; L0/L1-L9/LR/AN/OR are RPG-cycle-only, rejected)"};
+    inline constexpr ColSpec Indicators   {"Indicators",   9,  11, "SC09-2508 p.561: positions 9-11, conditioning indicator"};
+    inline constexpr ColSpec Factor1      {"Factor1",      12, 25, "SC09-2508 p.562: positions 12-25 (blank for extended-factor-2 opcodes)"};
+    inline constexpr ColSpec Opcode       {"Opcode",       26, 35, "SC09-2508 p.562: positions 26-35, operation code + (extender)"};
+    inline constexpr ColSpec Factor2      {"Factor2",      36, 49, "SC09-2508 p.563: positions 36-49 (traditional-syntax opcodes only)"};
+    inline constexpr ColSpec Result       {"Result",       50, 63, "SC09-2508 p.563: positions 50-63 (traditional-syntax opcodes only)"};
+    inline constexpr ColSpec Length       {"Length",       64, 68, "SC09-2508 p.563: positions 64-68 (must be blank — inline field definition not supported)"};
+    inline constexpr ColSpec Decimals     {"Decimals",     69, 70, "SC09-2508 p.564: positions 69-70 (must be blank — inline field definition not supported)"};
+    inline constexpr ColSpec ResultInd    {"ResultInd",    71, 76, "SC09-2508 p.564: positions 71-76 (must be blank — free-form drops resulting indicators)"};
+    inline constexpr ColSpec ExtFactor2   {"ExtFactor2",   36, 80, "SC09-2508 p.565: positions 36-80, one free-form expression (extended-factor-2 opcodes only); continuation lines resume here with 7-35 blank"};
+}
+
 // Extracts the (trimmed) substring for `spec` from `line`, converting the
 // 1-based inclusive column range to a 0-based std::string::substr call
 // and clamping to the line's actual length (a physical source line is

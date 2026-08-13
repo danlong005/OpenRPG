@@ -521,6 +521,27 @@ run_test "123" "Fixed-format DIM(n) array of DS" "$TESTDIR/test123_fixed_ds_dim.
 # format analogue of test62_overlay_pos.rpgle (identical C-spec logic).
 run_test "124" "Fixed-format subfield OVERLAY/POS" "$TESTDIR/test124_fixed_overlay.rpgle" "run"
 
+# ── Fixed-format frontend: traditional/extended-factor-2 C-spec ──────────
+# Native column-based C-spec (Factor1/Opcode/Factor2/Result and Extended
+# Factor 2), transpiled line-by-line into free-form-equivalent text and
+# bridged through the same parse_free_block() explicit /free blocks use
+# (see src/fixed_cspec.h/.cpp) — see TODO.md "Fixed-Format Source Support
+# — Next Steps" item #1.
+run_test "125" "Fixed C-spec: IF/ELSEIF/ELSE/ENDIF" "$TESTDIR/test125_fixed_cspec_if.rpgle" "run"
+run_test "126" "Fixed C-spec: DOW/DOU/ENDDO" "$TESTDIR/test126_fixed_cspec_dow_dou.rpgle" "run"
+run_test "127" "Fixed C-spec: FOR/ENDFOR (TO/DOWNTO/BY)" "$TESTDIR/test127_fixed_cspec_for.rpgle" "run"
+run_test "128" "Fixed C-spec: SELECT/WHEN/OTHER/ENDSL" "$TESTDIR/test128_fixed_cspec_select.rpgle" "run"
+run_test "129" "Fixed C-spec: BEGSR/EXSR/ENDSR" "$TESTDIR/test129_fixed_cspec_subr.rpgle" "run"
+run_test "130" "Fixed C-spec: EVAL/EVALR/CALLP/LEAVE/ITER" "$TESTDIR/test130_fixed_cspec_eval_callp.rpgle" "run"
+run_test "131" "Fixed C-spec: CLEAR/RESET/DSPLY/SORTA" "$TESTDIR/test131_fixed_cspec_clear_sorta.rpgle" "run"
+run_test "132" "Fixed C-spec: MONITOR/ON-ERROR/ENDMON" "$TESTDIR/test132_fixed_cspec_monitor.rpgle" "run"
+run_test "133" "Fixed C-spec: Extended-Factor-2 continuation" "$TESTDIR/test133_fixed_cspec_continuation.rpgle" "run"
+run_test "134" "Fixed C-spec: mixed with explicit /free block" "$TESTDIR/test134_fixed_cspec_mixed_free.rpgle" "run"
+run_test "135" "Fixed C-spec: reject non-blank control level" "$TESTDIR/test135_fixed_cspec_err_ctllevel.rpgle" "error"
+run_test "136" "Fixed C-spec: reject conditioning indicator" "$TESTDIR/test136_fixed_cspec_err_indicator.rpgle" "error"
+run_test "137" "Fixed C-spec: reject deferred opcode (CHAIN)" "$TESTDIR/test137_fixed_cspec_err_deferred.rpgle" "error"
+run_test "138" "Fixed C-spec: reject legacy opcode (ADD)" "$TESTDIR/test138_fixed_cspec_err_legacy.rpgle" "error"
+
 # ── Customer / drop-in tests ─────────────────────────────────────────────
 # Drop any .rpgle or .sqlrpgle file into tests/customer/ and it will be
 # compile-tested automatically — no registration or expected output needed.

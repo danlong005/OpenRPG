@@ -1,5 +1,6 @@
 #include "fixed_reader.h"
 #include "fixed_columns.h"
+#include "fixed_cspec.h"
 #include "free_bridge.h"
 #include "keyword_list.h"
 #include <cctype>
@@ -294,6 +295,23 @@ Program* parseFixedFormat(const std::string& src_text, const std::string& /*file
     std::string freeBlockText;
     int freeBlockStartLine = 0;
 
+    // Native (column-based) C-spec: a contiguous run of 'C' lines is
+    // transpiled line-by-line into free-form-equivalent text (see
+    // fixed_cspec.h/.cpp), then flushed through the *same*
+    // parse_free_block() bridge /free blocks already use, exactly once
+    // per run. bufLines keeps one entry per physical line consumed
+    // (including blank/comment lines, pushed directly below) so error
+    // line numbers inside the run stay aligned with the real source.
+    CSpecRunState cState;
+    bool inCSpecRun = false;
+    auto flushCRun = [&]() {
+        int startLine = 0;
+        std::string buf = flushCSpecRun(cState, startLine);
+        auto stmts = parse_free_block(buf, startLine);
+        for (auto& s : stmts) program->statements.push_back(std::move(s));
+        inCSpecRun = false;
+    };
+
     for (size_t idx = 0; idx < lines.size(); idx++) {
         int lineNo = (int)idx + 1;
         const std::string& line = lines[idx];
@@ -313,16 +331,26 @@ Program* parseFixedFormat(const std::string& src_text, const std::string& /*file
 
         std::string trimmed = trim(line);
         if (upper(trimmed) == "/FREE") {
+            if (inCSpecRun) flushCRun();
             inFreeBlock = true;
             freeBlockStartLine = lineNo + 1;
             continue;
         }
 
-        if (line.empty()) continue;
+        if (line.empty()) {
+            if (inCSpecRun) cState.bufLines.push_back("");
+            continue;
+        }
         std::string specType = upper(extractCol(line, SpecType));
         std::string commentFlag = extractCol(line, CommentFlag);
-        if (commentFlag == "*") continue; // whole-line comment
-        if (specType.empty()) continue;   // blank/short line, nothing to dispatch
+        if (commentFlag == "*") { // whole-line comment
+            if (inCSpecRun) cState.bufLines.push_back("");
+            continue;
+        }
+        if (specType.empty()) { // blank/short line, nothing to dispatch
+            if (inCSpecRun) cState.bufLines.push_back("");
+            continue;
+        }
 
         // A new spec-type line always closes out any pending F-spec
         // continuation (F-spec keyword-tail continuation lines have
@@ -336,6 +364,7 @@ Program* parseFixedFormat(const std::string& src_text, const std::string& /*file
             dState.pendingName.clear();
         }
         if (specType != "D") dState.currentDS = nullptr;
+        if (specType != "C" && inCSpecRun) flushCRun();
 
         if (specType == "H") {
             hSpecTail += " " + extractCol(line, HSpec::KeywordTail);
@@ -344,13 +373,8 @@ Program* parseFixedFormat(const std::string& src_text, const std::string& /*file
         } else if (specType == "D") {
             handleDSpecLine(program, dState, line, lineNo);
         } else if (specType == "C") {
-            // Only /free...end-free is recognized (handled above via the
-            // directive check, before spec-type dispatch); a real C-spec
-            // line reaching here is traditional/extended-factor-2 syntax,
-            // explicitly out of Phase 1's scope.
-            report_fixed_format_error(lineNo,
-                "C-spec: fixed-column and extended-factor-2 syntax are not supported in "
-                "fixed-format Phase 1 — use /free ... /end-free instead");
+            if (!inCSpecRun) { inCSpecRun = true; cState.startLine = lineNo; }
+            feedCSpecLine(cState, line, lineNo);
         } else if (specType == "I" || specType == "O") {
             report_fixed_format_error(lineNo,
                 std::string("Fixed-format Phase 1 does not support ") + specType +
@@ -363,6 +387,7 @@ Program* parseFixedFormat(const std::string& src_text, const std::string& /*file
     if (inFreeBlock) {
         report_fixed_format_error(freeBlockStartLine, "/FREE block never closed with /END-FREE");
     }
+    if (inCSpecRun) flushCRun();
     finalizeFSpec(program, pendingF);
     if (!dState.pendingName.empty()) {
         report_fixed_format_error((int)lines.size(), "D-spec: name continuation ('...') never completed");

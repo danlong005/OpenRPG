@@ -480,6 +480,26 @@ run_test "114" "DATA-INTO/GEN %PARSER('JSON')" "$TESTDIR/test114_data_into_json_
 # 115: DUMP opcode
 run_test "115" "DUMP opcode" "$TESTDIR/test115_dump.rpgle" "run"
 
+# ── Fixed-format frontend (Phase 1: H/F/D + /free-bridge C-spec) ─────────
+# 116: H+D specs only, no I/O, no C-spec — confirms sniff→dispatch→AST
+# construction→codegen→link before the /free bridge is involved at all.
+# Also exercises the comment-line skip (col 7 = '*') mid D-spec block.
+run_test "116" "Fixed-format H+D only" "$TESTDIR/test116_fixed_hd.rpgle" "run"
+
+# 117: H+D+C(/free) — direct fixed-format analogue of test01_hello.rpgle;
+# first test exercising the /free bridge end-to-end with real DSPLY output.
+run_test "117" "Fixed-format H+D+C(/free) hello" "$TESTDIR/test117_fixed_free_hello.rpgle" "run"
+
+# 118: H+F+D+C full Phase 1 milestone — fixed F-spec DISK file with
+# keyword-tail continuation, D-spec name continuation ("..."), CHAIN/
+# %FOUND inside a /free block.
+run_test "118" "Fixed-format H+F+D+C DISK CHAIN" "$TESTDIR/test118_fixed_rla_chain.rpgle" "run-sql-conf"
+
+# 119: deliberate syntax error inside a fixed-format /free block — confirms
+# get_parse_error_count() + main.cpp's error gate work identically for the
+# fixed-format frontend.
+run_test "119" "Fixed-format /free syntax error" "$TESTDIR/test119_fixed_free_error.rpgle" "error"
+
 # ── Customer / drop-in tests ─────────────────────────────────────────────
 # Drop any .rpgle or .sqlrpgle file into tests/customer/ and it will be
 # compile-tested automatically — no registration or expected output needed.

@@ -58,6 +58,7 @@ jobs:
               --license MIT \
               --depends unixodbc \
               --depends unixodbc-dev \
+              --depends g++ \
               --deb-recommends dspfc \
               -C /tmp/rpgc-root \
               usr/
@@ -73,6 +74,7 @@ jobs:
               --license MIT \
               --depends unixODBC \
               --depends unixODBC-devel \
+              --depends gcc-c++ \
               -C /tmp/rpgc-root \
               usr/
 
@@ -161,6 +163,7 @@ jobs:
               --license MIT \
               --depends unixodbc \
               --depends unixodbc-dev \
+              --depends g++ \
               --deb-recommends dspfc \
               -C /tmp/rpgc-root \
               usr/
@@ -176,6 +179,7 @@ jobs:
               --license MIT \
               --depends unixODBC \
               --depends unixODBC-devel \
+              --depends gcc-c++ \
               -C /tmp/rpgc-root \
               usr/
 
@@ -256,10 +260,25 @@ jobs:
         run: |
           VERSION=${GITHUB_REF_NAME#v}
 
-          # Pre-install script: check for unixodbc
+          # Pre-install script: check for Xcode Command Line Tools and unixodbc
           mkdir -p /tmp/rpgc-scripts
           cat > /tmp/rpgc-scripts/preinstall << 'EOF'
           #!/bin/bash
+          # rpgc shells out to clang++ at runtime (it compiles the C++ it
+          # generates), which needs the Xcode Command Line Tools. Unlike the
+          # unixodbc check below, this can't be a hard-fail here: `xcode-select
+          # --install` only *starts* an async GUI download the user has to
+          # click through, it can't be waited on inside a package-install
+          # script. So we just kick it off proactively and let the rest of the
+          # install proceed — without this, the same prompt would otherwise
+          # only appear later, as a confusing failed-compile error on the
+          # user's first `rpgc` run.
+          if ! xcode-select -p >/dev/null 2>&1; then
+              echo "Xcode Command Line Tools not found — starting installation..."
+              xcode-select --install >/dev/null 2>&1
+              echo "Finish that install before running rpgc for the first time."
+          fi
+
           if [ ! -f /opt/homebrew/lib/libodbc.dylib ] && [ ! -f /usr/local/lib/libodbc.dylib ]; then
               echo "Error: unixodbc is required. Install with: brew install unixodbc"
               exit 1

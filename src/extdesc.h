@@ -23,13 +23,19 @@ struct ExternalFileDesc {
 // e.g.  CUSTNO  VARCHAR(10)
 //        CUSTBAL  PACKED(9:2)
 
-// Query external descriptions for all DCL-F DISK files found in src_text.
-// src_dir: directory of the .rpgle source (for cache file lookup).
+// Query external descriptions for a caller-supplied list of DCL-F DISK
+// files: {rpgName, extdescOverride} pairs (extdescOverride empty means
+// "use the lowercased rpgName as the table name"). Callers extract this
+// list by walking the already-parsed AST for DclF nodes with
+// usage=="DISK" — not by re-scanning source text — so it works
+// identically regardless of which frontend (free- or fixed-format)
+// produced the AST.
+// src_dir: directory of the .rpgle/.rpg source (for cache file lookup).
 // conf: connection string from rpgc.conf (may be empty).
 // If a .extdesc cache file exists and DB is unavailable, uses cache.
 // Writes/updates .extdesc cache when DB is available.
 std::map<std::string, ExternalFileDesc>
-queryExternalDescs(const std::string& src_text,
+queryExternalDescs(const std::vector<std::pair<std::string, std::string>>& diskFiles,
                    const std::string& src_dir,
                    const RpgConf& conf);
 

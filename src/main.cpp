@@ -4,7 +4,6 @@
 #include <cctype>
 #include <fstream>
 #include <iostream>
-#include <regex>
 #include <sstream>
 #include <string>
 #include <sys/stat.h>
@@ -13,6 +12,7 @@
 #include "codegen.h"
 #include "conf.h"
 #include "extdesc.h"
+#include "fixed_reader.h"
 
 // ---------------------------------------------------------------------------
 // Minimal .dspfd JSON loader for the WORKSTN pre-pass
@@ -136,18 +136,15 @@ static rpg::DspfFileInfo loadDspfDesc(const std::string& path, const std::string
     return info;
 }
 
-// Scan RPG source for DCL-F X WORKSTN and load their .dspfd descriptors
+// Loads .dspfd descriptors for a caller-supplied list of DCL-F WORKSTN
+// file names. Callers extract this list by walking the already-parsed
+// AST for DclF nodes with usage=="WORKSTN" — not by re-scanning source
+// text — so it works identically regardless of which frontend (free- or
+// fixed-format) produced the AST.
 static std::map<std::string, rpg::DspfFileInfo>
-queryDspfDescs(const std::string& src_text, const std::string& src_dir) {
+queryDspfDescs(const std::vector<std::string>& workstnNames, const std::string& src_dir) {
     std::map<std::string, rpg::DspfFileInfo> result;
-    // Case-insensitive scan for DCL-F <name> WORKSTN
-    static const std::regex re(R"(DCL-F\s+([A-Za-z_][A-Za-z0-9_]*)\s+WORKSTN)",
-                                std::regex_constants::icase);
-    auto begin = std::sregex_iterator(src_text.begin(), src_text.end(), re);
-    auto end   = std::sregex_iterator();
-    for (auto it = begin; it != end; ++it) {
-        std::string fname = (*it)[1].str();
-        // Uppercase
+    for (std::string fname : workstnNames) {
         for (auto& c : fname) c = (char)toupper((unsigned char)c);
         if (result.count(fname)) continue;
         // Look for FNAME.dspfd in source directory
@@ -163,6 +160,70 @@ queryDspfDescs(const std::string& src_text, const std::string& src_dir) {
         result[fname] = loadDspfDesc(dspfdPath, fname);
     }
     return result;
+}
+
+// Content-sniffs source text to decide whether it's classic column-based
+// fixed-format RPG or free-format (**FREE, semicolon-terminated). Extension
+// is deliberately not consulted — **FREE itself isn't a hard mode switch in
+// this compiler either (see tests/test61_no_free.rpgle), so detection stays
+// consistent with that philosophy. Rule: on the first substantive (non-blank,
+// non-comment) physical line, columns 1-5 are the sequence-number field in
+// real fixed-format source (blank or numeric only) — free-format statements
+// routinely start in column 1 with non-numeric content. If columns 1-5 look
+// like a sequence-number field AND column 6 is one of H/F/D/I/C/O (the
+// fixed-format spec-type letter), it's fixed-format.
+static bool looksLikeFixedFormat(const std::string& src_text) {
+    std::istringstream ss(src_text);
+    std::string line;
+    while (std::getline(ss, line)) {
+        // Strip trailing \r for CRLF source files.
+        if (!line.empty() && line.back() == '\r') line.pop_back();
+
+        std::string trimmed = line;
+        size_t a = trimmed.find_first_not_of(" \t");
+        if (a == std::string::npos) continue; // blank line
+        trimmed = trimmed.substr(a);
+        if (trimmed.empty()) continue;
+
+        if (trimmed[0] == '*') {
+            // "**FREE" short-circuits to free-format; any other line
+            // starting with '*' in column 1 is a free-format comment.
+            std::string upper = trimmed;
+            for (auto& c : upper) c = (char)toupper((unsigned char)c);
+            if (upper.rfind("**FREE", 0) == 0) return false;
+            continue;
+        }
+
+        std::string cols1to5 = line.size() >= 5 ? line.substr(0, 5) : line;
+        bool seqLooksFixed = true;
+        for (char c : cols1to5) {
+            if (c != ' ' && !isdigit((unsigned char)c)) { seqLooksFixed = false; break; }
+        }
+        if (!seqLooksFixed) return false;
+
+        char col6 = line.size() >= 6 ? (char)toupper((unsigned char)line[5]) : ' ';
+        return col6 == 'H' || col6 == 'F' || col6 == 'D' ||
+               col6 == 'I' || col6 == 'C' || col6 == 'O';
+    }
+    return false; // empty source: treat as free-format
+}
+
+// Walks the (already-parsed) AST for top-level DCL-F statements, building
+// the caller-supplied lists queryExternalDescs()/queryDspfDescs() expect.
+// DclF only ever appears at program top level in this compiler's grammar
+// (both frontends), so a non-recursive scan of program->statements suffices.
+static void collectDclFLists(rpg::Program* program,
+                              std::vector<std::pair<std::string, std::string>>& diskFiles,
+                              std::vector<std::string>& workstnNames) {
+    for (auto& stmt : program->statements) {
+        auto* declF = dynamic_cast<rpg::DclF*>(stmt.get());
+        if (!declF) continue;
+        if (declF->usage == "DISK") {
+            diskFiles.emplace_back(declF->name, declF->extdesc);
+        } else if (declF->usage == "WORKSTN") {
+            workstnNames.push_back(declF->name);
+        }
+    }
 }
 
 #ifdef _WIN32
@@ -388,27 +449,41 @@ int main(int argc, char* argv[]) {
         src_dir = (sl != std::string::npos) ? inp.substr(0, sl) : ".";
     }
 
-    // Preemptive EXTDESC pass: query DB schema (or read cache)
-    auto ext_descs = queryExternalDescs(src_text, src_dir, conf);
+    // Parse first — the pre-passes below need the AST (DclF nodes) rather
+    // than raw source text, since fixed-format F-spec syntax can't be
+    // regex-matched the way free-format DCL-F could.
+    bool is_fixed = looksLikeFixedFormat(src_text);
+    rpg::Program* program = nullptr;
+    int errors = 0;
 
-    // Preemptive DSPF pass: load .dspfd descriptor for each DCL-F WORKSTN file
-    auto dspf_descs = queryDspfDescs(src_text, src_dir);
-
-    yyin = fopen(input_file, "r");
-    if (!yyin) {
-        std::cerr << "Error: cannot open " << input_file << "\n";
-        return 1;
+    if (is_fixed) {
+        program = rpg::fixed::parseFixedFormat(src_text, input_file);
+        errors = get_parse_error_count();
+    } else {
+        yyin = fopen(input_file, "r");
+        if (!yyin) {
+            std::cerr << "Error: cannot open " << input_file << "\n";
+            return 1;
+        }
+        program = get_parsed_program();
+        fclose(yyin);
+        errors = get_parse_error_count();
     }
 
-    rpg::Program* program = get_parsed_program();
-    fclose(yyin);
-
-    int errors = get_parse_error_count();
     if (errors > 0) {
         std::cerr << errors << " error(s) found. Compilation failed.\n";
         delete program;
         return 1;
     }
+
+    // Preemptive EXTDESC pass: query DB schema (or read cache)
+    std::vector<std::pair<std::string, std::string>> diskFiles;
+    std::vector<std::string> workstnNames;
+    collectDclFLists(program, diskFiles, workstnNames);
+    auto ext_descs = queryExternalDescs(diskFiles, src_dir, conf);
+
+    // Preemptive DSPF pass: load .dspfd descriptor for each DCL-F WORKSTN file
+    auto dspf_descs = queryDspfDescs(workstnNames, src_dir);
 
     // Resolve absolute path to source file for #line directives
     std::string abs_source;

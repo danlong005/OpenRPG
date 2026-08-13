@@ -35,12 +35,28 @@ struct DSFieldList {
 #include <vector>
 #include <string>
 #include "ast.h"
+#include "free_bridge.h"
 #include "sql_utils.h"
 
 extern int yylex();
 extern int yylineno;
 extern char* yytext;
 void yyerror(const char* s);
+
+// Flex's in-memory scan-buffer API — not declared by any generated
+// header (this Makefile invokes flex without --header-file), so these
+// match flex's actual default (non-%option c++) signatures by hand.
+// Used by parse_free_block() below to re-invoke this same lexer/parser
+// on an in-memory string instead of a file, for the fixed-format /free
+// bridge (see TODO.md's "Fixed-Format Source Support" entry).
+// No extern "C" here — flex's generated lexer.cpp is compiled as C++
+// (this Makefile has no %option c++, but clang++ still compiles the
+// .cpp output with normal C++ linkage/mangling), matching how yylex()/
+// yylineno above are declared as plain extern, not extern "C".
+typedef struct yy_buffer_state* YY_BUFFER_STATE;
+extern YY_BUFFER_STATE yy_scan_string(const char* yy_str);
+extern void yy_switch_to_buffer(YY_BUFFER_STATE new_buffer);
+extern void yy_delete_buffer(YY_BUFFER_STATE b);
 
 static rpg::Program* g_program = nullptr;
 static int g_error_count = 0;
@@ -2828,4 +2844,36 @@ rpg::Program* get_parsed_program() {
 
 int get_parse_error_count() {
     return g_error_count;
+}
+
+std::vector<std::unique_ptr<rpg::Statement>>
+parse_free_block(const std::string& text, int start_line) {
+    // Save every piece of global lexer/parser state this touches, so
+    // control returns to whatever the caller (the fixed-format reader,
+    // via main.cpp) was doing with none of it disturbed.
+    rpg::Program* saved_program = g_program;
+    int saved_lineno = yylineno;
+
+    g_program = new rpg::Program();
+    yylineno = start_line;
+    YY_BUFFER_STATE buf = yy_scan_string(text.c_str());
+    yy_switch_to_buffer(buf);
+    // Deliberately NOT resetting g_error_count here (unlike
+    // get_parsed_program()) — a syntax error inside a /free block is a
+    // real error in the overall compilation unit and must add to the
+    // same count main.cpp already gates on, not reset/hide it.
+    yyparse();
+    yy_delete_buffer(buf);
+
+    std::vector<std::unique_ptr<rpg::Statement>> stmts = std::move(g_program->statements);
+    delete g_program;
+
+    g_program = saved_program;
+    yylineno = saved_lineno;
+    return stmts;
+}
+
+void report_fixed_format_error(int line, const std::string& msg) {
+    g_error_count++;
+    fprintf(stderr, "Error at line %d: %s\n", line, msg.c_str());
 }

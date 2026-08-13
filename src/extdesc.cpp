@@ -4,7 +4,6 @@
 #include <cstring>
 #include <fstream>
 #include <iostream>
-#include <regex>
 #include <sstream>
 
 // ODBC headers — only included when building extdesc
@@ -173,39 +172,13 @@ static bool queryODBC(SQLHDBC hdbc, const std::string& tableName, ExternalFileDe
     return found;
 }
 
-// Extract DCL-F DISK file names from source text (fast regex scan, before full parse)
-static std::vector<std::pair<std::string, std::string>>
-scanDclF(const std::string& src) {
-    // Match: DCL-F <name> DISK [optional keywords including EXTDESC('tablename')]
-    std::vector<std::pair<std::string, std::string>> result; // {rpgName, extdescOverride}
-    std::regex dclf_re(R"(DCL-F\s+(\w+)\s+DISK\b([^;]*);)",
-                        std::regex::icase);
-    std::regex extdesc_re(R"(EXTDESC\s*\(\s*'([^']*)'\s*\))",
-                           std::regex::icase);
-
-    auto begin = std::sregex_iterator(src.begin(), src.end(), dclf_re);
-    auto end   = std::sregex_iterator();
-    for (auto it = begin; it != end; ++it) {
-        std::smatch m = *it;
-        std::string rpgName = toUpper(m[1].str());
-        std::string rest    = m[2].str();
-        std::string override_table;
-        std::smatch em;
-        if (std::regex_search(rest, em, extdesc_re)) {
-            override_table = em[1].str();
-        }
-        result.emplace_back(rpgName, override_table);
-    }
-    return result;
-}
-
 std::map<std::string, ExternalFileDesc>
-queryExternalDescs(const std::string& src_text,
+queryExternalDescs(const std::vector<std::pair<std::string, std::string>>& diskFiles,
                    const std::string& src_dir,
                    const RpgConf& conf) {
     std::map<std::string, ExternalFileDesc> result;
 
-    auto files = scanDclF(src_text);
+    auto& files = diskFiles;
     if (files.empty()) return result;
 
     // Try to establish ODBC connection if conf has DSN

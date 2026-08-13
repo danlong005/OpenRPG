@@ -542,6 +542,21 @@ run_test "136" "Fixed C-spec: reject conditioning indicator" "$TESTDIR/test136_f
 run_test "137" "Fixed C-spec: reject deferred opcode (CHAIN)" "$TESTDIR/test137_fixed_cspec_err_deferred.rpgle" "error"
 run_test "138" "Fixed C-spec: reject legacy opcode (ADD)" "$TESTDIR/test138_fixed_cspec_err_legacy.rpgle" "error"
 
+# ── Fixed-format frontend: /COPY and /INCLUDE ─────────────────────────────
+# Native /COPY/INCLUDE support outside /free blocks — a recursive,
+# depth-limited line-splicing pass that runs once before spec-type
+# dispatch begins (see expandCopyDirectives() in src/fixed_reader.cpp),
+# matching the free-format lexer's own /COPY convention exactly (literal
+# filename, opened relative to CWD). Lines inside an explicit /free block
+# are left untouched — parse_free_block() re-invokes the real free-format
+# lexer there, which already handles /COPY itself. See TODO.md "Fixed-
+# Format Source Support — Next Steps" item #2.
+run_test "139" "Fixed-format /COPY: D-spec copybook" "$TESTDIR/test139_fixed_copy_dspec.rpgle" "run"
+run_test "140" "Fixed-format /INCLUDE: C-spec copybook mid-run" "$TESTDIR/test140_fixed_copy_cspec.rpgle" "run"
+run_test "141" "Fixed-format /COPY: nested copybooks" "$TESTDIR/test141_fixed_copy_nested.rpgle" "run"
+run_test "142" "Fixed-format /COPY inside an explicit /free block" "$TESTDIR/test142_fixed_copy_in_free.rpgle" "run"
+run_test "143" "Fixed-format /COPY: missing file rejected" "$TESTDIR/test143_fixed_copy_err_missing.rpgle" "error"
+
 # ── Customer / drop-in tests ─────────────────────────────────────────────
 # Drop any .rpgle or .sqlrpgle file into tests/customer/ and it will be
 # compile-tested automatically — no registration or expected output needed.

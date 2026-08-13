@@ -5,6 +5,8 @@
 #include "keyword_list.h"
 #include <cctype>
 #include <cstdlib>
+#include <fstream>
+#include <sstream>
 
 namespace rpg {
 namespace fixed {
@@ -40,6 +42,94 @@ static std::string trim(const std::string& s) {
     if (a == std::string::npos) return "";
     size_t b = s.find_last_not_of(" \t");
     return s.substr(a, b - a + 1);
+}
+
+// Matches the free-format lexer's own /COPY and /INCLUDE nesting limit
+// (src/lexer.l's MAX_INCLUDE_DEPTH) — kept as the same constant for
+// consistency, not because either number is load-bearing.
+static const int MAX_COPY_DEPTH = 10;
+
+static bool readFileLines(const std::string& path, std::vector<std::string>& outLines) {
+    std::ifstream f(path);
+    if (!f) return false;
+    std::ostringstream ss;
+    ss << f.rdbuf();
+    outLines = splitLines(ss.str());
+    return true;
+}
+
+// Expands /COPY and /INCLUDE directive lines by splicing the target
+// file's own lines in place, recursively — matching the free-format
+// lexer's own /COPY/INCLUDE convention exactly (src/lexer.l): the text
+// after the directive keyword is a literal filename, opened via fopen()
+// relative to the process's current working directory (no library/member
+// catalog, no search path). Lines inside an explicit /FREE...·/END-FREE
+// region are left untouched: parse_free_block() re-invokes the real
+// free-format lexer on that text, which already has its own working
+// /COPY/INCLUDE mechanism — expanding here too would double-process it.
+//
+// Line numbers after an expansion point are relative to this flattened
+// line stream, not the original file — the same "best effort, not exact"
+// precision the free-format lexer already has today (yylineno isn't
+// saved/restored across its own buffer switch either), not a new
+// regression introduced here.
+//
+// `depth` guards against runaway/self-referential copies (matches
+// MAX_COPY_DEPTH above); `ok` is set false (not thrown) on any error so
+// the rest of the file can still be scanned for further diagnostics,
+// matching this reader's error-recovery style elsewhere.
+static std::vector<std::string> expandCopyDirectives(const std::vector<std::string>& lines, int depth, bool& ok) {
+    std::vector<std::string> out;
+    bool inFree = false;
+    for (size_t i = 0; i < lines.size(); i++) {
+        const std::string& line = lines[i];
+        std::string trimmed = trim(line);
+        std::string upperTrimmed = upper(trimmed);
+
+        if (inFree) {
+            out.push_back(line);
+            if (upperTrimmed == "/END-FREE") inFree = false;
+            continue;
+        }
+        if (upperTrimmed == "/FREE") {
+            inFree = true;
+            out.push_back(line);
+            continue;
+        }
+
+        bool isCopy = upperTrimmed.rfind("/COPY", 0) == 0 &&
+            (upperTrimmed.size() == 5 || upperTrimmed[5] == ' ' || upperTrimmed[5] == '\t');
+        bool isInclude = !isCopy && upperTrimmed.rfind("/INCLUDE", 0) == 0 &&
+            (upperTrimmed.size() == 8 || upperTrimmed[8] == ' ' || upperTrimmed[8] == '\t');
+        if (!isCopy && !isInclude) {
+            out.push_back(line);
+            continue;
+        }
+
+        const char* directiveName = isCopy ? "/COPY" : "/INCLUDE";
+        size_t kwLen = isCopy ? 5 : 8;
+        std::string filename = trim(trimmed.substr(kwLen));
+        if (filename.empty()) {
+            report_fixed_format_error((int)i + 1, std::string(directiveName) + ": missing filename");
+            ok = false;
+            continue;
+        }
+        if (depth >= MAX_COPY_DEPTH) {
+            report_fixed_format_error((int)i + 1, std::string(directiveName) + " nesting too deep");
+            ok = false;
+            continue;
+        }
+        std::vector<std::string> copied;
+        if (!readFileLines(filename, copied)) {
+            report_fixed_format_error((int)i + 1,
+                std::string("cannot open ") + directiveName + " file '" + filename + "'");
+            ok = false;
+            continue;
+        }
+        auto expanded = expandCopyDirectives(copied, depth + 1, ok);
+        for (auto& l : expanded) out.push_back(std::move(l));
+    }
+    return out;
 }
 
 // D-spec position 40 (Internal Data Type) — verified against IBM's ILE
@@ -286,6 +376,8 @@ static void handleDSpecLine(Program* program, DSpecState& state,
 Program* parseFixedFormat(const std::string& src_text, const std::string& /*filename*/) {
     auto* program = new Program();
     std::vector<std::string> lines = splitLines(src_text);
+    bool copyOk = true;
+    lines = expandCopyDirectives(lines, 0, copyOk);
 
     std::string hSpecTail;
     PendingFSpec pendingF;

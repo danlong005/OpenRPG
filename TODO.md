@@ -232,17 +232,27 @@ citations live in `fixed_columns.h`'s `CSpec` namespace.
   cleanly). Traditional *legacy* opcodes (`ADD`/`SUB`/`MOVE`/`GOTO`/etc.)
   remain item #3 below, untouched by this V1 pass.
 
-**2. `/COPY`/`/INCLUDE` outside `/free` blocks.** Currently unimplemented
-in `fixed_reader.cpp` entirely (zero references, confirmed by code
-search) — a `/COPY` line at the top of a fixed-format H/F/D-spec block
-hits column-6 spec-type dispatch and fails to compile. Splitting D-specs
-across shared copybook members is extremely common in real shops. Already
-works *inside* `/free` blocks today via the existing flex buffer-stack
-bridge, but not at the D/F/H-spec level. Needs a fixed-format-native
-mechanism — splice the copy member's physical lines into the outer
-reader's own line stream before spec-type dispatch — rather than reusing
-the free-format lexer's buffer-stack approach, which is flex-specific and
-not available to `fixed_reader.cpp`'s plain line-array driver.
+**2. `/COPY`/`/INCLUDE` outside `/free` blocks ✅.** Implemented as a
+recursive, depth-limited line-splicing preprocessing pass
+(`expandCopyDirectives()` in `src/fixed_reader.cpp`) that runs once,
+before spec-type dispatch begins — so a copied D-spec, F-spec, H-spec, or
+native C-spec line is indistinguishable from one that was physically
+present in the outer file. Matches the free-format lexer's own
+`/COPY`/`/INCLUDE` convention exactly (`src/lexer.l`): the text after the
+directive keyword is a literal filename, opened relative to the process's
+current working directory — no library/member catalog, no search path.
+Nesting is capped at the same depth (10) as the free-format lexer's own
+`MAX_INCLUDE_DEPTH`, for consistency rather than because either number is
+load-bearing. Lines between an explicit `/FREE`...`/END-FREE` pair are
+deliberately left untouched by this pass — `parse_free_block()`
+re-invokes the real free-format lexer on that text, which already has its
+own working `/COPY`/`/INCLUDE` handling, so expanding here too would
+double-process it (Test 142 proves the two paths coexist correctly). Line
+numbers after an expansion point are relative to the flattened line
+stream, not the original file — the same "best effort, not exact"
+precision the free-format lexer already has today (`yylineno` isn't
+saved/restored across its own buffer switch either), not a new
+regression. Tests 139-143.
 
 **3. Traditional legacy opcodes (MOVE, ADD, SUB, MULT, DIV, COMP,
 GOTO/TAG, CALL/PARM/PLIST).** For genuinely old, pre-modern-opcode fixed-
@@ -551,3 +561,8 @@ member's C-spec to host modern free-format statements.
 | 136 | Fixed C-spec: reject conditioning indicator |
 | 137 | Fixed C-spec: reject deferred opcode (CHAIN) with distinct message |
 | 138 | Fixed C-spec: reject legacy opcode (ADD) |
+| 139 | Fixed-format /COPY: D-spec copybook |
+| 140 | Fixed-format /INCLUDE: C-spec copybook mid-run |
+| 141 | Fixed-format /COPY: nested copybooks |
+| 142 | Fixed-format /COPY inside an explicit /free block |
+| 143 | Fixed-format /COPY: missing file rejected |

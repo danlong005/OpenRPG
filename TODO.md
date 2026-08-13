@@ -137,20 +137,24 @@
 ### Record Level Access (via ODBC) ✅
 DCL-F, CHAIN, READ, WRITE, UPDATE, DELETE, SETLL, SETGT, READE — implemented via ODBC (Tests 103-108)
 
-### Fixed-Format Source Support — Phase 1 (in progress)
+### Fixed-Format Source Support — Phase 1 ✅
 A second, column-based frontend alongside free-format — real legacy RPG is
 often still fixed-format H/F/D/C specs, sometimes with C-spec logic already
 modernized into `/free`...`/end-free` blocks while H/F/D stay fixed-format
 (a common incremental-modernization pattern). The AST and codegen are
 already format-agnostic, so this is purely a new *parsing* frontend — every
 existing language feature becomes reachable from fixed-format source once
-it builds the same AST nodes, no codegen changes needed.
+it builds the same AST nodes, no codegen changes needed. Source format is
+content-sniffed (columns 1-6 of the first substantive line), not extension-
+gated — `**FREE` was never a hard mode switch here either.
 - H-spec (control options — MAIN/NOMAIN/DATFMT/TIMFMT, same as CTL-OPT)
-- F-spec (externally-described DISK/WORKSTN files)
-- D-spec (standalone fields; basic non-OCCURS DS/subfields)
+- F-spec (externally-described DISK/WORKSTN files; keyword-tail continuation)
+- D-spec (standalone fields; basic non-OCCURS DS/subfields; name continuation via trailing `...`)
 - C-spec via `/free`...`/end-free` only — the block body is parsed by the
   *existing* free-format lexer/parser unchanged (re-invoked via flex's
   `yy_scan_string`), not a new C-spec grammar
+- Implemented via a hand-written column-slicer (`src/fixed_columns.h`,
+  `src/fixed_reader.cpp`), not a new flex/bison grammar (Tests 116-119)
 - **Deliberately excluded from Phase 1** (see "Legacy / Fixed-Format"
   below for what's rejected outright vs. deferred): traditional fixed-
   column C-spec, extended-factor-2 C-spec, I-specs, O-specs — all real
@@ -418,3 +422,7 @@ member's C-spec to host modern free-format statements.
 | 113 | DATA-GEN CSV generation (%PARSER('CSV')) |
 | 114 | DATA-INTO/GEN explicit %PARSER('JSON') |
 | 115 | DUMP opcode |
+| 116 | Fixed-format: H+D specs only |
+| 117 | Fixed-format: H+D+C(/free) hello world |
+| 118 | Fixed-format: H+F+D+C DISK CHAIN, full Phase 1 milestone |
+| 119 | Fixed-format: syntax error inside /free |

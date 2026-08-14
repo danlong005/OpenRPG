@@ -219,18 +219,29 @@ citations live in `fixed_columns.h`'s `CSpec` namespace.
   real, but deferred, see below), resulting indicators/inline field
   length (free-form drops these too, so this isn't a new gap), any opcode
   outside the V1 set — with a distinct message for known-but-deferred
-  opcodes (e.g. `CHAIN`) vs. never-planned legacy ones (e.g. `ADD`).
-- **Deferred fast-follow** (known opcodes, not wired yet): RLA opcodes
-  `CHAIN`/`READ`/`READP`/`READE`/`READPE`/`WRITE`/`UPDATE`/`DELETE`/
-  `SETLL`/`SETGT` (each needs its own traditional-field verification
-  pass); `ON-EXIT`/`ON-EXCP`; `XML-INTO`/`XML-SAX`/`DATA-INTO`/
-  `DATA-GEN`/`SND-MSG`; conditioning indicators (positions 9-11 — real
-  and independent of the cycle, would wrap the transpiled statement in
-  `IF {N}*INnn; ... ENDIF;`); `EXEC SQL` in fixed columns (architecturally
-  distinct — the SQL capture is a dedicated lexer `<SQL>` start-condition,
-  not a column-mapped opcode, so it doesn't fit this transpile model
-  cleanly). Traditional *legacy* opcodes (`ADD`/`SUB`/`MOVE`/`GOTO`/etc.)
-  remain item #3 below, untouched by this V1 pass.
+  opcodes (e.g. `SND-MSG`) vs. never-planned legacy ones (e.g. `ADD`).
+- **Deferred fast-follow**: `ON-EXIT`/`ON-EXCP`; `XML-INTO`/`XML-SAX`/
+  `DATA-INTO`/`DATA-GEN`/`SND-MSG`; conditioning indicators (positions
+  9-11 — real and independent of the cycle, would wrap the transpiled
+  statement in `IF {N}*INnn; ... ENDIF;`); `EXEC SQL` in fixed columns
+  (architecturally distinct — the SQL capture is a dedicated lexer
+  `<SQL>` start-condition, not a column-mapped opcode, so it doesn't fit
+  this transpile model cleanly). Traditional *legacy* opcodes (`ADD`/
+  `SUB`/`MOVE`/`GOTO`/etc.) remain item #3 below, untouched by this pass.
+
+**1b. RLA opcodes in native C-spec ✅.** `CHAIN`, `READ`, `READP`,
+`READE`, `READPE`, `WRITE`, `UPDATE`, `DELETE`, `SETLL`, `SETGT` — the
+same `TRADITIONAL`-shape mechanism item #1 already built, just more
+opcode-table entries in `src/fixed_cspec.cpp`; no new architecture.
+Verified against this compiler's own `parser.y` grammar rather than the
+full IBM manual, since the free-format RLA grammar here is already a
+simplified subset: **no data-structure Result operand on any of these**
+(every `*_stmt` rule ends at `IDENTIFIER SEMICOLON`, nothing after the
+file name), and **`DELETE` takes no key at all** — it deletes the
+last-fetched record, matching `tests/test105`'s own usage, not a
+delete-by-key Factor 1. `SETLL`/`SETGT` have no `KW_*_EXT` lexer rule, so
+(unlike the other eight) they don't accept an operation extender. Direct
+fixed-format analogues of Tests 103-106: Tests 144-147.
 
 **2. `/COPY`/`/INCLUDE` outside `/free` blocks ✅.** Implemented as a
 recursive, depth-limited line-splicing preprocessing pass
@@ -566,3 +577,7 @@ member's C-spec to host modern free-format statements.
 | 141 | Fixed-format /COPY: nested copybooks |
 | 142 | Fixed-format /COPY inside an explicit /free block |
 | 143 | Fixed-format /COPY: missing file rejected |
+| 144 | Fixed C-spec: CHAIN by key, %FOUND |
+| 145 | Fixed C-spec: READ sequential, %EOF |
+| 146 | Fixed C-spec: WRITE/UPDATE/DELETE |
+| 147 | Fixed C-spec: SETLL/READE |

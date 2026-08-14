@@ -74,14 +74,33 @@ static const std::unordered_map<std::string, OpcodeInfo>& opcodeTable() {
 
         // Traditional Factor1/Factor2/Result — exact per-opcode field
         // usage verified against SC09-2508's dedicated opcode sections
-        // and built by name in feedCSpecLine (only 6 opcodes; a generic
-        // field-shape table would be less readable than just naming them).
+        // and built by name in feedCSpecLine (a generic field-shape table
+        // would be less readable than just naming each opcode).
         {"BEGSR", {CSpecShape::TRADITIONAL}},
         {"EXSR",  {CSpecShape::TRADITIONAL}},
         {"CLEAR", {CSpecShape::TRADITIONAL}},
         {"RESET", {CSpecShape::TRADITIONAL}},
         {"DSPLY", {CSpecShape::TRADITIONAL}},
         {"SORTA", {CSpecShape::TRADITIONAL}},
+
+        // RLA opcodes (item 1b, fast-follow to V1) — this compiler's own
+        // free-format grammar (parser.y) is a simplified subset of the
+        // full IBM traditional syntax: no data-structure Result operand
+        // on any of these (verified — every *_stmt rule below ends at
+        // IDENTIFIER SEMICOLON, nothing after the file name), and DELETE
+        // takes no key at all (deletes the last-fetched record, per
+        // tests/test105's own usage). SETLL/SETGT have no KW_*_EXT lexer
+        // rule (src/lexer.l) — no extender support, unlike the rest.
+        {"CHAIN",  {CSpecShape::TRADITIONAL, true}},
+        {"READ",   {CSpecShape::TRADITIONAL, true}},
+        {"READP",  {CSpecShape::TRADITIONAL, true}},
+        {"READE",  {CSpecShape::TRADITIONAL, true}},
+        {"READPE", {CSpecShape::TRADITIONAL, true}},
+        {"WRITE",  {CSpecShape::TRADITIONAL, true}},
+        {"UPDATE", {CSpecShape::TRADITIONAL, true}},
+        {"DELETE", {CSpecShape::TRADITIONAL, true}},
+        {"SETLL",  {CSpecShape::TRADITIONAL}},
+        {"SETGT",  {CSpecShape::TRADITIONAL}},
     };
     return table;
 }
@@ -91,9 +110,8 @@ static const std::unordered_map<std::string, OpcodeInfo>& opcodeTable() {
 // from "not planned" legacy opcodes. See TODO.md's fast-follow list.
 static const std::unordered_set<std::string>& deferredOpcodes() {
     static const std::unordered_set<std::string> s = {
-        "CHAIN", "READ", "READP", "READE", "READPE", "WRITE", "UPDATE",
-        "DELETE", "SETLL", "SETGT", "ON-EXIT", "ON-EXCP", "XML-INTO",
-        "XML-SAX", "DATA-INTO", "DATA-GEN", "SND-MSG",
+        "ON-EXIT", "ON-EXCP", "XML-INTO", "XML-SAX", "DATA-INTO",
+        "DATA-GEN", "SND-MSG",
     };
     return s;
 }
@@ -255,6 +273,33 @@ void feedCSpecLine(CSpecRunState& state, const std::string& line, int lineNo) {
                 return;
             }
             built = "SORTA " + factor2;
+        } else if (opcodeName == "CHAIN" || opcodeName == "READE" || opcodeName == "READPE" ||
+                   opcodeName == "SETLL" || opcodeName == "SETGT") {
+            if (factor1.empty() || factor2.empty() || !result.empty()) {
+                report_fixed_format_error(lineNo, "C-spec: " + opcodeName +
+                    " requires a key in Factor 1 and a file name in Factor 2 "
+                    "(a data-structure result operand is not supported by this compiler)");
+                return;
+            }
+            built = opcodeName + extender + " " + factor1 + " " + factor2;
+        } else if (opcodeName == "READ" || opcodeName == "READP" ||
+                   opcodeName == "WRITE" || opcodeName == "UPDATE") {
+            if (factor2.empty() || !factor1.empty() || !result.empty()) {
+                report_fixed_format_error(lineNo, "C-spec: " + opcodeName +
+                    " requires a file name in Factor 2 only "
+                    "(a data-structure result operand is not supported by this compiler)");
+                return;
+            }
+            built = opcodeName + extender + " " + factor2;
+        } else if (opcodeName == "DELETE") {
+            if (factor2.empty() || !factor1.empty() || !result.empty()) {
+                report_fixed_format_error(lineNo,
+                    "C-spec: DELETE requires a file name in Factor 2 only — this "
+                    "compiler deletes the last-fetched record, it does not take a "
+                    "delete-by-key Factor 1 (matches the free-format grammar)");
+                return;
+            }
+            built = opcodeName + extender + " " + factor2;
         }
         state.bufLines[idx] = built + ";";
         return;

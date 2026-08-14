@@ -539,7 +539,7 @@ run_test "133" "Fixed C-spec: Extended-Factor-2 continuation" "$TESTDIR/test133_
 run_test "134" "Fixed C-spec: mixed with explicit /free block" "$TESTDIR/test134_fixed_cspec_mixed_free.rpgle" "run"
 run_test "135" "Fixed C-spec: reject non-blank control level" "$TESTDIR/test135_fixed_cspec_err_ctllevel.rpgle" "error"
 run_test "136" "Fixed C-spec: reject conditioning indicator" "$TESTDIR/test136_fixed_cspec_err_indicator.rpgle" "error"
-run_test "137" "Fixed C-spec: reject deferred opcode (CHAIN)" "$TESTDIR/test137_fixed_cspec_err_deferred.rpgle" "error"
+run_test "137" "Fixed C-spec: reject deferred opcode (SND-MSG)" "$TESTDIR/test137_fixed_cspec_err_deferred.rpgle" "error"
 run_test "138" "Fixed C-spec: reject legacy opcode (ADD)" "$TESTDIR/test138_fixed_cspec_err_legacy.rpgle" "error"
 
 # ── Fixed-format frontend: /COPY and /INCLUDE ─────────────────────────────
@@ -556,6 +556,17 @@ run_test "140" "Fixed-format /INCLUDE: C-spec copybook mid-run" "$TESTDIR/test14
 run_test "141" "Fixed-format /COPY: nested copybooks" "$TESTDIR/test141_fixed_copy_nested.rpgle" "run"
 run_test "142" "Fixed-format /COPY inside an explicit /free block" "$TESTDIR/test142_fixed_copy_in_free.rpgle" "run"
 run_test "143" "Fixed-format /COPY: missing file rejected" "$TESTDIR/test143_fixed_copy_err_missing.rpgle" "error"
+
+# ── Fixed-format frontend: native C-spec RLA opcodes (item 1b) ───────────
+# CHAIN/READ/READP/READE/READPE/WRITE/UPDATE/DELETE/SETLL/SETGT in native
+# column-based C-spec — same transpile-and-bridge mechanism as item #1,
+# just extending the TRADITIONAL-shape opcode table in src/fixed_cspec.cpp.
+# Direct fixed-format analogues of tests 103-106. See TODO.md "Fixed-
+# Format Source Support — Next Steps" item #1b.
+run_test "144" "Fixed C-spec: CHAIN by key, %FOUND" "$TESTDIR/test144_fixed_cspec_chain.rpgle" "run-sql-conf"
+run_test "145" "Fixed C-spec: READ sequential, %EOF" "$TESTDIR/test145_fixed_cspec_read.rpgle" "run-sql-conf"
+run_test "146" "Fixed C-spec: WRITE/UPDATE/DELETE" "$TESTDIR/test146_fixed_cspec_write_upd_del.rpgle" "run-sql-conf"
+run_test "147" "Fixed C-spec: SETLL/READE" "$TESTDIR/test147_fixed_cspec_setll_reade.rpgle" "run-sql-conf"
 
 # ── Customer / drop-in tests ─────────────────────────────────────────────
 # Drop any .rpgle or .sqlrpgle file into tests/customer/ and it will be

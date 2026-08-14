@@ -280,8 +280,43 @@ jobs:
           fi
 
           if [ ! -f /opt/homebrew/lib/libodbc.dylib ] && [ ! -f /usr/local/lib/libodbc.dylib ]; then
-              echo "Error: unixodbc is required. Install with: brew install unixodbc"
-              exit 1
+              # Try to install it automatically via Homebrew (bootstrapping
+              # Homebrew itself first if needed) before giving up. This
+              # script runs as root (pkg install scripts always do), but
+              # Homebrew refuses to run as root, so everything below runs as
+              # the actual logged-in console user instead — the standard
+              # pattern for pkg scripts that need to act as a real user.
+              find_brew() {
+                  if [ -x /opt/homebrew/bin/brew ]; then
+                      echo /opt/homebrew/bin/brew
+                  elif [ -x /usr/local/bin/brew ]; then
+                      echo /usr/local/bin/brew
+                  fi
+              }
+
+              CONSOLE_USER=$(stat -f%Su /dev/console 2>/dev/null)
+              BREW_BIN=$(find_brew)
+
+              if [ -z "$BREW_BIN" ] && [ -n "$CONSOLE_USER" ] && [ "$CONSOLE_USER" != "root" ]; then
+                  echo "Homebrew not found — installing it first (this can take a few minutes)..."
+                  sudo -u "$CONSOLE_USER" env NONINTERACTIVE=1 /bin/bash -c \
+                      "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+                  BREW_BIN=$(find_brew)
+              fi
+
+              if [ -n "$BREW_BIN" ] && [ -n "$CONSOLE_USER" ] && [ "$CONSOLE_USER" != "root" ]; then
+                  echo "unixodbc not found — installing via Homebrew..."
+                  sudo -u "$CONSOLE_USER" "$BREW_BIN" install unixodbc
+              fi
+
+              # Re-check: the steps above may not have run at all (no console
+              # user, e.g. a headless install) or may have failed (no
+              # internet, etc.) — this is the failure-mode-agnostic safety net.
+              if [ ! -f /opt/homebrew/lib/libodbc.dylib ] && [ ! -f /usr/local/lib/libodbc.dylib ]; then
+                  echo "Error: unixodbc is required and could not be installed automatically."
+                  echo "Install Homebrew (https://brew.sh) then run: brew install unixodbc"
+                  exit 1
+              fi
           fi
           exit 0
           EOF

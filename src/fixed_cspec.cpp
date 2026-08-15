@@ -101,6 +101,29 @@ static const std::unordered_map<std::string, OpcodeInfo>& opcodeTable() {
         {"DELETE", {CSpecShape::TRADITIONAL, true}},
         {"SETLL",  {CSpecShape::TRADITIONAL}},
         {"SETGT",  {CSpecShape::TRADITIONAL}},
+
+        // Item #3 V1 — traditional legacy opcodes. GOTO/TAG have NO
+        // free-form syntax at all (SC09-2508: "not allowed"), so the
+        // GotoStmt/TagStmt text these transpile to is only accepted by
+        // parser.y when g_allow_goto_tag is set — see free_bridge.h and
+        // fixed_reader.cpp's flushCRun. No extender column for either
+        // (unlike the arithmetic opcodes below).
+        {"GOTO", {CSpecShape::TRADITIONAL}},
+        {"TAG",  {CSpecShape::TRADITIONAL}},
+
+        // ADD/SUB/MULT/DIV/Z-ADD/Z-SUB also have no free-form *keyword*
+        // ("not allowed — use the +/-/*// operator", "use the EVAL
+        // operation code") but the manual explicitly prescribes the
+        // EVAL/expression equivalent, so these transpile to synthesized
+        // EVAL text rather than needing any new grammar. (H) half-adjust
+        // etc. passes straight through onto the synthesized EVAL, which
+        // already supports it.
+        {"ADD",   {CSpecShape::TRADITIONAL, true}},
+        {"SUB",   {CSpecShape::TRADITIONAL, true}},
+        {"MULT",  {CSpecShape::TRADITIONAL, true}},
+        {"DIV",   {CSpecShape::TRADITIONAL, true}},
+        {"Z-ADD", {CSpecShape::TRADITIONAL, true}},
+        {"Z-SUB", {CSpecShape::TRADITIONAL, true}},
     };
     return table;
 }
@@ -112,6 +135,12 @@ static const std::unordered_set<std::string>& deferredOpcodes() {
     static const std::unordered_set<std::string> s = {
         "ON-EXIT", "ON-EXCP", "XML-INTO", "XML-SAX", "DATA-INTO",
         "DATA-GEN", "SND-MSG",
+        // Item #3 fast-follow, deliberately not V1 — see TODO.md for why
+        // each one specifically (MOVE/MOVEL: real fixed-length right/left
+        // -adjust and date-format-conversion semantics, no clean EVAL
+        // mapping; CALL/PARM/PLIST: needs cross-line PLIST state, CALLP
+        // already covers modern program calls).
+        "MOVE", "MOVEL", "CALL", "PARM", "PLIST",
     };
     return s;
 }
@@ -300,6 +329,38 @@ void feedCSpecLine(CSpecRunState& state, const std::string& line, int lineNo) {
                 return;
             }
             built = opcodeName + extender + " " + factor2;
+        } else if (opcodeName == "GOTO" || opcodeName == "TAG") {
+            if (factor2.empty() || !factor1.empty()) {
+                report_fixed_format_error(lineNo,
+                    "C-spec: " + opcodeName + " requires a label in Factor 2 only");
+                return;
+            }
+            built = opcodeName + " " + factor2;
+        } else if (opcodeName == "ADD" || opcodeName == "SUB" ||
+                   opcodeName == "MULT" || opcodeName == "DIV") {
+            if (factor2.empty() || result.empty()) {
+                report_fixed_format_error(lineNo, "C-spec: " + opcodeName +
+                    " requires Factor 2 and a Result field");
+                return;
+            }
+            // SC09-2508: "If factor 1 is specified, ... adds it to factor 2
+            // and places the sum in the result field. If factor 1 is not
+            // specified, the contents of factor 2 are added to the result
+            // field" — same accumulate-into-result pattern for SUB/MULT/DIV.
+            char op = opcodeName == "ADD" ? '+' :
+                      opcodeName == "SUB" ? '-' :
+                      opcodeName == "MULT" ? '*' : '/';
+            std::string lhs = factor1.empty() ? result : factor1;
+            built = "EVAL" + extender + " " + result + " = " + lhs + " " + op + " " + factor2;
+        } else if (opcodeName == "Z-ADD" || opcodeName == "Z-SUB") {
+            if (factor2.empty() || result.empty() || !factor1.empty()) {
+                report_fixed_format_error(lineNo, "C-spec: " + opcodeName +
+                    " requires Factor 2 and a Result field (Factor 1 is not used)");
+                return;
+            }
+            built = (opcodeName == "Z-ADD")
+                ? ("EVAL" + extender + " " + result + " = " + factor2)
+                : ("EVAL" + extender + " " + result + " = -(" + factor2 + ")");
         }
         state.bufLines[idx] = built + ";";
         return;

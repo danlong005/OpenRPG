@@ -86,6 +86,8 @@ public:
     void visit(MonitorStmt& node) override;
     void visit(BegSR& node) override;
     void visit(ExSR& node) override;
+    void visit(GotoStmt& node) override;
+    void visit(TagStmt& node) override;
     void visit(SortAStmt& node) override;
     void visit(ResetStmt& node) override;
     void visit(ClearStmt& node) override;

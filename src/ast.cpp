@@ -99,6 +99,12 @@ void BegSR::accept(ASTVisitor& visitor) { visitor.visit(*this); }
 ExSR::ExSR(std::string name) : name(std::move(name)) {}
 void ExSR::accept(ASTVisitor& visitor) { visitor.visit(*this); }
 
+GotoStmt::GotoStmt(std::string label) : label(std::move(label)) {}
+void GotoStmt::accept(ASTVisitor& visitor) { visitor.visit(*this); }
+
+TagStmt::TagStmt(std::string label) : label(std::move(label)) {}
+void TagStmt::accept(ASTVisitor& visitor) { visitor.visit(*this); }
+
 SortAStmt::SortAStmt(std::string name) : array_name(std::move(name)) {}
 void SortAStmt::accept(ASTVisitor& visitor) { visitor.visit(*this); }
 

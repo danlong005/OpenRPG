@@ -456,6 +456,23 @@ public:
     void accept(ASTVisitor& visitor) override;
 };
 
+// GOTO/TAG — traditional unstructured branch/label. Fixed-format C-spec
+// only (SC09-2508: no free-form syntax exists for either); see
+// g_allow_goto_tag in free_bridge.h for how that restriction is enforced.
+class GotoStmt : public Statement {
+public:
+    std::string label;
+    explicit GotoStmt(std::string label);
+    void accept(ASTVisitor& visitor) override;
+};
+
+class TagStmt : public Statement {
+public:
+    std::string label;
+    explicit TagStmt(std::string label);
+    void accept(ASTVisitor& visitor) override;
+};
+
 // Indicator access (*INxx)
 class IndicatorExpr : public Expression {
 public:
@@ -776,6 +793,8 @@ public:
     virtual void visit(MonitorStmt& node) = 0;
     virtual void visit(BegSR& node) = 0;
     virtual void visit(ExSR& node) = 0;
+    virtual void visit(GotoStmt& node) = 0;
+    virtual void visit(TagStmt& node) = 0;
     virtual void visit(SortAStmt& node) = 0;
     virtual void visit(ResetStmt& node) = 0;
     virtual void visit(ClearStmt& node) = 0;

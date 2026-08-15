@@ -61,6 +61,10 @@ extern void yy_delete_buffer(YY_BUFFER_STATE b);
 static rpg::Program* g_program = nullptr;
 static int g_error_count = 0;
 
+// Declared extern in free_bridge.h — see that header for why GOTO/TAG need
+// this gate (no free-form syntax exists for either per SC09-2508).
+bool g_allow_goto_tag = false;
+
 rpg::Program* get_parsed_program();
 int get_parse_error_count();
 
@@ -144,6 +148,7 @@ static rpg::FuncCall* make_func(const char* name, std::vector<rpg::Expression*>*
 %token KW_ITER KW_LEAVE
 %token KW_MONITOR KW_ON_ERROR KW_ENDMON
 %token KW_BEGSR KW_ENDSR KW_EXSR
+%token KW_GOTO KW_TAG
 %token KW_OFF KW_RESET KW_CLEAR KW_SORTA KW_DUMP KW_DUMP_A
 %token <ival> INDICATOR
 %token KW_AND KW_OR KW_NOT
@@ -200,7 +205,7 @@ static rpg::FuncCall* make_func(const char* name, std::vector<rpg::Expression*>*
 %type <stmt> statement dcl_f_stmt dcl_s_stmt dcl_c_stmt eval_stmt eval_corr_stmt evalr_stmt dsply_stmt inlr_stmt return_stmt expr_stmt reset_stmt clear_stmt sorta_stmt dump_stmt callp_stmt leavesr_stmt dealloc_stmt test_stmt
 %type <stmt> if_stmt dow_stmt dou_stmt for_stmt for_each_stmt select_stmt iter_stmt leave_stmt
 %type <stmt> dcl_proc_stmt dcl_pr_stmt dcl_ds_stmt dcl_enum_stmt
-%type <stmt> monitor_stmt begsr_stmt exsr_stmt exec_sql_stmt xml_into_stmt
+%type <stmt> monitor_stmt begsr_stmt exsr_stmt goto_stmt tag_stmt exec_sql_stmt xml_into_stmt
 %type <stmt> in_da_stmt out_da_stmt unlock_da_stmt data_into_stmt data_gen_stmt snd_msg_stmt
 %type <stmt> chain_stmt read_stmt readc_stmt reade_stmt readp_stmt readpe_stmt
 %type <stmt> write_stmt update_stmt delete_stmt setll_stmt setgt_stmt exfmt_stmt
@@ -286,6 +291,8 @@ statement:
     | monitor_stmt  { $$ = $1; SET_LINE($$); }
     | begsr_stmt    { $$ = $1; SET_LINE($$); }
     | exsr_stmt     { $$ = $1; SET_LINE($$); }
+    | goto_stmt     { $$ = $1; SET_LINE($$); }
+    | tag_stmt      { $$ = $1; SET_LINE($$); }
     | reset_stmt    { $$ = $1; SET_LINE($$); }
     | clear_stmt    { $$ = $1; SET_LINE($$); }
     | sorta_stmt    { $$ = $1; SET_LINE($$); }
@@ -1592,6 +1599,33 @@ begsr_stmt:
 exsr_stmt:
     KW_EXSR ident SEMICOLON {
         $$ = new rpg::ExSR($2);
+        free($2);
+    }
+    ;
+
+/* GOTO/TAG have no free-form syntax at all (SC09-2508: "not allowed — use
+   other operation codes"). g_allow_goto_tag (free_bridge.h) is only set
+   true around the fixed-format reader's own native-C-spec parse_free_block()
+   call, so this only accepts them when the text being parsed was
+   synthesized by that transpiler — genuine free-form text (**FREE
+   top-level, or an explicit /free block even inside a fixed-format file)
+   always parses with the flag false and gets a clear rejection here. */
+goto_stmt:
+    KW_GOTO ident SEMICOLON {
+        if (!g_allow_goto_tag) {
+            yyerror("GOTO is not valid in free-format RPG (fixed-format C-spec only)");
+        }
+        $$ = new rpg::GotoStmt($2);
+        free($2);
+    }
+    ;
+
+tag_stmt:
+    KW_TAG ident SEMICOLON {
+        if (!g_allow_goto_tag) {
+            yyerror("TAG is not valid in free-format RPG (fixed-format C-spec only)");
+        }
+        $$ = new rpg::TagStmt($2);
         free($2);
     }
     ;

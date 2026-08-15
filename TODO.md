@@ -265,14 +265,63 @@ precision the free-format lexer already has today (`yylineno` isn't
 saved/restored across its own buffer switch either), not a new
 regression. Tests 139-143.
 
-**3. Traditional legacy opcodes (MOVE, ADD, SUB, MULT, DIV, COMP,
-GOTO/TAG, CALL/PARM/PLIST).** For genuinely old, pre-modern-opcode fixed-
-format source. Distinct from #1: #1 targets shops writing modern opcodes
-in column form; this targets shops that never left MOVE/ADD/GOTO-style
-code. Larger and riskier than #1 — GOTO/TAG has no direct structured-code
-AST equivalent and needs real design work, not just a new parser. Still
-does not revive the RPG cycle itself (detail/total calc, LR-driven
-implicit read loop) — that stays rejected regardless of this item's fate.
+**3. Traditional legacy opcodes ✅ (V1): `GOTO`/`TAG`, `ADD`/`SUB`/`MULT`/
+`DIV`/`Z-ADD`/`Z-SUB`.** For genuinely old, pre-modern-opcode fixed-format
+source — distinct from #1, which targets shops already writing modern
+opcodes in column form; this targets shops that never left `MOVE`/`ADD`/
+`GOTO`-style code. The one part of this whole "Fixed-Format Source
+Support" effort that couldn't just reuse the transpile-and-bridge trick
+as-is, since `GOTO`/`TAG` have **no free-form syntax at all** (SC09-2508
+says so outright for both: "not allowed — use other operation codes, such
+as `LEAVE`, `LEAVESR`, `ITER`, and `RETURN`").
+- **`GOTO`/`TAG`**: real new `GotoStmt`/`TagStmt` AST nodes + `parser.y`
+  grammar (`src/ast.h`, `src/codegen.cpp` → `goto`/label in the generated
+  C++ directly), gated by `g_allow_goto_tag` (`src/free_bridge.h`) so
+  they're only accepted when the text being parsed was synthesized by the
+  fixed-format C-spec transpiler (`fixed_reader.cpp`'s `flushCRun`) —
+  genuine free-form text, `**FREE` top-level or an explicit `/free` block
+  even inside an otherwise fixed-format file, still correctly rejects
+  them (Test 152), matching the manual exactly rather than silently
+  extending free-form beyond the documented spec. Subroutines (`BEGSR`/
+  `ENDSR`) codegen as C++ lambdas, which happens to enforce real RPG's own
+  `GOTO` scoping rule (can't cross a subroutine boundary) for free, with
+  no extra validation needed — a `TAG`/`GOTO` crossing that boundary
+  anyway just surfaces as a real (if less-polished) C++ compile error,
+  not silently wrong behavior. No "undefined/duplicate label" validation
+  either — C++'s own compiler already rejects that when it compiles the
+  generated code.
+- **`ADD`/`SUB`/`MULT`/`DIV`/`Z-ADD`/`Z-SUB`**: no free-form *keyword*
+  either ("not allowed — use the `+`/`+=` operator", etc.) but the manual
+  itself prescribes the `EVAL`/expression equivalent, so these transpile
+  straight to synthesized `EVAL` text — zero new grammar, same mechanism
+  as items #1/1b. Verified blank-Factor-1 semantics against SC09-2508:
+  Factor 1 present → `Result = Factor1 op Factor2`; Factor 1 blank →
+  `Result = Result op Factor2` (accumulate into the result field) for
+  `ADD`/`SUB`/`MULT`/`DIV`; `Z-ADD`/`Z-SUB` never use Factor 1 at all
+  (`Result = Factor2` / `Result = -Factor2`). Extenders (e.g. `(H)`
+  half-adjust) pass straight through onto the synthesized `EVAL`, which
+  already supports them.
+- **Deferred, not V1** (documented, not silently dropped): `MOVE`/`MOVEL`
+  — real semantic risk, not just unwired plumbing: traditional fixed-
+  length right/left-adjusted move with truncation/padding, plus date/
+  time-format conversion via `D()`/`T()`/`Z()` Factor-2 suffixes, none of
+  which map onto this compiler's plain-assignment `EVAL` — shipping an
+  approximate version risks silently-wrong output for edge cases rather
+  than a clear compile error, which this project avoids. `COMP` — its
+  only real effect (setting `HI`/`LO`/`EQ` resulting indicators) has no
+  free-form target at all, since free-form drops resulting indicators
+  entirely (an existing limitation, not new). `CASxx`/`CABxx` —
+  conditional branch-to-tag/subroutine; meaningfully more parsing work for
+  the `xx` comparison-mnemonic suffix, and with `GOTO`/`TAG`/`IF` all now
+  available, the same logic is expressible as `IF cond; GOTO label;
+  ENDIF;`. `CALL`/`PARM`/`PLIST` — old-style program calls, a genuinely
+  different mechanism from `CALLP` needing cross-line state to build a
+  `PLIST`'s parameter list across multiple physical `PARM` lines (similar
+  complexity to F-spec continuation); `CALLP` already covers modern
+  program calls. `DO` — the manual's own guidance is "not allowed — use
+  the `FOR` operation code," already fully supported. Does not revive the
+  RPG cycle itself (detail/total calc, LR-driven implicit read loop) —
+  that stays rejected regardless of any of this item's future scope.
 
 **4. I-specs / O-specs (program-described file I/O).** Lower priority —
 real shops overwhelmingly use externally-described (DDS-defined) files,
@@ -581,3 +630,9 @@ member's C-spec to host modern free-format statements.
 | 145 | Fixed C-spec: READ sequential, %EOF |
 | 146 | Fixed C-spec: WRITE/UPDATE/DELETE |
 | 147 | Fixed C-spec: SETLL/READE |
+| 148 | Fixed C-spec: GOTO/TAG backward loop + forward skip |
+| 149 | Fixed C-spec: GOTO/TAG inside BEGSR |
+| 150 | Fixed C-spec: ADD/SUB/MULT/DIV (both Factor 1 forms) |
+| 151 | Fixed C-spec: Z-ADD/Z-SUB |
+| 152 | Fixed C-spec: reject GOTO inside explicit /free block |
+| 153 | Fixed C-spec: reject deferred legacy opcode (MOVE) |

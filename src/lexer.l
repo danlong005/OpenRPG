@@ -375,6 +375,8 @@ static void parse_ctlopt(const char* text) {
 "BEGSR"             { return KW_BEGSR; }
 "ENDSR"             { return KW_ENDSR; }
 "EXSR"              { return KW_EXSR; }
+"GOTO"              { return KW_GOTO; }
+"TAG"               { return KW_TAG; }
 "RESET"             { return KW_RESET; }
 "SORTA"             { return KW_SORTA; }
 "CLEAR"             { return KW_CLEAR; }

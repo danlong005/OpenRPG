@@ -399,7 +399,12 @@ Program* parseFixedFormat(const std::string& src_text, const std::string& /*file
     auto flushCRun = [&]() {
         int startLine = 0;
         std::string buf = flushCSpecRun(cState, startLine);
+        // Only this call site's text is transpiler-synthesized (never
+        // user-typed), so only here is GOTO/TAG allowed — see
+        // g_allow_goto_tag's doc comment in free_bridge.h.
+        g_allow_goto_tag = true;
         auto stmts = parse_free_block(buf, startLine);
+        g_allow_goto_tag = false;
         for (auto& s : stmts) program->statements.push_back(std::move(s));
         inCSpecRun = false;
     };

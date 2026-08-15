@@ -1756,6 +1756,16 @@ void CodeGen::visit(ExSR& node) {
     out_ << "sr_" << sanitizeSRName(node.name) << "();\n";
 }
 
+void CodeGen::visit(GotoStmt& node) {
+    emitIndent();
+    out_ << "goto rpg_label_" << node.label << ";\n";
+}
+
+void CodeGen::visit(TagStmt& node) {
+    emitIndent();
+    out_ << "rpg_label_" << node.label << ":;\n";
+}
+
 void CodeGen::visit(ResetStmt& node) {
     emitIndent();
     if (has_inz_.count(node.var_name)) {

@@ -540,7 +540,7 @@ run_test "134" "Fixed C-spec: mixed with explicit /free block" "$TESTDIR/test134
 run_test "135" "Fixed C-spec: reject non-blank control level" "$TESTDIR/test135_fixed_cspec_err_ctllevel.rpgle" "error"
 run_test "136" "Fixed C-spec: reject conditioning indicator" "$TESTDIR/test136_fixed_cspec_err_indicator.rpgle" "error"
 run_test "137" "Fixed C-spec: reject deferred opcode (SND-MSG)" "$TESTDIR/test137_fixed_cspec_err_deferred.rpgle" "error"
-run_test "138" "Fixed C-spec: reject legacy opcode (ADD)" "$TESTDIR/test138_fixed_cspec_err_legacy.rpgle" "error"
+run_test "138" "Fixed C-spec: reject legacy opcode (COMP)" "$TESTDIR/test138_fixed_cspec_err_legacy.rpgle" "error"
 
 # ── Fixed-format frontend: /COPY and /INCLUDE ─────────────────────────────
 # Native /COPY/INCLUDE support outside /free blocks — a recursive,
@@ -567,6 +567,19 @@ run_test "144" "Fixed C-spec: CHAIN by key, %FOUND" "$TESTDIR/test144_fixed_cspe
 run_test "145" "Fixed C-spec: READ sequential, %EOF" "$TESTDIR/test145_fixed_cspec_read.rpgle" "run-sql-conf"
 run_test "146" "Fixed C-spec: WRITE/UPDATE/DELETE" "$TESTDIR/test146_fixed_cspec_write_upd_del.rpgle" "run-sql-conf"
 run_test "147" "Fixed C-spec: SETLL/READE" "$TESTDIR/test147_fixed_cspec_setll_reade.rpgle" "run-sql-conf"
+
+# ── Fixed-format frontend: traditional legacy opcodes (item #3 V1) ───────
+# GOTO/TAG (new AST + parser.y grammar, gated by g_allow_goto_tag — see
+# free_bridge.h — since SC09-2508 explicitly has no free-form syntax for
+# either) plus ADD/SUB/MULT/DIV/Z-ADD/Z-SUB (transpiled to the EVAL
+# equivalent the manual itself prescribes). See TODO.md "Fixed-Format
+# Source Support — Next Steps" item #3.
+run_test "148" "Fixed C-spec: GOTO/TAG backward loop + forward skip" "$TESTDIR/test148_fixed_cspec_goto_tag.rpgle" "run"
+run_test "149" "Fixed C-spec: GOTO/TAG inside BEGSR" "$TESTDIR/test149_fixed_cspec_goto_in_begsr.rpgle" "run"
+run_test "150" "Fixed C-spec: ADD/SUB/MULT/DIV (both Factor 1 forms)" "$TESTDIR/test150_fixed_cspec_arith.rpgle" "run"
+run_test "151" "Fixed C-spec: Z-ADD/Z-SUB" "$TESTDIR/test151_fixed_cspec_zadd_zsub.rpgle" "run"
+run_test "152" "Fixed C-spec: reject GOTO inside explicit /free block" "$TESTDIR/test152_fixed_cspec_err_goto_in_free.rpgle" "error"
+run_test "153" "Fixed C-spec: reject deferred legacy opcode (MOVE)" "$TESTDIR/test153_fixed_cspec_err_move_deferred.rpgle" "error"
 
 # ── Customer / drop-in tests ─────────────────────────────────────────────
 # Drop any .rpgle or .sqlrpgle file into tests/customer/ and it will be

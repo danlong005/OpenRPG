@@ -710,6 +710,8 @@ struct DSField {
     int overlay_pos = 0;
     int pos = 0;
     std::string likeds;  // LIKEDS subfield — nested DS type name
+    std::string like_var; // LIKE(fieldname) — subfield type/length copied from another field
+    int dim = 0;          // DIM(n) — subfield is itself an array within the DS, 0 = not an array
 };
 
 class DclDS : public Statement {

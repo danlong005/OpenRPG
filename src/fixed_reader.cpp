@@ -362,6 +362,10 @@ static void handleDSpecLine(Program* program, DSpecState& state,
         if (it != kw.end() && !it->second.empty()) f.pos = atoi(it->second.c_str());
         it = kw.find("LIKEDS");
         if (it != kw.end()) f.likeds = upper(it->second);
+        it = kw.find("LIKE");
+        if (it != kw.end()) f.like_var = upper(it->second);
+        it = kw.find("DIM");
+        if (it != kw.end() && !it->second.empty()) f.dim = atoi(it->second.c_str());
         state.currentDS->fields.push_back(f);
     } else {
         auto* n = new DclS(upper(name), type, length, digits, decimals);

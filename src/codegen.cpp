@@ -1706,6 +1706,18 @@ void CodeGen::visit(DclDS& node) {
 
     // Emit struct definition at file scope
     out_ << "struct " << node.name << "_t {\n";
+    // Per-subfield LIKE(other) resolves against fields already declared
+    // earlier in this same DS — the reliable, tested case. The var_types_/
+    // var_lengths_ fallback (an outer standalone field) only helps when
+    // that field's own DclS has already been visited by this point; at
+    // top/main-line scope it usually hasn't, since visit(Program) emits
+    // *every* DS struct definition before *any* standalone field (DS
+    // structs are needed for procedure params — see visit(Program)'s
+    // ds_stmts pass), regardless of the two statements' textual order.
+    // Inside a DCL-PROC body, where declarations emit in textual order,
+    // the fallback does apply. Unresolved LIKE falls back to the field's
+    // own placeholder type, same as top-level DclS's LIKE handling above.
+    std::map<std::string, std::pair<RPGType, int>> ds_local_types;
     for (auto& f : node.fields) {
         if (!f.overlay_field.empty()) {
             out_ << "    " << typeToString(f.type, f.length) << " " << f.name;
@@ -1714,20 +1726,49 @@ void CodeGen::visit(DclDS& node) {
             out_ << "; // OVERLAY(" << f.overlay_field;
             if (f.overlay_pos > 0) out_ << ":" << f.overlay_pos;
             out_ << ")\n";
+            ds_local_types[f.name] = {f.type, f.length};
         } else if (!f.likeds.empty()) {
             // LIKEDS subfield: emit nested struct type
             out_ << "    " << f.likeds << "_t " << f.name << ";\n";
+        } else if (!f.like_var.empty()) {
+            // Per-subfield LIKE(other): resolve type/length from an earlier
+            // subfield in this DS, else an outer standalone field.
+            RPGType rtype = f.type;
+            int rlen = f.length;
+            auto lit = ds_local_types.find(f.like_var);
+            if (lit != ds_local_types.end()) {
+                rtype = lit->second.first;
+                rlen = lit->second.second;
+            } else {
+                auto git = var_types_.find(f.like_var);
+                if (git != var_types_.end()) {
+                    rtype = git->second;
+                    rlen = var_lengths_[f.like_var];
+                }
+            }
+            out_ << "    " << typeToString(rtype, rlen) << " " << f.name;
+            if (rtype == RPGType::INT10) out_ << " = 0";
+            else if (rtype == RPGType::PACKED || rtype == RPGType::ZONED) out_ << " = 0.0";
+            out_ << "; // LIKE(" << f.like_var << ")\n";
+            ds_local_types[f.name] = {rtype, rlen};
+        } else if (f.dim > 0) {
+            // Per-subfield DIM(n): the subfield itself is an array within the DS.
+            out_ << "    std::array<" << typeToString(f.type, f.length) << ", " << f.dim
+                 << "> " << f.name << "; // DIM(" << f.dim << ")\n";
+            ds_local_types[f.name] = {f.type, f.length};
         } else if (f.pos > 0) {
             // POS field: emit with comment showing position
             out_ << "    " << typeToString(f.type, f.length) << " " << f.name;
             if (f.type == RPGType::INT10) out_ << " = 0";
             else if (f.type == RPGType::PACKED || f.type == RPGType::ZONED) out_ << " = 0.0";
             out_ << "; // POS(" << f.pos << ")\n";
+            ds_local_types[f.name] = {f.type, f.length};
         } else {
             out_ << "    " << typeToString(f.type, f.length) << " " << f.name;
             if (f.type == RPGType::INT10) out_ << " = 0";
             else if (f.type == RPGType::PACKED || f.type == RPGType::ZONED) out_ << " = 0.0";
             out_ << ";\n";
+            ds_local_types[f.name] = {f.type, f.length};
         }
     }
     out_ << "};\n";

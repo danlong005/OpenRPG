@@ -603,6 +603,17 @@ run_test "158" "Fixed O-spec: field placement + edit code" "$TESTDIR/test158_fix
 run_test "159" "Fixed I-spec: reject zone record-ID test" "$TESTDIR/test159_fixed_ispec_err_zone.rpgle" "error"
 run_test "160" "Fixed I-spec: reject matching fields (M1)" "$TESTDIR/test160_fixed_ispec_err_matching.rpgle" "error"
 
+# ── Fixed-format frontend: per-subfield LIKE/DIM (item #5) ───────────────
+# See TODO.md "Fixed-Format Source Support — Next Steps" item #5. Test 163
+# is free-format — it's the one that actually exercises the new ds_field
+# grammar productions (declaring LIKE/DIM on a subfield); the fixed-format
+# D-spec reader builds DSField structs directly in C++, bypassing the
+# bison grammar entirely, so 161/162 only exercise the ds.field(idx) /
+# LIKE-resolution *codegen* path, not the new parser.y productions.
+run_test "161" "Fixed D-spec: per-subfield DIM(n)" "$TESTDIR/test161_fixed_subf_dim.rpgle" "run"
+run_test "162" "Fixed D-spec: per-subfield LIKE(field)" "$TESTDIR/test162_fixed_subf_like.rpgle" "run"
+run_test "163" "Free-format: per-subfield LIKE/DIM declaration + access" "$TESTDIR/test163_subfield_like_dim.rpgle" "run"
+
 # ── Customer / drop-in tests ─────────────────────────────────────────────
 # Drop any .rpgle or .sqlrpgle file into tests/customer/ and it will be
 # compile-tested automatically — no registration or expected output needed.

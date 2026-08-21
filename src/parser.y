@@ -849,6 +849,13 @@ eval_target:
         free($1);
         free($6);
     }
+    /* Per-subfield array element: ds.field(idx) — field itself is DIM(n) */
+    | IDENTIFIER DOT IDENTIFIER LPAREN expression RPAREN {
+        std::string qualified = std::string($1) + "." + $3;
+        $$ = new rpg::ArrayAccess(qualified, std::unique_ptr<rpg::Expression>($5));
+        free($1);
+        free($3);
+    }
     | BIF_ELEM LPAREN arg_list RPAREN {
         $$ = make_bif("ELEM", $3);
     }
@@ -2037,6 +2044,68 @@ ds_field:
         free($2); free($5);
         $$ = f;
     }
+    /* Per-subfield LIKE(field): field LIKE(other); */
+    | IDENTIFIER KW_LIKE LPAREN IDENTIFIER RPAREN SEMICOLON {
+        auto* f = new rpg::DSField{$1, rpg::RPGType::CHAR, 0, 0, 0};
+        f->like_var = $4;
+        free($1); free($4);
+        $$ = f;
+    }
+    | KW_DCL_SUBF IDENTIFIER KW_LIKE LPAREN IDENTIFIER RPAREN SEMICOLON {
+        auto* f = new rpg::DSField{$2, rpg::RPGType::CHAR, 0, 0, 0};
+        f->like_var = $5;
+        free($2); free($5);
+        $$ = f;
+    }
+    /* Per-subfield DIM(n): field TYPE(...) DIM(n); — subfield is itself an array */
+    | IDENTIFIER KW_INT LPAREN INTEGER_LITERAL RPAREN KW_DIM LPAREN INTEGER_LITERAL RPAREN SEMICOLON {
+        auto* f = new rpg::DSField{$1, rpg::RPGType::INT10, 0, 0, 0};
+        f->dim = $8;
+        free($1);
+        $$ = f;
+    }
+    | IDENTIFIER KW_CHAR LPAREN INTEGER_LITERAL RPAREN KW_DIM LPAREN INTEGER_LITERAL RPAREN SEMICOLON {
+        auto* f = new rpg::DSField{$1, rpg::RPGType::CHAR, $4, 0, 0};
+        f->dim = $8;
+        free($1);
+        $$ = f;
+    }
+    | IDENTIFIER KW_VARCHAR LPAREN INTEGER_LITERAL RPAREN KW_DIM LPAREN INTEGER_LITERAL RPAREN SEMICOLON {
+        auto* f = new rpg::DSField{$1, rpg::RPGType::VARCHAR, $4, 0, 0};
+        f->dim = $8;
+        free($1);
+        $$ = f;
+    }
+    | IDENTIFIER KW_PACKED LPAREN INTEGER_LITERAL COLON INTEGER_LITERAL RPAREN KW_DIM LPAREN INTEGER_LITERAL RPAREN SEMICOLON {
+        auto* f = new rpg::DSField{$1, rpg::RPGType::PACKED, 0, $4, $6};
+        f->dim = $10;
+        free($1);
+        $$ = f;
+    }
+    | KW_DCL_SUBF IDENTIFIER KW_INT LPAREN INTEGER_LITERAL RPAREN KW_DIM LPAREN INTEGER_LITERAL RPAREN SEMICOLON {
+        auto* f = new rpg::DSField{$2, rpg::RPGType::INT10, 0, 0, 0};
+        f->dim = $9;
+        free($2);
+        $$ = f;
+    }
+    | KW_DCL_SUBF IDENTIFIER KW_CHAR LPAREN INTEGER_LITERAL RPAREN KW_DIM LPAREN INTEGER_LITERAL RPAREN SEMICOLON {
+        auto* f = new rpg::DSField{$2, rpg::RPGType::CHAR, $5, 0, 0};
+        f->dim = $9;
+        free($2);
+        $$ = f;
+    }
+    | KW_DCL_SUBF IDENTIFIER KW_VARCHAR LPAREN INTEGER_LITERAL RPAREN KW_DIM LPAREN INTEGER_LITERAL RPAREN SEMICOLON {
+        auto* f = new rpg::DSField{$2, rpg::RPGType::VARCHAR, $5, 0, 0};
+        f->dim = $9;
+        free($2);
+        $$ = f;
+    }
+    | KW_DCL_SUBF IDENTIFIER KW_PACKED LPAREN INTEGER_LITERAL COLON INTEGER_LITERAL RPAREN KW_DIM LPAREN INTEGER_LITERAL RPAREN SEMICOLON {
+        auto* f = new rpg::DSField{$2, rpg::RPGType::PACKED, 0, $5, $7};
+        f->dim = $11;
+        free($2);
+        $$ = f;
+    }
     ;
 
 /* --- Control Flow --- */
@@ -2334,6 +2403,21 @@ postfix_expr:
     primary_expr { $$ = $1; }
     | postfix_expr DOT IDENTIFIER {
         $$ = new rpg::DotExpr(std::unique_ptr<rpg::Expression>($1), $3);
+        free($3);
+    }
+    /* Per-subfield array element (read): ds.field(idx) — field itself is DIM(n).
+       $1 must already be a simple Identifier (the DS name) — chained/indexed
+       bases (e.g. items(1).field(idx)) aren't supported, same scope limit
+       as item #5's declaration side. */
+    | postfix_expr DOT IDENTIFIER LPAREN expression RPAREN {
+        auto* base = dynamic_cast<rpg::Identifier*>($1);
+        if (!base) {
+            yyerror("subfield array access (ds.field(idx)) requires a simple data structure name before the dot");
+            YYERROR;
+        }
+        std::string qualified = base->name + "." + $3;
+        delete $1;
+        $$ = new rpg::ArrayAccess(qualified, std::unique_ptr<rpg::Expression>($5));
         free($3);
     }
     ;

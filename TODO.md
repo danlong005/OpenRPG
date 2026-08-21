@@ -377,10 +377,41 @@ the pattern the WORKSTN branch already used in the same methods.
   17-20) — not implemented, must be blank.
 - Tests 154-160.
 
-**5. Per-subfield `LIKE(...)`/`DIM(...)`.** Small, low-priority polish;
-found during Phase 2. Would also require extending the free-format
-grammar itself (not just `fixed_reader.cpp`), since neither exists at the
-subfield level in free-format either.
+**5. Per-subfield `LIKE(...)`/`DIM(...)` ✅.** Found during Phase 2: neither
+existed at the subfield level in free-format either, so — unlike items
+#1-#4, which were pure fixed-format *parsing* gaps — this needed real
+`ds_field` grammar productions in `parser.y` (`DSField` gained `like_var`/
+`dim` members) before `fixed_reader.cpp` had anything to populate.
+- **DIM(n)**: the subfield becomes an array *within* the DS
+  (`std::array<T,n>`), distinct from DIM on the DS itself (an array of DS
+  elements, Phase 2). Accessed via new `ds.field(idx)` grammar — added at
+  the `postfix_expr`/`eval_target` level, not as a flat `IDENTIFIER DOT
+  IDENTIFIER LPAREN...` production, since the latter would shift/reduce-
+  conflict with plain `ds.field` (no index) in `primary_expr`'s existing
+  `IDENTIFIER` reduction; going through the already-reduced `postfix_expr`
+  nonterminal first sidesteps that (verified no new conflicts vs. this
+  grammar's existing 2 shift/reduce + 1 reduce/reduce baseline).
+- **LIKE(other)**: resolves against a field already declared **earlier in
+  the same DS** — the reliable, tested case (Test 163's `price
+  LIKE(unitPrice)` inside the same DS). Referencing an *outer standalone*
+  field also has fallback code (mirroring top-level `DCL-S ... LIKE`), but
+  doesn't fire reliably at main/top-line scope: `visit(Program)` emits
+  every DS struct definition before any standalone field's own DclS
+  (DS structs are needed for procedure params), regardless of the two
+  declarations' textual order — found the hard way via Test 162's first
+  version, which referenced an outer field and silently got the fallback
+  placeholder type. Works fine inside a `DCL-PROC` body, where
+  declarations emit in textual order.
+- **Deferred, not V1**: combining `LIKE` and `DIM` on the same subfield
+  (e.g. `qty LIKE(other) DIM(5)`); `DIM(*VAR:n)`/`DIM(*AUTO:n)` on a
+  subfield (fixed-size only, matching the DS-level DIM(n) case this
+  mirrors, not the *VAR/*AUTO forms DCL-S standalone fields support).
+- Tests 161-162 (fixed-format D-spec — declaration only, since
+  `fixed_reader.cpp` builds `DSField` directly rather than through the
+  bison grammar); Test 163 (free-format — the one that actually exercises
+  the new `ds_field` productions, since 161/162's fixed-format source
+  never touches `parser.y` on the declaration side, only via the `/free`
+  block's access expressions).
 
 ### ~~Fixed-Format File I/O~~ — Not Planned
 ~~Native record format / INFSR / legacy PLIST-based file I/O~~ — item #4
@@ -695,3 +726,6 @@ member's C-spec to host modern free-format statements.
 | 158 | Fixed O-spec: field placement + edit code |
 | 159 | Fixed I-spec: reject zone record-ID test |
 | 160 | Fixed I-spec: reject matching fields (M1) |
+| 161 | Fixed D-spec: per-subfield DIM(n) |
+| 162 | Fixed D-spec: per-subfield LIKE(field) |
+| 163 | Free-format: per-subfield LIKE/DIM declaration + access |

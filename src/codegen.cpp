@@ -620,6 +620,14 @@ void CodeGen::visit(Program& node) {
         auto* dclf = dynamic_cast<DclF*>(stmt.get());
         if (dclf && dclf->usage == "DISK") uses_rla_ = true;
         if (dclf && dclf->usage == "WORKSTN") uses_dspf_ = true;
+        if (auto* irf = dynamic_cast<IRecordFormat*>(stmt.get())) {
+            flat_input_formats_[irf->fileName].push_back(irf);
+            uses_flatfile_ = true;
+        }
+        if (auto* orf = dynamic_cast<ORecordFormat*>(stmt.get())) {
+            flat_output_formats_[orf->fileName] = orf;
+            uses_flatfile_ = true;
+        }
         // Also check inside procedures
         auto* proc = dynamic_cast<DclProc*>(stmt.get());
         if (proc) {
@@ -664,6 +672,9 @@ void CodeGen::visit(Program& node) {
     }
     if (uses_csv_) {
         out_ << "#include \"rpg_csv_runtime.h\"\n";
+    }
+    if (uses_flatfile_) {
+        out_ << "#include \"rpg_flatfile_runtime.h\"\n";
     }
     out_ << "#include <algorithm>\n";
     out_ << "#include <array>\n";
@@ -1117,6 +1128,67 @@ void CodeGen::visit(DclF& node) {
     // Register for opcode lookup
     file_defs_[node.name] = &node;
 
+    // Program-described (I-spec/O-spec) file — mutually exclusive with the
+    // externally-described/RLA path below (see TODO.md item #4).
+    auto finIt = flat_input_formats_.find(node.name);
+    auto foutIt = flat_output_formats_.find(node.name);
+    if (finIt != flat_input_formats_.end() || foutIt != flat_output_formats_.end()) {
+        emitIndent();
+        out_ << "// --- File " << node.name << " (program-described) ---\n";
+
+        // Union of fields across every I-spec record format for this
+        // file, first-declared-wins on name collisions across formats.
+        std::vector<std::string> fieldOrder;
+        std::map<std::string, RPGType> fieldTypes;
+        std::map<std::string, int> fieldDecimals;
+        std::map<std::string, int> fieldLengths;
+        int recLen = node.recordLen;
+        if (finIt != flat_input_formats_.end()) {
+            for (auto* rf : finIt->second) {
+                for (auto& f : rf->fields) {
+                    if (!fieldTypes.count(f.name)) {
+                        fieldTypes[f.name] = f.type;
+                        fieldDecimals[f.name] = f.decimals;
+                        fieldLengths[f.name] = f.toPos - f.fromPos + 1;
+                        fieldOrder.push_back(f.name);
+                    }
+                    if (f.toPos > recLen) recLen = f.toPos;
+                }
+            }
+        }
+        if (recLen < 1) recLen = 1;
+        flat_record_len_[node.name] = recLen;
+
+        for (auto& fname : fieldOrder) {
+            RPGType t = fieldTypes[fname];
+            var_types_[fname] = t;
+            var_decimals_[fname] = fieldDecimals[fname];
+            var_lengths_[fname] = fieldLengths[fname];
+            std::string cpptype = typeToString(t);
+            emitIndent();
+            if (cpptype == "std::string") {
+                out_ << cpptype << " " << fname << ";\n";
+            } else if (cpptype == "bool") {
+                out_ << cpptype << " " << fname << " = false;\n";
+            } else if (cpptype == "void*") {
+                out_ << cpptype << " " << fname << " = nullptr;\n";
+            } else {
+                out_ << cpptype << " " << fname << " = 0;\n";
+            }
+        }
+
+        std::string lowerName = node.name;
+        for (auto& c : lowerName) c = (char)tolower((unsigned char)c);
+
+        emitIndent(); out_ << "RpgFlatFile " << node.name << "_ff;\n";
+        emitIndent(); out_ << "bool " << node.name << "_eof   = false;\n";
+        emitIndent(); out_ << "bool " << node.name << "_found = false;\n";
+        emitIndent();
+        out_ << "bool " << node.name << "_open = " << node.name << "_ff.open(\""
+             << lowerName << ".txt\", " << recLen << ");\n";
+        return;
+    }
+
     auto it = ext_file_descs_.find(node.name);
     if (it == ext_file_descs_.end()) {
         emitIndent();
@@ -1152,6 +1224,14 @@ void CodeGen::visit(DclF& node) {
     emitIndent(); out_ << "SQLHSTMT " << node.name << "_del    = SQL_NULL_HSTMT;\n";
     emitIndent(); out_ << "bool " << node.name << "_open  = false;\n";
 }
+
+// IRecordFormat/ORecordFormat are purely declarative (like DclDS) — their
+// data is consumed via flat_input_formats_/flat_output_formats_ (built in
+// the visit(Program&) pre-pass) by visit(DclF&) and the ReadStmt/WriteStmt/
+// UpdateStmt program-described branches, not emitted at their own position
+// in the statement stream.
+void CodeGen::visit(IRecordFormat&) {}
+void CodeGen::visit(ORecordFormat&) {}
 
 void CodeGen::visit(DclC& node) {
     emitIndent();
@@ -3555,6 +3635,84 @@ void CodeGen::visit(ReadStmt& node) {
         }
     }
 
+    // Program-described (I-spec) READ
+    {
+        auto fin = flat_input_formats_.find(node.filename);
+        if (fin != flat_input_formats_.end()) {
+            emitIndent(); out_ << "{\n"; indent_++;
+            emitIndent(); out_ << "std::string __rec;\n";
+            emitIndent(); out_ << "bool __ok = " << node.filename << "_ff.readNext(__rec);\n";
+            emitIndent(); out_ << node.filename << "_eof = !__ok;\n";
+            emitIndent(); out_ << node.filename << "_found = __ok;\n";
+            emitIndent(); out_ << "if (__ok) {\n"; indent_++;
+            // Reset every record-identifying indicator this file's
+            // formats use before dispatch, so a later read of a
+            // different record type doesn't leave an earlier read's
+            // indicator stuck on (this compiler has no RPG cycle to do
+            // that reset for us).
+            for (auto* rf : fin->second) {
+                if (!rf->recordIdIndicator.empty()) {
+                    emitIndent(); out_ << "rpg_indicators[" << atoi(rf->recordIdIndicator.c_str())
+                                       << "] = false;\n";
+                }
+            }
+            for (auto* rf : fin->second) {
+                std::string cond;
+                if (rf->idTests.empty()) {
+                    cond = "true";
+                } else {
+                    for (size_t i = 0; i < rf->idTests.size(); i++) {
+                        auto& t = rf->idTests[i];
+                        if (i) cond += " && ";
+                        cond += "__rec.substr(" + std::to_string(t.position - 1) + ", 1) " +
+                                (t.negate ? "!= \"" : "== \"") + cppEscape(t.character) + "\"";
+                    }
+                }
+                emitIndent(); out_ << "if (" << cond << ") {\n"; indent_++;
+                if (!rf->recordIdIndicator.empty()) {
+                    emitIndent(); out_ << "rpg_indicators[" << atoi(rf->recordIdIndicator.c_str())
+                                       << "] = true;\n";
+                }
+                for (auto& f : rf->fields) {
+                    int width = f.toPos - f.fromPos + 1;
+                    std::string raw = "__rec.substr(" + std::to_string(f.fromPos - 1) +
+                                       ", " + std::to_string(width) + ")";
+                    std::string cpptype = typeToString(f.type);
+                    emitIndent();
+                    if (cpptype == "std::string") {
+                        out_ << f.name << " = " << raw << ";\n";
+                    } else {
+                        out_ << f.name << " = static_cast<" << cpptype
+                             << ">(rpg_flatfile_parse_numeric(" << raw << ", " << f.decimals << "));\n";
+                    }
+                    if (!f.indPlus.empty()) {
+                        emitIndent(); out_ << "rpg_indicators[" << atoi(f.indPlus.c_str())
+                                           << "] = (" << f.name << " > 0);\n";
+                    }
+                    if (!f.indMinus.empty()) {
+                        emitIndent(); out_ << "rpg_indicators[" << atoi(f.indMinus.c_str())
+                                           << "] = (" << f.name << " < 0);\n";
+                    }
+                    if (!f.indZeroBlank.empty()) {
+                        emitIndent();
+                        if (cpptype == "std::string") {
+                            out_ << "rpg_indicators[" << atoi(f.indZeroBlank.c_str())
+                                 << "] = rpg_trim(" << f.name << ").empty();\n";
+                        } else {
+                            out_ << "rpg_indicators[" << atoi(f.indZeroBlank.c_str())
+                                 << "] = (" << f.name << " == 0);\n";
+                        }
+                    }
+                }
+                indent_--; emitIndent(); out_ << "}\n";
+            }
+            indent_--; emitIndent(); out_ << "}\n";
+            indent_--; emitIndent(); out_ << "}\n";
+            uses_indicators_ = true;
+            return;
+        }
+    }
+
     // Disk / RLA READ
     auto it = ext_file_descs_.find(node.filename);
     if (it == ext_file_descs_.end()) {
@@ -3768,6 +3926,60 @@ void CodeGen::visit(WriteStmt& node) {
         }
     }
 
+    // Program-described (O-spec) WRITE. Each field/constant's start
+    // position is inferred as (previous field's end position + 1) on the
+    // same record — i.e. O-spec fields must be listed in increasing,
+    // contiguous end-position order (a documented simplification: real
+    // DDS infers width from the field's own prior declared length, which
+    // would need cross-referencing D-spec/I-spec declarations at O-spec
+    // parse time; this compiler infers it from the gap between
+    // successive end positions instead).
+    {
+        auto fout = flat_output_formats_.find(node.filename);
+        if (fout != flat_output_formats_.end()) {
+            int recLen = flat_record_len_.count(node.filename) ? flat_record_len_[node.filename] : 1;
+            emitIndent(); out_ << "{\n"; indent_++;
+            emitIndent(); out_ << "std::string __rec(" << recLen << ", ' ');\n";
+            int prevEnd = 0;
+            for (auto& f : fout->second->fields) {
+                int width = f.endPos - prevEnd;
+                if (width < 1) width = 1;
+                std::string valueExpr;
+                if (!f.fieldName.empty()) {
+                    if (f.editCode != '\0') {
+                        valueExpr = "rpg_editc(" + f.fieldName + ", \"" + std::string(1, f.editCode) + "\")";
+                    } else if (var_types_.count(f.fieldName) && typeToString(var_types_[f.fieldName]) == "std::string") {
+                        valueExpr = f.fieldName;
+                    } else {
+                        valueExpr = "rpg_flatfile_format_numeric(static_cast<double>(" + f.fieldName +
+                                     "), " + std::to_string(width) + ", 0)";
+                    }
+                } else {
+                    valueExpr = "std::string(\"" + cppEscape(f.constant) + "\")";
+                }
+                emitIndent();
+                out_ << "{ std::string __v = " << valueExpr << "; "
+                     << "if ((int)__v.size() > " << width << ") __v.resize(" << width << "); "
+                     << "else if ((int)__v.size() < " << width << ") __v.resize(" << width << ", ' '); "
+                     << "__rec.replace(" << prevEnd << ", " << width << ", __v); }\n";
+                prevEnd = f.endPos;
+            }
+            emitIndent(); out_ << node.filename << "_ff.writeRecord(__rec);\n";
+            for (auto& f : fout->second->fields) {
+                if (f.blankAfter && !f.fieldName.empty()) {
+                    emitIndent();
+                    if (var_types_.count(f.fieldName) && typeToString(var_types_[f.fieldName]) == "std::string") {
+                        out_ << f.fieldName << ".assign(" << f.fieldName << ".size(), ' ');\n";
+                    } else {
+                        out_ << f.fieldName << " = 0;\n";
+                    }
+                }
+            }
+            indent_--; emitIndent(); out_ << "}\n";
+            return;
+        }
+    }
+
     // Disk / RLA WRITE
     auto it = ext_file_descs_.find(node.filename);
     if (it == ext_file_descs_.end()) {
@@ -3825,6 +4037,37 @@ void CodeGen::visit(UpdateStmt& node) {
             }
             emitIndent(); out_ << "dspf_set_indicators(rpg_indicators, 100);\n";
             emitIndent(); out_ << "dspf_update(\"" << node.filename << "\", &" << bufName << ");\n";
+            indent_--; emitIndent(); out_ << "}\n";
+            return;
+        }
+    }
+
+    // Program-described (I-spec) UPDATE — rewrites the last-read record
+    // with the current flat-field values, using the union of all record
+    // formats' field layouts (a single-record-type file, the common
+    // case, is handled exactly; a multi-record-type file assumes fields
+    // from every format can coexist in one rewritten buffer).
+    {
+        auto fin = flat_input_formats_.find(node.filename);
+        if (fin != flat_input_formats_.end()) {
+            int recLen = flat_record_len_.count(node.filename) ? flat_record_len_[node.filename] : 1;
+            emitIndent(); out_ << "{\n"; indent_++;
+            emitIndent(); out_ << "std::string __rec(" << recLen << ", ' ');\n";
+            for (auto* rf : fin->second) {
+                for (auto& f : rf->fields) {
+                    int width = f.toPos - f.fromPos + 1;
+                    std::string cpptype = typeToString(f.type);
+                    std::string valueExpr = (cpptype == "std::string") ? f.name
+                        : ("rpg_flatfile_format_numeric(static_cast<double>(" + f.name + "), " +
+                           std::to_string(width) + ", " + std::to_string(f.decimals) + ")");
+                    emitIndent();
+                    out_ << "{ std::string __v = " << valueExpr << "; "
+                         << "if ((int)__v.size() > " << width << ") __v.resize(" << width << "); "
+                         << "else if ((int)__v.size() < " << width << ") __v.resize(" << width << ", ' '); "
+                         << "__rec.replace(" << (f.fromPos - 1) << ", " << width << ", __v); }\n";
+                }
+            }
+            emitIndent(); out_ << node.filename << "_ff.updateLast(__rec);\n";
             indent_--; emitIndent(); out_ << "}\n";
             return;
         }

@@ -33,6 +33,12 @@ DclF::DclF(std::string name, std::string usage)
     : name(std::move(name)), usage(std::move(usage)) {}
 void DclF::accept(ASTVisitor& visitor) { visitor.visit(*this); }
 
+IRecordFormat::IRecordFormat(std::string fileName) : fileName(std::move(fileName)) {}
+void IRecordFormat::accept(ASTVisitor& visitor) { visitor.visit(*this); }
+
+ORecordFormat::ORecordFormat(std::string fileName) : fileName(std::move(fileName)) {}
+void ORecordFormat::accept(ASTVisitor& visitor) { visitor.visit(*this); }
+
 DclC::DclC(std::string name, std::unique_ptr<Expression> value)
     : name(std::move(name)), value(std::move(value)) {}
 void DclC::accept(ASTVisitor& visitor) { visitor.visit(*this); }

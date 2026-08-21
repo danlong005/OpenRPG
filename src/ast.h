@@ -126,7 +126,76 @@ public:
     std::string usages;   // *INPUT, *OUTPUT, *UPDATE, etc.
     bool usropn = false;
     std::string prefix;   // PREFIX(pfx) — prepended to field variable names
+    int recordLen = 0;    // F-spec record length (program-described files only)
     DclF(std::string name, std::string usage);
+    void accept(ASTVisitor& visitor) override;
+};
+
+// --- Program-described I-spec / O-spec (fixed-format only — see
+// TODO.md "Fixed-Format Source Support" item #4). Declarative, like
+// DclDS/DSField: no executable behavior of their own, consumed by codegen
+// when building a program-described DclF's per-record state and by the
+// flat-file runtime (runtime/rpg_flatfile_runtime.h) READ/UPDATE/WRITE
+// emission. There is no free-form equivalent for either spec, so (unlike
+// the transpile-and-bridge C-spec opcodes) fixed_reader.cpp constructs
+// these directly rather than synthesizing free-form text. ---
+
+// One record-identification test within an I-spec record-identification
+// line (SC09-2508 p.548): does byte `position` (1-based, within the raw
+// record) equal `character` (or NOT equal it, if `negate`)? Only the "C"
+// (entire character) code-part is supported — "Z"/"D" (zone/digit) tests
+// are rejected as unsupported at parse time.
+struct IRecordIdTest {
+    int position = 0;
+    bool negate = false;
+    std::string character;
+};
+
+// One field within an I-spec record layout (SC09-2508 p.550-555).
+struct IFieldDesc {
+    std::string name;
+    RPGType type;
+    int fromPos = 0;
+    int toPos = 0;
+    int decimals = 0;
+    std::string controlLevel;  // "" or "L1".."L9"
+    std::string indPlus;       // field indicator, numeric-positive (bare digits, e.g. "01")
+    std::string indMinus;      // field indicator, numeric-negative
+    std::string indZeroBlank;  // field indicator, zero (numeric) or blank (character)
+};
+
+// One I-spec record-identification line plus the field-description lines
+// that follow it — describes one record "type" within a program-described
+// file. A file with only one record type has an empty `idTests` (matches
+// every record read).
+class IRecordFormat : public Statement {
+public:
+    std::string fileName;
+    std::string recordIdIndicator; // "" or a bare indicator name, e.g. "01"
+    std::vector<IRecordIdTest> idTests;
+    std::vector<IFieldDesc> fields;
+    explicit IRecordFormat(std::string fileName);
+    void accept(ASTVisitor& visitor) override;
+};
+
+// One field or constant within an O-spec output record (SC09-2508
+// p.575-578). `fieldName` is empty when this is a constant/literal
+// (`constant` holds the text instead).
+struct OFieldDesc {
+    std::string fieldName;
+    std::string constant;
+    char editCode = '\0';      // '\0' = none
+    bool blankAfter = false;
+    int endPos = 0;
+};
+
+// One O-spec record's field/constant placement list — describes one
+// WRITE-triggered output record layout for a program-described DISK file.
+class ORecordFormat : public Statement {
+public:
+    std::string fileName;
+    std::vector<OFieldDesc> fields;
+    explicit ORecordFormat(std::string fileName);
     void accept(ASTVisitor& visitor) override;
 };
 
@@ -772,6 +841,8 @@ public:
     virtual void visit(BIFCall& node) = 0;
     virtual void visit(FuncCall& node) = 0;
     virtual void visit(DclF& node) = 0;
+    virtual void visit(IRecordFormat& node) = 0;
+    virtual void visit(ORecordFormat& node) = 0;
     virtual void visit(DclC& node) = 0;
     virtual void visit(DclS& node) = 0;
     virtual void visit(EvalStmt& node) = 0;

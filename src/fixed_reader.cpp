@@ -6,6 +6,7 @@
 #include <cctype>
 #include <cstdlib>
 #include <fstream>
+#include <set>
 #include <sstream>
 
 namespace rpg {
@@ -242,6 +243,8 @@ static void handleFSpecLine(Program* program, PendingFSpec& pending,
     pending.dclf = new DclF(upper(name), usage);
     pending.tailText = extractCol(line, FSpec::KeywordTail);
     pending.line = lineNo;
+    std::string recLenStr = extractCol(line, FSpec::RecordLen);
+    if (!recLenStr.empty()) pending.dclf->recordLen = atoi(recLenStr.c_str());
 }
 
 // --- D-spec ---------------------------------------------------------------
@@ -371,6 +374,265 @@ static void handleDSpecLine(Program* program, DSpecState& state,
     }
 }
 
+// --- I-spec (program-described files only) -------------------------------
+// I-spec's data-format letter (position 36) is a distinct table from
+// D-spec's position-40 letters (SC09-2508 p.550-551) — L/R (zoned with
+// leading/trailing sign) and N (character in "indicator format") have no
+// D-spec counterpart, so this is deliberately not shared with mapDataType().
+// L/R both map to plain ZONED (the leading-vs-trailing sign distinction
+// isn't modeled, matching how this compiler doesn't track sign position
+// elsewhere either). G (graphic) and N (indicator-format character) are
+// rejected as unsupported, same spirit as D-spec's own G rejection. D/T/Z
+// (date/time/timestamp) are also rejected here — codegen extracts I-spec
+// fields as plain substrings, and those three are C++ struct types
+// (RpgDate/RpgTime/RpgTimestamp), not std::string, so they'd need real
+// date/time parsing this pass doesn't build; a program-described file
+// with a date field can still read it as plain CHAR text.
+static bool mapISpecDataFormat(char c, int lenForFloat, RPGType& outType) {
+    switch ((char)toupper((unsigned char)c)) {
+        case 'A': outType = RPGType::CHAR;      return true;
+        case 'B': outType = RPGType::BINDEC;    return true;
+        case 'C': outType = RPGType::UCS2;      return true;
+        case 'F': outType = (lenForFloat == 4) ? RPGType::FLOAT4 : RPGType::FLOAT8; return true;
+        case 'I': outType = RPGType::INT10;     return true;
+        case 'L': outType = RPGType::ZONED;     return true; // leading sign, not modeled
+        case 'P': outType = RPGType::PACKED;    return true;
+        case 'R': outType = RPGType::ZONED;     return true; // trailing sign, not modeled
+        case 'S': outType = RPGType::ZONED;     return true;
+        case 'U': outType = RPGType::UNS;       return true;
+        default: return false; // includes D, T, Z, G, N — unsupported
+    }
+}
+
+// One record-identification line's worth of state; field-description
+// lines that follow (blank FileName) attach to it, same shape as D-spec's
+// "currentDS" tracking.
+struct ISpecState {
+    IRecordFormat* currentFormat = nullptr;
+};
+
+// Parses one record-identification-code set (position/not/codepart/char)
+// and, if a position is given, appends the test to `tests`. Returns false
+// (after reporting an error) if the code-part is Z or D — unsupported.
+static bool parseIdTestSet(const std::string& line, int lineNo,
+                            const ColSpec& posSpec, const ColSpec& notSpec,
+                            const ColSpec& partSpec, const ColSpec& charSpec,
+                            std::vector<IRecordIdTest>& tests) {
+    std::string posStr = extractCol(line, posSpec);
+    if (posStr.empty()) return true; // this set isn't used on this line
+    std::string partStr = upper(extractCol(line, partSpec));
+    if (!partStr.empty() && partStr != "C") {
+        report_fixed_format_error(lineNo,
+            "I-spec: record-identification code part '" + partStr +
+            "' is not supported (only 'C' — entire character — is; see TODO.md)");
+        return false;
+    }
+    IRecordIdTest test;
+    test.position = atoi(posStr.c_str());
+    test.negate = upper(extractCol(line, notSpec)) == "N";
+    test.character = extractCol(line, charSpec);
+    tests.push_back(test);
+    return true;
+}
+
+static void handleISpecLine(Program* program, ISpecState& state,
+                             const std::string& line, int lineNo) {
+    std::string fileName = extractCol(line, ISpec::FileName);
+    if (!fileName.empty()) {
+        // New record-identification line.
+        std::string seq = extractCol(line, ISpec::Sequence);
+        if (!seq.empty()) {
+            report_fixed_format_error(lineNo, "I-spec: sequence checking (positions 17-18) is not supported");
+            return;
+        }
+        if (!extractCol(line, ISpec::Number).empty() || !extractCol(line, ISpec::Option).empty()) {
+            report_fixed_format_error(lineNo, "I-spec: sequence number/option (positions 19-20) is not supported");
+            return;
+        }
+        auto* rf = new IRecordFormat(upper(fileName));
+        rf->line = lineNo;
+        rf->recordIdIndicator = upper(extractCol(line, ISpec::RecordIdInd));
+        bool ok = true;
+        ok &= parseIdTestSet(line, lineNo, ISpec::Set1Position, ISpec::Set1Not, ISpec::Set1CodePart, ISpec::Set1Character, rf->idTests);
+        ok &= parseIdTestSet(line, lineNo, ISpec::Set2Position, ISpec::Set2Not, ISpec::Set2CodePart, ISpec::Set2Character, rf->idTests);
+        ok &= parseIdTestSet(line, lineNo, ISpec::Set3Position, ISpec::Set3Not, ISpec::Set3CodePart, ISpec::Set3Character, rf->idTests);
+        if (!ok) { delete rf; return; }
+        program->statements.emplace_back(rf);
+        state.currentFormat = rf;
+        return;
+    }
+
+    if (upper(extractCol(line, ISpec::LogicalRel)) == "AND" ||
+        upper(extractCol(line, ISpec::LogicalRel)) == "OR") {
+        report_fixed_format_error(lineNo,
+            "I-spec: AND/OR record-identification continuation lines are not supported — see TODO.md");
+        return;
+    }
+
+    // Field-description line.
+    if (!state.currentFormat) {
+        report_fixed_format_error(lineNo, "I-spec: field description with no preceding record-identification line");
+        return;
+    }
+    if (!extractCol(line, ISpec::DataAttributes).empty() || !extractCol(line, ISpec::DateTimeSep).empty()) {
+        report_fixed_format_error(lineNo,
+            "I-spec: date/time external format and *VAR (positions 31-35) are not supported");
+        return;
+    }
+    std::string fmtStr = extractCol(line, ISpec::DataFormat);
+    char fmtChar = fmtStr.empty() ? '\0' : fmtStr[0];
+    std::string fromStr = extractCol(line, ISpec::FromPos);
+    std::string toStr = extractCol(line, ISpec::ToPos);
+    std::string decStr = extractCol(line, ISpec::Decimals);
+    std::string fname = extractCol(line, ISpec::FieldName);
+    if (fromStr.empty() || toStr.empty() || fname.empty()) {
+        report_fixed_format_error(lineNo, "I-spec: field description requires From/To position and a field name");
+        return;
+    }
+    if (!extractCol(line, ISpec::MatchingFields).empty()) {
+        report_fixed_format_error(lineNo, "I-spec: matching fields (positions 65-66) are not supported — see TODO.md");
+        return;
+    }
+    if (!extractCol(line, ISpec::FieldRecordRel).empty()) {
+        report_fixed_format_error(lineNo, "I-spec: field record relation (positions 67-68) is not supported — see TODO.md");
+        return;
+    }
+
+    RPGType type;
+    if (fmtChar == '\0') {
+        type = decStr.empty() ? RPGType::CHAR : RPGType::ZONED;
+    } else if (!mapISpecDataFormat(fmtChar, 0, type)) {
+        report_fixed_format_error(lineNo, std::string("I-spec: unsupported data format '") +
+                                   fmtChar + "' for field " + fname);
+        return;
+    }
+
+    IFieldDesc f;
+    f.name = upper(fname);
+    f.type = type;
+    f.fromPos = atoi(fromStr.c_str());
+    f.toPos = atoi(toStr.c_str());
+    f.decimals = decStr.empty() ? 0 : atoi(decStr.c_str());
+    f.controlLevel = upper(extractCol(line, ISpec::ControlLevel));
+    f.indPlus = extractCol(line, ISpec::FieldIndPlus);
+    f.indMinus = extractCol(line, ISpec::FieldIndMinus);
+    f.indZeroBlank = extractCol(line, ISpec::FieldIndZeroBlank);
+    state.currentFormat->fields.push_back(f);
+}
+
+// --- O-spec (program-described DISK files only) --------------------------
+struct OSpecState {
+    ORecordFormat* currentFormat = nullptr;
+    // Only one O-spec record format per file is supported — codegen keeps
+    // a single ORecordFormat* per file name (real DDS disambiguates
+    // multiple O-spec formats for one file via record-type/EXCEPT names,
+    // both deferred; see TODO.md). Tracks every file name a record line
+    // has already been seen for, across the whole O-spec, so a second one
+    // is rejected loudly instead of silently overwriting the first.
+    std::set<std::string> seenFiles;
+};
+
+// True if all three conditioning-indicator slots on this line are blank.
+static bool oCondBlank(const std::string& line, const ColSpec& c1, const ColSpec& c2, const ColSpec& c3) {
+    return extractCol(line, c1).empty() && extractCol(line, c2).empty() && extractCol(line, c3).empty();
+}
+
+static void handleOSpecLine(Program* program, OSpecState& state,
+                             const std::string& line, int lineNo) {
+    std::string fileName = extractCol(line, OSpec::FileName);
+    if (!fileName.empty()) {
+        if (!extractCol(line, OSpec::RecType).empty()) {
+            report_fixed_format_error(lineNo,
+                "O-spec: record type (position 17) is not supported — heading/total/exception "
+                "records need RPG-cycle timing this compiler doesn't implement; see TODO.md");
+            return;
+        }
+        if (!extractCol(line, OSpec::AddDel).empty()) {
+            report_fixed_format_error(lineNo, "O-spec: record addition/deletion (positions 18-20) is not supported");
+            return;
+        }
+        if (!oCondBlank(line, OSpec::Cond1, OSpec::Cond2, OSpec::Cond3)) {
+            report_fixed_format_error(lineNo,
+                "O-spec: conditioning indicators (positions 21-29) are not yet supported — see TODO.md");
+            return;
+        }
+        if (!extractCol(line, OSpec::ExceptName).empty()) {
+            report_fixed_format_error(lineNo, "O-spec: EXCEPT name (positions 30-39) is not supported — see TODO.md");
+            return;
+        }
+        if (!extractCol(line, OSpec::SpaceSkip).empty()) {
+            report_fixed_format_error(lineNo,
+                "O-spec: printer spacing/skip (positions 40-51) is not supported — this compiler "
+                "has no PRINTER-file runtime; see TODO.md");
+            return;
+        }
+        std::string upperFileName = upper(fileName);
+        if (!state.seenFiles.insert(upperFileName).second) {
+            report_fixed_format_error(lineNo,
+                "O-spec: only one record format per file is supported (real DDS disambiguates "
+                "multiple O-spec formats for one file via record-type/EXCEPT names, both "
+                "deferred — see TODO.md)");
+            return;
+        }
+        auto* orf = new ORecordFormat(upperFileName);
+        orf->line = lineNo;
+        program->statements.emplace_back(orf);
+        state.currentFormat = orf;
+        return;
+    }
+
+    if (upper(extractCol(line, OSpec::LogicalRel)) == "AND" ||
+        upper(extractCol(line, OSpec::LogicalRel)) == "OR") {
+        report_fixed_format_error(lineNo,
+            "O-spec: AND/OR conditioning continuation lines are not supported — see TODO.md");
+        return;
+    }
+
+    // Field/constant description line.
+    if (!state.currentFormat) {
+        report_fixed_format_error(lineNo, "O-spec: field description with no preceding record line");
+        return;
+    }
+    if (!oCondBlank(line, OSpec::FCond1, OSpec::FCond2, OSpec::FCond3)) {
+        report_fixed_format_error(lineNo,
+            "O-spec: output conditioning indicators (positions 21-29) are not yet supported — see TODO.md");
+        return;
+    }
+    std::string fname = extractCol(line, OSpec::FieldName);
+    std::string constantRaw = trim(extractCol(line, OSpec::Constant));
+    std::string endStr = extractCol(line, OSpec::EndPos);
+    if (endStr.empty() || (endStr[0] == '+' || endStr[0] == '-')) {
+        report_fixed_format_error(lineNo,
+            "O-spec: end position (positions 47-51) is required and must be an absolute position "
+            "(relative +n/-n positions are not supported)");
+        return;
+    }
+    if (fname.empty() && constantRaw.empty()) {
+        report_fixed_format_error(lineNo, "O-spec: field description requires a field name or a constant");
+        return;
+    }
+
+    OFieldDesc f;
+    f.endPos = atoi(endStr.c_str());
+    if (!fname.empty()) {
+        f.fieldName = upper(fname);
+    } else {
+        // Constant: a quoted literal ('text'). Anything else at 53-80
+        // (edit words, DATE/TIME/SYSNAME/etc.) isn't supported yet.
+        if (constantRaw.size() >= 2 && constantRaw.front() == '\'' && constantRaw.back() == '\'') {
+            f.constant = constantRaw.substr(1, constantRaw.size() - 2);
+        } else {
+            report_fixed_format_error(lineNo,
+                "O-spec: only a quoted 'constant' is supported at positions 53-80 (no edit words/reserved words yet)");
+            return;
+        }
+    }
+    std::string editCodeStr = extractCol(line, OSpec::EditCode);
+    if (!editCodeStr.empty()) f.editCode = editCodeStr[0];
+    f.blankAfter = upper(extractCol(line, OSpec::BlankAfter)) == "B";
+    state.currentFormat->fields.push_back(f);
+}
+
 // --- Main driver ------------------------------------------------------
 
 Program* parseFixedFormat(const std::string& src_text, const std::string& /*filename*/) {
@@ -382,6 +644,8 @@ Program* parseFixedFormat(const std::string& src_text, const std::string& /*file
     std::string hSpecTail;
     PendingFSpec pendingF;
     DSpecState dState;
+    ISpecState iState;
+    OSpecState oState;
 
     bool inFreeBlock = false;
     std::string freeBlockText;
@@ -462,6 +726,8 @@ Program* parseFixedFormat(const std::string& src_text, const std::string& /*file
         }
         if (specType != "D") dState.currentDS = nullptr;
         if (specType != "C" && inCSpecRun) flushCRun();
+        if (specType != "I") iState.currentFormat = nullptr;
+        if (specType != "O") oState.currentFormat = nullptr;
 
         if (specType == "H") {
             hSpecTail += " " + extractCol(line, HSpec::KeywordTail);
@@ -472,10 +738,10 @@ Program* parseFixedFormat(const std::string& src_text, const std::string& /*file
         } else if (specType == "C") {
             if (!inCSpecRun) { inCSpecRun = true; cState.startLine = lineNo; }
             feedCSpecLine(cState, line, lineNo);
-        } else if (specType == "I" || specType == "O") {
-            report_fixed_format_error(lineNo,
-                std::string("Fixed-format Phase 1 does not support ") + specType +
-                "-specs (record I/O) — see TODO.md");
+        } else if (specType == "I") {
+            handleISpecLine(program, iState, line, lineNo);
+        } else if (specType == "O") {
+            handleOSpecLine(program, oState, line, lineNo);
         } else {
             report_fixed_format_error(lineNo, "Unrecognized spec type '" + specType + "'");
         }

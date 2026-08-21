@@ -65,6 +65,8 @@ public:
     void visit(BIFCall& node) override;
     void visit(FuncCall& node) override;
     void visit(DclF& node) override;
+    void visit(IRecordFormat& node) override;
+    void visit(ORecordFormat& node) override;
     void visit(DclC& node) override;
     void visit(DclS& node) override;
     void visit(EvalStmt& node) override;
@@ -145,10 +147,17 @@ private:
     bool uses_psds_ = false;  // program declares a PSDS
     bool uses_rla_  = false;   // program uses file I/O opcodes or DCL-F DISK
     bool uses_dspf_ = false;   // program uses DCL-F WORKSTN
+    bool uses_flatfile_ = false; // program uses a program-described (I-spec/O-spec) file
 
     std::map<std::string, ExternalFileDesc> ext_file_descs_; // from pre-pass
     std::map<std::string, DspfFileInfo>     dspf_descs_;      // from .dspfd pre-pass
     std::map<std::string, DclF*> file_defs_;  // DCL-F nodes by name
+    // Program-described I-spec/O-spec layouts, collected in a first pass
+    // over Program::statements (fixed_reader.cpp constructs these AST
+    // nodes directly — no free-form equivalent exists to bridge through).
+    std::map<std::string, std::vector<IRecordFormat*>> flat_input_formats_;
+    std::map<std::string, ORecordFormat*> flat_output_formats_;
+    std::map<std::string, int> flat_record_len_; // resolved record length, keyed by file name
     std::string conf_dsn_;    // from rpgc.conf, for auto-connect
 
     void emitIndent();

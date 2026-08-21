@@ -581,6 +581,28 @@ run_test "151" "Fixed C-spec: Z-ADD/Z-SUB" "$TESTDIR/test151_fixed_cspec_zadd_zs
 run_test "152" "Fixed C-spec: reject GOTO inside explicit /free block" "$TESTDIR/test152_fixed_cspec_err_goto_in_free.rpgle" "error"
 run_test "153" "Fixed C-spec: reject deferred legacy opcode (MOVE)" "$TESTDIR/test153_fixed_cspec_err_move_deferred.rpgle" "error"
 
+# ── Fixed-format frontend: program-described I-spec/O-spec (item #4) ─────
+# Program-described (byte-position) file I/O — an entirely new raw
+# fixed-length-record runtime (src/rpg_flatfile_runtime.h), separate from
+# RLA's SQL/ODBC-backed CHAIN/READ/WRITE/etc. The flat-file runtime opens
+# paths relative to CWD ("<lowercased-DCL-F-name>.txt"), and this script
+# never cds, so these land at the repo root — rm -f first for a clean
+# slate each run (the runtime appends rather than truncating, so a stale
+# file from a previous run would otherwise leak extra records in). See
+# TODO.md "Fixed-Format Source Support — Next Steps" item #4.
+rm -f "$TESTDIR/../testfl154.txt"
+run_test "154" "Fixed I-spec: single record type, sequential READ" "$TESTDIR/test154_fixed_ispec_single.rpgle" "run"
+rm -f "$TESTDIR/../testfl155.txt"
+run_test "155" "Fixed I-spec: multi record type dispatch" "$TESTDIR/test155_fixed_ispec_multi.rpgle" "run"
+rm -f "$TESTDIR/../testfl156.txt"
+run_test "156" "Fixed I-spec: field indicators (plus/minus/zero)" "$TESTDIR/test156_fixed_ispec_field_ind.rpgle" "run"
+rm -f "$TESTDIR/../testfl157.txt"
+run_test "157" "Fixed I-spec: UPDATE rewrites record in place" "$TESTDIR/test157_fixed_ispec_update.rpgle" "run"
+rm -f "$TESTDIR/../testfl158.txt"
+run_test "158" "Fixed O-spec: field placement + edit code" "$TESTDIR/test158_fixed_ospec_editcode.rpgle" "run"
+run_test "159" "Fixed I-spec: reject zone record-ID test" "$TESTDIR/test159_fixed_ispec_err_zone.rpgle" "error"
+run_test "160" "Fixed I-spec: reject matching fields (M1)" "$TESTDIR/test160_fixed_ispec_err_matching.rpgle" "error"
+
 # ── Customer / drop-in tests ─────────────────────────────────────────────
 # Drop any .rpgle or .sqlrpgle file into tests/customer/ and it will be
 # compile-tested automatically — no registration or expected output needed.

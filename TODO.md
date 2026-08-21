@@ -323,11 +323,59 @@ as `LEAVE`, `LEAVESR`, `ITER`, and `RETURN`").
   RPG cycle itself (detail/total calc, LR-driven implicit read loop) —
   that stays rejected regardless of any of this item's future scope.
 
-**4. I-specs / O-specs (program-described file I/O).** Lower priority —
-real shops overwhelmingly use externally-described (DDS-defined) files,
-which RLA (Tests 103-108) already covers. Two full column layouts
-(program- vs. externally-described) with cross-line continuation state,
-for comparatively little missed real-world coverage.
+**4. I-specs / O-specs (program-described file I/O) ✅.** Unlike items
+1/1b/2/3, this couldn't reuse existing infrastructure — every existing
+file opcode (RLA — `CHAIN`/`READ`/`WRITE`/etc.) is 100% SQL/ODBC against a
+database table, but program-described I-specs/O-specs describe **flat
+files with byte-position field layout**, so this needed a genuinely new
+raw fixed-length-record file I/O runtime
+(`runtime/rpg_flatfile_runtime.h`) built from scratch. Real IBM i
+program-described files have no in-file delimiters (pure fixed-width
+bytes on a record-oriented file system); since there's no equivalent on
+macOS/Linux/Windows, records are newline-delimited fixed-width text
+instead — an OpenRPG-specific portable convention, not literal IBM i
+on-disk semantics, documented as such in the runtime header. `READ`/
+`WRITE`/`UPDATE` reuse the *same* `ReadStmt`/`WriteStmt`/`UpdateStmt` AST
+nodes RLA already uses (a program just writes `READ MYFILE;` regardless
+of which kind of file `MYFILE` is) — `visit()` for each gained a new
+branch checked before the existing RLA/"no schema" fallback, mirroring
+the pattern the WORKSTN branch already used in the same methods.
+- **In scope**: record identification via character-part (`C`) tests only
+  (position/not/character — no zone/digit tests), field description
+  (from/to byte position, data type, decimals, field name, field
+  indicators for plus/minus/zero-or-blank), sequential `READ` with
+  multi-record-type dispatch, `UPDATE` (rewrite the last-read record in
+  place). **One O-spec record format per file** (field/constant placement
+  by end-position — width inferred from the gap to the previous field's
+  end position, not by cross-referencing the field's own declared length;
+  edit codes reuse the existing `rpg_editc()` used by `%EDITC`), `WRITE`.
+- **Deferred, documented not dropped** (found or reconfirmed during
+  implementation, beyond the two flagged when this item was scoped):
+  zone/digit (`Z`/`D`) record-identification tests (SC09-2508 p.548-549,
+  obscure EBCDIC-era byte testing); matching fields / multi-file record
+  merging (RPG-cycle-adjacent, permanently rejected elsewhere);
+  `CHAIN`/`SETLL`/`SETGT`/`DELETE` on program-described files (real keyed
+  access needs F-spec key-field columns not modeled for program-described
+  files); O-spec spacing/skip and printer paging (this compiler has zero
+  PRINTER-output runtime at all, for *any* file type — a separate,
+  standalone feature, not something O-specs are specifically blocked on);
+  **control-level (`L1`-`L9`) indicator-on-value-change** — parses and is
+  accepted, but doesn't yet set anything at codegen time: wiring it in
+  turned out to need real extensions to this compiler's indicator system
+  (general indicators are a flat `bool[100]` array with no L1-L9 concept
+  at all, and *INL1-style expression syntax doesn't exist), a
+  meaningfully bigger, separate task once actually reached; **multiple
+  O-spec record formats per file** — real DDS disambiguates via
+  record-type/EXCEPT names, both already deferred above, so a file needs
+  exactly one O-spec format (a second one is rejected with a clear error,
+  not silently overwritten — found via this session's own test155);
+  **date/time/timestamp (`D`/`T`/`Z`) and graphic/indicator-format
+  (`G`/`N`) I-spec data formats** — rejected at parse time (`CHAR` text
+  still works fine for a date field if you don't need real date parsing);
+  **O-spec relative end positions** (`+n`/`-n`) — only absolute end
+  positions are supported; **sequence checking** (I-spec positions
+  17-20) — not implemented, must be blank.
+- Tests 154-160.
 
 **5. Per-subfield `LIKE(...)`/`DIM(...)`.** Small, low-priority polish;
 found during Phase 2. Would also require extending the free-format
@@ -335,7 +383,11 @@ grammar itself (not just `fixed_reader.cpp`), since neither exists at the
 subfield level in free-format either.
 
 ### ~~Fixed-Format File I/O~~ — Not Planned
-~~Native record format / INFSR / legacy PLIST-based file I/O~~
+~~Native record format / INFSR / legacy PLIST-based file I/O~~ — item #4
+above *does* now implement program-described (byte-position) record I/O
+for fixed-format source; what stays not-planned here is INFSR (file
+exception/error subroutines) and legacy `PLIST`-based parameter-list file
+operations, neither of which item #4 touches.
 
 ### Embedded SQL (via ODBC)
 
@@ -636,3 +688,10 @@ member's C-spec to host modern free-format statements.
 | 151 | Fixed C-spec: Z-ADD/Z-SUB |
 | 152 | Fixed C-spec: reject GOTO inside explicit /free block |
 | 153 | Fixed C-spec: reject deferred legacy opcode (MOVE) |
+| 154 | Fixed I-spec: single record type, sequential READ |
+| 155 | Fixed I-spec: multi record type dispatch |
+| 156 | Fixed I-spec: field indicators (plus/minus/zero) |
+| 157 | Fixed I-spec: UPDATE rewrites record in place |
+| 158 | Fixed O-spec: field placement + edit code |
+| 159 | Fixed I-spec: reject zone record-ID test |
+| 160 | Fixed I-spec: reject matching fields (M1) |

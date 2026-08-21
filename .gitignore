@@ -11,3 +11,7 @@ build/parser.h
 /*.cpp
 /*.o
 /test[0-9]*
+# Program-described (I-spec/O-spec) flat-file test runtime output — see
+# TODO.md item #4; these land in the repo root because the flat-file
+# runtime opens paths relative to CWD, and run_tests.sh doesn't cd.
+/testfl*.txt

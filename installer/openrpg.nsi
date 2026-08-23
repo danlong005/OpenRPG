@@ -35,6 +35,7 @@ Section "OpenRPG Compiler (rpgc)" SecMain
     File "rpg_xml_runtime.h"
     File "rpg_json_runtime.h"
     File "rpg_csv_runtime.h"
+    File "rpg_flatfile_runtime.h"
 
     ; Bundled C++ compiler (llvm-mingw, trimmed) — rpgc/dspfc transpile to
     ; C++ and shell out to a real compiler to build the final .exe. Part of
@@ -81,6 +82,7 @@ Section "Uninstall"
     Delete "$INSTDIR\runtime\rpg_xml_runtime.h"
     Delete "$INSTDIR\runtime\rpg_json_runtime.h"
     Delete "$INSTDIR\runtime\rpg_csv_runtime.h"
+    Delete "$INSTDIR\runtime\rpg_flatfile_runtime.h"
     Delete "$INSTDIR\dspfc.exe"
     Delete "$INSTDIR\runtime\rpg_dspf_runtime.h"
     Delete "$INSTDIR\uninstall.exe"

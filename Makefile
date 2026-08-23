@@ -138,6 +138,7 @@ install: $(TARGET)
 	install -m 644 runtime/rpg_xml_runtime.h $(DESTDIR)$(DATADIR)/
 	install -m 644 runtime/rpg_json_runtime.h $(DESTDIR)$(DATADIR)/
 	install -m 644 runtime/rpg_csv_runtime.h $(DESTDIR)$(DATADIR)/
+	install -m 644 runtime/rpg_flatfile_runtime.h $(DESTDIR)$(DATADIR)/
 
 $(DSPF_DIR)/dspfc:
 	$(MAKE) -C $(DSPF_DIR)

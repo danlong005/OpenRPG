@@ -2,8 +2,8 @@
      Dconn                      200    A   VARYING
      Dnm                         50    A   VARYING
      Dtot                        10    I 0
-     C                   EVAL      conn = 'Driver={SQLite3};Data' +
-     C                             'base=/tmp/rpgc_test188.sqlite;'
+     C                   EVAL      conn = 'Driver={SQLite3};' +
+     C                             'Database=/tmp/rpgc_test188.sqlite;'
      C/EXEC SQL
      C+ CONNECT USING :conn
      C/END-EXEC

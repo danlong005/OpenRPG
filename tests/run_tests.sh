@@ -167,6 +167,10 @@ run_test() {
 
             # On Windows (MSYS2), the ODBC driver uses native Windows paths, not MSYS2 /tmp.
             # Translate the SQLite path in the generated .cpp so both the driver and cleanup agree.
+            # NOTE: this matches the literal "Database=/tmp/", so a test that builds its
+            # connection string by concatenation must never split it across that token —
+            # the rewrite silently fails to match and the test then passes on Unix while
+            # quietly reading the wrong (nonexistent) database on Windows.
             if command -v cygpath >/dev/null 2>&1; then
                 WIN_TMP=$(cygpath -m /tmp)
                 sed -i "s|Database=/tmp/|Database=${WIN_TMP}/|g" "$TMPDIR/test${testnum}.cpp"

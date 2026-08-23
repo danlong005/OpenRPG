@@ -538,8 +538,8 @@ run_test "132" "Fixed C-spec: MONITOR/ON-ERROR/ENDMON" "$TESTDIR/test132_fixed_c
 run_test "133" "Fixed C-spec: Extended-Factor-2 continuation" "$TESTDIR/test133_fixed_cspec_continuation.rpgle" "run"
 run_test "134" "Fixed C-spec: mixed with explicit /free block" "$TESTDIR/test134_fixed_cspec_mixed_free.rpgle" "run"
 run_test "135" "Fixed C-spec: reject non-blank control level" "$TESTDIR/test135_fixed_cspec_err_ctllevel.rpgle" "error"
-run_test "136" "Fixed C-spec: reject conditioning indicator" "$TESTDIR/test136_fixed_cspec_err_indicator.rpgle" "error"
-run_test "137" "Fixed C-spec: reject deferred opcode (SND-MSG)" "$TESTDIR/test137_fixed_cspec_err_deferred.rpgle" "error"
+run_test "136" "Fixed C-spec: reject misaligned cond indicator" "$TESTDIR/test136_fixed_cspec_err_indicator.rpgle" "error"
+run_test "137" "Fixed C-spec: reject deferred opcode (XML-SAX)" "$TESTDIR/test137_fixed_cspec_err_deferred.rpgle" "error"
 run_test "138" "Fixed C-spec: reject legacy opcode (COMP)" "$TESTDIR/test138_fixed_cspec_err_legacy.rpgle" "error"
 
 # ── Fixed-format frontend: /COPY and /INCLUDE ─────────────────────────────
@@ -579,7 +579,7 @@ run_test "149" "Fixed C-spec: GOTO/TAG inside BEGSR" "$TESTDIR/test149_fixed_csp
 run_test "150" "Fixed C-spec: ADD/SUB/MULT/DIV (both Factor 1 forms)" "$TESTDIR/test150_fixed_cspec_arith.rpgle" "run"
 run_test "151" "Fixed C-spec: Z-ADD/Z-SUB" "$TESTDIR/test151_fixed_cspec_zadd_zsub.rpgle" "run"
 run_test "152" "Fixed C-spec: reject GOTO inside explicit /free block" "$TESTDIR/test152_fixed_cspec_err_goto_in_free.rpgle" "error"
-run_test "153" "Fixed C-spec: reject deferred legacy opcode (MOVE)" "$TESTDIR/test153_fixed_cspec_err_move_deferred.rpgle" "error"
+run_test "153" "Fixed C-spec: reject deferred legacy opcode (CALL)" "$TESTDIR/test153_fixed_cspec_err_call_deferred.rpgle" "error"
 
 # ── Fixed-format frontend: program-described I-spec/O-spec (item #4) ─────
 # Program-described (byte-position) file I/O — an entirely new raw
@@ -613,6 +613,79 @@ run_test "160" "Fixed I-spec: reject matching fields (M1)" "$TESTDIR/test160_fix
 run_test "161" "Fixed D-spec: per-subfield DIM(n)" "$TESTDIR/test161_fixed_subf_dim.rpgle" "run"
 run_test "162" "Fixed D-spec: per-subfield LIKE(field)" "$TESTDIR/test162_fixed_subf_like.rpgle" "run"
 run_test "163" "Free-format: per-subfield LIKE/DIM declaration + access" "$TESTDIR/test163_subfield_like_dim.rpgle" "run"
+
+# ── Fixed C-spec: conditioning indicators (positions 9-11) ───────────────
+# See TODO.md "Fixed C-spec — Deferred Fast-Follow" item #1. Each
+# conditioned statement is transpiled into an IF/ENDIF wrapper, so only
+# self-contained statements can carry one — 165 pins the block-structure
+# rejection, 166 the indicators this compiler has no representation for,
+# and 136 (above) the column-misalignment case.
+run_test "164" "Fixed C-spec: conditioning indicators" "$TESTDIR/test164_fixed_cspec_cond_ind.rpgle" "run"
+run_test "165" "Fixed C-spec: reject cond ind on block opcode" "$TESTDIR/test165_fixed_cspec_err_cond_block.rpgle" "error"
+run_test "166" "Fixed C-spec: reject unsupported cond indicator" "$TESTDIR/test166_fixed_cspec_err_cond_ind_name.rpgle" "error"
+run_test "167" "Fixed C-spec: AN/OR indicator groups" "$TESTDIR/test167_fixed_cspec_cond_anor.rpgle" "run"
+run_test "168" "Fixed C-spec: reject orphan AN line" "$TESTDIR/test168_fixed_cspec_err_anor_orphan.rpgle" "error"
+run_test "169" "Fixed C-spec: reject dangling cond ind line" "$TESTDIR/test169_fixed_cspec_err_anor_dangling.rpgle" "error"
+
+# ── Fixed C-spec: MOVE/MOVEL (character only) ────────────────────────────
+# See TODO.md "Fixed C-spec — Deferred Fast-Follow" item #1. Character-to-
+# character only; 171 pins the codegen-level rejection (the transpiler has
+# no symbol table, so only codegen can see that the result is numeric),
+# 172 the date/time-format form, 173 that MOVE has no free-format syntax.
+run_test "170" "Fixed C-spec: MOVE/MOVEL character move" "$TESTDIR/test170_fixed_cspec_move.rpgle" "run"
+run_test "171" "Fixed C-spec: reject MOVE to numeric field" "$TESTDIR/test171_fixed_cspec_err_move_numeric.rpgle" "error"
+run_test "172" "Fixed C-spec: reject MOVE date/time format" "$TESTDIR/test172_fixed_cspec_err_move_datefmt.rpgle" "error"
+run_test "173" "Free-format: reject MOVE (fixed-format only)" "$TESTDIR/test173_move_err_free_format.rpgle" "error"
+
+# ── Fixed C-spec: CALL/PARM (inline parameter list) ──────────────────────
+# See TODO.md "Fixed C-spec — Deferred Fast-Follow" item #3. A traditional
+# CALL has no prototype, so codegen synthesizes the callee's signature
+# from the PARM operands' declared types; 174 is the module it links
+# against (same pattern as tests 48/49). Named PLISTs stay deferred (176).
+run_test "174" "CALL callee module (NOMAIN)" "$TESTDIR/test174_call_callee_module.rpgle" "compile-only"
+run_test "175" "Fixed C-spec: CALL/PARM program call" "$TESTDIR/test175_fixed_cspec_call_parm.rpgle" "run" "$TMPDIR/test174.o"
+run_test "176" "Fixed C-spec: reject named PLIST" "$TESTDIR/test176_fixed_cspec_err_plist.rpgle" "error"
+run_test "177" "Fixed C-spec: reject dynamic CALL name" "$TESTDIR/test177_fixed_cspec_err_call_dynamic.rpgle" "error"
+run_test "178" "Fixed C-spec: reject PARM without CALL" "$TESTDIR/test178_fixed_cspec_err_parm_orphan.rpgle" "error"
+run_test "179" "Free-format: reject CALL (fixed-format only)" "$TESTDIR/test179_call_err_free_format.rpgle" "error"
+
+# ── Fixed C-spec: modern opcodes reachable from native columns ───────────
+# XML-INTO / DATA-INTO / DATA-GEN / SND-MSG are extended-factor-2 shaped,
+# so columns 36-80 (plus continuation) carry their %XML/%DATA/%PARSER
+# expression straight through to the free-format parser — all four share
+# that one code path with no per-opcode logic, so 180 covers it with
+# DATA-INTO (continued across a line) and SND-MSG. 181 pins ON-EXIT,
+# which fixed columns can never reach: it is valid only inside a
+# DCL-PROC, and fixed-format source has no P-spec to declare one.
+run_test "180" "Fixed C-spec: DATA-INTO / SND-MSG" "$TESTDIR/test180_fixed_cspec_modern_opcodes.rpgle" "run"
+run_test "181" "Fixed C-spec: reject ON-EXIT (proc-only)" "$TESTDIR/test181_fixed_cspec_err_on_exit.rpgle" "error"
+
+# ── Fixed C-spec: CASxx / CABxx ──────────────────────────────────────────
+# CASxx lines chain like SELECT/WHEN, so a group transpiles to one
+# IF/ELSEIF/ELSE closed by ENDCS; CABxx is self-contained (a comparison
+# guarding a GOTO). 183-185 pin the orphan ENDCS, the unclosed group, and
+# an unrecognized comparison mnemonic.
+run_test "182" "Fixed C-spec: CASxx chain + CABxx branch" "$TESTDIR/test182_fixed_cspec_cas_cab.rpgle" "run"
+run_test "183" "Fixed C-spec: reject orphan ENDCS" "$TESTDIR/test183_fixed_cspec_err_endcs_orphan.rpgle" "error"
+run_test "184" "Fixed C-spec: reject unclosed CASxx group" "$TESTDIR/test184_fixed_cspec_err_cas_unclosed.rpgle" "error"
+run_test "185" "Fixed C-spec: reject bad CASxx mnemonic" "$TESTDIR/test185_fixed_cspec_err_cas_mnemonic.rpgle" "error"
+
+# ── Fixed C-spec: COMP ───────────────────────────────────────────────────
+# The one opcode allowed to fill the resulting-indicator columns (71-76),
+# because unlike everywhere else those indicators ARE its whole effect and
+# *INnn is an assignable target here. 186 reads the results back through
+# conditioning indicators; 187 rejects a COMP that sets nothing.
+run_test "186" "Fixed C-spec: COMP resulting indicators" "$TESTDIR/test186_fixed_cspec_comp.rpgle" "run"
+run_test "187" "Fixed C-spec: reject COMP with no indicators" "$TESTDIR/test187_fixed_cspec_err_comp_noind.rpgle" "error"
+
+# ── Fixed C-spec: embedded SQL in fixed columns ──────────────────────────
+# C/EXEC SQL ... C+ ... C/END-EXEC. The gathered text is emitted as one
+# free-form `EXEC SQL ...;`, so the lexer's existing <SQL> start condition
+# captures it exactly as it does for free-format source — no SQL parsing
+# was added. 189/190 pin the orphan C/END-EXEC and the unterminated block.
+run_test "188" "Fixed C-spec: embedded SQL (C/EXEC SQL)" "$TESTDIR/test188_fixed_cspec_exec_sql.sqlrpgle" "run-sql"
+run_test "189" "Fixed C-spec: reject orphan C/END-EXEC" "$TESTDIR/test189_fixed_cspec_err_endexec_orphan.sqlrpgle" "error"
+run_test "190" "Fixed C-spec: reject unterminated EXEC SQL" "$TESTDIR/test190_fixed_cspec_err_sql_unterminated.sqlrpgle" "error"
 
 # ── Customer / drop-in tests ─────────────────────────────────────────────
 # Drop any .rpgle or .sqlrpgle file into tests/customer/ and it will be

@@ -27,6 +27,13 @@
 std::vector<std::unique_ptr<rpg::Statement>>
 parse_free_block(const std::string& text, int start_line);
 
+// Reports a diagnostic raised after parsing — by codegen, which has the
+// declared types and lengths the fixed-format transpiler cannot see (a
+// MOVE into a numeric field, say). Same channel and same error counter as
+// report_fixed_format_error; main.cpp re-checks the count after codegen
+// runs so these gate compilation too.
+void report_semantic_error(int line, const std::string& msg);
+
 // Reports a fixed-format-reader diagnostic through the same channel
 // yyerror() uses (stderr, "Error at line N: ..." format) and increments
 // the same global error count get_parse_error_count() reads — so a
@@ -35,15 +42,15 @@ parse_free_block(const std::string& text, int start_line);
 // changes needed to main.cpp's existing `if (errors > 0)` check.
 void report_fixed_format_error(int line, const std::string& msg);
 
-// GOTO/TAG have no free-form syntax at all (SC09-2508 explicitly says so
-// for both — "not allowed, use other operation codes"), so parser.y's
-// goto_stmt/tag_stmt rules reject them unless this is true. Only the
-// fixed-format reader's native C-spec transpiler (fixed_reader.cpp's
-// flushCRun, via fixed_cspec.cpp) sets this true immediately around its
-// own parse_free_block() call — genuine free-form text, whether the
-// **FREE top-level entry point or an explicit /free...end-free block
-// (even one embedded in an otherwise fixed-format file), always parses
-// with this false, matching the manual exactly.
-extern bool g_allow_goto_tag;
+// Some opcodes have no free-form syntax at all (SC09-2508 explicitly says
+// so — "not allowed, use other operation codes"): GOTO, TAG, MOVE and
+// MOVEL. parser.y's rules for them reject the statement unless this is
+// true. Only the fixed-format reader's native C-spec transpiler
+// (fixed_reader.cpp's flushCRun, via fixed_cspec.cpp) sets this true
+// immediately around its own parse_free_block() call — genuine free-form
+// text, whether the **FREE top-level entry point or an explicit
+// /free...end-free block (even one embedded in an otherwise fixed-format
+// file), always parses with this false, matching the manual exactly.
+extern bool g_allow_fixed_only_stmts;
 
 #endif // RPG_FREE_BRIDGE_H

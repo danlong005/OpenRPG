@@ -1,0 +1,3 @@
+**FREE
+DCL-S n INT(10);
+CALL 'ADDONE';

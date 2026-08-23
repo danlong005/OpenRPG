@@ -1,0 +1,4 @@
+**FREE
+DCL-S a CHAR(10);
+DCL-S b CHAR(10);
+MOVE a b;

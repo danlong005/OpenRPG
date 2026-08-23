@@ -504,6 +504,16 @@ int main(int argc, char* argv[]) {
     if (!conf.db_dsn.empty()) codegen.setConfDsn(conf.db_dsn);
     std::string cpp_code = codegen.generate(*program);
 
+    // Codegen raises its own diagnostics for anything only the declared
+    // types can decide (a MOVE into a numeric field, say) — see
+    // report_semantic_error in free_bridge.h.
+    errors = get_parse_error_count();
+    if (errors > 0) {
+        std::cerr << errors << " error(s) found. Compilation failed.\n";
+        delete program;
+        return 1;
+    }
+
     if (emit_only) {
         // -S: emit C++ only
         std::string cpp_path = output_file ? output_file : base + ".cpp";

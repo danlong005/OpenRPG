@@ -527,7 +527,8 @@ public:
 
 // GOTO/TAG — traditional unstructured branch/label. Fixed-format C-spec
 // only (SC09-2508: no free-form syntax exists for either); see
-// g_allow_goto_tag in free_bridge.h for how that restriction is enforced.
+// g_allow_fixed_only_stmts in free_bridge.h for how that restriction is
+// enforced.
 class GotoStmt : public Statement {
 public:
     std::string label;
@@ -539,6 +540,47 @@ class TagStmt : public Statement {
 public:
     std::string label;
     explicit TagStmt(std::string label);
+    void accept(ASTVisitor& visitor) override;
+};
+
+// MOVE/MOVEL — fixed-length character move. MOVE aligns Factor 2 against
+// the RIGHT end of the result field, MOVEL against the LEFT; either way
+// the part of the result the move does not reach is left UNCHANGED unless
+// the (P) extender asks for it to be blanked. That "unchanged remainder"
+// is why this is not plain assignment and needs the result field's
+// declared length, which only codegen knows (var_lengths_).
+// Character-to-character only — codegen rejects other operand types
+// rather than guessing at numeric/date conversion semantics.
+// Fixed-format C-spec only (SC09-2508: no free-form syntax exists for
+// either); see g_allow_fixed_only_stmts in free_bridge.h.
+// CALL — traditional dynamic program call with its parameters supplied by
+// following PARM lines. Fixed-format C-spec only (free-form has CALLP);
+// see g_allow_fixed_only_stmts in free_bridge.h.
+//
+// The program name must be a literal: this compiler links programs
+// statically as C++ functions (the same thing DCL-PR ... EXTPGM already
+// resolves to), so a program name held in a variable — a genuinely
+// dynamic dispatch on IBM i — has no representation here and is refused
+// by the fixed-format reader rather than guessed at.
+//
+// Parameters are the PARM lines' Result fields, passed by reference (RPG
+// always passes by reference). Codegen synthesizes the callee's signature
+// from their declared types, since a traditional CALL has no prototype.
+class CallStmt : public Statement {
+public:
+    std::string program;             // program name, quotes already stripped
+    std::vector<std::string> parms;  // PARM result fields, in order
+    CallStmt(std::string program, std::vector<std::string> parms);
+    void accept(ASTVisitor& visitor) override;
+};
+
+class MoveStmt : public Statement {
+public:
+    std::unique_ptr<Expression> source;
+    std::string target;
+    bool left = false; // MOVEL (left-adjusted) rather than MOVE
+    bool pad  = false; // (P) — blank the untouched remainder
+    MoveStmt(std::unique_ptr<Expression> source, std::string target, bool left, bool pad);
     void accept(ASTVisitor& visitor) override;
 };
 
@@ -868,6 +910,8 @@ public:
     virtual void visit(ExSR& node) = 0;
     virtual void visit(GotoStmt& node) = 0;
     virtual void visit(TagStmt& node) = 0;
+    virtual void visit(MoveStmt& node) = 0;
+    virtual void visit(CallStmt& node) = 0;
     virtual void visit(SortAStmt& node) = 0;
     virtual void visit(ResetStmt& node) = 0;
     virtual void visit(ClearStmt& node) = 0;

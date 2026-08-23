@@ -73,7 +73,7 @@ namespace CSpec {
     // the same column positions (SC09-2508 "Calculation Specifications",
     // p.559 Table 125 "Operation Codes in Traditional Syntax" and p.565
     // "Extended Factor 2 Syntax"); which fields apply depends on the opcode.
-    inline constexpr ColSpec ControlLevel {"ControlLevel", 7,   8, "SC09-2508 p.560: positions 7-8 (blank or SR here; L0/L1-L9/LR/AN/OR are RPG-cycle-only, rejected)"};
+    inline constexpr ColSpec ControlLevel {"ControlLevel", 7,   8, "SC09-2508 p.560: positions 7-8 (blank, SR, or AN/OR here; L0/L1-L9/LR are RPG-cycle-only, rejected. AN/OR are not cycle-related at all — they combine the positions-9-11 conditioning indicators of consecutive lines, the only way to write a multi-indicator condition)"};
     inline constexpr ColSpec Indicators   {"Indicators",   9,  11, "SC09-2508 p.561: positions 9-11, conditioning indicator"};
     inline constexpr ColSpec Factor1      {"Factor1",      12, 25, "SC09-2508 p.562: positions 12-25 (blank for extended-factor-2 opcodes)"};
     inline constexpr ColSpec Opcode       {"Opcode",       26, 35, "SC09-2508 p.562: positions 26-35, operation code + (extender)"};
@@ -81,7 +81,12 @@ namespace CSpec {
     inline constexpr ColSpec Result       {"Result",       50, 63, "SC09-2508 p.563: positions 50-63 (traditional-syntax opcodes only)"};
     inline constexpr ColSpec Length       {"Length",       64, 68, "SC09-2508 p.563: positions 64-68 (must be blank — inline field definition not supported)"};
     inline constexpr ColSpec Decimals     {"Decimals",     69, 70, "SC09-2508 p.564: positions 69-70 (must be blank — inline field definition not supported)"};
-    inline constexpr ColSpec ResultInd    {"ResultInd",    71, 76, "SC09-2508 p.564: positions 71-76 (must be blank — free-form drops resulting indicators)"};
+    inline constexpr ColSpec ResultInd    {"ResultInd",    71, 76, "SC09-2508 p.564: positions 71-76 (must be blank for every opcode but COMP — free-form drops resulting indicators; COMP is the exception, since its whole effect IS the three indicators and indicator assignment is expressible)"};
+    // COMP's three resulting-indicator slots (SC09-2508 p.564): high
+    // (factor 1 > factor 2), low (factor 1 < factor 2), equal.
+    inline constexpr ColSpec ResultIndHi  {"ResultIndHi",  71, 72, "SC09-2508 p.564: positions 71-72, high (factor 1 > factor 2)"};
+    inline constexpr ColSpec ResultIndLo  {"ResultIndLo",  73, 74, "SC09-2508 p.564: positions 73-74, low (factor 1 < factor 2)"};
+    inline constexpr ColSpec ResultIndEq  {"ResultIndEq",  75, 76, "SC09-2508 p.564: positions 75-76, equal"};
     inline constexpr ColSpec ExtFactor2   {"ExtFactor2",   36, 80, "SC09-2508 p.565: positions 36-80, one free-form expression (extended-factor-2 opcodes only); continuation lines resume here with 7-35 blank"};
 }
 

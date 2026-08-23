@@ -111,6 +111,14 @@ void GotoStmt::accept(ASTVisitor& visitor) { visitor.visit(*this); }
 TagStmt::TagStmt(std::string label) : label(std::move(label)) {}
 void TagStmt::accept(ASTVisitor& visitor) { visitor.visit(*this); }
 
+MoveStmt::MoveStmt(std::unique_ptr<Expression> source, std::string target, bool left, bool pad)
+    : source(std::move(source)), target(std::move(target)), left(left), pad(pad) {}
+void MoveStmt::accept(ASTVisitor& visitor) { visitor.visit(*this); }
+
+CallStmt::CallStmt(std::string program, std::vector<std::string> parms)
+    : program(std::move(program)), parms(std::move(parms)) {}
+void CallStmt::accept(ASTVisitor& visitor) { visitor.visit(*this); }
+
 SortAStmt::SortAStmt(std::string name) : array_name(std::move(name)) {}
 void SortAStmt::accept(ASTVisitor& visitor) { visitor.visit(*this); }
 

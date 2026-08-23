@@ -215,15 +215,18 @@ citations live in `fixed_columns.h`'s `CSpec` namespace.
   explicit `/free` blocks in the same file (Test 134).
 - **Rejected, not silently dropped** (clear, distinct compile errors —
   Tests 135-138): non-blank control level (RPG-cycle-only, `L0`/`L1-L9`/
-  `LR`/`AN`/`OR`), non-blank conditioning indicators (positions 9-11 —
-  real, but deferred, see below), resulting indicators/inline field
+  `LR`; `AN`/`OR` were rejected here too but have since shipped with item
+  #6 — they are conditioning syntax, not cycle syntax), non-blank
+  conditioning indicators (positions 9-11 —
+  since shipped, see item #6), resulting indicators/inline field
   length (free-form drops these too, so this isn't a new gap), any opcode
   outside the V1 set — with a distinct message for known-but-deferred
   opcodes (e.g. `SND-MSG`) vs. never-planned legacy ones (e.g. `ADD`).
 - **Deferred fast-follow**: `ON-EXIT`/`ON-EXCP`; `XML-INTO`/`XML-SAX`/
   `DATA-INTO`/`DATA-GEN`/`SND-MSG`; conditioning indicators (positions
-  9-11 — real and independent of the cycle, would wrap the transpiled
-  statement in `IF {N}*INnn; ... ENDIF;`); `EXEC SQL` in fixed columns
+  9-11 — since shipped as item #6, exactly as sketched here: the
+  transpiled statement wrapped in `IF {N}*INnn; ... ENDIF;`); `EXEC SQL`
+  in fixed columns
   (architecturally distinct — the SQL capture is a dedicated lexer
   `<SQL>` start-condition, not a column-mapped opcode, so it doesn't fit
   this transpile model cleanly). Traditional *legacy* opcodes (`ADD`/
@@ -412,6 +415,261 @@ existed at the subfield level in free-format either, so — unlike items
   the new `ds_field` productions, since 161/162's fixed-format source
   never touches `parser.y` on the declaration side, only via the `/free`
   block's access expressions).
+
+**6. Conditioning indicators (positions 9-11) ✅.** The highest-value
+entry on the deferred fast-follow list below when it was written — common
+in real legacy source and, unlike the RPG cycle's control-level field
+(positions 7-8), completely independent of cycle semantics. Same
+transpile-and-bridge design as item #1: position 9 (blank or `N`) and
+positions 10-11 (the indicator) become an `IF {NOT }*INnn; <stmt> ENDIF;`
+wrapper emitted onto the *same* buffer line the physical source line
+already owns, so `parse_free_block`'s line numbers stay aligned exactly as
+before. No new AST nodes, no grammar change — `*IN01`-`*IN99` were already
+ordinary expressions (`IndicatorExpr`, parser.y).
+- **Conditionable only where the wrapper is exactly equivalent** — that
+  is, self-contained statements: `EVAL`/`EVALR`/`EVAL-CORR`/`RETURN`/
+  `CALLP`; `ITER`/`LEAVE`/`LEAVESR`; every traditional-shape opcode
+  (`EXSR`/`CLEAR`/`RESET`/`DSPLY`/`SORTA`, the RLA set, `GOTO`, and the
+  `ADD`/`SUB`/`MULT`/`DIV`/`Z-ADD`/`Z-SUB` arithmetic set).
+- **Rejected on block-structure opcodes** (`IF`/`ELSEIF`/`ELSE`/`ENDIF`,
+  `DOW`/`DOU`/`ENDDO`, `FOR`/`FOR-EACH`/`ENDFOR`, `SELECT`/`WHEN`/
+  `OTHER`/`ENDSL`, `MONITOR`/`ON-ERROR`/`ENDMON`, `BEGSR`/`ENDSR`) — an
+  `IF`/`ENDIF` wrapper around one half of a block leaves the block
+  unbalanced, so there is no honest transpilation; a distinct compile
+  error says so and suggests folding the test into the block's own
+  condition (Test 165). `TAG` is rejected for a related but different
+  reason: wrapping a label would bury it inside a nested scope its own
+  `GOTO`s cannot legally jump into.
+- **Rejected on indicators this compiler has no representation for** —
+  `LR`, `MR`, `RT`, `OV`, `1P`, `L1-L9`, `H1-H9`, `U1-U8`, `KA-KY`,
+  `OA-OG` — recognized by name specifically so they get a "not supported
+  here" diagnostic pointing at "Indicator Types" under Not Planned,
+  rather than being reported as a typo (Test 166). `00` and any
+  column-misaligned entry get their own messages (Test 136, repurposed
+  from its previous "conditioning indicators rejected outright" role to
+  the misalignment case its source actually exercises).
+- **`AN`/`OR` multi-indicator groups (positions 7-8)** — RPG IV's C-spec
+  has room for exactly one indicator per line, so `AN`/`OR` on a following
+  line is the *only* way to write a multi-indicator condition; the group's
+  operation code sits on its last line. Terms accumulate in
+  `CSpecRunState::condGroups` (outer = AND-groups, ORed together) and
+  collapse into one expression when that operation line arrives. RPG
+  relates them as an **OR of AND-groups**, not left-to-right, so each
+  multi-term AND-group is parenthesized — Test 167 pins this with a
+  `(10 AND 30) OR 20` case that only passes under the correct grouping.
+  Note this corrects a wrong claim in the old `fixed_columns.h`
+  `ControlLevel` doc string, which lumped `AN`/`OR` in with `L0`/`L1-L9`/
+  `LR` as "RPG-cycle-only" — they have nothing to do with the cycle, and
+  that mischaracterization is likely why they were rejected alongside it.
+  A group whose last line never arrives, an `AN`/`OR` with nothing before
+  it, and an `AN`/`OR` line missing its indicator each get their own error
+  (Tests 168-169).
+- **Extended-factor-2 continuation** needed the one piece of new state:
+  the wrapper's `ENDIF` can't be emitted until whoever appends the
+  statement's terminating `;` runs, which for a continued statement is
+  several physical lines later — hence `CSpecRunState::pendingSuffix`.
+- **Still not conditionable from fixed columns**: the O-spec's own
+  conditioning indicators (positions 21-29) remain rejected in
+  `fixed_reader.cpp` — a separate mechanism belonging to item #4, not to
+  this one.
+- Tests 164 (positive: both polarities, all three opcode shapes,
+  conditioned `GOTO`, conditioned `LEAVE`/`ITER` inside `DOW` loops, and
+  a conditioned statement continued across a physical line), 167 (`AN`/
+  `OR` groups), 165-166 and 168-169 (rejections).
+
+**7. `MOVE`/`MOVEL` — character moves ✅.** Deferred out of item #3 for
+semantic risk rather than missing plumbing, so this ships the part that
+can be made exact and refuses the rest outright.
+- **What makes it not plain assignment**: `MOVE` aligns factor 2 against
+  the RIGHT end of the result, `MOVEL` against the LEFT, and the part of
+  the result the move does not reach is left **unchanged** (the `(P)`
+  extender blanks it instead). An over-long factor 2 truncates on the side
+  away from the alignment. That needs the result's *declared* length, so
+  unlike every other opcode here this could not be a pure text transpile.
+- **Where the type check lives**: `fixed_cspec.cpp` has no symbol table,
+  so codegen — the first stage that can see declared types — is what
+  refuses a non-character operand. That needed a diagnostic channel after
+  parsing: `report_semantic_error` (free_bridge.h) reuses
+  `report_fixed_format_error`'s stderr channel and error counter, and
+  `main.cpp` now re-checks the count once codegen returns.
+- **Character-to-character only.** Numeric, date/time and varying-length
+  results are rejected (Test 171), as is a numeric or date/time factor 2,
+  and so is the date/time-conversion form that puts a format in Factor 1
+  — that one is caught in the transpiler, since it needs no type info
+  (Test 172). Digit-alignment and format-conversion semantics have no
+  representation in this compiler, and approximating them is exactly the
+  silently-wrong-output risk this item was deferred over.
+- **New `MoveStmt` AST node** plus a `move_stmt` rule gated the way
+  `GOTO`/`TAG` already were — `MOVE`/`MOVEL` likewise have no free-form
+  syntax at all (Test 173). The gate flag was renamed `g_allow_goto_tag`
+  → `g_allow_fixed_only_stmts` now that it guards four opcodes, not two.
+- **Cost of making them keywords**: `MOVE`/`MOVEL` are now lexer keywords,
+  so free-format source can no longer use either as a *variable* name
+  (`DCL-S move CHAR(10)` is a syntax error today, where it parsed before).
+  Same tradeoff `GOTO`/`TAG` already carry, and both are reserved opcode
+  names in RPG, so real source is unlikely to hit it — noted rather than
+  discovered later.
+- **Fixed a latent gap this exposed**: a CHAR field's generated
+  `std::string` is *not* kept at its declared length (a plain `EVAL`
+  assigns a shorter string), but real RPG fixed-length fields always are,
+  and `MOVE` alignment depends on it. Codegen now wraps a CHAR factor 2
+  in `rpg_fixed_len(...)`, and the runtime normalizes the result field
+  before moving, so `MOVEL` of a `CHAR(5)` holding `'AB'` correctly moves
+  five characters, not two. Only `MOVE`/`MOVEL` are corrected here — the
+  broader "CHAR is not padding-faithful" behavior is untouched elsewhere.
+- Test 170 covers both directions, both truncation sides, `(P)` on each,
+  and a literal factor 2 (which keeps its own length rather than being
+  padded to a declared one). Test 153 was repurposed from `MOVE` to
+  `CALL`, still deferred, so deferred-opcode rejection stays covered.
+
+**8. `CALL`/`PARM` — traditional program calls ✅.** Old-style program
+calls, pervasive in pre-ILE source and the kind of thing that fails a
+whole member. V1 supports a `CALL` with its `PARM` lines inline
+immediately after it; named `PLIST`s stay deferred (below).
+- **How a prototype-less call gets a signature**: `CALLP` works because
+  `DCL-PR ... EXTPGM` declared the parameter types; a traditional `CALL`
+  has no prototype at all. Codegen synthesizes the callee's signature
+  from the `PARM` operands' own declared types — every parameter a `T&`,
+  since RPG passes by reference, which is exactly what a non-`VALUE`
+  `DCL-PI` parameter generates in the called member. The declaration is
+  emitted at **block scope** (legal C++, external linkage), so no
+  hoisting pass or output-stream refactor was needed.
+- **Mismatches fail at link time, not silently**: if caller and callee
+  disagree on types, the two C++ mangled names differ and the link fails.
+  An ugly error, but an honest one — and the same failure mode `EXTPGM`
+  already has.
+- **The program name must be a literal.** A name held in a variable is a
+  genuinely dynamic dispatch on IBM i; this compiler links programs
+  statically as C++ functions, so there is nothing to compile it to. The
+  transpiler refuses it (Test 177) rather than guessing.
+- **Cross-line state**: `CSpecRunState` gains a pending-`CALL` block. The
+  assembled statement is written back into the `CALL`'s *own* buffer line
+  once the `PARM` run ends (any other opcode, or the end of the C-spec
+  run), keeping the one-buffer-line-per-physical-line invariant that
+  `parse_free_block`'s line numbers depend on. Blank and comment lines
+  between `CALL` and its `PARM`s are fine — they never reach
+  `feedCSpecLine`. A conditioning indicator on the `CALL` wraps the whole
+  thing; one on a `PARM` is refused, since a `PARM` line is part of the
+  call's parameter list rather than a statement of its own.
+- **New `CallStmt` AST node**, gated on `g_allow_fixed_only_stmts` like
+  `GOTO`/`TAG`/`MOVE` — free-form has `CALLP` instead (Test 179). As with
+  `MOVE`, this makes `CALL` a lexer keyword, so free-format source can no
+  longer use it as a variable name; `CALLP` is unaffected (flex takes the
+  longest match).
+- Tests 174 (the NOMAIN callee module it links against, same pattern as
+  tests 48/49) and 175 (call, by-reference mutation of both an `INT` and
+  a `CHAR` parameter, plus a conditioned `CALL` in both polarities);
+  176-179 (rejections).
+
+**9. Modern opcodes in native C-spec ✅.** `XML-INTO`, `DATA-INTO`,
+`DATA-GEN` and `SND-MSG` are now reachable from fixed columns. This turned
+out to be four table entries and nothing else — the item's framing was
+more pessimistic than the work.
+- **Extended factor 2 is the right shape**, and that is the whole trick.
+  Their operands are free-form expressions by nature (`%XML(doc:opts)`,
+  `%DATA(...) %PARSER(...)`, `SND-MSG`'s message-type operand), which is
+  exactly what columns 36-80 plus continuation lines carry through to the
+  free-format parser untouched. Factor 2's traditional 14-column width
+  could never have held a realistic one — reading them as extended factor
+  2 sidesteps that entirely. No new grammar, AST node, or codegen change.
+- **`ON-EXIT` was mis-filed on this list** and is not a port at all.
+  `parser.y` has no standalone rule for it — it appears only inside the
+  `DCL-PROC` productions — and fixed-format source cannot declare a
+  procedure, since this reader has no P-spec support. It therefore needs
+  a `/free` block either way, and now says so in its own error (Test 181)
+  instead of promising a fast-follow that would not help.
+- **`XML-SAX` and `ON-EXCP` were also mis-filed**: they are not
+  implemented anywhere in this compiler (no lexer token, no parser rule),
+  so there was never anything to reach from fixed columns. They stay in
+  `deferredOpcodes` purely to earn the friendlier "planned" message, and
+  `XML-SAX`'s real home is Modern/Stretch item 46.
+- Test 180 (`DATA-INTO` with its expression continued across a physical
+  line, plus `SND-MSG`); all four opcodes share the one code path with no
+  per-opcode logic. Test 137 was repurposed from `SND-MSG` to `XML-SAX`,
+  which is still deferred, so the deferred-opcode message stays covered.
+
+**10. `CASxx` / `CABxx` ✅.** Both are comparison-mnemonic opcodes, so
+neither can be an opcode-table entry — the mnemonic is glued onto the
+opcode itself (`CASGT`), and they are matched by prefix ahead of the table
+lookup. `EQ`/`NE`/`LT`/`LE`/`GT`/`GE` map to `=`/`<>`/`<`/`<=`/`>`/`>=`,
+and the bare `CAS`/`CAB` forms are the unconditional ones.
+- **`CABxx` is self-contained**: a comparison guarding a branch, so it
+  transpiles to `IF f1 <op> f2; GOTO label; ENDIF;` — or a plain
+  `GOTO label;` for bare `CAB`. It can carry a conditioning indicator.
+- **`CASxx` is a group**, and that is the real work here: the lines chain
+  like `SELECT`/`WHEN` (the first true comparison runs its subroutine,
+  the rest are skipped), so a group transpiles to one `IF`/`ELSEIF`/`ELSE`
+  chain that `ENDCS` closes with `ENDIF`. State lives in `CSpecRunState`
+  alongside the `AN`/`OR` and pending-`CALL` accumulators. A conditioning
+  indicator on a single arm is refused — it would leave the chain
+  unbalanced, the same reasoning as the block-structure opcodes.
+- **Degenerate groups are caught, not miscompiled**: a group led by an
+  unconditional `CAS` needs no `IF` and so gets no `ENDIF`; arms after an
+  unconditional one are unreachable and rejected; an orphan `ENDCS`
+  (Test 183), a group left unclosed at the end of the run (Test 184), and
+  an unrecognized mnemonic (Test 185) each get their own message.
+- Test 182 runs the same group four times, hitting each arm including the
+  `ELSE`, then exercises both `CABxx` forms.
+
+**11. `COMP` ✅ — and the reason it was deferred turned out to be wrong.**
+The old entry said `COMP`'s only effect, setting the `HI`/`LO`/`EQ`
+resulting indicators, "has no free-form target at all". That is true of
+resulting indicators as a *column feature* — free-form drops them — but
+not of `COMP`, because `*INnn` is an assignable target in this compiler.
+Each non-blank slot simply becomes one indicator assignment:
+`*IN10 = (a > b); *IN20 = (a < b); *IN30 = (a = b);`. Exact, not
+approximate.
+- `COMP` is therefore the **one** opcode allowed to fill positions 71-76;
+  every other opcode still rejects them. The three slots got their own
+  `ColSpec`s (71-72 high, 73-74 low, 75-76 equal) and reuse the
+  conditioning indicators' validation, so `*INLR` and friends are refused
+  the same way there as anywhere else.
+- A `COMP` with all three slots blank does nothing at all and is rejected
+  rather than silently emitted (Test 187).
+- Test 186 reads the results back through *conditioning* indicators,
+  exercising both halves of the indicator support against each other.
+
+**12. `EXEC SQL` in fixed columns ✅.** `C/EXEC SQL` … `C+` … `C/END-EXEC`.
+The old entry called this "architecturally distinct — the SQL capture is a
+dedicated lexer `<SQL>` start-condition, not a column-mapped opcode, so it
+doesn't fit the transpile-and-bridge model". The start-condition part is
+right; the conclusion was not. Gathering the `C+` lines and emitting one
+free-form `EXEC SQL …;` hands the text to that very start condition, which
+captures it exactly as it does in free-format source — so the bridge model
+fits perfectly and **no SQL parsing was added at all**.
+- Handled ahead of the ordinary column layout, since position 7 carries
+  the `/` or `+` marker that the control-level field would otherwise
+  reject. The gathered statement is written into the `C/EXEC SQL` line's
+  own buffer entry, keeping the one-line-per-physical-line invariant.
+- An orphan `C/END-EXEC` (Test 189) and a block never terminated
+  (Test 190, plus the same check at run flush) each get their own error.
+- Test 188 goes end to end against SQLite: connect, create, two inserts,
+  a `SELECT … INTO` host variable, and a `COUNT(*)`, with the `CREATE
+  TABLE` continued across two `C+` lines.
+
+### Fixed C-spec — Deferred Fast-Follow (ranked by real-world necessity)
+Items explicitly deferred (not silently dropped) out of items #1 and #3
+above when each shipped — called out here as their own trackable list
+instead of staying buried in a completed item's writeup:
+
+1. **`MOVE`/`MOVEL` beyond character-to-character.** What item #7 above
+   deliberately left out: numeric results (digit-by-digit alignment
+   against a declared digit count, not string positions), date/time
+   results, and the Factor-1 date-format conversion form. Each is
+   rejected with its own message today rather than approximated. Numeric
+   `MOVE` is the most commonly hit of the three in real legacy source.
+2. **Named `PLIST`, `*ENTRY PLIST`, and `PARM` factor 1/2.** What item #8
+   above left out. A named `PLIST` can be *defined after* the `CALL` that
+   references it, so the linear transpiler cannot resolve it the way it
+   resolves an inline `PARM` run — it needs a collect-then-substitute
+   pass. `*ENTRY PLIST` is the bigger and more common one: it declares a
+   program's own *incoming* parameters, the fixed-format equivalent of
+   `DCL-PI` on the main procedure, so it needs the main-program signature
+   machinery rather than anything in the CALL path. `PARM` factor 1 and
+   factor 2 (the move-in/move-out convenience operands) are refused
+   because their direction semantics were not verified against the
+   manual — a guess there moves data the wrong way silently, which is
+   precisely what this project refuses to ship.
 
 ### ~~Fixed-Format File I/O~~ — Not Planned
 ~~Native record format / INFSR / legacy PLIST-based file I/O~~ — item #4
@@ -701,7 +959,7 @@ member's C-spec to host modern free-format statements.
 | 133 | Fixed C-spec: Extended-Factor-2 continuation across lines |
 | 134 | Fixed C-spec: mixed with an explicit /free block |
 | 135 | Fixed C-spec: reject non-blank control level |
-| 136 | Fixed C-spec: reject conditioning indicator |
+| 136 | Fixed C-spec: reject misaligned cond indicator |
 | 137 | Fixed C-spec: reject deferred opcode (CHAIN) with distinct message |
 | 138 | Fixed C-spec: reject legacy opcode (ADD) |
 | 139 | Fixed-format /COPY: D-spec copybook |
@@ -718,7 +976,7 @@ member's C-spec to host modern free-format statements.
 | 150 | Fixed C-spec: ADD/SUB/MULT/DIV (both Factor 1 forms) |
 | 151 | Fixed C-spec: Z-ADD/Z-SUB |
 | 152 | Fixed C-spec: reject GOTO inside explicit /free block |
-| 153 | Fixed C-spec: reject deferred legacy opcode (MOVE) |
+| 153 | Fixed C-spec: reject deferred legacy opcode (CALL) |
 | 154 | Fixed I-spec: single record type, sequential READ |
 | 155 | Fixed I-spec: multi record type dispatch |
 | 156 | Fixed I-spec: field indicators (plus/minus/zero) |
@@ -729,3 +987,30 @@ member's C-spec to host modern free-format statements.
 | 161 | Fixed D-spec: per-subfield DIM(n) |
 | 162 | Fixed D-spec: per-subfield LIKE(field) |
 | 163 | Free-format: per-subfield LIKE/DIM declaration + access |
+| 164 | Fixed C-spec: conditioning indicators |
+| 165 | Fixed C-spec: reject cond ind on block opcode |
+| 166 | Fixed C-spec: reject unsupported cond indicator |
+| 167 | Fixed C-spec: AN/OR indicator groups |
+| 168 | Fixed C-spec: reject orphan AN line |
+| 169 | Fixed C-spec: reject dangling cond ind line |
+| 170 | Fixed C-spec: MOVE/MOVEL character move |
+| 171 | Fixed C-spec: reject MOVE to numeric field |
+| 172 | Fixed C-spec: reject MOVE date/time format |
+| 173 | Free-format: reject MOVE (fixed-format only) |
+| 174 | CALL callee module (NOMAIN) |
+| 175 | Fixed C-spec: CALL/PARM program call |
+| 176 | Fixed C-spec: reject named PLIST |
+| 177 | Fixed C-spec: reject dynamic CALL name |
+| 178 | Fixed C-spec: reject PARM without CALL |
+| 179 | Free-format: reject CALL (fixed-format only) |
+| 180 | Fixed C-spec: DATA-INTO / SND-MSG |
+| 181 | Fixed C-spec: reject ON-EXIT (proc-only) |
+| 182 | Fixed C-spec: CASxx chain + CABxx branch |
+| 183 | Fixed C-spec: reject orphan ENDCS |
+| 184 | Fixed C-spec: reject unclosed CASxx group |
+| 185 | Fixed C-spec: reject bad CASxx mnemonic |
+| 186 | Fixed C-spec: COMP resulting indicators |
+| 187 | Fixed C-spec: reject COMP with no indicators |
+| 188 | Fixed C-spec: embedded SQL (C/EXEC SQL) |
+| 189 | Fixed C-spec: reject orphan C/END-EXEC |
+| 190 | Fixed C-spec: reject unterminated EXEC SQL |

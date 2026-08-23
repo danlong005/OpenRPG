@@ -63,7 +63,7 @@ static int g_error_count = 0;
 
 // Declared extern in free_bridge.h — see that header for why GOTO/TAG need
 // this gate (no free-form syntax exists for either per SC09-2508).
-bool g_allow_goto_tag = false;
+bool g_allow_fixed_only_stmts = false;
 
 rpg::Program* get_parsed_program();
 int get_parse_error_count();
@@ -83,6 +83,16 @@ static bool g_dclf_usropn = false;
 static char* g_dclf_extdesc = nullptr;
 static char* g_dclf_usages = nullptr;
 static char* g_dclf_prefix = nullptr;
+
+static rpg::Statement* make_move(rpg::Expression* src, char* dst, bool left, bool pad) {
+    if (!g_allow_fixed_only_stmts) {
+        yyerror(left ? "MOVEL is not valid in free-format RPG (fixed-format C-spec only)"
+                     : "MOVE is not valid in free-format RPG (fixed-format C-spec only)");
+    }
+    auto* s = new rpg::MoveStmt(std::unique_ptr<rpg::Expression>(src), dst, left, pad);
+    free(dst);
+    return s;
+}
 
 static rpg::BIFCall* make_bif(const char* name, std::vector<rpg::Expression*>* raw_args) {
     std::vector<std::unique_ptr<rpg::Expression>> args;
@@ -148,7 +158,7 @@ static rpg::FuncCall* make_func(const char* name, std::vector<rpg::Expression*>*
 %token KW_ITER KW_LEAVE
 %token KW_MONITOR KW_ON_ERROR KW_ENDMON
 %token KW_BEGSR KW_ENDSR KW_EXSR
-%token KW_GOTO KW_TAG
+%token KW_GOTO KW_TAG KW_MOVE KW_MOVEL KW_MOVE_PAD KW_MOVEL_PAD KW_CALL
 %token KW_OFF KW_RESET KW_CLEAR KW_SORTA KW_DUMP KW_DUMP_A
 %token <ival> INDICATOR
 %token KW_AND KW_OR KW_NOT
@@ -205,7 +215,8 @@ static rpg::FuncCall* make_func(const char* name, std::vector<rpg::Expression*>*
 %type <stmt> statement dcl_f_stmt dcl_s_stmt dcl_c_stmt eval_stmt eval_corr_stmt evalr_stmt dsply_stmt inlr_stmt return_stmt expr_stmt reset_stmt clear_stmt sorta_stmt dump_stmt callp_stmt leavesr_stmt dealloc_stmt test_stmt
 %type <stmt> if_stmt dow_stmt dou_stmt for_stmt for_each_stmt select_stmt iter_stmt leave_stmt
 %type <stmt> dcl_proc_stmt dcl_pr_stmt dcl_ds_stmt dcl_enum_stmt
-%type <stmt> monitor_stmt begsr_stmt exsr_stmt goto_stmt tag_stmt exec_sql_stmt xml_into_stmt
+%type <str_list> call_parm_list
+%type <stmt> monitor_stmt begsr_stmt exsr_stmt goto_stmt tag_stmt move_stmt call_stmt exec_sql_stmt xml_into_stmt
 %type <stmt> in_da_stmt out_da_stmt unlock_da_stmt data_into_stmt data_gen_stmt snd_msg_stmt
 %type <stmt> chain_stmt read_stmt readc_stmt reade_stmt readp_stmt readpe_stmt
 %type <stmt> write_stmt update_stmt delete_stmt setll_stmt setgt_stmt exfmt_stmt
@@ -293,6 +304,8 @@ statement:
     | exsr_stmt     { $$ = $1; SET_LINE($$); }
     | goto_stmt     { $$ = $1; SET_LINE($$); }
     | tag_stmt      { $$ = $1; SET_LINE($$); }
+    | move_stmt     { $$ = $1; SET_LINE($$); }
+    | call_stmt     { $$ = $1; SET_LINE($$); }
     | reset_stmt    { $$ = $1; SET_LINE($$); }
     | clear_stmt    { $$ = $1; SET_LINE($$); }
     | sorta_stmt    { $$ = $1; SET_LINE($$); }
@@ -1611,7 +1624,7 @@ exsr_stmt:
     ;
 
 /* GOTO/TAG have no free-form syntax at all (SC09-2508: "not allowed — use
-   other operation codes"). g_allow_goto_tag (free_bridge.h) is only set
+   other operation codes"). g_allow_fixed_only_stmts (free_bridge.h) is only set
    true around the fixed-format reader's own native-C-spec parse_free_block()
    call, so this only accepts them when the text being parsed was
    synthesized by that transpiler — genuine free-form text (**FREE
@@ -1619,7 +1632,7 @@ exsr_stmt:
    always parses with the flag false and gets a clear rejection here. */
 goto_stmt:
     KW_GOTO ident SEMICOLON {
-        if (!g_allow_goto_tag) {
+        if (!g_allow_fixed_only_stmts) {
             yyerror("GOTO is not valid in free-format RPG (fixed-format C-spec only)");
         }
         $$ = new rpg::GotoStmt($2);
@@ -1629,12 +1642,60 @@ goto_stmt:
 
 tag_stmt:
     KW_TAG ident SEMICOLON {
-        if (!g_allow_goto_tag) {
+        if (!g_allow_fixed_only_stmts) {
             yyerror("TAG is not valid in free-format RPG (fixed-format C-spec only)");
         }
         $$ = new rpg::TagStmt($2);
         free($2);
     }
+    ;
+
+/* MOVE/MOVEL — like GOTO/TAG, no free-form syntax exists; the fixed-format
+   C-spec transpiler is the only thing that emits this text. Factor 2 is a
+   general expression, the Result field a plain name (this compiler's MOVE
+   is character-to-character; codegen enforces that once it can see the
+   declared types). */
+/* CALL — traditional program call. Like GOTO/TAG/MOVE, no free-form
+   syntax exists (free-form uses CALLP with a prototype), so only the
+   fixed-format C-spec transpiler emits this text; it collects the
+   following PARM lines and hands the whole call over at once. The program
+   name is a literal by construction — the transpiler refuses a variable
+   one, since there is no dynamic program dispatch to compile it to. */
+call_stmt:
+    KW_CALL STRING_LITERAL SEMICOLON {
+        if (!g_allow_fixed_only_stmts) {
+            yyerror("CALL is not valid in free-format RPG (fixed-format C-spec only; use CALLP)");
+        }
+        $$ = new rpg::CallStmt($2, {});
+        free($2);
+    }
+    | KW_CALL STRING_LITERAL LPAREN call_parm_list RPAREN SEMICOLON {
+        if (!g_allow_fixed_only_stmts) {
+            yyerror("CALL is not valid in free-format RPG (fixed-format C-spec only; use CALLP)");
+        }
+        $$ = new rpg::CallStmt($2, *$4);
+        free($2); delete $4;
+    }
+    ;
+
+call_parm_list:
+    IDENTIFIER {
+        $$ = new std::vector<std::string>();
+        $$->push_back($1);
+        free($1);
+    }
+    | call_parm_list COLON IDENTIFIER {
+        $$ = $1;
+        $$->push_back($3);
+        free($3);
+    }
+    ;
+
+move_stmt:
+    KW_MOVE expression IDENTIFIER SEMICOLON      { $$ = make_move($2, $3, false, false); }
+    | KW_MOVE_PAD expression IDENTIFIER SEMICOLON  { $$ = make_move($2, $3, false, true); }
+    | KW_MOVEL expression IDENTIFIER SEMICOLON     { $$ = make_move($2, $3, true, false); }
+    | KW_MOVEL_PAD expression IDENTIFIER SEMICOLON { $$ = make_move($2, $3, true, true); }
     ;
 
 /* SORTA */
@@ -2994,4 +3055,8 @@ parse_free_block(const std::string& text, int start_line) {
 void report_fixed_format_error(int line, const std::string& msg) {
     g_error_count++;
     fprintf(stderr, "Error at line %d: %s\n", line, msg.c_str());
+}
+
+void report_semantic_error(int line, const std::string& msg) {
+    report_fixed_format_error(line, msg);
 }

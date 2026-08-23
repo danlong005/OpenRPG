@@ -1049,6 +1049,53 @@ inline int rpg_subdt_seconds(const RpgTime& t) {
 inline std::string rpg_proc_name() { return "main"; }
 
 // --- *ALL'x': fill with repeated characters ---
+// A fixed-length character field's full declared-length value. Codegen
+// wraps a CHAR factor 2 in this so MOVE/MOVEL align against the length the
+// field was DECLARED with, not the possibly-shorter string a plain
+// assignment happened to leave in it — real RPG draws no such distinction,
+// a fixed-length field is always exactly its declared length.
+inline std::string rpg_fixed_len(const std::string& s, int n) {
+    std::string out = s;
+    out.resize(static_cast<size_t>(n), ' ');
+    return out;
+}
+
+// MOVE/MOVEL — fixed-length character move (SC09-2508). `dstLen` is the
+// result field's DECLARED length, passed in by codegen: RPG fixed-length
+// character fields are always exactly that long, but this compiler's
+// generated std::string can be shorter after a plain assignment, so the
+// destination is normalized to its declared length first.
+//
+// The move copies at most dstLen characters and leaves the rest of the
+// destination UNCHANGED — that remainder is the whole reason MOVE is not
+// plain assignment. `pad` is the (P) extender: blank the remainder instead
+// of leaving it. MOVE aligns right (truncating Factor 2 on the LEFT when
+// it is too long); MOVEL aligns left (truncating on the RIGHT).
+inline void rpg_move_fixed(std::string& dst, const std::string& src,
+                           int dstLen, bool pad, bool left) {
+    if (dstLen <= 0) return;
+    dst.resize(static_cast<size_t>(dstLen), ' ');
+    int n = static_cast<int>(src.size());
+    if (n > dstLen) n = dstLen;
+    if (left) {
+        for (int i = 0; i < n; i++) dst[static_cast<size_t>(i)] = src[static_cast<size_t>(i)];
+        if (pad) for (int i = n; i < dstLen; i++) dst[static_cast<size_t>(i)] = ' ';
+    } else {
+        int srcStart = static_cast<int>(src.size()) - n;
+        for (int i = 0; i < n; i++)
+            dst[static_cast<size_t>(dstLen - n + i)] = src[static_cast<size_t>(srcStart + i)];
+        if (pad) for (int i = 0; i < dstLen - n; i++) dst[static_cast<size_t>(i)] = ' ';
+    }
+}
+
+inline void rpg_move(std::string& dst, const std::string& src, int dstLen, bool pad) {
+    rpg_move_fixed(dst, src, dstLen, pad, false);
+}
+
+inline void rpg_movel(std::string& dst, const std::string& src, int dstLen, bool pad) {
+    rpg_move_fixed(dst, src, dstLen, pad, true);
+}
+
 inline std::string rpg_all(const std::string& pattern, int len = 50) {
     std::string result;
     while (static_cast<int>(result.size()) < len) {

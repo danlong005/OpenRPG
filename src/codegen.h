@@ -90,6 +90,8 @@ public:
     void visit(ExSR& node) override;
     void visit(GotoStmt& node) override;
     void visit(TagStmt& node) override;
+    void visit(MoveStmt& node) override;
+    void visit(CallStmt& node) override;
     void visit(SortAStmt& node) override;
     void visit(ResetStmt& node) override;
     void visit(ClearStmt& node) override;

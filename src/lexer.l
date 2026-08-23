@@ -289,6 +289,7 @@ static void parse_ctlopt(const char* text) {
     return KW_CALLP_EXT;
 }
 "CALLP"             { return KW_CALLP; }
+"CALL"              { return KW_CALL; }
 "LEAVESR"           { return KW_LEAVESR; }
 "ON-EXIT"           { return KW_ON_EXIT; }
 "STATIC"            { return KW_STATIC; }
@@ -376,6 +377,10 @@ static void parse_ctlopt(const char* text) {
 "ENDSR"             { return KW_ENDSR; }
 "EXSR"              { return KW_EXSR; }
 "GOTO"              { return KW_GOTO; }
+"MOVEL(P)"          { return KW_MOVEL_PAD; }
+"MOVEL"             { return KW_MOVEL; }
+"MOVE(P)"           { return KW_MOVE_PAD; }
+"MOVE"              { return KW_MOVE; }
 "TAG"               { return KW_TAG; }
 "RESET"             { return KW_RESET; }
 "SORTA"             { return KW_SORTA; }

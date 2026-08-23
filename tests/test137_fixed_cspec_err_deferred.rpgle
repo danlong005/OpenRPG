@@ -1,4 +1,4 @@
      HDFTACTGRP(*NO)
-     Dkey                       10     I0
-     C                   SND-MSG   'hi'
+     Ddoc                       100    A   VARYING
+     C                   XML-SAX   %HANDLER(h : doc)
      C                   RETURN

@@ -26,6 +26,42 @@ struct CSpecRunState {
     int startLine = 0;
     bool pendingExt = false; // mid-way through an extended-factor-2 statement
     int pendingLineIdx = -1; // bufLines index of that statement's most recent line
+    // Text appended after the terminating ';' when that statement finally
+    // closes — " ENDIF;" when a conditioning indicator (positions 9-11)
+    // opened an IF wrapper around it, empty otherwise.
+    std::string pendingSuffix;
+    // Conditioning indicators accumulated from an AND/OR group (`AN`/`OR`
+    // in positions 7-8) that is still waiting for the line carrying its
+    // operation code. Outer vector = AND-groups, ORed together; inner =
+    // the terms of one AND-group. Empty whenever no group is open.
+    std::vector<std::vector<std::string>> condGroups;
+    int condLine = 0; // physical line the open group started on, for diagnostics
+    // A CALL whose PARM lines have not all been seen yet. The assembled
+    // statement is written back into the CALL's own buffer line (index
+    // callLineIdx) once the run of PARM lines ends, so each physical line
+    // still owns exactly one buffer entry.
+    bool pendingCall = false;
+    int callLineIdx = -1;
+    int callLine = 0;                     // for diagnostics
+    std::string callProgram;              // factor 2 literal, quotes included
+    std::string callCond;                 // conditioning indicator on the CALL line
+    std::vector<std::string> callParms;   // PARM result fields, in order
+    // A CASxx group in progress. CASxx lines chain like SELECT/WHEN — the
+    // first true comparison runs its subroutine — so the group transpiles
+    // to an IF/ELSEIF/ELSE chain that ENDCS closes. casOpened is false
+    // when the group led with an unconditional CAS, which needs no IF and
+    // therefore no ENDIF.
+    bool inCasGroup = false;
+    bool casOpened = false;
+    bool casElse = false; // an unconditional CAS has already taken the ELSE arm
+    int casLine = 0;
+    // Fixed-column embedded SQL in progress: C/EXEC SQL ... C+ ...
+    // C/END-EXEC. The gathered statement is written into the C/EXEC SQL
+    // line's own buffer entry when C/END-EXEC arrives.
+    bool inSqlCapture = false;
+    int sqlLineIdx = -1;
+    int sqlLine = 0;
+    std::string sqlText;
 };
 
 // Feeds one physical native C-spec line (spec type already confirmed 'C',

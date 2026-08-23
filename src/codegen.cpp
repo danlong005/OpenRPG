@@ -1,4 +1,5 @@
 #include "codegen.h"
+#include "free_bridge.h"
 #include <iomanip>
 #include <algorithm>
 
@@ -1885,6 +1886,120 @@ void CodeGen::visit(GotoStmt& node) {
 void CodeGen::visit(TagStmt& node) {
     emitIndent();
     out_ << "rpg_label_" << node.label << ":;\n";
+}
+
+// MOVE/MOVEL. Character-to-character only: the fixed-format transpiler
+// that emits these has no symbol table, so this is the first point that
+// can see the operands' declared types — and the first that can refuse a
+// numeric or date move rather than guess at digit-alignment or
+// format-conversion semantics this compiler has no representation for.
+void CodeGen::visit(MoveStmt& node) {
+    auto tit = var_types_.find(node.target);
+    const char* op = node.left ? "MOVEL" : "MOVE";
+    if (tit == var_types_.end()) {
+        report_semantic_error(node.line, std::string(op) + ": result field '" + node.target +
+            "' is not a declared standalone field — this compiler's " + op +
+            " works on declared character fields only");
+        return;
+    }
+    if (tit->second != RPGType::CHAR) {
+        report_semantic_error(node.line, std::string(op) + ": result field '" + node.target +
+            "' is not a fixed-length character field — numeric, date/time and varying-length "
+            + op + " targets are not supported (their digit-alignment and format-conversion "
+            "semantics have no equivalent here); see TODO.md");
+        return;
+    }
+    auto lit = var_lengths_.find(node.target);
+    if (lit == var_lengths_.end() || lit->second <= 0) {
+        report_semantic_error(node.line, std::string(op) + ": result field '" + node.target +
+            "' has no known declared length, which " + op + " needs to align against");
+        return;
+    }
+    // Factor 2: reject what is statically knowable to be non-character.
+    // A BIF or computed expression is taken at its word as producing a
+    // string — %CHAR/%TRIM/%SUBST and friends all do.
+    std::string srcExpr;
+    if (auto* sid = dynamic_cast<Identifier*>(node.source.get())) {
+        auto sit = var_types_.find(sid->name);
+        if (sit != var_types_.end() && sit->second != RPGType::CHAR &&
+            sit->second != RPGType::VARCHAR) {
+            report_semantic_error(node.line, std::string(op) + ": factor 2 '" + sid->name +
+                "' is not a character field — " + op + " between character and numeric or "
+                "date/time fields is not supported; see TODO.md");
+            return;
+        }
+        // A fixed-length factor 2 must be aligned against its DECLARED
+        // length, not whatever shorter string a plain assignment left in
+        // it. VARCHAR is genuinely its current length, so it is left be.
+        auto sln = var_lengths_.find(sid->name);
+        if (sit != var_types_.end() && sit->second == RPGType::CHAR &&
+            sln != var_lengths_.end() && sln->second > 0) {
+            srcExpr = "rpg_fixed_len(" + emitExpr(*node.source) + ", " +
+                      std::to_string(sln->second) + ")";
+        }
+    } else if (dynamic_cast<IntLiteral*>(node.source.get()) ||
+               dynamic_cast<FloatLiteral*>(node.source.get())) {
+        report_semantic_error(node.line, std::string(op) +
+            ": factor 2 is a numeric literal — " + op + " is character-to-character in this "
+            "compiler; quote the value to move it as characters");
+        return;
+    }
+    if (srcExpr.empty()) srcExpr = emitExpr(*node.source);
+    emitIndent();
+    out_ << (node.left ? "rpg_movel(" : "rpg_move(") << node.target << ", "
+         << srcExpr << ", " << lit->second << ", "
+         << (node.pad ? "true" : "false") << ");";
+    if (node.line > 0) out_ << " // line " << node.line;
+    out_ << "\n";
+}
+
+// CALL — a traditional program call has no prototype, so the callee's
+// C++ signature is synthesized here from the PARM operands' declared
+// types. RPG passes by reference, so every parameter is a T&, matching
+// what a DCL-PI in the called member generates for a non-VALUE parameter.
+// The declaration is emitted at block scope (legal C++, and it declares
+// the name with external linkage) so no hoisting pass is needed.
+void CodeGen::visit(CallStmt& node) {
+    // The program name becomes a C++ symbol, so it has to be spellable as
+    // one — reject anything else here rather than emit uncompilable code.
+    bool ok = !node.program.empty() &&
+              (isalpha((unsigned char)node.program[0]) || node.program[0] == '_');
+    for (char ch : node.program)
+        if (!isalnum((unsigned char)ch) && ch != '_') ok = false;
+    if (!ok) {
+        report_semantic_error(node.line, "CALL: program name '" + node.program +
+            "' is not usable as a linkable symbol — this compiler resolves a called program "
+            "to a C++ function of the same name (as DCL-PR ... EXTPGM does), so the name must "
+            "be letters, digits and underscores");
+        return;
+    }
+    std::vector<std::string> sig;
+    for (const auto& pname : node.parms) {
+        auto tit = var_types_.find(pname);
+        if (tit == var_types_.end()) {
+            report_semantic_error(node.line, "CALL: PARM '" + pname +
+                "' is not a declared standalone field — a data structure or undeclared name "
+                "cannot have its parameter type derived; see TODO.md");
+            return;
+        }
+        sig.push_back(typeToString(tit->second, 0) + "&");
+    }
+    std::string params;
+    for (size_t i = 0; i < sig.size(); i++) {
+        if (i) params += ", ";
+        params += sig[i];
+    }
+    emitIndent();
+    out_ << "void " << node.program << "(" << params << ");";
+    if (node.line > 0) out_ << " // CALL — synthesized prototype, line " << node.line;
+    out_ << "\n";
+    emitIndent();
+    out_ << node.program << "(";
+    for (size_t i = 0; i < node.parms.size(); i++) {
+        if (i) out_ << ", ";
+        out_ << node.parms[i];
+    }
+    out_ << ");\n";
 }
 
 void CodeGen::visit(ResetStmt& node) {

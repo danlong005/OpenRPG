@@ -22,6 +22,147 @@ static std::string trim(const std::string& s) {
     return s.substr(a, b - a + 1);
 }
 
+// Raw (untrimmed, blank-padded to the full range) column slice. Unlike
+// extractCol it preserves each character's position within the range,
+// which the conditioning-indicator field needs: position 9 is the "not"
+// flag and positions 10-11 the indicator itself, so a trimmed "N10" and a
+// trimmed (misaligned) "N10" starting a column early would otherwise be
+// indistinguishable.
+static std::string rawCols(const std::string& line, const ColSpec& spec) {
+    std::string out;
+    for (int c = spec.startCol; c <= spec.endCol; c++)
+        out += (c <= (int)line.size()) ? line[c - 1] : ' ';
+    return out;
+}
+
+// The RPG IV indicators that are real conditioning indicators but that
+// this compiler has no representation for — everything outside *IN01-*IN99
+// (see TODO.md "Indicator Types (beyond *IN01-*IN99, *INLR)" under Not
+// Planned). Recognized only so they get a "not supported here" diagnostic
+// instead of being reported as a typo.
+static bool isUnsupportedIndicatorName(const std::string& s) {
+    if (s.size() != 2) return false;
+    char a = s[0], b = s[1];
+    if (s == "LR" || s == "MR" || s == "RT" || s == "OV" || s == "1P") return true;
+    if ((a == 'L' || a == 'H') && b >= '1' && b <= '9') return true; // L1-L9, H1-H9
+    if (a == 'U' && b >= '1' && b <= '8') return true;               // U1-U8
+    if (a == 'K' && b >= 'A' && b <= 'Y' && b != 'O') return true;   // KA-KN, KP-KY
+    if (a == 'O' && b >= 'A' && b <= 'G') return true;               // OA-OG
+    return false;
+}
+
+// Parses the conditioning-indicator field (SC09-2508 p.561: position 9 is
+// an optional 'N' meaning "not", positions 10-11 the indicator). On
+// success `cond` is either left empty (field blank — statement runs
+// unconditionally) or set to the free-form boolean expression the
+// statement must be wrapped in. Returns false after reporting an error.
+static bool parseCondIndicator(const std::string& line, int lineNo, std::string& cond) {
+    std::string raw = rawCols(line, CSpec::Indicators);
+    if (trim(raw).empty()) return true;
+
+    char notFlag = (char)toupper((unsigned char)raw[0]);
+    std::string name = upper(raw.substr(1, 2));
+    if (notFlag != ' ' && notFlag != 'N') {
+        report_fixed_format_error(lineNo, std::string("C-spec: malformed conditioning indicator '") +
+            trim(raw) + "' — position 9 must be blank or 'N', with the indicator itself in "
+            "positions 10-11");
+        return false;
+    }
+    if (name.size() == 2 && isdigit((unsigned char)name[0]) && isdigit((unsigned char)name[1])) {
+        if (name == "00") {
+            report_fixed_format_error(lineNo,
+                "C-spec: conditioning indicator '00' is not valid — indicators are 01-99");
+            return false;
+        }
+        cond = (notFlag == 'N') ? ("NOT *IN" + name) : ("*IN" + name);
+        return true;
+    }
+    if (isUnsupportedIndicatorName(name)) {
+        report_fixed_format_error(lineNo, "C-spec: conditioning indicator '" + name +
+            "' is not supported — this compiler implements only the numbered indicators "
+            "*IN01-*IN99 (see TODO.md \"Indicator Types\")");
+        return false;
+    }
+    report_fixed_format_error(lineNo, std::string("C-spec: malformed conditioning indicator '") +
+        trim(raw) + "' — expected an optional 'N' in position 9 and a two-digit indicator "
+        "(01-99) in positions 10-11");
+    return false;
+}
+
+// Collapses an accumulated AND/OR conditioning group into one free-form
+// boolean expression. RPG relates the lines of such a group as an OR of
+// AND-groups — each `OR` line starts a fresh AND-group — rather than
+// left-to-right, so every multi-term AND-group is parenthesized before the
+// groups are ORed together, and the whole thing is parenthesized again so
+// it composes safely wherever it is dropped in.
+static std::string joinCondGroups(const std::vector<std::vector<std::string>>& groups) {
+    std::string out;
+    for (const auto& group : groups) {
+        std::string andExpr;
+        for (const auto& term : group) {
+            if (!andExpr.empty()) andExpr += " AND ";
+            andExpr += term;
+        }
+        if (group.size() > 1) andExpr = "(" + andExpr + ")";
+        if (!out.empty()) out += " OR ";
+        out += andExpr;
+    }
+    if (groups.size() > 1) out = "(" + out + ")";
+    return out;
+}
+
+// Maps a CASxx/CABxx comparison mnemonic (SC09-2508: EQ/NE/LT/LE/GT/GE,
+// or none at all for the unconditional CAS/CAB form) onto the free-form
+// operator it transpiles to. Returns false if the suffix is not one.
+static bool casCabOperator(const std::string& mn, std::string& op) {
+    if (mn.empty()) { op.clear(); return true; }
+    if (mn == "EQ") { op = "=";  return true; }
+    if (mn == "NE") { op = "<>"; return true; }
+    if (mn == "LT") { op = "<";  return true; }
+    if (mn == "LE") { op = "<="; return true; }
+    if (mn == "GT") { op = ">";  return true; }
+    if (mn == "GE") { op = ">="; return true; }
+    return false;
+}
+
+// Validates one of COMP's resulting-indicator slots and turns it into the
+// indicator's free-form name. Empty slot -> empty name (that comparison
+// simply is not recorded). Same supported set as conditioning indicators:
+// only the numbered *IN01-*IN99 exist in this compiler.
+static bool parseResultIndicator(const std::string& raw, int lineNo,
+                                 const char* which, std::string& name) {
+    std::string t = trim(raw);
+    if (t.empty()) { name.clear(); return true; }
+    std::string up = upper(t);
+    if (up.size() == 2 && isdigit((unsigned char)up[0]) && isdigit((unsigned char)up[1])) {
+        if (up == "00") {
+            report_fixed_format_error(lineNo, std::string("C-spec: COMP ") + which +
+                " resulting indicator '00' is not valid — indicators are 01-99");
+            return false;
+        }
+        name = "*IN" + up;
+        return true;
+    }
+    if (isUnsupportedIndicatorName(up)) {
+        report_fixed_format_error(lineNo, std::string("C-spec: COMP ") + which +
+            " resulting indicator '" + up + "' is not supported — this compiler implements "
+            "only the numbered indicators *IN01-*IN99 (see TODO.md \"Indicator Types\")");
+        return false;
+    }
+    report_fixed_format_error(lineNo, std::string("C-spec: COMP ") + which +
+        " resulting indicator '" + t + "' is malformed — expected a two-digit indicator (01-99)");
+    return false;
+}
+
+// Wraps one already-complete transpiled statement (its ';' included) in
+// the IF/ENDIF a conditioning indicator asks for. Deliberately stays on
+// the single buffer line this physical source line owns, so
+// parse_free_block's line numbers keep matching the original source.
+static std::string wrapCond(const std::string& cond, const std::string& stmt) {
+    if (cond.empty()) return stmt;
+    return "IF " + cond + "; " + stmt + " ENDIF;";
+}
+
 // Which fixed-column layout an opcode uses (SC09-2508 p.559 Table 125
 // "Traditional Syntax" vs p.565 "Extended Factor 2 Syntax") and whether
 // this compiler's free-format grammar accepts an (extender) suffix on it
@@ -31,6 +172,17 @@ enum class CSpecShape { BARE, EXT_FACTOR2, TRADITIONAL };
 struct OpcodeInfo {
     CSpecShape shape;
     bool allowsExtender = false;
+    // Whether a conditioning indicator (positions 9-11) may condition this
+    // opcode. False for every block-structure opcode — openers (IF/DOW/
+    // SELECT/BEGSR/...), middles (ELSE/WHEN/ON-ERROR), closers (ENDIF/
+    // ENDDO/ENDSR/...) — and for TAG. This transpiler expresses a
+    // conditioning indicator as an `IF cond; <stmt>; ENDIF;` wrapper
+    // around the one statement the indicator conditions, which only works
+    // when that statement is self-contained: wrapping half of a block
+    // would leave the block unbalanced, and wrapping a TAG would bury the
+    // label inside a nested scope its GOTOs cannot legally jump into.
+    // Rejected with a distinct error rather than transpiled approximately.
+    bool allowsCond = true;
 };
 
 // V1 opcode set (see TODO.md "Fixed-Format Source Support — Next Steps"
@@ -41,47 +193,62 @@ struct OpcodeInfo {
 static const std::unordered_map<std::string, OpcodeInfo>& opcodeTable() {
     static const std::unordered_map<std::string, OpcodeInfo> table = {
         // Bare — no operands (parser.y: KW_X SEMICOLON with nothing between).
-        {"ELSE",    {CSpecShape::BARE}},
-        {"ENDDO",   {CSpecShape::BARE}},
-        {"ENDFOR",  {CSpecShape::BARE}},
-        {"ENDIF",   {CSpecShape::BARE}},
-        {"ENDMON",  {CSpecShape::BARE}},
-        {"ENDSL",   {CSpecShape::BARE}},
-        {"ENDSR",   {CSpecShape::BARE}}, // begsr_stmt: KW_ENDSR SEMICOLON — no return-point/label support
+        {"ELSE",    {CSpecShape::BARE, false, false}},
+        {"ENDDO",   {CSpecShape::BARE, false, false}},
+        {"ENDFOR",  {CSpecShape::BARE, false, false}},
+        {"ENDIF",   {CSpecShape::BARE, false, false}},
+        {"ENDMON",  {CSpecShape::BARE, false, false}},
+        {"ENDSL",   {CSpecShape::BARE, false, false}},
+        {"ENDSR",   {CSpecShape::BARE, false, false}}, // begsr_stmt: KW_ENDSR SEMICOLON — no return-point/label support
         {"ITER",    {CSpecShape::BARE}},
         {"LEAVE",   {CSpecShape::BARE}},
         {"LEAVESR", {CSpecShape::BARE}},
-        {"OTHER",   {CSpecShape::BARE}},
-        {"SELECT",  {CSpecShape::BARE}},
-        {"MONITOR", {CSpecShape::BARE}},
+        {"OTHER",   {CSpecShape::BARE, false, false}},
+        {"SELECT",  {CSpecShape::BARE, false, false}},
+        {"MONITOR", {CSpecShape::BARE, false, false}},
 
         // Extended factor 2 — Factor 1 blank, cols 36-80 = one free-form
         // expression (SC09-2508 p.565's own opcode list, intersected with
         // what this compiler's free-format grammar actually implements).
-        {"IF",         {CSpecShape::EXT_FACTOR2}},
-        {"ELSEIF",     {CSpecShape::EXT_FACTOR2}},
-        {"DOW",        {CSpecShape::EXT_FACTOR2}},
-        {"DOU",        {CSpecShape::EXT_FACTOR2}},
-        {"WHEN",       {CSpecShape::EXT_FACTOR2}},
+        {"IF",         {CSpecShape::EXT_FACTOR2, false, false}},
+        {"ELSEIF",     {CSpecShape::EXT_FACTOR2, false, false}},
+        {"DOW",        {CSpecShape::EXT_FACTOR2, false, false}},
+        {"DOU",        {CSpecShape::EXT_FACTOR2, false, false}},
+        {"WHEN",       {CSpecShape::EXT_FACTOR2, false, false}},
         {"EVAL",       {CSpecShape::EXT_FACTOR2, true}},
         {"EVALR",      {CSpecShape::EXT_FACTOR2, true}},
         {"EVAL-CORR",  {CSpecShape::EXT_FACTOR2}},
         {"RETURN",     {CSpecShape::EXT_FACTOR2}},
         {"CALLP",      {CSpecShape::EXT_FACTOR2, true}},
-        {"FOR",        {CSpecShape::EXT_FACTOR2}},
-        {"FOR-EACH",   {CSpecShape::EXT_FACTOR2}},
-        {"ON-ERROR",   {CSpecShape::EXT_FACTOR2}},
+        {"FOR",        {CSpecShape::EXT_FACTOR2, false, false}},
+        {"FOR-EACH",   {CSpecShape::EXT_FACTOR2, false, false}},
+        {"ON-ERROR",   {CSpecShape::EXT_FACTOR2, false, false}},
+
+        // Modern opcodes whose operand syntax is free-form by nature
+        // (%XML/%DATA/%PARSER expressions, SND-MSG's message-type
+        // operand). Extended factor 2 is the right shape for exactly that
+        // reason: columns 36-80 plus continuation carry the expression
+        // through to the free-format parser untouched, where these
+        // opcodes were already fully implemented. Nothing else was
+        // needed — no new grammar, no new AST, no codegen change.
+        {"XML-INTO",   {CSpecShape::EXT_FACTOR2}},
+        {"DATA-INTO",  {CSpecShape::EXT_FACTOR2}},
+        {"DATA-GEN",   {CSpecShape::EXT_FACTOR2}},
+        {"SND-MSG",    {CSpecShape::EXT_FACTOR2}},
 
         // Traditional Factor1/Factor2/Result — exact per-opcode field
         // usage verified against SC09-2508's dedicated opcode sections
         // and built by name in feedCSpecLine (a generic field-shape table
         // would be less readable than just naming each opcode).
-        {"BEGSR", {CSpecShape::TRADITIONAL}},
+        {"BEGSR", {CSpecShape::TRADITIONAL, false, false}},
         {"EXSR",  {CSpecShape::TRADITIONAL}},
         {"CLEAR", {CSpecShape::TRADITIONAL}},
         {"RESET", {CSpecShape::TRADITIONAL}},
         {"DSPLY", {CSpecShape::TRADITIONAL}},
         {"SORTA", {CSpecShape::TRADITIONAL}},
+        // COMP — the sole opcode allowed to fill the resulting-indicator
+        // columns (71-76); see the COMP branch in feedCSpecLine.
+        {"COMP",  {CSpecShape::TRADITIONAL}},
 
         // RLA opcodes (item 1b, fast-follow to V1) — this compiler's own
         // free-format grammar (parser.y) is a simplified subset of the
@@ -105,11 +272,11 @@ static const std::unordered_map<std::string, OpcodeInfo>& opcodeTable() {
         // Item #3 V1 — traditional legacy opcodes. GOTO/TAG have NO
         // free-form syntax at all (SC09-2508: "not allowed"), so the
         // GotoStmt/TagStmt text these transpile to is only accepted by
-        // parser.y when g_allow_goto_tag is set — see free_bridge.h and
+        // parser.y when g_allow_fixed_only_stmts is set — see free_bridge.h and
         // fixed_reader.cpp's flushCRun. No extender column for either
         // (unlike the arithmetic opcodes below).
         {"GOTO", {CSpecShape::TRADITIONAL}},
-        {"TAG",  {CSpecShape::TRADITIONAL}},
+        {"TAG",  {CSpecShape::TRADITIONAL, false, false}},
 
         // ADD/SUB/MULT/DIV/Z-ADD/Z-SUB also have no free-form *keyword*
         // ("not allowed — use the +/-/*// operator", "use the EVAL
@@ -124,6 +291,22 @@ static const std::unordered_map<std::string, OpcodeInfo>& opcodeTable() {
         {"DIV",   {CSpecShape::TRADITIONAL, true}},
         {"Z-ADD", {CSpecShape::TRADITIONAL, true}},
         {"Z-SUB", {CSpecShape::TRADITIONAL, true}},
+
+        // MOVE/MOVEL — like GOTO/TAG, no free-form syntax exists, so the
+        // MoveStmt text these build is only accepted by parser.y when
+        // g_allow_fixed_only_stmts is set. Character-to-character only;
+        // the operand-type check that enforces that lives in codegen,
+        // the first place with a symbol table. (P) is the one extender.
+        {"MOVE",  {CSpecShape::TRADITIONAL, true}},
+        {"MOVEL", {CSpecShape::TRADITIONAL, true}},
+
+        // CALL/PARM — traditional program call. CALL has no free-form
+        // syntax (CALLP replaced it), so like GOTO/TAG/MOVE its bridge
+        // text is gated on g_allow_fixed_only_stmts. PARM contributes no
+        // statement of its own: it feeds the pending CALL, which is why
+        // it cannot carry a conditioning indicator of its own.
+        {"CALL", {CSpecShape::TRADITIONAL, false, true}},
+        {"PARM", {CSpecShape::TRADITIONAL, false, false}},
     };
     return table;
 }
@@ -133,21 +316,103 @@ static const std::unordered_map<std::string, OpcodeInfo>& opcodeTable() {
 // from "not planned" legacy opcodes. See TODO.md's fast-follow list.
 static const std::unordered_set<std::string>& deferredOpcodes() {
     static const std::unordered_set<std::string> s = {
-        "ON-EXIT", "ON-EXCP", "XML-INTO", "XML-SAX", "DATA-INTO",
-        "DATA-GEN", "SND-MSG",
-        // Item #3 fast-follow, deliberately not V1 — see TODO.md for why
-        // each one specifically (MOVE/MOVEL: real fixed-length right/left
-        // -adjust and date-format-conversion semantics, no clean EVAL
-        // mapping; CALL/PARM/PLIST: needs cross-line PLIST state, CALLP
-        // already covers modern program calls).
-        "MOVE", "MOVEL", "CALL", "PARM", "PLIST",
+        // Not implemented anywhere in this compiler — free-format has no
+        // grammar for either, so there is nothing to reach from fixed
+        // columns yet. Listed here only so they earn the "planned"
+        // message rather than the never-planned one.
+        "ON-EXCP", "XML-SAX",
+        // Named parameter lists (and *ENTRY PLIST) remain deferred — see
+        // TODO.md; CALL with its PARM lines inline is supported.
+        "PLIST",
     };
     return s;
+}
+
+// Opcodes that exist and work, but only somewhere fixed-format source
+// cannot reach. ON-EXIT is valid solely inside a DCL-PROC (parser.y has
+// no standalone rule for it — it appears only in the DCL-PROC
+// productions), and fixed-format source cannot declare a procedure at
+// all, since this reader has no P-spec support. So it is not a fast-
+// follow port: it needs a /free block either way.
+static const std::unordered_set<std::string>& procOnlyOpcodes() {
+    static const std::unordered_set<std::string> s = { "ON-EXIT" };
+    return s;
+}
+
+// Writes a CALL and the PARM lines gathered after it into the CALL's own
+// buffer line, and clears the pending state. Called when the run of PARM
+// lines ends: any other opcode, or the end of the C-spec run.
+static void finishCall(CSpecRunState& state) {
+    if (!state.pendingCall) return;
+    std::string text = "CALL " + state.callProgram;
+    if (!state.callParms.empty()) {
+        text += " (";
+        for (size_t i = 0; i < state.callParms.size(); i++) {
+            if (i) text += " : ";
+            text += state.callParms[i];
+        }
+        text += ")";
+    }
+    text += ";";
+    state.bufLines[state.callLineIdx] = wrapCond(state.callCond, text);
+    state.pendingCall = false;
+    state.callLineIdx = -1;
+    state.callProgram.clear();
+    state.callCond.clear();
+    state.callParms.clear();
 }
 
 void feedCSpecLine(CSpecRunState& state, const std::string& line, int lineNo) {
     int idx = (int)state.bufLines.size();
     state.bufLines.push_back("");
+
+    // Fixed-column embedded SQL: C/EXEC SQL, C+ continuation lines,
+    // C/END-EXEC. Checked before the ordinary column layout because
+    // column 7 here carries a directive ('/') or continuation ('+')
+    // marker, which the control-level field would otherwise reject.
+    // Everything gathered is emitted as one free-form `EXEC SQL ...;`,
+    // which the lexer's own <SQL> start condition then captures exactly
+    // as it does for free-format source — so this needs no SQL parsing
+    // of its own, and the transpile-and-bridge model still holds.
+    {
+        char marker = line.size() >= 7 ? line[6] : ' ';
+        std::string rest = line.size() > 7 ? trim(line.substr(7)) : "";
+        std::string restUp = upper(rest);
+        if (state.inSqlCapture) {
+            if (marker == '/' && restUp == "END-EXEC") {
+                state.bufLines[state.sqlLineIdx] = "EXEC SQL " + trim(state.sqlText) + ";";
+                state.inSqlCapture = false;
+                state.sqlLineIdx = -1;
+                state.sqlText.clear();
+                return;
+            }
+            if (marker == '+') {
+                if (!state.sqlText.empty()) state.sqlText += " ";
+                state.sqlText += rest;
+                return;
+            }
+            report_fixed_format_error(state.sqlLine, "C-spec: embedded SQL statement is not "
+                "terminated by a C/END-EXEC line — continuation lines must carry '+' in "
+                "position 7");
+            state.inSqlCapture = false;
+            state.sqlLineIdx = -1;
+            state.sqlText.clear();
+            return;
+        }
+        if (marker == '/' && restUp.compare(0, 8, "EXEC SQL") == 0) {
+            finishCall(state);
+            state.inSqlCapture = true;
+            state.sqlLineIdx = idx;
+            state.sqlLine = lineNo;
+            state.sqlText = trim(rest.substr(8)); // text may start on this line
+            return;
+        }
+        if (marker == '/' && restUp == "END-EXEC") {
+            report_fixed_format_error(lineNo,
+                "C-spec: C/END-EXEC with no preceding C/EXEC SQL");
+            return;
+        }
+    }
 
     bool contShaped = extractCol(line, CSpec::ControlLevel).empty() &&
                        extractCol(line, CSpec::Indicators).empty() &&
@@ -167,26 +432,68 @@ void feedCSpecLine(CSpecRunState& state, const std::string& line, int lineNo) {
 
     // A non-continuation line closes any statement still open from before.
     if (state.pendingExt) {
-        state.bufLines[state.pendingLineIdx] += ";";
+        state.bufLines[state.pendingLineIdx] += ";" + state.pendingSuffix;
+        state.pendingSuffix.clear();
         state.pendingExt = false;
         state.pendingLineIdx = -1;
     }
 
     std::string controlLevel = upper(extractCol(line, CSpec::ControlLevel));
-    if (!controlLevel.empty() && controlLevel != "SR") {
+    bool isAnOr = (controlLevel == "AN" || controlLevel == "OR");
+    if (!controlLevel.empty() && !isAnOr && controlLevel != "SR") {
         report_fixed_format_error(lineNo, "C-spec: control level '" + controlLevel +
             "' is not supported (RPG-cycle semantics are not implemented) — "
-            "leave positions 7-8 blank, or 'SR'");
+            "leave positions 7-8 blank, or 'SR'/'AN'/'OR'");
         return;
     }
-    if (!extractCol(line, CSpec::Indicators).empty()) {
-        report_fixed_format_error(lineNo,
-            "C-spec: conditioning indicators (positions 9-11) are not yet "
-            "supported in fixed-format C-spec — see TODO.md");
+    // Conditioning indicator (positions 9-11) — transpiled into an
+    // IF/ENDIF wrapper around this one statement once the opcode is known
+    // to be conditionable (OpcodeInfo::allowsCond). `cond` holds just this
+    // line's own term until any AND/OR group below folds the rest in.
+    std::string cond;
+    if (!parseCondIndicator(line, lineNo, cond)) return;
+
+    std::string opcodeRaw = extractCol(line, CSpec::Opcode);
+
+    // AND/OR conditioning group (positions 7-8). Unlike the control-level
+    // entries above, `AN`/`OR` have nothing to do with the RPG cycle: they
+    // exist only to combine positions-9-11 indicators across physical
+    // lines, which is the sole way to write a multi-indicator condition in
+    // RPG IV (its C-spec has room for exactly one indicator per line). The
+    // group's operation code sits on its last line.
+    if (!isAnOr && !state.condGroups.empty()) {
+        report_fixed_format_error(state.condLine,
+            "C-spec: conditioning-indicator line (no operation code) is not continued by "
+            "an 'AN'/'OR' line — an AND/OR conditioning group must end with the line "
+            "carrying the operation");
+        state.condGroups.clear();
+    }
+    if (isAnOr) {
+        if (state.condGroups.empty()) {
+            report_fixed_format_error(lineNo, "C-spec: '" + controlLevel +
+                "' in positions 7-8 has no preceding conditioning-indicator line to "
+                "combine with");
+            return;
+        }
+        if (cond.empty()) {
+            report_fixed_format_error(lineNo, "C-spec: an '" + controlLevel +
+                "' line must carry a conditioning indicator in positions 9-11");
+            state.condGroups.clear(); // group is broken; don't also report it dangling
+            return;
+        }
+        if (controlLevel == "AN") state.condGroups.back().push_back(cond);
+        else                      state.condGroups.push_back({cond});
+        if (opcodeRaw.empty()) return; // group continues on a later line
+        cond = joinCondGroups(state.condGroups);
+        state.condGroups.clear();
+    } else if (!cond.empty() && opcodeRaw.empty()) {
+        // First line of a group: an indicator with the operation still to
+        // come on a following AN/OR line.
+        state.condGroups.push_back({cond});
+        state.condLine = lineNo;
         return;
     }
 
-    std::string opcodeRaw = extractCol(line, CSpec::Opcode);
     if (opcodeRaw.empty()) {
         report_fixed_format_error(lineNo, "C-spec: missing operation code");
         return;
@@ -206,10 +513,134 @@ void feedCSpecLine(CSpecRunState& state, const std::string& line, int lineNo) {
     }
     opcodeName = upper(trim(opcodeName));
 
+    if (state.pendingCall && opcodeName != "PARM") finishCall(state);
+
+    // CASxx / CABxx / ENDCS. Handled ahead of the opcode table because the
+    // comparison mnemonic is glued onto the opcode itself (`CASGT`), so
+    // there is no fixed name to look up.
+    bool isCas = opcodeName.compare(0, 3, "CAS") == 0 &&
+                 (opcodeName.size() == 3 || opcodeName.size() == 5);
+    bool isCab = opcodeName.compare(0, 3, "CAB") == 0 &&
+                 (opcodeName.size() == 3 || opcodeName.size() == 5);
+    if (isCas || isCab || opcodeName == "ENDCS") {
+        if (!extractCol(line, CSpec::ResultInd).empty() ||
+            !extractCol(line, CSpec::Length).empty() ||
+            !extractCol(line, CSpec::Decimals).empty()) {
+            report_fixed_format_error(lineNo, "C-spec: '" + opcodeName +
+                "' — resulting indicators and inline field length/decimals are not supported");
+            return;
+        }
+        if (!extender.empty()) {
+            report_fixed_format_error(lineNo, "C-spec: operation extender '" + extender +
+                "' is not supported on '" + opcodeName + "' in this compiler");
+            return;
+        }
+        std::string factor1 = extractCol(line, CSpec::Factor1);
+        std::string factor2 = extractCol(line, CSpec::Factor2);
+        std::string result  = extractCol(line, CSpec::Result);
+
+        if (opcodeName == "ENDCS") {
+            if (!state.inCasGroup) {
+                report_fixed_format_error(lineNo,
+                    "C-spec: ENDCS with no CASxx group to close");
+                return;
+            }
+            if (!cond.empty()) {
+                report_fixed_format_error(lineNo, "C-spec: a conditioning indicator cannot be "
+                    "applied to 'ENDCS' — it closes the CASxx group, so conditioning it would "
+                    "leave the group unbalanced");
+                return;
+            }
+            state.bufLines[idx] = state.casOpened ? "ENDIF;" : "";
+            state.inCasGroup = false;
+            state.casOpened = false;
+            state.casElse = false;
+            return;
+        }
+
+        std::string mnemonic = opcodeName.substr(3);
+        std::string cmp;
+        if (!casCabOperator(mnemonic, cmp)) {
+            report_fixed_format_error(lineNo, "C-spec: '" + opcodeName + "' — '" + mnemonic +
+                "' is not a comparison mnemonic (expected EQ, NE, LT, LE, GT or GE, or none "
+                "at all for the unconditional form)");
+            return;
+        }
+        if (result.empty()) {
+            report_fixed_format_error(lineNo, "C-spec: " + opcodeName + " requires a " +
+                std::string(isCas ? "subroutine name" : "label") + " in the Result field");
+            return;
+        }
+        if (cmp.empty()) {
+            if (!factor1.empty() || !factor2.empty()) {
+                report_fixed_format_error(lineNo, "C-spec: " + opcodeName +
+                    " has no comparison mnemonic, so Factor 1 and Factor 2 must be blank");
+                return;
+            }
+        } else if (factor1.empty() || factor2.empty()) {
+            report_fixed_format_error(lineNo, "C-spec: " + opcodeName +
+                " requires Factor 1 and Factor 2 to compare");
+            return;
+        }
+        std::string test = cmp.empty() ? "" : (factor1 + " " + cmp + " " + factor2);
+
+        if (isCab) {
+            // Self-contained: a comparison guarding a branch, or a bare
+            // unconditional branch. GOTO is accepted here because the whole
+            // run parses with g_allow_fixed_only_stmts set.
+            std::string built = cmp.empty()
+                ? ("GOTO " + result + ";")
+                : ("IF " + test + "; GOTO " + result + "; ENDIF;");
+            state.bufLines[idx] = wrapCond(cond, built);
+            return;
+        }
+
+        // CASxx: a chain, so a conditioning indicator on one arm would
+        // break the IF/ELSEIF structure the group transpiles to.
+        if (!cond.empty()) {
+            report_fixed_format_error(lineNo, "C-spec: a conditioning indicator cannot be "
+                "applied to '" + opcodeName + "' — CASxx lines chain into one IF/ELSEIF "
+                "group, which conditioning a single arm would leave unbalanced");
+            return;
+        }
+        if (!state.inCasGroup) {
+            state.inCasGroup = true;
+            state.casLine = lineNo;
+            state.casOpened = !cmp.empty();
+            state.casElse = false;
+            state.bufLines[idx] = cmp.empty()
+                ? ("EXSR " + result + ";")
+                : ("IF " + test + "; EXSR " + result + ";");
+        } else if (!state.casOpened || state.casElse) {
+            report_fixed_format_error(lineNo, "C-spec: " + opcodeName + " follows an "
+                "unconditional CAS, which already runs on every pass — the rest of the group "
+                "is unreachable");
+            return;
+        } else {
+            state.bufLines[idx] = cmp.empty()
+                ? ("ELSE; EXSR " + result + ";")
+                : ("ELSEIF " + test + "; EXSR " + result + ";");
+            if (cmp.empty()) state.casElse = true; // ELSE arm taken; no further arms
+        }
+        return;
+    }
+    if (state.inCasGroup) {
+        report_fixed_format_error(state.casLine, "C-spec: CASxx group is not closed by an "
+            "ENDCS — every CASxx line up to the ENDCS must be part of the same group");
+        state.inCasGroup = false;
+        state.casOpened = false;
+        state.casElse = false;
+    }
+
     const auto& table = opcodeTable();
     auto it = table.find(opcodeName);
     if (it == table.end()) {
-        if (deferredOpcodes().count(opcodeName)) {
+        if (procOnlyOpcodes().count(opcodeName)) {
+            report_fixed_format_error(lineNo, "C-spec: opcode '" + opcodeName +
+                "' is valid only inside a DCL-PROC, which fixed-format source cannot declare "
+                "(no P-spec support) — write the procedure in a /free block, where '" +
+                opcodeName + "' already works");
+        } else if (deferredOpcodes().count(opcodeName)) {
             report_fixed_format_error(lineNo, "C-spec: opcode '" + opcodeName +
                 "' is not yet supported in fixed-format C-spec (planned fast-follow — see TODO.md)");
         } else {
@@ -223,6 +654,28 @@ void feedCSpecLine(CSpecRunState& state, const std::string& line, int lineNo) {
     if (!extender.empty() && !info.allowsExtender) {
         report_fixed_format_error(lineNo, "C-spec: operation extender '" + extender +
             "' is not supported on '" + opcodeName + "' in this compiler");
+        return;
+    }
+
+    if (!cond.empty() && !info.allowsCond) {
+        if (opcodeName == "PARM") {
+            report_fixed_format_error(lineNo,
+                "C-spec: a conditioning indicator cannot be applied to 'PARM' — a PARM line "
+                "is part of the preceding CALL's parameter list, not a statement of its own; "
+                "condition the CALL instead");
+        } else if (opcodeName == "TAG") {
+            report_fixed_format_error(lineNo,
+                "C-spec: a conditioning indicator cannot be applied to 'TAG' — a label is a "
+                "jump target, not an executable operation, and the IF/ENDIF this compiler "
+                "conditions with would put it inside a block its own GOTOs cannot jump into; "
+                "condition the GOTO instead");
+        } else {
+            report_fixed_format_error(lineNo, "C-spec: a conditioning indicator cannot be "
+                "applied to the block-structure opcode '" + opcodeName + "' — conditioning is "
+                "transpiled to an IF/ENDIF around the conditioned statement, which would leave "
+                "the block unbalanced; fold the indicator into the block's own condition "
+                "instead (e.g. 'IF *INnn AND ...')");
+        }
         return;
     }
 
@@ -240,7 +693,7 @@ void feedCSpecLine(CSpecRunState& state, const std::string& line, int lineNo) {
                 "C-spec: '" + opcodeName + "' does not take operands");
             return;
         }
-        state.bufLines[idx] = opcodeName + ";";
+        state.bufLines[idx] = wrapCond(cond, opcodeName + ";");
         return;
     }
     case CSpecShape::EXT_FACTOR2: {
@@ -251,7 +704,14 @@ void feedCSpecLine(CSpecRunState& state, const std::string& line, int lineNo) {
         }
         std::string expr = extractCol(line, CSpec::ExtFactor2);
         std::string header = opcodeName + extender;
-        state.bufLines[idx] = expr.empty() ? header : (header + " " + expr);
+        std::string stmt = expr.empty() ? header : (header + " " + expr);
+        // The statement stays open across any continuation lines, so its
+        // ENDIF has to wait for whoever appends the terminating ';'.
+        if (!cond.empty()) {
+            stmt = "IF " + cond + "; " + stmt;
+            state.pendingSuffix = " ENDIF;";
+        }
+        state.bufLines[idx] = stmt;
         state.pendingExt = true;
         state.pendingLineIdx = idx;
         return; // closed by the next non-continuation feedCSpecLine call, or flush
@@ -259,6 +719,47 @@ void feedCSpecLine(CSpecRunState& state, const std::string& line, int lineNo) {
     case CSpecShape::TRADITIONAL: {
         std::string factor2 = extractCol(line, CSpec::Factor2);
         std::string result = extractCol(line, CSpec::Result);
+        if (opcodeName == "COMP") {
+            // The one opcode whose resulting indicators are its entire
+            // effect — and, unlike the resulting indicators free-form
+            // drops everywhere else, one this compiler CAN express, since
+            // *INnn is an assignable target. Each non-blank slot becomes
+            // one indicator assignment.
+            if (factor1.empty() || factor2.empty()) {
+                report_fixed_format_error(lineNo,
+                    "C-spec: COMP requires Factor 1 and Factor 2 to compare");
+                return;
+            }
+            if (!result.empty()) {
+                report_fixed_format_error(lineNo,
+                    "C-spec: COMP does not take a Result field — its result is the "
+                    "resulting indicators in positions 71-76");
+                return;
+            }
+            if (!extractCol(line, CSpec::Length).empty() ||
+                !extractCol(line, CSpec::Decimals).empty()) {
+                report_fixed_format_error(lineNo,
+                    "C-spec: COMP — inline field length/decimals are not supported");
+                return;
+            }
+            std::string hi, lo, eq;
+            if (!parseResultIndicator(extractCol(line, CSpec::ResultIndHi), lineNo, "high", hi) ||
+                !parseResultIndicator(extractCol(line, CSpec::ResultIndLo), lineNo, "low",  lo) ||
+                !parseResultIndicator(extractCol(line, CSpec::ResultIndEq), lineNo, "equal", eq))
+                return;
+            if (hi.empty() && lo.empty() && eq.empty()) {
+                report_fixed_format_error(lineNo, "C-spec: COMP with no resulting indicators "
+                    "in positions 71-76 has no effect — give at least one");
+                return;
+            }
+            std::string text;
+            if (!hi.empty()) text += hi + " = (" + factor1 + " > "  + factor2 + "); ";
+            if (!lo.empty()) text += lo + " = (" + factor1 + " < "  + factor2 + "); ";
+            if (!eq.empty()) text += eq + " = (" + factor1 + " = "  + factor2 + "); ";
+            while (!text.empty() && text.back() == ' ') text.pop_back();
+            state.bufLines[idx] = wrapCond(cond, text);
+            return;
+        }
         if (!extractCol(line, CSpec::ResultInd).empty() ||
             !extractCol(line, CSpec::Length).empty() ||
             !extractCol(line, CSpec::Decimals).empty()) {
@@ -352,6 +853,74 @@ void feedCSpecLine(CSpecRunState& state, const std::string& line, int lineNo) {
                       opcodeName == "MULT" ? '*' : '/';
             std::string lhs = factor1.empty() ? result : factor1;
             built = "EVAL" + extender + " " + result + " = " + lhs + " " + op + " " + factor2;
+        } else if (opcodeName == "CALL") {
+            if (!factor1.empty()) {
+                report_fixed_format_error(lineNo,
+                    "C-spec: CALL does not take a Factor 1 entry");
+                return;
+            }
+            if (factor2.size() < 3 || factor2.front() != '\'' || factor2.back() != '\'') {
+                report_fixed_format_error(lineNo, "C-spec: CALL requires a quoted program name "
+                    "in Factor 2 — a program name held in a variable is a dynamic call, which "
+                    "has no equivalent here (this compiler links a called program statically, "
+                    "the same way DCL-PR ... EXTPGM does); see TODO.md");
+                return;
+            }
+            if (!result.empty()) {
+                report_fixed_format_error(lineNo, "C-spec: CALL with a named PLIST in the "
+                    "Result field is not supported — list the parameters as PARM lines "
+                    "directly after the CALL instead; see TODO.md");
+                return;
+            }
+            // Assembled once the PARM lines that follow have been read.
+            state.pendingCall = true;
+            state.callLineIdx = idx;
+            state.callLine = lineNo;
+            state.callProgram = factor2;
+            state.callCond = cond;
+            state.callParms.clear();
+            return;
+        } else if (opcodeName == "PARM") {
+            if (!state.pendingCall) {
+                report_fixed_format_error(lineNo, "C-spec: PARM with no preceding CALL — this "
+                    "compiler supports PARM lines only as the parameter list of the CALL they "
+                    "follow (named PLISTs are not supported); see TODO.md");
+                return;
+            }
+            if (!factor1.empty() || !factor2.empty()) {
+                report_fixed_format_error(lineNo, "C-spec: PARM with a Factor 1 or Factor 2 "
+                    "entry is not supported — only the Result field (the parameter itself) is "
+                    "read; see TODO.md");
+                return;
+            }
+            if (result.empty()) {
+                report_fixed_format_error(lineNo,
+                    "C-spec: PARM requires the parameter name in the Result field");
+                return;
+            }
+            state.callParms.push_back(result);
+            return; // contributes to the pending CALL, not a statement of its own
+        } else if (opcodeName == "MOVE" || opcodeName == "MOVEL") {
+            // Factor 1 on MOVE/MOVEL holds a date/time format for the
+            // conversion forms — refused here rather than approximated,
+            // and refusable at this level because it needs no type info.
+            if (!factor1.empty()) {
+                report_fixed_format_error(lineNo, "C-spec: " + opcodeName + " with a date/time "
+                    "format in Factor 1 is not supported — this compiler's " + opcodeName +
+                    " is a character move only; see TODO.md");
+                return;
+            }
+            if (factor2.empty() || result.empty()) {
+                report_fixed_format_error(lineNo, "C-spec: " + opcodeName +
+                    " requires Factor 2 and a Result field");
+                return;
+            }
+            if (!extender.empty() && upper(extender) != "(P)") {
+                report_fixed_format_error(lineNo, "C-spec: " + opcodeName + " supports only the "
+                    "(P) extender in this compiler, not '" + extender + "'");
+                return;
+            }
+            built = opcodeName + upper(extender) + " " + factor2 + " " + result;
         } else if (opcodeName == "Z-ADD" || opcodeName == "Z-SUB") {
             if (factor2.empty() || result.empty() || !factor1.empty()) {
                 report_fixed_format_error(lineNo, "C-spec: " + opcodeName +
@@ -362,15 +931,30 @@ void feedCSpecLine(CSpecRunState& state, const std::string& line, int lineNo) {
                 ? ("EVAL" + extender + " " + result + " = " + factor2)
                 : ("EVAL" + extender + " " + result + " = -(" + factor2 + ")");
         }
-        state.bufLines[idx] = built + ";";
+        state.bufLines[idx] = wrapCond(cond, built + ";");
         return;
     }
     }
 }
 
 std::string flushCSpecRun(CSpecRunState& state, int& outStartLine) {
+    finishCall(state);
+    if (state.inCasGroup) {
+        report_fixed_format_error(state.casLine,
+            "C-spec: CASxx group is not closed by an ENDCS");
+    }
+    if (state.inSqlCapture) {
+        report_fixed_format_error(state.sqlLine,
+            "C-spec: embedded SQL statement is not terminated by a C/END-EXEC line");
+    }
+    if (!state.condGroups.empty()) {
+        report_fixed_format_error(state.condLine,
+            "C-spec: conditioning-indicator line (no operation code) is not continued by "
+            "an 'AN'/'OR' line — an AND/OR conditioning group must end with the line "
+            "carrying the operation");
+    }
     if (state.pendingExt && state.pendingLineIdx >= 0) {
-        state.bufLines[state.pendingLineIdx] += ";";
+        state.bufLines[state.pendingLineIdx] += ";" + state.pendingSuffix;
     }
     std::string buf;
     for (auto& l : state.bufLines) {

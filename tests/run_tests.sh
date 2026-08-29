@@ -631,13 +631,15 @@ run_test "167" "Fixed C-spec: AN/OR indicator groups" "$TESTDIR/test167_fixed_cs
 run_test "168" "Fixed C-spec: reject orphan AN line" "$TESTDIR/test168_fixed_cspec_err_anor_orphan.rpgle" "error"
 run_test "169" "Fixed C-spec: reject dangling cond ind line" "$TESTDIR/test169_fixed_cspec_err_anor_dangling.rpgle" "error"
 
-# ── Fixed C-spec: MOVE/MOVEL (character only) ────────────────────────────
-# See TODO.md "Fixed C-spec — Deferred Fast-Follow" item #1. Character-to-
-# character only; 171 pins the codegen-level rejection (the transpiler has
-# no symbol table, so only codegen can see that the result is numeric),
-# 172 the date/time-format form, 173 that MOVE has no free-format syntax.
+# ── Fixed C-spec: MOVE/MOVEL ─────────────────────────────────────────────
+# 170 is the character-to-character move; 191-196 the numeric forms (see
+# the block further down). The rejections here are the ones that survive:
+# 171 a date result field and 172 the factor-1 date/time-format form (both
+# still deferred, see TODO.md), 173 that MOVE has no free-format syntax at
+# all. 171 also pins that the check happens in codegen — the transpiler has
+# no symbol table, so only codegen can see an operand's declared type.
 run_test "170" "Fixed C-spec: MOVE/MOVEL character move" "$TESTDIR/test170_fixed_cspec_move.rpgle" "run"
-run_test "171" "Fixed C-spec: reject MOVE to numeric field" "$TESTDIR/test171_fixed_cspec_err_move_numeric.rpgle" "error"
+run_test "171" "Fixed C-spec: reject MOVE to date field" "$TESTDIR/test171_fixed_cspec_err_move_date.rpgle" "error"
 run_test "172" "Fixed C-spec: reject MOVE date/time format" "$TESTDIR/test172_fixed_cspec_err_move_datefmt.rpgle" "error"
 run_test "173" "Free-format: reject MOVE (fixed-format only)" "$TESTDIR/test173_move_err_free_format.rpgle" "error"
 
@@ -690,6 +692,22 @@ run_test "187" "Fixed C-spec: reject COMP with no indicators" "$TESTDIR/test187_
 run_test "188" "Fixed C-spec: embedded SQL (C/EXEC SQL)" "$TESTDIR/test188_fixed_cspec_exec_sql.sqlrpgle" "run-sql"
 run_test "189" "Fixed C-spec: reject orphan C/END-EXEC" "$TESTDIR/test189_fixed_cspec_err_endexec_orphan.sqlrpgle" "error"
 run_test "190" "Fixed C-spec: reject unterminated EXEC SQL" "$TESTDIR/test190_fixed_cspec_err_sql_unterminated.sqlrpgle" "error"
+
+# ── Fixed C-spec: MOVE/MOVEL with a numeric operand ──────────────────────
+# TODO.md "Fixed C-spec — Deferred Fast-Follow" item #1. A numeric MOVE is
+# a DIGIT move against declared digit counts, with both operands' decimal
+# positions ignored (SC09-2508 p.633) — so these tests are written as
+# digit-alignment checks, not arithmetic ones. 191 numeric-to-numeric
+# (including the manual's own 1.00 -> 10.0 example), 192 character-to-
+# numeric, 193 numeric-to-character, 196 the invalid-digit data exception.
+# 194-195 pin the two operands that stay refused: float (the manual
+# disallows it) and a decimal literal (its digit count is unrecoverable).
+run_test "191" "Fixed C-spec: MOVE numeric to numeric" "$TESTDIR/test191_fixed_cspec_move_num.rpgle" "run"
+run_test "192" "Fixed C-spec: MOVE character to numeric" "$TESTDIR/test192_fixed_cspec_move_char_to_num.rpgle" "run"
+run_test "193" "Fixed C-spec: MOVE numeric to character" "$TESTDIR/test193_fixed_cspec_move_num_to_char.rpgle" "run"
+run_test "194" "Fixed C-spec: reject MOVE on float field" "$TESTDIR/test194_fixed_cspec_err_move_float.rpgle" "error"
+run_test "195" "Fixed C-spec: reject MOVE decimal literal" "$TESTDIR/test195_fixed_cspec_err_move_declit.rpgle" "error"
+run_test "196" "Fixed C-spec: MOVE invalid digit -> 907" "$TESTDIR/test196_fixed_cspec_move_data_exc.rpgle" "run"
 
 # ── Customer / drop-in tests ─────────────────────────────────────────────
 # Drop any .rpgle or .sqlrpgle file into tests/customer/ and it will be

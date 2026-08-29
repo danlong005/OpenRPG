@@ -1888,67 +1888,162 @@ void CodeGen::visit(TagStmt& node) {
     out_ << "rpg_label_" << node.label << ":;\n";
 }
 
-// MOVE/MOVEL. Character-to-character only: the fixed-format transpiler
-// that emits these has no symbol table, so this is the first point that
-// can see the operands' declared types — and the first that can refuse a
-// numeric or date move rather than guess at digit-alignment or
-// format-conversion semantics this compiler has no representation for.
+// The numeric types MOVE/MOVEL can align digit-by-digit. Float is absent
+// deliberately: "MOVE and MOVEL are not allowed for float fields or
+// literals" (SC09-2508 p.633), and a float has no declared digit count to
+// align against anyway.
+static bool isMoveNumeric(RPGType t) {
+    return t == RPGType::PACKED || t == RPGType::ZONED ||
+           t == RPGType::INT10  || t == RPGType::UNS   ||
+           t == RPGType::BINDEC;
+}
+
+// The declared digit count of a numeric field. Fixed-format D-specs put
+// the digit count in `digits` and leave `length` 0, but a free-format
+// DCL-S can land it in either, so fall back the same way %SIZE does.
+int CodeGen::declaredDigits(const std::string& name) const {
+    auto d = var_digits_.find(name);
+    if (d != var_digits_.end() && d->second > 0) return d->second;
+    auto l = var_lengths_.find(name);
+    if (l != var_lengths_.end() && l->second > 0) return l->second;
+    return 0;
+}
+
+// MOVE/MOVEL. The fixed-format transpiler that emits these has no symbol
+// table, so this is the first point that can see the operands' declared
+// types. Character-to-character is a positional CHARACTER move; anything
+// with a numeric operand is a positional DIGIT move against declared
+// digit counts, with both operands' decimal positions ignored — see the
+// rpg_move_num family in rpg_runtime.h for the rules and their citations.
+// Date/time operands and the factor-1 date-format conversion form are
+// still refused rather than guessed at (fixed_cspec.cpp catches the
+// factor-1 form earlier, before types are known).
 void CodeGen::visit(MoveStmt& node) {
     auto tit = var_types_.find(node.target);
     const char* op = node.left ? "MOVEL" : "MOVE";
     if (tit == var_types_.end()) {
         report_semantic_error(node.line, std::string(op) + ": result field '" + node.target +
             "' is not a declared standalone field — this compiler's " + op +
-            " works on declared character fields only");
+            " works on declared character and numeric fields only");
         return;
     }
-    if (tit->second != RPGType::CHAR) {
+    const RPGType tt = tit->second;
+    if (tt == RPGType::FLOAT4 || tt == RPGType::FLOAT8) {
         report_semantic_error(node.line, std::string(op) + ": result field '" + node.target +
-            "' is not a fixed-length character field — numeric, date/time and varying-length "
-            + op + " targets are not supported (their digit-alignment and format-conversion "
-            "semantics have no equivalent here); see TODO.md");
+            "' is a float field — " + op + " is not allowed for float fields");
         return;
     }
-    auto lit = var_lengths_.find(node.target);
-    if (lit == var_lengths_.end() || lit->second <= 0) {
+    const bool targetNumeric = isMoveNumeric(tt);
+    if (!targetNumeric && tt != RPGType::CHAR) {
         report_semantic_error(node.line, std::string(op) + ": result field '" + node.target +
-            "' has no known declared length, which " + op + " needs to align against");
+            "' is not a fixed-length character or numeric field — date/time and varying-length "
+            + op + " targets are not supported (their format-conversion semantics have no "
+            "equivalent here); see TODO.md");
         return;
     }
-    // Factor 2: reject what is statically knowable to be non-character.
-    // A BIF or computed expression is taken at its word as producing a
-    // string — %CHAR/%TRIM/%SUBST and friends all do.
-    std::string srcExpr;
+    // Both paths align against a DECLARED width the result field must have:
+    // characters for a character result, digits for a numeric one.
+    const int dstWidth = targetNumeric ? declaredDigits(node.target)
+                                       : (var_lengths_.count(node.target)
+                                          ? var_lengths_.at(node.target) : 0);
+    if (dstWidth <= 0) {
+        report_semantic_error(node.line, std::string(op) + ": result field '" + node.target +
+            "' has no known declared " + (targetNumeric ? "digit count" : "length") +
+            ", which " + op + " needs to align against");
+        return;
+    }
+    const int dstDec = (targetNumeric && var_decimals_.count(node.target))
+                       ? var_decimals_.at(node.target) : 0;
+
+    // --- Classify factor 2 ---
+    // An identifier resolves through the symbol table; a numeric literal
+    // carries its own digits; anything else (a BIF, a computed expression)
+    // is taken at its word as producing a string, which %CHAR/%TRIM/%SUBST
+    // and friends all do.
+    bool srcNumeric = false;      // factor 2 moves as digits, not characters
+    std::string srcDigitsExpr;    // an RpgDigits expression, when srcNumeric
+    std::string srcCharExpr;      // a std::string expression, otherwise
+
     if (auto* sid = dynamic_cast<Identifier*>(node.source.get())) {
         auto sit = var_types_.find(sid->name);
-        if (sit != var_types_.end() && sit->second != RPGType::CHAR &&
-            sit->second != RPGType::VARCHAR) {
-            report_semantic_error(node.line, std::string(op) + ": factor 2 '" + sid->name +
-                "' is not a character field — " + op + " between character and numeric or "
-                "date/time fields is not supported; see TODO.md");
-            return;
+        const RPGType st = (sit != var_types_.end()) ? sit->second : RPGType::CHAR;
+        if (sit != var_types_.end()) {
+            if (st == RPGType::FLOAT4 || st == RPGType::FLOAT8) {
+                report_semantic_error(node.line, std::string(op) + ": factor 2 '" + sid->name +
+                    "' is a float field — " + op + " is not allowed for float fields");
+                return;
+            }
+            if (!isMoveNumeric(st) && st != RPGType::CHAR && st != RPGType::VARCHAR) {
+                report_semantic_error(node.line, std::string(op) + ": factor 2 '" + sid->name +
+                    "' is a date/time field — " + op + " between date/time and character or "
+                    "numeric fields is not supported; see TODO.md");
+                return;
+            }
         }
-        // A fixed-length factor 2 must be aligned against its DECLARED
-        // length, not whatever shorter string a plain assignment left in
-        // it. VARCHAR is genuinely its current length, so it is left be.
-        auto sln = var_lengths_.find(sid->name);
-        if (sit != var_types_.end() && sit->second == RPGType::CHAR &&
-            sln != var_lengths_.end() && sln->second > 0) {
-            srcExpr = "rpg_fixed_len(" + emitExpr(*node.source) + ", " +
-                      std::to_string(sln->second) + ")";
+        if (isMoveNumeric(st)) {
+            const int sd = declaredDigits(sid->name);
+            if (sd <= 0) {
+                report_semantic_error(node.line, std::string(op) + ": factor 2 '" + sid->name +
+                    "' has no known declared digit count, which " + op + " needs to align "
+                    "against");
+                return;
+            }
+            const int sdec = var_decimals_.count(sid->name) ? var_decimals_.at(sid->name) : 0;
+            srcNumeric = true;
+            srcDigitsExpr = "rpg_digits_of(" + emitExpr(*node.source) + ", " +
+                            std::to_string(sd) + ", " + std::to_string(sdec) + ")";
+        } else if (st == RPGType::CHAR) {
+            // A fixed-length factor 2 must be aligned against its DECLARED
+            // length, not whatever shorter string a plain assignment left
+            // in it. VARCHAR is genuinely its current length, so it is
+            // left be.
+            auto sln = var_lengths_.find(sid->name);
+            if (sln != var_lengths_.end() && sln->second > 0) {
+                srcCharExpr = "rpg_fixed_len(" + emitExpr(*node.source) + ", " +
+                              std::to_string(sln->second) + ")";
+            }
         }
-    } else if (dynamic_cast<IntLiteral*>(node.source.get()) ||
-               dynamic_cast<FloatLiteral*>(node.source.get())) {
+    } else if (auto* iv = dynamic_cast<IntLiteral*>(node.source.get())) {
+        // An integer literal's digit count is exactly the digits written,
+        // so it can align without a declaration behind it.
+        long long v = iv->value;
+        std::string digits = std::to_string(v < 0 ? -v : v);
+        srcNumeric = true;
+        srcDigitsExpr = "RpgDigits{\"" + digits + "\", " + (v < 0 ? "true" : "false") + "}";
+    } else if (dynamic_cast<FloatLiteral*>(node.source.get())) {
+        // A decimal literal is stored here as a double, which has lost the
+        // trailing zeros that decide its digit count — and the digit count
+        // is the whole basis of the alignment. Refused rather than guessed
+        // at: '1.00' and '1.0' move differently and are indistinguishable
+        // by the time they reach codegen.
         report_semantic_error(node.line, std::string(op) +
-            ": factor 2 is a numeric literal — " + op + " is character-to-character in this "
-            "compiler; quote the value to move it as characters");
+            ": factor 2 is a decimal literal — its declared digit count, which " + op +
+            " aligns against, is not recoverable here; move a declared field instead");
         return;
     }
-    if (srcExpr.empty()) srcExpr = emitExpr(*node.source);
+
     emitIndent();
-    out_ << (node.left ? "rpg_movel(" : "rpg_move(") << node.target << ", "
-         << srcExpr << ", " << lit->second << ", "
-         << (node.pad ? "true" : "false") << ");";
+    if (targetNumeric) {
+        if (!srcNumeric) {
+            if (srcCharExpr.empty()) srcCharExpr = emitExpr(*node.source);
+            srcDigitsExpr = "rpg_digits_of_char(" + srcCharExpr + ")";
+        }
+        out_ << (node.left ? "rpg_movel_num(" : "rpg_move_num(") << node.target << ", "
+             << dstWidth << ", " << dstDec << ", " << srcDigitsExpr << ", "
+             << (node.pad ? "true" : "false") << ");";
+    } else {
+        // Numeric factor 2 into a character result moves the digits alone.
+        // Real IBM i also folds the sign into the zone of the result's
+        // rightmost character (an EBCDIC overpunch); ASCII has no such
+        // encoding, and faking one would corrupt the character rather than
+        // carry a sign, so the sign is dropped here — see TODO.md.
+        std::string src = srcNumeric
+            ? "(" + srcDigitsExpr + ").digits"
+            : (srcCharExpr.empty() ? emitExpr(*node.source) : srcCharExpr);
+        out_ << (node.left ? "rpg_movel(" : "rpg_move(") << node.target << ", "
+             << src << ", " << dstWidth << ", "
+             << (node.pad ? "true" : "false") << ");";
+    }
     if (node.line > 0) out_ << " // line " << node.line;
     out_ << "\n";
 }

@@ -492,13 +492,15 @@ can be made exact and refuses the rest outright.
   parsing: `report_semantic_error` (free_bridge.h) reuses
   `report_fixed_format_error`'s stderr channel and error counter, and
   `main.cpp` now re-checks the count once codegen returns.
-- **Character-to-character only.** Numeric, date/time and varying-length
-  results are rejected (Test 171), as is a numeric or date/time factor 2,
-  and so is the date/time-conversion form that puts a format in Factor 1
-  — that one is caught in the transpiler, since it needs no type info
-  (Test 172). Digit-alignment and format-conversion semantics have no
-  representation in this compiler, and approximating them is exactly the
-  silently-wrong-output risk this item was deferred over.
+- **Character-to-character only** *(superseded by item #13, which added
+  the numeric forms)*. Numeric, date/time and varying-length results were
+  rejected here, as was a numeric or date/time factor 2, and so is the
+  date/time-conversion form that puts a format in Factor 1 — that one is
+  caught in the transpiler, since it needs no type info (Test 172).
+  Digit-alignment and format-conversion semantics had no representation
+  in this compiler at the time, and approximating them is exactly the
+  silently-wrong-output risk this item was deferred over. Date/time
+  results and the Factor-1 form are still refused.
 - **New `MoveStmt` AST node** plus a `move_stmt` rule gated the way
   `GOTO`/`TAG` already were — `MOVE`/`MOVEL` likewise have no free-form
   syntax at all (Test 173). The gate flag was renamed `g_allow_goto_tag`
@@ -647,17 +649,86 @@ fits perfectly and **no SQL parsing was added at all**.
   a `SELECT … INTO` host variable, and a `COUNT(*)`, with the `CREATE
   TABLE` continued across two `C+` lines.
 
+**13. `MOVE`/`MOVEL` — numeric operands ✅.** The rest of item #7, and the
+one the deferred list called the most commonly hit in real legacy source.
+The reason it was deferred — "digit-alignment semantics have no
+representation in this compiler" — turned out to be a *runtime* gap, not a
+semantic one: the semantics are exact and citable, they just needed a
+digit string to act on.
+- **The rule that decides everything**: SC09-2508 p.633, "if move
+  operations are specified between numeric fields, the decimal positions
+  specified for the factor 2 field are ignored. For example, if 1.00 is
+  moved into a three-position numeric field with one decimal position,
+  the result is 10.0." So a numeric `MOVE` is not an assignment and not a
+  scaling conversion — it is the *same positional move* the character
+  form already does, run over the field's digits instead of its
+  characters. Neither operand's decimal point participates. Test 191
+  opens with that exact example.
+- **Reducing a numeric to digits is the whole implementation.** A
+  `PACKED`/`ZONED` field is a C++ `double` here, which carries neither a
+  digit count nor a decimal place, so codegen passes both declared
+  numbers in (`var_digits_`/`var_decimals_`, with the same
+  `var_lengths_` fallback `%SIZE` already uses) and
+  `rpg_num_digits(v, digits, dec)` builds the fixed-width digit string.
+  The move then runs positionally on that string exactly as
+  `rpg_move_fixed` does on characters, and the result is read back
+  through the *result* field's decimal places. Same three cases as the
+  character form (factor 2 longer / shorter / equal), same `(P)`
+  behaviour except that the pad character is `'0'` for a numeric result
+  and stays blank for a character one.
+- **`llround`, not a cast**, when scaling by 10^dec — binary floating
+  point lands an exact `1.00` at `99.999999`, and a truncating cast would
+  turn the manual's own worked example into `099`. Found by running it.
+- **The sign rules are asymmetric and are implemented as written**, not
+  approximated: `MOVE` always moves factor 2's rightmost position, which
+  is where the sign lives, so factor 2's sign always wins. `MOVEL`
+  (p.905) "retains the sign of the result field except when factor 2 is
+  as long as or longer than the result field", so a shorter factor 2
+  leaves the result negative if it already was. Test 191 pins all four
+  combinations.
+- **Character→numeric is always positive, and that is the manual's rule
+  rather than a guess.** It asks for a minus sign only when "the zone
+  from the rightmost position of factor 2 is a hexadecimal D", and
+  otherwise a positive one. That zone is EBCDIC; this compiler stores
+  ASCII, where no digit (zone `0x3`) or blank (`0x2`) is ever a D — so
+  the rule *evaluates* to positive here, every time. No overpunch
+  decoding is invented, consistent with how the I-spec reader already
+  refuses `Z`/`D` record-identification code parts. "Blanks are
+  transferred as zeros" is implemented literally, so a `CHAR(5)` holding
+  `'123'` moves the digits `12300` (Test 192).
+- **A character that is not a digit or blank is a data exception**
+  (`%STATUS` 907), matching "if the digit portions are not valid digits,
+  a data exception error occurs" — the moved digits become zeros and the
+  program can test for it (Test 196), rather than the compiler
+  reinterpreting the byte.
+- **Numeric→character drops the sign, and this is the one deviation.**
+  Real IBM i folds it into the EBCDIC zone of the result's rightmost
+  character; in ASCII that byte is a printable character with no zone to
+  spare, so writing one would corrupt the character rather than carry a
+  sign. Digits move, sign does not (Test 193). Flagged here rather than
+  buried because it is the only place this item is not exact.
+- **Still refused, each with its own message**: float operands (the
+  manual disallows them outright — Test 194), date/time results and
+  factor 2s, and a *decimal* literal as factor 2 (Test 195) — it reaches
+  codegen as a `double` having lost the trailing zeros that decide its
+  digit count, and `'1.00'` and `'1.0'` move differently. An *integer*
+  literal is accepted, since the digits written are the digits it has.
+
 ### Fixed C-spec — Deferred Fast-Follow (ranked by real-world necessity)
 Items explicitly deferred (not silently dropped) out of items #1 and #3
 above when each shipped — called out here as their own trackable list
 instead of staying buried in a completed item's writeup:
 
-1. **`MOVE`/`MOVEL` beyond character-to-character.** What item #7 above
-   deliberately left out: numeric results (digit-by-digit alignment
-   against a declared digit count, not string positions), date/time
-   results, and the Factor-1 date-format conversion form. Each is
-   rejected with its own message today rather than approximated. Numeric
-   `MOVE` is the most commonly hit of the three in real legacy source.
+1. **`MOVE`/`MOVEL` date/time conversion.** What items #7 and #13 both
+   left out, and all that remains of this entry now that #13 has shipped
+   the numeric forms: a date, time or timestamp *result* field, a
+   date/time *factor 2*, and the Factor-1 date-format conversion form
+   (`C  *MDY  MOVE  chr  datefld`). Unlike the numeric case, these are
+   genuine format conversions rather than positional moves — the operand
+   list on p.634 spans twelve source/target combinations, each with its
+   own format and 2-/3-/4-digit-year range rules — so they need the
+   date-format machinery, not the digit-string machinery #13 built. Each
+   is rejected with its own message today (Tests 171, 172).
 2. **Named `PLIST`, `*ENTRY PLIST`, and `PARM` factor 1/2.** What item #8
    above left out. A named `PLIST` can be *defined after* the `CALL` that
    references it, so the linear transpiler cannot resolve it the way it
@@ -994,7 +1065,7 @@ member's C-spec to host modern free-format statements.
 | 168 | Fixed C-spec: reject orphan AN line |
 | 169 | Fixed C-spec: reject dangling cond ind line |
 | 170 | Fixed C-spec: MOVE/MOVEL character move |
-| 171 | Fixed C-spec: reject MOVE to numeric field |
+| 171 | Fixed C-spec: reject MOVE to date field |
 | 172 | Fixed C-spec: reject MOVE date/time format |
 | 173 | Free-format: reject MOVE (fixed-format only) |
 | 174 | CALL callee module (NOMAIN) |
@@ -1014,3 +1085,9 @@ member's C-spec to host modern free-format statements.
 | 188 | Fixed C-spec: embedded SQL (C/EXEC SQL) |
 | 189 | Fixed C-spec: reject orphan C/END-EXEC |
 | 190 | Fixed C-spec: reject unterminated EXEC SQL |
+| 191 | Fixed C-spec: MOVE numeric to numeric |
+| 192 | Fixed C-spec: MOVE character to numeric |
+| 193 | Fixed C-spec: MOVE numeric to character |
+| 194 | Fixed C-spec: reject MOVE on float field |
+| 195 | Fixed C-spec: reject MOVE decimal literal |
+| 196 | Fixed C-spec: MOVE invalid digit -> 907 |

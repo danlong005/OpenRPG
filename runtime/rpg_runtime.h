@@ -1096,6 +1096,136 @@ inline void rpg_movel(std::string& dst, const std::string& src, int dstLen, bool
     rpg_move_fixed(dst, src, dstLen, pad, true);
 }
 
+// --- MOVE/MOVEL with a numeric operand ---
+// SC09-2508 "Move Operations" p.633 plus the MOVE (p.884) and MOVEL
+// (p.905) entries. The governing rule is that these are *digit* moves,
+// not value assignments: "If move operations are specified between
+// numeric fields, the decimal positions specified for the factor 2 field
+// are ignored. For example, if 1.00 is moved into a three-position
+// numeric field with one decimal position, the result is 10.0."
+//
+// So a numeric operand is first reduced to the fixed-width digit string
+// its DECLARED digit count and decimal places give it (codegen passes
+// both, since a double carries neither), the move then runs positionally
+// on that string exactly as the character move does, and the result
+// string is finally reinterpreted through the RESULT field's own decimal
+// places. Nothing here looks at either operand's decimal point.
+
+// Exactly `digits` characters: the absolute value scaled by 10^dec, zero
+// padded on the left, keeping the rightmost digits if it overflows (which
+// is the value a field of that declared size could actually hold).
+inline std::string rpg_num_digits(double v, int digits, int dec) {
+    if (digits <= 0) return std::string();
+    double scaled = std::fabs(v);
+    for (int i = 0; i < dec; i++) scaled *= 10.0;
+    // llround, not a truncating cast: the scaling above is binary floating
+    // point, so an exact decimal like 1.00 can arrive as 99.999999 and a
+    // cast would yield "099" — the manual's own worked example, wrong.
+    long long n = std::llround(scaled);
+    std::string s = std::to_string(n);
+    if (static_cast<int>(s.size()) < digits)
+        s = std::string(static_cast<size_t>(digits) - s.size(), '0') + s;
+    else if (static_cast<int>(s.size()) > digits)
+        s = s.substr(s.size() - static_cast<size_t>(digits));
+    return s;
+}
+
+inline double rpg_digits_num(const std::string& d, int dec, bool neg) {
+    double v = 0.0;
+    for (char c : d) v = v * 10.0 + static_cast<double>(c - '0');
+    for (int i = 0; i < dec; i++) v /= 10.0;
+    return neg ? -v : v;
+}
+
+// A factor 2 reduced to (digit string, sign) in one evaluation — so a
+// factor 2 that is a call or a computed expression is not evaluated twice
+// to get its digits and then its sign.
+struct RpgDigits {
+    std::string digits;
+    bool neg;
+};
+
+template <typename T>
+inline RpgDigits rpg_digits_of(T v, int digits, int dec) {
+    double d = static_cast<double>(v);
+    return RpgDigits{rpg_num_digits(d, digits, dec), d < 0};
+}
+
+// Character factor 2 into a numeric result: "the digit portion of each
+// character is converted to its corresponding numeric character and then
+// moved to the result field. Blanks are transferred as zeros."
+//
+// The sign is always positive here, and that is the manual's own rule
+// rather than an assumption: it asks for "a minus zone ... if the zone
+// from the rightmost position of factor 2 is a hexadecimal D (minus
+// zone). However, if the zone ... is not a hexadecimal D, a positive zone
+// is moved". This compiler stores ASCII, where no digit (zone 0x3) or
+// blank (0x2) carries a D zone, so the rule yields positive every time.
+// No EBCDIC low-nibble decoding is attempted for the same reason: a
+// character whose digit portion is not a valid digit is "a data exception
+// error" (status 907), not something to reinterpret.
+inline RpgDigits rpg_digits_of_char(const std::string& s) {
+    std::string out;
+    out.reserve(s.size());
+    for (char c : s) {
+        if (c == ' ') {
+            out += '0';
+        } else if (c >= '0' && c <= '9') {
+            out += c;
+        } else {
+            rpg_status_code() = 907; // decimal data error
+            rpg_error_flag() = true;
+            return RpgDigits{std::string(s.size(), '0'), false};
+        }
+    }
+    return RpgDigits{out, false};
+}
+
+template <typename T>
+inline void rpg_move_num_fixed(T& dst, int dstDigits, int dstDec,
+                               const RpgDigits& src, bool pad, bool left) {
+    if (dstDigits <= 0) return;
+    double cur_val = static_cast<double>(dst);
+    std::string cur = rpg_num_digits(cur_val, dstDigits, dstDec);
+    bool neg = cur_val < 0;
+    int slen = static_cast<int>(src.digits.size());
+    int n = slen > dstDigits ? dstDigits : slen;
+    if (left) {
+        // MOVEL: excess RIGHTMOST digits of factor 2 are not moved; excess
+        // rightmost digits of the result are unchanged unless padded.
+        for (int i = 0; i < n; i++)
+            cur[static_cast<size_t>(i)] = src.digits[static_cast<size_t>(i)];
+        if (pad) for (int i = n; i < dstDigits; i++) cur[static_cast<size_t>(i)] = '0';
+        // "the sign (+ or -) of the result field is retained except when
+        // factor 2 is as long as or longer than the result field. In this
+        // case, the sign of factor 2 is used as the sign of the result."
+        if (slen >= dstDigits) neg = src.neg;
+    } else {
+        // MOVE: excess LEFTMOST digits of factor 2 are not moved; excess
+        // leftmost digits of the result are unchanged unless padded.
+        for (int i = 0; i < n; i++)
+            cur[static_cast<size_t>(dstDigits - n + i)] =
+                src.digits[static_cast<size_t>(slen - n + i)];
+        if (pad) for (int i = 0; i < dstDigits - n; i++) cur[static_cast<size_t>(i)] = '0';
+        // MOVE always moves factor 2's rightmost position, which is where
+        // the sign lives, so factor 2's sign always becomes the result's.
+        neg = src.neg;
+    }
+    dst = static_cast<T>(rpg_digits_num(cur, dstDec, neg));
+}
+
+template <typename T>
+inline void rpg_move_num(T& dst, int dstDigits, int dstDec,
+                         const RpgDigits& src, bool pad) {
+    rpg_move_num_fixed(dst, dstDigits, dstDec, src, pad, false);
+}
+
+template <typename T>
+inline void rpg_movel_num(T& dst, int dstDigits, int dstDec,
+                          const RpgDigits& src, bool pad) {
+    rpg_move_num_fixed(dst, dstDigits, dstDec, src, pad, true);
+}
+
 inline std::string rpg_all(const std::string& pattern, int len = 50) {
     std::string result;
     while (static_cast<int>(result.size()) < len) {

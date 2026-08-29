@@ -167,6 +167,7 @@ private:
     void emitStatements(std::vector<std::unique_ptr<Statement>>& stmts);
     std::string emitExpr(Expression& expr);
     std::string typeToString(RPGType type, int length = 0);
+    int declaredDigits(const std::string& name) const;
     std::string paramTypeToString(const ParamDecl& p);
     std::string paramTypeDefault(const ParamDecl& p);
     int countRequiredParams(const std::vector<ParamDecl>& params);

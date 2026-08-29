@@ -907,7 +907,7 @@ void feedCSpecLine(CSpecRunState& state, const std::string& line, int lineNo) {
             if (!factor1.empty()) {
                 report_fixed_format_error(lineNo, "C-spec: " + opcodeName + " with a date/time "
                     "format in Factor 1 is not supported — this compiler's " + opcodeName +
-                    " is a character move only; see TODO.md");
+                    " moves characters and digits, not date/time conversions; see TODO.md");
                 return;
             }
             if (factor2.empty() || result.empty()) {

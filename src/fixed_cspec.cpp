@@ -300,13 +300,15 @@ static const std::unordered_map<std::string, OpcodeInfo>& opcodeTable() {
         {"MOVE",  {CSpecShape::TRADITIONAL, true}},
         {"MOVEL", {CSpecShape::TRADITIONAL, true}},
 
-        // CALL/PARM — traditional program call. CALL has no free-form
+        // CALL/PLIST/PARM — traditional program call. CALL has no free-form
         // syntax (CALLP replaced it), so like GOTO/TAG/MOVE its bridge
-        // text is gated on g_allow_fixed_only_stmts. PARM contributes no
-        // statement of its own: it feeds the pending CALL, which is why
-        // it cannot carry a conditioning indicator of its own.
-        {"CALL", {CSpecShape::TRADITIONAL, false, true}},
-        {"PARM", {CSpecShape::TRADITIONAL, false, false}},
+        // text is gated on g_allow_fixed_only_stmts. PLIST and PARM are
+        // declarative and contribute no statement of their own — they feed
+        // the CALL that uses them, which is why neither can carry a
+        // conditioning indicator (SC09-2508 p.928/930 forbid one outright).
+        {"CALL",  {CSpecShape::TRADITIONAL, false, true}},
+        {"PLIST", {CSpecShape::TRADITIONAL, false, false}},
+        {"PARM",  {CSpecShape::TRADITIONAL, false, false}},
     };
     return table;
 }
@@ -321,9 +323,6 @@ static const std::unordered_set<std::string>& deferredOpcodes() {
         // columns yet. Listed here only so they earn the "planned"
         // message rather than the never-planned one.
         "ON-EXCP", "XML-SAX",
-        // Named parameter lists (and *ENTRY PLIST) remain deferred — see
-        // TODO.md; CALL with its PARM lines inline is supported.
-        "PLIST",
     };
     return s;
 }
@@ -339,27 +338,65 @@ static const std::unordered_set<std::string>& procOnlyOpcodes() {
     return s;
 }
 
+// The whole statement text for a call plus its parameter list. SC09-2508
+// p.929 numbers the moves a CALL performs around each PARM: on the call,
+// "the contents of the factor 2 field of a PARM operation are copied into
+// the result field"; on return, "the contents of the result field ... are
+// copied into the factor 1 field". Both operands are optional, and the
+// data "is moved in the same way as data is moved using the EVAL
+// operation code" — so each becomes one ordinary assignment bracketing
+// the CALL, and a PARM with neither operand contributes nothing but the
+// argument itself.
+//
+// All of it lands on the CALL's single buffer line: the PARM lines sit
+// *after* the CALL in the source, so their own buffer entries could never
+// hold statements that must run *before* it.
+static std::string buildCallText(const std::string& program,
+                                 const std::vector<CSpecParm>& parms) {
+    std::string pre, args, post;
+    for (size_t i = 0; i < parms.size(); i++) {
+        if (i) args += " : ";
+        args += parms[i].name;
+        if (!parms[i].source.empty())
+            pre += parms[i].name + " = " + parms[i].source + "; ";
+        if (!parms[i].target.empty())
+            post += " " + parms[i].target + " = " + parms[i].name + ";";
+    }
+    std::string text = pre + "CALL " + program;
+    if (!parms.empty()) text += " (" + args + ")";
+    return text + ";" + post;
+}
+
 // Writes a CALL and the PARM lines gathered after it into the CALL's own
 // buffer line, and clears the pending state. Called when the run of PARM
 // lines ends: any other opcode, or the end of the C-spec run.
 static void finishCall(CSpecRunState& state) {
     if (!state.pendingCall) return;
-    std::string text = "CALL " + state.callProgram;
-    if (!state.callParms.empty()) {
-        text += " (";
-        for (size_t i = 0; i < state.callParms.size(); i++) {
-            if (i) text += " : ";
-            text += state.callParms[i];
-        }
-        text += ")";
-    }
-    text += ";";
-    state.bufLines[state.callLineIdx] = wrapCond(state.callCond, text);
+    state.bufLines[state.callLineIdx] =
+        wrapCond(state.callCond, buildCallText(state.callProgram, state.callParms));
     state.pendingCall = false;
     state.callLineIdx = -1;
     state.callProgram.clear();
     state.callCond.clear();
     state.callParms.clear();
+}
+
+// Closes a named PLIST once its run of PARM lines ends. "The PLIST
+// operation must be immediately followed by at least one PARM"
+// (SC09-2508 p.930), so an empty one is an error rather than an empty
+// argument list — it is far more likely a typo'd or misplaced PARM.
+static void finishPlist(CSpecRunState& state) {
+    state.plistSuppress = false;
+    if (!state.inPlist) return;
+    if (!state.plistSawParm) {
+        report_fixed_format_error(state.plistLine, "C-spec: PLIST '" + state.plistName +
+            "' is not followed by any PARM line — a parameter list must declare at least "
+            "one parameter");
+    }
+    state.inPlist = false;
+    state.plistName.clear();
+    state.plistLine = 0;
+    state.plistSawParm = false;
 }
 
 void feedCSpecLine(CSpecRunState& state, const std::string& line, int lineNo) {
@@ -401,6 +438,7 @@ void feedCSpecLine(CSpecRunState& state, const std::string& line, int lineNo) {
         }
         if (marker == '/' && restUp.compare(0, 8, "EXEC SQL") == 0) {
             finishCall(state);
+            finishPlist(state);
             state.inSqlCapture = true;
             state.sqlLineIdx = idx;
             state.sqlLine = lineNo;
@@ -513,7 +551,10 @@ void feedCSpecLine(CSpecRunState& state, const std::string& line, int lineNo) {
     }
     opcodeName = upper(trim(opcodeName));
 
-    if (state.pendingCall && opcodeName != "PARM") finishCall(state);
+    // A PARM run belongs to whichever of the two opened it; anything
+    // else ends it. "A parameter list is ended when an operation other
+    // than PARM is encountered" (SC09-2508 p.930).
+    if (opcodeName != "PARM") { finishCall(state); finishPlist(state); }
 
     // CASxx / CABxx / ENDCS. Handled ahead of the opcode table because the
     // comparison mnemonic is glued onto the opcode itself (`CASGT`), so
@@ -658,11 +699,15 @@ void feedCSpecLine(CSpecRunState& state, const std::string& line, int lineNo) {
     }
 
     if (!cond.empty() && !info.allowsCond) {
-        if (opcodeName == "PARM") {
+        if (opcodeName == "PARM" || opcodeName == "PLIST") {
+            // SC09-2508 p.928/930 forbid these outright ("Conditioning
+            // indicator entries (positions 9 through 11) are not
+            // allowed"), and the reason carries over here: both are
+            // declarative, so there is no statement to wrap in an IF.
             report_fixed_format_error(lineNo,
-                "C-spec: a conditioning indicator cannot be applied to 'PARM' — a PARM line "
-                "is part of the preceding CALL's parameter list, not a statement of its own; "
-                "condition the CALL instead");
+                "C-spec: a conditioning indicator cannot be applied to '" + opcodeName +
+                "' — it declares part of a parameter list rather than being a statement of "
+                "its own; condition the CALL instead");
         } else if (opcodeName == "TAG") {
             report_fixed_format_error(lineNo,
                 "C-spec: a conditioning indicator cannot be applied to 'TAG' — a label is a "
@@ -866,10 +911,19 @@ void feedCSpecLine(CSpecRunState& state, const std::string& line, int lineNo) {
                     "the same way DCL-PR ... EXTPGM does); see TODO.md");
                 return;
             }
+            if (upper(result) == "*ENTRY") {
+                report_fixed_format_error(lineNo, "C-spec: CALL cannot name the *ENTRY "
+                    "parameter list — *ENTRY declares this program's own incoming "
+                    "parameters, not a list to pass to another program");
+                return;
+            }
             if (!result.empty()) {
-                report_fixed_format_error(lineNo, "C-spec: CALL with a named PLIST in the "
-                    "Result field is not supported — list the parameters as PARM lines "
-                    "directly after the CALL instead; see TODO.md");
+                // A named PLIST, which may be defined *later* in the
+                // source than the CALL that uses it — so this call cannot
+                // be assembled now the way an inline PARM run can. Record
+                // the site; flushCSpecRun substitutes the parameter list
+                // once every PLIST has been seen.
+                state.plistCalls.push_back({idx, lineNo, factor2, upper(result), cond});
                 return;
             }
             // Assembled once the PARM lines that follow have been read.
@@ -880,17 +934,40 @@ void feedCSpecLine(CSpecRunState& state, const std::string& line, int lineNo) {
             state.callCond = cond;
             state.callParms.clear();
             return;
-        } else if (opcodeName == "PARM") {
-            if (!state.pendingCall) {
-                report_fixed_format_error(lineNo, "C-spec: PARM with no preceding CALL — this "
-                    "compiler supports PARM lines only as the parameter list of the CALL they "
-                    "follow (named PLISTs are not supported); see TODO.md");
+        } else if (opcodeName == "PLIST") {
+            if (factor1.empty() || !factor2.empty() || !result.empty()) {
+                report_fixed_format_error(lineNo,
+                    "C-spec: PLIST requires the parameter-list name in Factor 1 only");
+                state.plistSuppress = true;
                 return;
             }
-            if (!factor1.empty() || !factor2.empty()) {
-                report_fixed_format_error(lineNo, "C-spec: PARM with a Factor 1 or Factor 2 "
-                    "entry is not supported — only the Result field (the parameter itself) is "
-                    "read; see TODO.md");
+            std::string name = upper(factor1);
+            // *ENTRY is the program's own incoming parameter list, not a
+            // list some CALL in this member uses. It is collected the same
+            // way (so the PARM path is shared) but read back out by
+            // parseFixedFormat, which turns the mainline into a callable
+            // function instead of an int main().
+            if (state.plists.count(name)) {
+                report_fixed_format_error(lineNo, name == "*ENTRY"
+                    ? std::string("C-spec: only one *ENTRY parameter list can be specified "
+                                  "in a program")
+                    : ("C-spec: PLIST '" + name +
+                       "' is already defined — a parameter-list name must be unique"));
+                state.plistSuppress = true;
+                return;
+            }
+            state.plists[name]; // registered now, so a forward CALL resolves
+            state.inPlist = true;
+            state.plistName = name;
+            state.plistLine = lineNo;
+            return; // declarative — contributes no statement
+        } else if (opcodeName == "PARM") {
+            if (state.plistSuppress) return; // its PLIST line already errored
+            state.plistSawParm = true;
+            if (!state.pendingCall && !state.inPlist) {
+                report_fixed_format_error(lineNo, "C-spec: PARM with no preceding CALL or "
+                    "PLIST — a PARM line must immediately follow the CALL or PLIST whose "
+                    "parameter list it belongs to");
                 return;
             }
             if (result.empty()) {
@@ -898,8 +975,52 @@ void feedCSpecLine(CSpecRunState& state, const std::string& line, int lineNo) {
                     "C-spec: PARM requires the parameter name in the Result field");
                 return;
             }
-            state.callParms.push_back(result);
-            return; // contributes to the pending CALL, not a statement of its own
+            // p.929: the Result field is the field whose address is
+            // passed, so it cannot be anything without one. Indicators are
+            // called out by name there; a literal has no storage to pass
+            // and no name to declare. (A named constant is equally
+            // forbidden but is not distinguishable here — it reaches
+            // codegen, which has the symbol table, as an ordinary name.)
+            if (upper(result).compare(0, 3, "*IN") == 0) {
+                report_fixed_format_error(lineNo, "C-spec: PARM cannot pass an indicator ('" +
+                    result + "') as the parameter — use a declared field, and move the "
+                    "indicator into it around the CALL");
+                return;
+            }
+            if (result.front() == '\'' || isdigit((unsigned char)result.front())) {
+                report_fixed_format_error(lineNo, "C-spec: PARM cannot pass the literal " +
+                    result + " as the parameter — RPG passes parameters by address, so the "
+                    "Result field must be a declared field");
+                return;
+            }
+            // p.929: "A literal or named constant cannot be specified in
+            // factor 1" — factor 1 is written to on return, so it needs
+            // storage just as the result field does. Factor 2 is only read
+            // and may be a literal.
+            if (!factor1.empty() &&
+                (factor1.front() == '\'' || isdigit((unsigned char)factor1.front()))) {
+                report_fixed_format_error(lineNo, "C-spec: PARM Factor 1 cannot be the literal "
+                    + factor1 + " — it receives the parameter's value when the call returns, "
+                    "so it must be a field");
+                return;
+            }
+            // p.929 step 4: in the CALLED program, factor 2 is copied into
+            // the result field when control returns to the caller. That is
+            // a copy at *every* exit point — each RETURN plus falling off
+            // the end — which this line-by-line transpiler cannot place.
+            // Factor 1 on an *ENTRY PARM is the entry-time copy (step 3)
+            // and is supported, since it happens once, at the top.
+            if (state.inPlist && state.plistName == "*ENTRY" && !factor2.empty()) {
+                report_fixed_format_error(lineNo, "C-spec: Factor 2 on an *ENTRY PLIST PARM "
+                    "is not supported — it copies the parameter back when the program "
+                    "returns, which would have to happen at every exit point; assign to '" +
+                    result + "' directly instead. Factor 1 (the entry-time copy) does work.");
+                return;
+            }
+            CSpecParm parm{factor1, factor2, result, lineNo};
+            if (state.inPlist) state.plists[state.plistName].push_back(parm);
+            else               state.callParms.push_back(parm);
+            return; // feeds the CALL or PLIST, not a statement of its own
         } else if (opcodeName == "MOVE" || opcodeName == "MOVEL") {
             // Factor 1 on MOVE/MOVEL holds a date/time format for the
             // conversion forms — refused here rather than approximated,
@@ -939,6 +1060,20 @@ void feedCSpecLine(CSpecRunState& state, const std::string& line, int lineNo) {
 
 std::string flushCSpecRun(CSpecRunState& state, int& outStartLine) {
     finishCall(state);
+    finishPlist(state);
+    // Named-PLIST call sites, resolved only now that every PLIST in the
+    // run has been seen — a PLIST is allowed to be defined after the CALL
+    // that names it, so this is the earliest point the parameter list is
+    // knowable. An unresolved name is reported against the CALL's own line.
+    for (const auto& pc : state.plistCalls) {
+        auto it = state.plists.find(pc.plist);
+        if (it == state.plists.end()) {
+            report_fixed_format_error(pc.line, "C-spec: CALL names the parameter list '" +
+                pc.plist + "', which no PLIST line defines");
+            continue;
+        }
+        state.bufLines[pc.bufIdx] = wrapCond(pc.cond, buildCallText(pc.program, it->second));
+    }
     if (state.inCasGroup) {
         report_fixed_format_error(state.casLine,
             "C-spec: CASxx group is not closed by an ENDCS");
@@ -962,7 +1097,13 @@ std::string flushCSpecRun(CSpecRunState& state, int& outStartLine) {
         buf += "\n";
     }
     outStartLine = state.startLine;
+    // PLIST declarations are program-wide, not run-wide: an interleaved
+    // spec type (an O-spec, a /free block) splits the calculations into
+    // several runs, and a PLIST defined in one of them is still in scope
+    // for the rest. Everything else here is genuinely per-run and resets.
+    auto plists = std::move(state.plists);
     state = CSpecRunState();
+    state.plists = std::move(plists);
     return buf;
 }
 

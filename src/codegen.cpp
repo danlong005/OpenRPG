@@ -758,15 +758,48 @@ void CodeGen::visit(Program& node) {
         return;
     }
 
-    // Emit main (use argc/argv when PSDS is declared)
-    if (uses_psds_) {
+    // *ENTRY PLIST: the mainline becomes a callable function rather than
+    // an int main(). RPG passes parameters by address, so each is a T& —
+    // the same signature a caller's traditional CALL synthesizes from its
+    // own PARM operands, which is what lets the two link. The parameters
+    // are declared by ordinary D-specs too, so their local declarations
+    // are suppressed below (entry_params_) and the C++ parameter is the
+    // one storage location, exactly as p.929 describes.
+    if (!node.entry_params.empty()) {
+        std::map<std::string, DclS*> decls;
+        for (auto* st : main_stmts)
+            if (auto* d = dynamic_cast<DclS*>(st)) decls[d->name] = d;
+        std::string params;
+        bool ok = true;
+        for (size_t i = 0; i < node.entry_params.size(); i++) {
+            const std::string& pname = node.entry_params[i].name;
+            auto dit = decls.find(pname);
+            if (dit == decls.end()) {
+                report_semantic_error(node.entry_params[i].line,
+                    "*ENTRY PLIST: parameter '" + pname +
+                    "' is not a declared standalone field — a caller passes it by address, "
+                    "so its type has to come from a D-spec in this member");
+                ok = false;
+                continue;
+            }
+            entry_params_.insert(pname);
+            if (!params.empty()) params += ", ";
+            params += typeToString(dit->second->type, dit->second->length) + "& " + pname;
+        }
+        if (!ok) return;
+        out_ << "void " << node.entry_name << "(" << params << ") {\n";
+        out_ << "    bool rpg_indicators[100] = {};\n";
+        void_return_ = true;
+    } else if (uses_psds_) {
+        // Emit main (use argc/argv when PSDS is declared)
         out_ << "int main(int argc, char* argv[]) {\n";
         out_ << "    (void)argc;\n";
         out_ << "    rpg_psds_init(argv[0]);\n";
+        out_ << "    bool rpg_indicators[100] = {};\n";
     } else {
         out_ << "int main() {\n";
+        out_ << "    bool rpg_indicators[100] = {};\n";
     }
-    out_ << "    bool rpg_indicators[100] = {};\n";
     indent_ = 1;
 
     // Emit DS instance declarations in main
@@ -872,6 +905,17 @@ void CodeGen::visit(Program& node) {
         out_ << "sr__INZSR();\n";
     }
 
+    // *ENTRY PLIST PARM factor 1 (SC09-2508 p.929 step 3): "in the called
+    // procedure, after it receives control and after any normal program
+    // initialization, the contents of the result field of a PARM operation
+    // are copied into the factor 1 field" — hence after *INZSR, before any
+    // executable statement.
+    for (const auto& ep : node.entry_params) {
+        if (ep.target.empty()) continue;
+        emitIndent();
+        out_ << ep.target << " = " << ep.name << ";\n";
+    }
+
     // 4. Emit remaining executable statements — wrap in try/catch if *PSSR exists
     if (pssr_stmt) {
         emitIndent(); out_ << "try {\n"; indent_++;
@@ -888,6 +932,7 @@ void CodeGen::visit(Program& node) {
         indent_--; emitIndent(); out_ << "}\n";
     }
     out_ << "}\n";
+    void_return_ = false;
 }
 
 void CodeGen::visit(DclPR& node) {
@@ -964,6 +1009,7 @@ void CodeGen::visit(DclProc& node) {
 
     std::string ret = node.interface.has_return
         ? typeToString(node.interface.return_type) : "void";
+    void_return_ = !node.interface.has_return;
     out_ << ret << " " << node.name << "(";
     for (size_t i = 0; i < node.interface.params.size(); i++) {
         if (i > 0) out_ << ", ";
@@ -1059,6 +1105,7 @@ void CodeGen::visit(DclProc& node) {
     current_proc_parm_count_ = 0;
     has_nopass_params_ = false;
     current_proc_name_.clear();
+    void_return_ = false;
     out_ << "}\n";
 }
 
@@ -1258,6 +1305,12 @@ void CodeGen::visit(DclS& node) {
 
     // TEMPLATE: skip emission (type definition only, no variable)
     if (node.is_template) return;
+
+    // An *ENTRY PLIST parameter is already declared as this function's own
+    // C++ parameter. Its types are registered above like any other field;
+    // only the local declaration is skipped, so the caller's storage is
+    // what the body reads and writes.
+    if (entry_params_.count(node.name)) return;
 
     // IMPORT: emit as extern declaration
     if (node.is_import) {
@@ -1543,6 +1596,10 @@ void CodeGen::visit(ReturnStmt& node) {
     emitIndent();
     if (node.has_expr) {
         out_ << "return " << emitExpr(*node.expr) << ";\n";
+    } else if (void_return_) {
+        // A bare RETURN in a function with no return value. `node.code` is
+        // main()'s exit status, which a void function has nowhere to put.
+        out_ << "return;\n";
     } else {
         out_ << "return " << node.code << ";\n";
     }

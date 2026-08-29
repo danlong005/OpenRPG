@@ -137,6 +137,16 @@ private:
     int current_proc_parm_count_ = 0;
     bool has_nopass_params_ = false;
     std::string current_proc_name_;
+    // True while emitting a function with no return value, so a bare RPG
+    // RETURN emits `return;` rather than `return 0;` (which does not
+    // compile in a void function). Set for a DCL-PROC with no return type
+    // and for the *ENTRY PLIST entry point.
+    bool void_return_ = false;
+    // *ENTRY PLIST parameter names. These are declared by ordinary D-specs
+    // *and* are the entry function's C++ parameters, so their local
+    // declarations are suppressed — the parameter is the one storage
+    // location the caller's address refers to.
+    std::set<std::string> entry_params_;
     std::string datfmt_; // default date format (e.g., "*ISO", "*USA", "*MDY")
     std::string timfmt_; // default time format
     bool debug_mode_ = false; // emit #line directives for source-level debugging

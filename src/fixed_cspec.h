@@ -1,11 +1,25 @@
 #ifndef RPG_FIXED_CSPEC_H
 #define RPG_FIXED_CSPEC_H
 
+#include <map>
 #include <string>
 #include <vector>
 
 namespace rpg {
 namespace fixed {
+
+// One PARM line. SC09-2508 p.929 gives the Result field as the parameter
+// itself — the field whose *address* is passed — and Factor 1/Factor 2 as
+// optional move operands around the call: on the call, factor 2 is copied
+// into the result field; on return, the result field is copied into
+// factor 1. Both moves are "in the same way as data is moved using the
+// EVAL operation code", so each is one plain assignment.
+struct CSpecParm {
+    std::string target; // Factor 1 — receives the parameter after the call
+    std::string source; // Factor 2 — copied into the parameter before it
+    std::string name;   // Result — the parameter passed by reference
+    int line = 0;       // the PARM's own source line, for diagnostics
+};
 
 // Accumulates a contiguous run of native (column-based) C-spec lines,
 // transpiling each into free-form-equivalent text so the whole run can be
@@ -45,7 +59,37 @@ struct CSpecRunState {
     int callLine = 0;                     // for diagnostics
     std::string callProgram;              // factor 2 literal, quotes included
     std::string callCond;                 // conditioning indicator on the CALL line
-    std::vector<std::string> callParms;   // PARM result fields, in order
+    std::vector<CSpecParm> callParms;     // PARM lines following it, in order
+    // A named PLIST gathering its own PARM lines. PLIST is declarative —
+    // it emits no statement — so unlike CALL it owns no buffer line.
+    bool inPlist = false;
+    std::string plistName;
+    int plistLine = 0;
+    // Set when a PLIST line was rejected. Its PARM lines are then swallowed
+    // silently rather than each reporting itself an orphan — one diagnostic
+    // for one mistake. Cleared by the next non-PARM operation.
+    bool plistSuppress = false;
+    // Whether the open PLIST has seen a PARM line at all, valid or not.
+    // A PARM that was itself rejected still means the list is not empty,
+    // so the "no PARM line" diagnostic stays quiet — one per mistake.
+    bool plistSawParm = false;
+    // Named parameter lists collected so far, keyed by upper-cased name.
+    // Outlives a single run (flushCSpecRun carries it over) because the
+    // calculations of one program can be split into several runs by an
+    // interleaved spec type, and a PLIST is a program-wide declaration.
+    std::map<std::string, std::vector<CSpecParm>> plists;
+    // A CALL that named a PLIST in its Result field. "A named PLIST can
+    // be defined after the CALL that references it", so these cannot be
+    // assembled in line order the way an inline PARM run can — the site
+    // is recorded here and substituted once the run is flushed.
+    struct PendingPlistCall {
+        int bufIdx;
+        int line;
+        std::string program;
+        std::string plist; // upper-cased, to match `plists`
+        std::string cond;
+    };
+    std::vector<PendingPlistCall> plistCalls;
     // A CASxx group in progress. CASxx lines chain like SELECT/WHEN — the
     // first true comparison runs its subroutine — so the group transpiles
     // to an IF/ELSEIF/ELSE chain that ENDCS closes. casOpened is false

@@ -527,7 +527,8 @@ can be made exact and refuses the rest outright.
 **8. `CALL`/`PARM` — traditional program calls ✅.** Old-style program
 calls, pervasive in pre-ILE source and the kind of thing that fails a
 whole member. V1 supports a `CALL` with its `PARM` lines inline
-immediately after it; named `PLIST`s stay deferred (below).
+immediately after it; named `PLIST`s were deferred here and shipped in
+item #14 below.
 - **How a prototype-less call gets a signature**: `CALLP` works because
   `DCL-PR ... EXTPGM` declared the parameter types; a traditional `CALL`
   has no prototype at all. Codegen synthesizes the callee's signature
@@ -552,7 +553,8 @@ immediately after it; named `PLIST`s stay deferred (below).
   between `CALL` and its `PARM`s are fine — they never reach
   `feedCSpecLine`. A conditioning indicator on the `CALL` wraps the whole
   thing; one on a `PARM` is refused, since a `PARM` line is part of the
-  call's parameter list rather than a statement of its own.
+  call's parameter list rather than a statement of its own — SC09-2508
+  p.928 forbids one there outright, which item #14 later confirmed.
 - **New `CallStmt` AST node**, gated on `g_allow_fixed_only_stmts` like
   `GOTO`/`TAG`/`MOVE` — free-form has `CALLP` instead (Test 179). As with
   `MOVE`, this makes `CALL` a lexer keyword, so free-format source can no
@@ -714,10 +716,109 @@ digit string to act on.
   digit count, and `'1.00'` and `'1.0'` move differently. An *integer*
   literal is accepted, since the digits written are the digits it has.
 
+**14. Named `PLIST` and `PARM` factor 1/2 ✅.** The two thirds of the
+deferred `PLIST` entry that did not need any new signature machinery.
+- **A named `PLIST` forces a collect-then-substitute pass**, and that is
+  the whole reason it was deferred: "a parameter list is ended when an
+  operation other than PARM is encountered" (SC09-2508 p.930), but
+  nothing requires the `PLIST` to appear *before* the `CALL` that names
+  it — real source routinely groups every `PLIST` at the bottom. A
+  linear transpiler cannot resolve that in line order, so a `CALL` with a
+  name in its Result field now records its buffer index and is filled in
+  by `flushCSpecRun`, once every `PLIST` in the run has been seen. Test
+  197 puts the definition after all five calls that use it, which is the
+  case that fails without the pass.
+- **`plists` is the one piece of `CSpecRunState` that survives a flush.**
+  A `PLIST` is a program-wide declaration, but a C-spec *run* ends at any
+  interleaved spec type, so a run boundary between the definition and a
+  later use would otherwise lose it. The reverse order — a `CALL` in an
+  earlier run than its `PLIST` — is still refused, since the substitution
+  happens at that earlier run's flush; it gets a real diagnostic naming
+  the list (Test 200), never a silently argument-less call.
+- **`PARM` factor 1/2 turned out to be two plain assignments.** The
+  deferral said the direction semantics were unverified, and p.929
+  settles them: on the call "the contents of the factor 2 field ... are
+  copied into the result field", and on return "the contents of the
+  result field ... are copied into the factor 1 field" — each "in the
+  same way as data is moved using the EVAL operation code". So factor 2
+  is a seed-in and factor 1 a harvest-out, and `buildCallText` brackets
+  the `CALL` with one assignment apiece. Both land on the `CALL`'s own
+  buffer line, because the `PARM` lines sit *after* it in the source and
+  their own entries could never hold statements that must run *before*
+  it. Test 198 runs all three shapes (both operands, factor 2 only,
+  factor 1 only).
+- **Result-field restrictions are enforced, not assumed.** p.929 bars
+  `*IN`/`*INxx`, literals, named constants and table names from a `PARM`
+  Result field, and bars a literal from factor 1 (which is written to on
+  return). Indicators and literals are refused by name (Test 202); a
+  named constant is indistinguishable from an ordinary name at this stage
+  and reaches codegen, which has the symbol table.
+- **One diagnostic per mistake.** A rejected `PLIST` line sets
+  `plistSuppress`, so its orphaned `PARM` lines stay quiet instead of
+  each reporting itself — without it, `*ENTRY PLIST` reported two errors
+  for one cause. Duplicate names (Test 201) and an empty `PLIST` (Test
+  176, repurposed from the old "named PLISTs are rejected" test) each get
+  their own message.
+- **`*ENTRY PLIST` shipped separately** as item #15 — it turned out to be
+  a different problem entirely, and needed a design decision rather than
+  more transpiler work.
+
+**15. `*ENTRY PLIST` ✅.** The last of the deferred `PLIST` entry, and the
+one that was mis-scoped: the old note said it "needs the main-program
+signature machinery", but **there is no such machinery**. `DCL-PI` appears
+only inside `DCL-PROC` in `parser.y`, and a compiled program is an
+`int main()` taking no arguments — free-format has no way to give the main
+program parameters either. So this was never a port; it was a decision
+about what a *program with parameters* compiles to at all.
+- **A member with an `*ENTRY PLIST` compiles to a callable function, not
+  a `main()`.** `void <NAME>(T1&, T2&, ...)`, holding the mainline, with
+  every parameter a reference because RPG passes by address — which is
+  exactly the signature a caller's traditional `CALL` already synthesizes
+  from its own `PARM` operands (item #8), so the two link with no new
+  machinery on the calling side. The alternative, filling parameters from
+  `argv`, was rejected: a process cannot write back to its caller, so the
+  *output* half of `*ENTRY` semantics would be silently lost, and output
+  parameters are the common case in real entry lists.
+- **The name comes from the source file**, upper-cased with directory and
+  extension stripped: `ORD100.rpgle` is reachable as `CALL 'ORD100'`.
+  Fixed-format source has no P-spec to name a procedure with, so the file
+  name is the only thing both sides can agree on. A file name that is not
+  a usable symbol is refused with an explicit "rename the source file"
+  message rather than emitting an uncompilable one. This is why the test
+  callee is `tests/ADDTWO.rpgle` and not a `testNNN` name.
+- **The parameters are declared twice and stored once.** They are ordinary
+  D-spec fields *and* the function's C++ parameters, so codegen registers
+  their types as usual but suppresses the local declaration
+  (`entry_params_`) — leaving the caller's storage as the single location
+  the body reads and writes, which is what p.929's "each parameter field
+  has only one storage location" requires.
+- **Factor 1 works; factor 2 is refused.** p.929 step 3 puts the
+  result→factor 1 copy "after it receives control and after any normal
+  program initialization", so it is emitted once, after `*INZSR`, before
+  the first executable statement. Step 4's factor 2→result copy happens
+  *on return* — at every exit point, each `RETURN` plus falling off the
+  end — which this line-by-line transpiler cannot place, so it is
+  rejected with a message saying to assign to the parameter directly
+  (Test 205).
+- **`NOMAIN` with `*ENTRY` is an error** (Test 199, repurposed): `NOMAIN`
+  discards the mainline, which is the very thing `*ENTRY` turns into the
+  function, so together they compiled to an empty file.
+- **Fixed a pre-existing bug this exposed**: a bare `RETURN` emitted
+  `return 0;` regardless of the enclosing function's return type, so it
+  did not compile inside *any* `void` function — a `DCL-PROC` with no
+  return type already had this, `*ENTRY` just made it unavoidable (a
+  fixed-format mainline almost always ends in `C RETURN`). Codegen now
+  tracks `void_return_` and emits a bare `return;`.
+- Tests 203 (the `ADDTWO` callee) and 204, which calls it twice — once
+  with inline `PARM`s and once through a named `PLIST` defined after the
+  call — so items #14 and #15 meet end to end. 205-207 are the
+  rejections.
+
 ### Fixed C-spec — Deferred Fast-Follow (ranked by real-world necessity)
 Items explicitly deferred (not silently dropped) out of items #1 and #3
 above when each shipped — called out here as their own trackable list
-instead of staying buried in a completed item's writeup:
+instead of staying buried in a completed item's writeup. Entry 2 is now
+closed by items #14 and #15; only the date/time move remains.
 
 1. **`MOVE`/`MOVEL` date/time conversion.** What items #7 and #13 both
    left out, and all that remains of this entry now that #13 has shipped
@@ -729,18 +830,14 @@ instead of staying buried in a completed item's writeup:
    own format and 2-/3-/4-digit-year range rules — so they need the
    date-format machinery, not the digit-string machinery #13 built. Each
    is rejected with its own message today (Tests 171, 172).
-2. **Named `PLIST`, `*ENTRY PLIST`, and `PARM` factor 1/2.** What item #8
-   above left out. A named `PLIST` can be *defined after* the `CALL` that
-   references it, so the linear transpiler cannot resolve it the way it
-   resolves an inline `PARM` run — it needs a collect-then-substitute
-   pass. `*ENTRY PLIST` is the bigger and more common one: it declares a
-   program's own *incoming* parameters, the fixed-format equivalent of
-   `DCL-PI` on the main procedure, so it needs the main-program signature
-   machinery rather than anything in the CALL path. `PARM` factor 1 and
-   factor 2 (the move-in/move-out convenience operands) are refused
-   because their direction semantics were not verified against the
-   manual — a guess there moves data the wrong way silently, which is
-   precisely what this project refuses to ship.
+2. ~~**Named `PLIST`, `*ENTRY PLIST`, and `PARM` factor 1/2.**~~ — done:
+   items #14 and #15 above. The one piece deliberately left behind is
+   **factor 2 on an `*ENTRY` PARM**, the return-time copy back to the
+   caller: it has to happen at every exit point, which a line-by-line
+   transpiler cannot place, and it is refused rather than approximated
+   (Test 205). Doing it properly means a control-flow pass over the
+   mainline — a single exit rewrite, or a scope guard — which is a
+   bigger change than this entry ever covered.
 
 ### ~~Fixed-Format File I/O~~ — Not Planned
 ~~Native record format / INFSR / legacy PLIST-based file I/O~~ — item #4
@@ -1070,7 +1167,7 @@ member's C-spec to host modern free-format statements.
 | 173 | Free-format: reject MOVE (fixed-format only) |
 | 174 | CALL callee module (NOMAIN) |
 | 175 | Fixed C-spec: CALL/PARM program call |
-| 176 | Fixed C-spec: reject named PLIST |
+| 176 | Fixed C-spec: reject PLIST with no PARM |
 | 177 | Fixed C-spec: reject dynamic CALL name |
 | 178 | Fixed C-spec: reject PARM without CALL |
 | 179 | Free-format: reject CALL (fixed-format only) |
@@ -1091,3 +1188,14 @@ member's C-spec to host modern free-format statements.
 | 194 | Fixed C-spec: reject MOVE on float field |
 | 195 | Fixed C-spec: reject MOVE decimal literal |
 | 196 | Fixed C-spec: MOVE invalid digit -> 907 |
+| 197 | Fixed C-spec: named PLIST |
+| 198 | Fixed C-spec: PARM factor 1/factor 2 |
+| 199 | Fixed C-spec: reject *ENTRY with NOMAIN |
+| 200 | Fixed C-spec: reject undefined PLIST name |
+| 201 | Fixed C-spec: reject duplicate PLIST name |
+| 202 | Fixed C-spec: reject literal PARM result |
+| 203 | *ENTRY callee module (ADDTWO) |
+| 204 | Fixed C-spec: *ENTRY PLIST call |
+| 205 | Fixed C-spec: reject *ENTRY PARM factor 2 |
+| 206 | Fixed C-spec: reject undeclared *ENTRY parm |
+| 207 | Fixed C-spec: reject CALL naming *ENTRY |

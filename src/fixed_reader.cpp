@@ -637,9 +637,24 @@ static void handleOSpecLine(Program* program, OSpecState& state,
     state.currentFormat->fields.push_back(f);
 }
 
+// The C++ symbol a member with an *ENTRY PLIST compiles to. A traditional
+// CALL resolves a program name to a same-named function (see codegen's
+// CallStmt), and fixed-format source has no P-spec to name a procedure
+// with, so the member's own file name is what the caller must be able to
+// spell: `CALL 'ORD100'` links to ORD100.rpgle's entry point. Directory
+// and extension are stripped and the name upper-cased, matching how RPG
+// program names are written.
+static std::string entryNameFromFile(const std::string& path) {
+    size_t slash = path.find_last_of("/\\");
+    std::string base = (slash == std::string::npos) ? path : path.substr(slash + 1);
+    size_t dot = base.find_last_of('.');
+    if (dot != std::string::npos && dot > 0) base = base.substr(0, dot);
+    return upper(base);
+}
+
 // --- Main driver ------------------------------------------------------
 
-Program* parseFixedFormat(const std::string& src_text, const std::string& /*filename*/) {
+Program* parseFixedFormat(const std::string& src_text, const std::string& filename) {
     auto* program = new Program();
     std::vector<std::string> lines = splitLines(src_text);
     bool copyOk = true;
@@ -760,6 +775,36 @@ Program* parseFixedFormat(const std::string& src_text, const std::string& /*file
         report_fixed_format_error((int)lines.size(), "D-spec: name continuation ('...') never completed");
     }
     applyHSpecKeywords(program, hSpecTail);
+
+    // *ENTRY PLIST — collected by the C-spec transpiler alongside the named
+    // PLISTs (cState.plists survives each flush), and read back here
+    // because it changes what the whole member compiles to rather than
+    // what any one statement does.
+    auto entry = cState.plists.find("*ENTRY");
+    if (entry != cState.plists.end() && !entry->second.empty()) {
+        if (program->nomain) {
+            // NOMAIN discards the mainline, which is precisely what an
+            // *ENTRY PLIST turns into a callable function — so the two
+            // together would silently compile to nothing at all.
+            report_fixed_format_error(1, "*ENTRY PLIST cannot be combined with NOMAIN — "
+                "*ENTRY already makes this member a callable function rather than a "
+                "standalone program, and NOMAIN would discard its calculations");
+        }
+        std::string name = entryNameFromFile(filename);
+        bool ok = !name.empty() && (isalpha((unsigned char)name[0]) || name[0] == '_');
+        for (char ch : name)
+            if (!isalnum((unsigned char)ch) && ch != '_') ok = false;
+        if (!ok) {
+            report_fixed_format_error(1, "*ENTRY PLIST: this member compiles to a function "
+                "named after its own file, which a caller spells in CALL — but '" + name +
+                "' is not usable as a program name (letters, digits and underscores only). "
+                "Rename the source file.");
+        } else {
+            program->entry_name = name;
+            for (const auto& p : entry->second)
+                program->entry_params.push_back(EntryParam{p.name, p.target, p.line});
+        }
+    }
 
     return program;
 }

@@ -643,14 +643,15 @@ run_test "171" "Fixed C-spec: reject MOVE to date field" "$TESTDIR/test171_fixed
 run_test "172" "Fixed C-spec: reject MOVE date/time format" "$TESTDIR/test172_fixed_cspec_err_move_datefmt.rpgle" "error"
 run_test "173" "Free-format: reject MOVE (fixed-format only)" "$TESTDIR/test173_move_err_free_format.rpgle" "error"
 
-# ── Fixed C-spec: CALL/PARM (inline parameter list) ──────────────────────
+# ── Fixed C-spec: CALL/PLIST/PARM ────────────────────────────────────────
 # See TODO.md "Fixed C-spec — Deferred Fast-Follow" item #3. A traditional
 # CALL has no prototype, so codegen synthesizes the callee's signature
 # from the PARM operands' declared types; 174 is the module it links
-# against (same pattern as tests 48/49). Named PLISTs stay deferred (176).
+# against (same pattern as tests 48/49), and 197-198 link against it too.
+# 176 pins that a PLIST must declare at least one parameter.
 run_test "174" "CALL callee module (NOMAIN)" "$TESTDIR/test174_call_callee_module.rpgle" "compile-only"
 run_test "175" "Fixed C-spec: CALL/PARM program call" "$TESTDIR/test175_fixed_cspec_call_parm.rpgle" "run" "$TMPDIR/test174.o"
-run_test "176" "Fixed C-spec: reject named PLIST" "$TESTDIR/test176_fixed_cspec_err_plist.rpgle" "error"
+run_test "176" "Fixed C-spec: reject PLIST with no PARM" "$TESTDIR/test176_fixed_cspec_err_plist.rpgle" "error"
 run_test "177" "Fixed C-spec: reject dynamic CALL name" "$TESTDIR/test177_fixed_cspec_err_call_dynamic.rpgle" "error"
 run_test "178" "Fixed C-spec: reject PARM without CALL" "$TESTDIR/test178_fixed_cspec_err_parm_orphan.rpgle" "error"
 run_test "179" "Free-format: reject CALL (fixed-format only)" "$TESTDIR/test179_call_err_free_format.rpgle" "error"
@@ -708,6 +709,32 @@ run_test "193" "Fixed C-spec: MOVE numeric to character" "$TESTDIR/test193_fixed
 run_test "194" "Fixed C-spec: reject MOVE on float field" "$TESTDIR/test194_fixed_cspec_err_move_float.rpgle" "error"
 run_test "195" "Fixed C-spec: reject MOVE decimal literal" "$TESTDIR/test195_fixed_cspec_err_move_declit.rpgle" "error"
 run_test "196" "Fixed C-spec: MOVE invalid digit -> 907" "$TESTDIR/test196_fixed_cspec_move_data_exc.rpgle" "run"
+
+# ── Fixed C-spec: named PLIST and PARM factor 1/2 ────────────────────────
+# The rest of TODO.md's deferred item #2. 197 covers a PLIST defined AFTER
+# both CALLs that name it — the case that forces the collect-then-
+# substitute pass, since a linear transpiler cannot resolve it in line
+# order. 198 covers PARM's optional move-in/move-out operands, and
+# 199-202 the rejections that keep a mistake from compiling into a
+# silently different call.
+run_test "197" "Fixed C-spec: named PLIST" "$TESTDIR/test197_fixed_cspec_plist.rpgle" "run" "$TMPDIR/test174.o"
+run_test "198" "Fixed C-spec: PARM factor 1/factor 2" "$TESTDIR/test198_fixed_cspec_parm_f1f2.rpgle" "run" "$TMPDIR/test174.o"
+run_test "199" "Fixed C-spec: reject *ENTRY with NOMAIN" "$TESTDIR/test199_fixed_cspec_err_entry_nomain.rpgle" "error"
+run_test "200" "Fixed C-spec: reject undefined PLIST name" "$TESTDIR/test200_fixed_cspec_err_plist_undef.rpgle" "error"
+run_test "201" "Fixed C-spec: reject duplicate PLIST name" "$TESTDIR/test201_fixed_cspec_err_plist_dup.rpgle" "error"
+run_test "202" "Fixed C-spec: reject literal PARM result" "$TESTDIR/test202_fixed_cspec_err_parm_literal.rpgle" "error"
+
+# ── Fixed C-spec: *ENTRY PLIST ───────────────────────────────────────────
+# A member with an *ENTRY PLIST compiles to a function named after its own
+# FILE — which is why the callee here is tests/ADDTWO.rpgle and not a
+# testNNN name: the file name is the program name a caller spells in CALL.
+# 204 calls it both ways (inline PARMs and a named PLIST defined after the
+# call), so the two halves of this work meet end to end.
+run_test "203" "*ENTRY callee module (ADDTWO)" "$TESTDIR/ADDTWO.rpgle" "compile-only"
+run_test "204" "Fixed C-spec: *ENTRY PLIST call" "$TESTDIR/test204_fixed_cspec_entry_caller.rpgle" "run" "$TMPDIR/test203.o"
+run_test "205" "Fixed C-spec: reject *ENTRY PARM factor 2" "$TESTDIR/test205_fixed_cspec_err_entry_f2.rpgle" "error"
+run_test "206" "Fixed C-spec: reject undeclared *ENTRY parm" "$TESTDIR/test206_fixed_cspec_err_entry_undecl.rpgle" "error"
+run_test "207" "Fixed C-spec: reject CALL naming *ENTRY" "$TESTDIR/test207_fixed_cspec_err_call_entry.rpgle" "error"
 
 # ── Customer / drop-in tests ─────────────────────────────────────────────
 # Drop any .rpgle or .sqlrpgle file into tests/customer/ and it will be

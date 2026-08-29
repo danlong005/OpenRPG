@@ -845,11 +845,29 @@ public:
 
 // --- Program ---
 
+// One *ENTRY PLIST parameter (fixed-format C-spec only). SC09-2508 p.929:
+// the Result field is the parameter itself — the field whose address the
+// caller passes — and Factor 1 receives a copy of it once the called
+// program gets control.
+struct EntryParam {
+    std::string name;   // Result — becomes a by-reference C++ parameter
+    std::string target; // Factor 1 — copied from `name` on entry (may be empty)
+    int line = 0;       // the PARM's own source line, for diagnostics
+};
+
 class Program : public ASTNode {
 public:
     bool nomain = false;
     bool uses_user_const = false; // program references *USER
     std::string main_proc;
+    // *ENTRY PLIST — the program's own incoming parameters. When
+    // entry_params is non-empty the mainline compiles to a function named
+    // entry_name taking these fields by reference, instead of an
+    // int main(), which is what makes the member reachable from another
+    // program's CALL. Fixed-format only: free-format has no way to give
+    // the main program parameters.
+    std::string entry_name;
+    std::vector<EntryParam> entry_params;
     std::string datfmt;
     std::string timfmt;
     std::vector<std::unique_ptr<Statement>> statements;

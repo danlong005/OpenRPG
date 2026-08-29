@@ -632,15 +632,17 @@ run_test "168" "Fixed C-spec: reject orphan AN line" "$TESTDIR/test168_fixed_csp
 run_test "169" "Fixed C-spec: reject dangling cond ind line" "$TESTDIR/test169_fixed_cspec_err_anor_dangling.rpgle" "error"
 
 # ── Fixed C-spec: MOVE/MOVEL ─────────────────────────────────────────────
-# 170 is the character-to-character move; 191-196 the numeric forms (see
-# the block further down). The rejections here are the ones that survive:
-# 171 a date result field and 172 the factor-1 date/time-format form (both
-# still deferred, see TODO.md), 173 that MOVE has no free-format syntax at
-# all. 171 also pins that the check happens in codegen — the transpiler has
-# no symbol table, so only codegen can see an operand's declared type.
+# 170 is the character-to-character move; 191-196 the numeric forms and
+# 208-214 the date/time ones (both blocks further down). The rejections
+# here are the two operand shapes RPG itself does not allow: 171 a date
+# straight into a time (the manual's combination list routes that through
+# a timestamp) and 172 a factor-1 format with no date/time operand for it
+# to describe. 173 pins that MOVE has no free-format syntax at all. 171
+# also pins that the check happens in codegen — the transpiler has no
+# symbol table, so only codegen can see an operand's declared type.
 run_test "170" "Fixed C-spec: MOVE/MOVEL character move" "$TESTDIR/test170_fixed_cspec_move.rpgle" "run"
-run_test "171" "Fixed C-spec: reject MOVE to date field" "$TESTDIR/test171_fixed_cspec_err_move_date.rpgle" "error"
-run_test "172" "Fixed C-spec: reject MOVE date/time format" "$TESTDIR/test172_fixed_cspec_err_move_datefmt.rpgle" "error"
+run_test "171" "Fixed C-spec: reject MOVE date to time" "$TESTDIR/test171_fixed_cspec_err_move_date_time.rpgle" "error"
+run_test "172" "Fixed C-spec: reject MOVE format, no date op" "$TESTDIR/test172_fixed_cspec_err_move_datefmt.rpgle" "error"
 run_test "173" "Free-format: reject MOVE (fixed-format only)" "$TESTDIR/test173_move_err_free_format.rpgle" "error"
 
 # ── Fixed C-spec: CALL/PLIST/PARM ────────────────────────────────────────
@@ -735,6 +737,23 @@ run_test "204" "Fixed C-spec: *ENTRY PLIST call" "$TESTDIR/test204_fixed_cspec_e
 run_test "205" "Fixed C-spec: reject *ENTRY PARM factor 2" "$TESTDIR/test205_fixed_cspec_err_entry_f2.rpgle" "error"
 run_test "206" "Fixed C-spec: reject undeclared *ENTRY parm" "$TESTDIR/test206_fixed_cspec_err_entry_undecl.rpgle" "error"
 run_test "207" "Fixed C-spec: reject CALL naming *ENTRY" "$TESTDIR/test207_fixed_cspec_err_call_entry.rpgle" "error"
+
+# ── Fixed C-spec: MOVE/MOVEL with date/time operands ─────────────────────
+# SC09-2508 "Moving Date-Time Data" (p.405) and the worked examples in the
+# MOVE entry. 208-210 reproduce Figures 287, 288 and 289 value for value,
+# so the manual is the oracle rather than this compiler's own output:
+# 208 the date conversions (including its error-114 case), 209 the
+# separator-free formats, 210 the timestamp. 211 pins that the conversion
+# feeds the SAME positional move the character form uses, in both
+# directions. 212 the runtime conversion failures (status 112, result
+# unchanged). 213-214 the two factor-1 entries that stay refused.
+run_test "208" "Fixed C-spec: MOVE date conversions" "$TESTDIR/test208_fixed_cspec_move_date.rpgle" "run"
+run_test "209" "Fixed C-spec: MOVE date/time no separators" "$TESTDIR/test209_fixed_cspec_move_dt_nosep.rpgle" "run"
+run_test "210" "Fixed C-spec: MOVE timestamp" "$TESTDIR/test210_fixed_cspec_move_timestamp.rpgle" "run"
+run_test "211" "Fixed C-spec: MOVE date alignment/truncation" "$TESTDIR/test211_fixed_cspec_move_dt_align.rpgle" "run"
+run_test "212" "Fixed C-spec: MOVE bad date -> 112" "$TESTDIR/test212_fixed_cspec_move_dt_err.rpgle" "run"
+run_test "213" "Fixed C-spec: reject MOVE *JOBRUN" "$TESTDIR/test213_fixed_cspec_err_move_jobrun.rpgle" "error"
+run_test "214" "Fixed C-spec: reject MOVE time *USA to numeric" "$TESTDIR/test214_fixed_cspec_err_move_usa_num.rpgle" "error"
 
 # ── Customer / drop-in tests ─────────────────────────────────────────────
 # Drop any .rpgle or .sqlrpgle file into tests/customer/ and it will be

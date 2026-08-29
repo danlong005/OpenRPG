@@ -84,13 +84,16 @@ static char* g_dclf_extdesc = nullptr;
 static char* g_dclf_usages = nullptr;
 static char* g_dclf_prefix = nullptr;
 
-static rpg::Statement* make_move(rpg::Expression* src, char* dst, bool left, bool pad) {
+static rpg::Statement* make_move(rpg::Expression* src, char* dst, bool left, bool pad,
+                                 char* fmt = nullptr) {
     if (!g_allow_fixed_only_stmts) {
         yyerror(left ? "MOVEL is not valid in free-format RPG (fixed-format C-spec only)"
                      : "MOVE is not valid in free-format RPG (fixed-format C-spec only)");
     }
-    auto* s = new rpg::MoveStmt(std::unique_ptr<rpg::Expression>(src), dst, left, pad);
+    auto* s = new rpg::MoveStmt(std::unique_ptr<rpg::Expression>(src), dst, left, pad,
+                                fmt ? std::string(fmt) : std::string());
     free(dst);
+    if (fmt) free(fmt);
     return s;
 }
 
@@ -1696,6 +1699,17 @@ move_stmt:
     | KW_MOVE_PAD expression IDENTIFIER SEMICOLON  { $$ = make_move($2, $3, false, true); }
     | KW_MOVEL expression IDENTIFIER SEMICOLON     { $$ = make_move($2, $3, true, false); }
     | KW_MOVEL_PAD expression IDENTIFIER SEMICOLON { $$ = make_move($2, $3, true, true); }
+    /* Factor 1 (a date/time format) rides in a quoted string right after
+       the opcode, keeping the C-spec's own operand order. It cannot simply
+       precede factor 2 unquoted: a format like *MDY/ is not one token, and
+       an unquoted leading literal would collide with a character factor 2
+       (MOVE '02/01/53' D) one token before an LALR(1) parser can tell them
+       apart. The COLON marker resolves that on the token right after the
+       opcode. */
+    | KW_MOVE COLON STRING_LITERAL expression IDENTIFIER SEMICOLON      { $$ = make_move($4, $5, false, false, $3); }
+    | KW_MOVE_PAD COLON STRING_LITERAL expression IDENTIFIER SEMICOLON  { $$ = make_move($4, $5, false, true, $3); }
+    | KW_MOVEL COLON STRING_LITERAL expression IDENTIFIER SEMICOLON     { $$ = make_move($4, $5, true, false, $3); }
+    | KW_MOVEL_PAD COLON STRING_LITERAL expression IDENTIFIER SEMICOLON { $$ = make_move($4, $5, true, true, $3); }
     ;
 
 /* SORTA */

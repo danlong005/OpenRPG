@@ -178,6 +178,7 @@ private:
     std::string emitExpr(Expression& expr);
     std::string typeToString(RPGType type, int length = 0);
     int declaredDigits(const std::string& name) const;
+    std::string declaredDtFormat(const std::string& name, RPGType type) const;
     std::string paramTypeToString(const ParamDecl& p);
     std::string paramTypeDefault(const ParamDecl& p);
     int countRequiredParams(const std::vector<ParamDecl>& params);
@@ -225,6 +226,8 @@ private:
     std::map<std::string, int> var_lengths_; // for CHAR length
     std::map<std::string, int> var_digits_;   // for PACKED/ZONED digit count
     std::map<std::string, int> var_decimals_; // for PACKED/ZONED decimal places (scale)
+    std::map<std::string, std::string> var_datfmt_; // per-field DATFMT (DATE fields)
+    std::map<std::string, std::string> var_timfmt_; // per-field TIMFMT (TIME fields)
     std::set<std::string> has_inz_; // variables with INZ values
     std::set<std::string> array_vars_; // DIM array variables
     std::set<std::string> nopass_procs_; // procs with *NOPASS params

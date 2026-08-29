@@ -1299,6 +1299,8 @@ void CodeGen::visit(DclS& node) {
     var_lengths_[node.name] = node.length;
     var_digits_[node.name] = node.digits;
     var_decimals_[node.name] = node.decimals;
+    if (!node.datfmt.empty()) var_datfmt_[node.name] = node.datfmt;
+    if (!node.timfmt.empty()) var_timfmt_[node.name] = node.timfmt;
     if (node.inz_value) has_inz_.insert(node.name);
     if (node.dim > 0) array_vars_.insert(node.name);
     if (!node.dtaara_name.empty()) dtaara_vars_[node.name] = node.dtaara_name;
@@ -1966,36 +1968,330 @@ int CodeGen::declaredDigits(const std::string& name) const {
     return 0;
 }
 
+// The declared format of a date, time or timestamp field: its own
+// DATFMT/TIMFMT if it has one, else the program-wide default from CTL-OPT
+// or the H-spec, else *ISO. This is what a MOVE/MOVEL with a blank factor
+// 1 uses — "If factor 1 is blank, the format of the Date, Time, or
+// Timestamp field is used" (SC09-2508 p.405). A timestamp has only one
+// format, so it never consults either map.
+std::string CodeGen::declaredDtFormat(const std::string& name, RPGType type) const {
+    if (type == RPGType::TIMESTAMP) return "*ISO";
+    if (type == RPGType::TIME) {
+        auto it = var_timfmt_.find(name);
+        if (it != var_timfmt_.end() && !it->second.empty()) return it->second;
+        return timfmt_.empty() ? "*ISO" : timfmt_;
+    }
+    auto it = var_datfmt_.find(name);
+    if (it != var_datfmt_.end() && !it->second.empty()) return it->second;
+    return datfmt_.empty() ? "*ISO" : datfmt_;
+}
+
+static bool isMoveDt(RPGType t) {
+    return t == RPGType::DATE || t == RPGType::TIME || t == RPGType::TIMESTAMP;
+}
+static int moveDtKind(RPGType t) {
+    return t == RPGType::DATE ? 0 : (t == RPGType::TIME ? 1 : 2);
+}
+static const char* moveDtTypeName(RPGType t) {
+    return t == RPGType::DATE ? "date" : (t == RPGType::TIME ? "time" : "timestamp");
+}
+
+// The separators SC09-2508 allows after a format in factor 1, by operand
+// kind (0 date, 1 time, 2 timestamp) — Tables 13, 15 and 16. The FIRST
+// character of each set is that format's default separator, which is what
+// a factor 1 that names no separator of its own means, so the default
+// needs no second table. A format absent from a kind is not valid for it
+// (*MDY against a time field, say); returning nullptr is what turns a
+// mismatched factor 1 into a compile error instead of a runtime surprise.
+static const char* moveDtSeps(int kind, const std::string& f) {
+    if (kind == 2) return (f == "*ISO") ? "-" : nullptr; // timestamps are *ISO only
+    if (kind == 1) {
+        if (f == "*HMS") return ":.,&";
+        if (f == "*ISO" || f == "*EUR") return ".";
+        if (f == "*JIS" || f == "*USA") return ":";
+        return nullptr;
+    }
+    if (f == "*MDY" || f == "*DMY" || f == "*YMD" || f == "*JUL" ||
+        f == "*CYMD" || f == "*CMDY" || f == "*CDMY" || f == "*LONGJUL") return "/-.,&";
+    if (f == "*ISO" || f == "*JIS") return "-";
+    if (f == "*USA") return "/";
+    if (f == "*EUR") return ".";
+    return nullptr;
+}
+
+// Split a factor 1 entry into its format name and the separator the
+// character operand carries: a trailing 0 means none at all (*MDY0, "the
+// character field does not contain separators"), a trailing separator
+// character overrides the default (*MDY/), and a bare format takes the
+// default. `sep` comes back 0 for "no separators".
+static bool moveDtSplitFmt(const std::string& f1, int kind, const std::string& op,
+                           std::string& name, char& sep, std::string& err) {
+    name = f1;
+    sep = 0;
+    if (name == "*JOBRUN") {
+        err = op + ": factor 1 *JOBRUN takes its format and separator from the runtime job "
+              "attributes (DATFMT/DATSEP/TIMSEP), which this compiler has no equivalent of — "
+              "name the format explicitly instead";
+        return false;
+    }
+    bool noSep = false;
+    char explicitSep = 0;
+    if (name.size() > 1) {
+        char last = name.back();
+        if (last == '0') { noSep = true; name.pop_back(); }
+        else if (!isalnum((unsigned char)last)) { explicitSep = last; name.pop_back(); }
+    }
+    const char* seps = moveDtSeps(kind, name);
+    if (!seps) {
+        err = op + ": factor 1 '" + f1 + "' is not a format this compiler accepts for a " +
+              (kind == 0 ? "date" : (kind == 1 ? "time" : "timestamp")) + " operand" +
+              (kind == 2 ? " (a timestamp is always *ISO)" : "");
+        return false;
+    }
+    if (noSep) {
+        // *USA time is "hh:mm AM" — a 12-hour clock with a suffix, not a
+        // run of digit groups — so it has no separator-free form to ask for.
+        if (kind == 1 && name == "*USA") {
+            err = op + ": factor 1 '" + f1 + "' is not valid — time format *USA is a 12-hour "
+                  "clock with an AM/PM suffix and has no separator-free form";
+            return false;
+        }
+        sep = 0;
+    } else if (explicitSep) {
+        if (std::string(seps).find(explicitSep) == std::string::npos) {
+            err = op + ": factor 1 '" + f1 + "' uses a separator that " + name +
+                  " does not allow (valid separators: " + seps + ")";
+            return false;
+        }
+        sep = explicitSep;
+    } else {
+        sep = seps[0];
+    }
+    return true;
+}
+
+// A C++ character literal for a separator, with 0 meaning "none".
+static std::string moveDtSepLiteral(char sep) {
+    return sep ? (std::string("'") + sep + "'") : std::string("'\\0'");
+}
+
 // MOVE/MOVEL. The fixed-format transpiler that emits these has no symbol
 // table, so this is the first point that can see the operands' declared
 // types. Character-to-character is a positional CHARACTER move; anything
 // with a numeric operand is a positional DIGIT move against declared
-// digit counts, with both operands' decimal positions ignored — see the
-// rpg_move_num family in rpg_runtime.h for the rules and their citations.
-// Date/time operands and the factor-1 date-format conversion form are
-// still refused rather than guessed at (fixed_cspec.cpp catches the
-// factor-1 form earlier, before types are known).
+// digit counts, with both operands' decimal positions ignored; and a
+// date, time or timestamp operand converts through the factor 1 format
+// first and then runs the very same positional move on the text that
+// conversion produces — see the rpg_move_num and rpg_move_dt families in
+// rpg_runtime.h for the rules and their citations.
 void CodeGen::visit(MoveStmt& node) {
     auto tit = var_types_.find(node.target);
-    const char* op = node.left ? "MOVEL" : "MOVE";
+    const std::string op = node.left ? "MOVEL" : "MOVE";
     if (tit == var_types_.end()) {
-        report_semantic_error(node.line, std::string(op) + ": result field '" + node.target +
+        report_semantic_error(node.line, op + ": result field '" + node.target +
             "' is not a declared standalone field — this compiler's " + op +
-            " works on declared character and numeric fields only");
+            " works on declared character, numeric and date/time fields only");
         return;
     }
     const RPGType tt = tit->second;
     if (tt == RPGType::FLOAT4 || tt == RPGType::FLOAT8) {
-        report_semantic_error(node.line, std::string(op) + ": result field '" + node.target +
+        report_semantic_error(node.line, op + ": result field '" + node.target +
             "' is a float field — " + op + " is not allowed for float fields");
+        return;
+    }
+
+    // --- Classify factor 2 up front: the date/time combination table is
+    // decided by BOTH operands' types, so the source has to be resolved
+    // before the result field can be judged.
+    auto* srcId  = dynamic_cast<Identifier*>(node.source.get());
+    auto* srcInt = dynamic_cast<IntLiteral*>(node.source.get());
+    bool srcTyped = false;              // factor 2 is a field with a known type
+    RPGType st = RPGType::CHAR;         // ...and this is it
+    if (srcId) {
+        auto sit = var_types_.find(srcId->name);
+        if (sit != var_types_.end()) { srcTyped = true; st = sit->second; }
+    }
+    if (srcTyped && (st == RPGType::FLOAT4 || st == RPGType::FLOAT8)) {
+        report_semantic_error(node.line, op + ": factor 2 '" + srcId->name +
+            "' is a float field — " + op + " is not allowed for float fields");
+        return;
+    }
+    if (dynamic_cast<FloatLiteral*>(node.source.get())) {
+        // A decimal literal is stored here as a double, which has lost the
+        // trailing zeros that decide its digit count — and the digit count
+        // is the whole basis of the alignment. Refused rather than guessed
+        // at: '1.00' and '1.0' move differently and are indistinguishable
+        // by the time they reach codegen.
+        report_semantic_error(node.line, op +
+            ": factor 2 is a decimal literal — its declared digit count, which " + op +
+            " aligns against, is not recoverable here; move a declared field instead");
+        return;
+    }
+
+    const bool tgtDt = isMoveDt(tt);
+    const bool srcDt = srcTyped && isMoveDt(st);
+
+    // ---------------------------------------------------------------
+    // Date/time/timestamp moves (SC09-2508 "Moving Date-Time Data" p.405)
+    // ---------------------------------------------------------------
+    if (tgtDt || srcDt) {
+        if (tgtDt && srcDt) {
+            // "Factor 1 must be blank if both the source and the target of
+            // the move are Date, Time or Timestamp fields."
+            if (!node.fmt.empty()) {
+                report_semantic_error(node.line, op + ": factor 1 must be blank when both "
+                    "operands are date/time fields — a format describes the character or "
+                    "numeric operand, and there is none here");
+                return;
+            }
+            // The seven allowed same-family pairings. Date and time are
+            // disjoint calendars, so the manual allows neither direction
+            // between them; only the timestamp bridges the two.
+            const bool ok =
+                (tt == RPGType::DATE      && (st == RPGType::DATE || st == RPGType::TIMESTAMP)) ||
+                (tt == RPGType::TIME      && (st == RPGType::TIME || st == RPGType::TIMESTAMP)) ||
+                (tt == RPGType::TIMESTAMP);
+            if (!ok) {
+                report_semantic_error(node.line, op + ": moving a " + moveDtTypeName(st) +
+                    " field to a " + moveDtTypeName(tt) + " field is not one of the "
+                    "combinations RPG allows — go through a timestamp, which carries both");
+                return;
+            }
+            emitIndent();
+            out_ << "rpg_move_dt(" << node.target << ", " << emitExpr(*node.source);
+            // Only a date result can fail: its declared format decides how
+            // many year digits it has, and a 2- or 3-digit year cannot
+            // represent every date.
+            if (tt == RPGType::DATE)
+                out_ << ", \"" << declaredDtFormat(node.target, tt) << "\"";
+            out_ << ");";
+            if (node.line > 0) out_ << " // line " << node.line;
+            out_ << "\n";
+            return;
+        }
+
+        // One operand is date/time, the other character or numeric. Factor
+        // 1 describes the character/numeric side; blank means the date/time
+        // field's own declared format.
+        const RPGType dtType = tgtDt ? tt : st;
+        const std::string dtName = tgtDt ? node.target : srcId->name;
+        const int kind = moveDtKind(dtType);
+        std::string fmtName;
+        char sep = 0;
+        std::string err;
+        const std::string f1 = node.fmt.empty() ? declaredDtFormat(dtName, dtType) : node.fmt;
+        if (!moveDtSplitFmt(f1, kind, op, fmtName, sep, err)) {
+            report_semantic_error(node.line, err);
+            return;
+        }
+
+        if (srcDt) {
+            // --- Date/time/timestamp -> character or numeric ---
+            if (isMoveNumeric(tt)) {
+                const int dstDigits = declaredDigits(node.target);
+                if (dstDigits <= 0) {
+                    report_semantic_error(node.line, op + ": result field '" + node.target +
+                        "' has no known declared digit count, which " + op +
+                        " needs to align against");
+                    return;
+                }
+                if (kind == 1 && fmtName == "*USA") {
+                    report_semantic_error(node.line, op + ": time format *USA is not allowed "
+                        "for movement between a time field and a numeric field — its AM/PM "
+                        "suffix is not a digit");
+                    return;
+                }
+                const int dstDec = var_decimals_.count(node.target)
+                                   ? var_decimals_.at(node.target) : 0;
+                emitIndent();
+                out_ << "rpg_move_dt_num(" << node.target << ", " << dstDigits << ", " << dstDec
+                     << ", " << emitExpr(*node.source) << ", \"" << fmtName << "\", "
+                     << (node.pad ? "true" : "false") << ", "
+                     << (node.left ? "true" : "false") << ");";
+            } else if (tt == RPGType::CHAR) {
+                const int dstLen = var_lengths_.count(node.target)
+                                   ? var_lengths_.at(node.target) : 0;
+                if (dstLen <= 0) {
+                    report_semantic_error(node.line, op + ": result field '" + node.target +
+                        "' has no known declared length, which " + op +
+                        " needs to align against");
+                    return;
+                }
+                emitIndent();
+                out_ << "rpg_move_dt_char(" << node.target << ", " << dstLen << ", "
+                     << emitExpr(*node.source) << ", \"" << fmtName << "\", "
+                     << moveDtSepLiteral(sep) << ", "
+                     << (node.pad ? "true" : "false") << ", "
+                     << (node.left ? "true" : "false") << ");";
+            } else {
+                report_semantic_error(node.line, op + ": result field '" + node.target +
+                    "' is neither a fixed-length character field nor a numeric one — a " +
+                    moveDtTypeName(st) + " can only be moved into those two (or into another "
+                    "date/time field)");
+                return;
+            }
+            if (node.line > 0) out_ << " // line " << node.line;
+            out_ << "\n";
+            return;
+        }
+
+        // --- Character or numeric -> date/time/timestamp ---
+        // The operand is reduced to text at its DECLARED width, and only
+        // as much of it as the format needs is used: "if character or
+        // numeric data is longer than required, only the leftmost data
+        // (rightmost for the MOVE operation) is used."
+        std::string text;
+        if (srcTyped && isMoveNumeric(st)) {
+            const int sd = declaredDigits(srcId->name);
+            if (sd <= 0) {
+                report_semantic_error(node.line, op + ": factor 2 '" + srcId->name +
+                    "' has no known declared digit count, which " + op +
+                    " needs to align against");
+                return;
+            }
+            const int sdec = var_decimals_.count(srcId->name)
+                             ? var_decimals_.at(srcId->name) : 0;
+            text = "rpg_num_digits(" + emitExpr(*node.source) + ", " +
+                   std::to_string(sd) + ", " + std::to_string(sdec) + ")";
+            sep = 0; // a numeric operand never carries separators
+        } else if (srcInt) {
+            long long v = srcInt->value;
+            text = "std::string(\"" + std::to_string(v < 0 ? -v : v) + "\")";
+            sep = 0;
+        } else if (srcTyped && st == RPGType::CHAR) {
+            const int sl = var_lengths_.count(srcId->name) ? var_lengths_.at(srcId->name) : 0;
+            text = sl > 0 ? ("rpg_fixed_len(" + emitExpr(*node.source) + ", " +
+                             std::to_string(sl) + ")")
+                          : emitExpr(*node.source);
+        } else {
+            // A literal, a VARCHAR field or a computed expression: its own
+            // current length is its length, exactly as it is for the
+            // character move.
+            text = emitExpr(*node.source);
+        }
+        emitIndent();
+        out_ << "rpg_move_text_dt(" << node.target << ", " << text << ", \"" << fmtName
+             << "\", " << moveDtSepLiteral(sep) << ", " << (node.left ? "true" : "false")
+             << ", \"" << declaredDtFormat(node.target, tt) << "\");";
+        if (node.line > 0) out_ << " // line " << node.line;
+        out_ << "\n";
+        return;
+    }
+
+    // ---------------------------------------------------------------
+    // Character and numeric moves
+    // ---------------------------------------------------------------
+    if (!node.fmt.empty()) {
+        report_semantic_error(node.line, op + ": factor 1 '" + node.fmt +
+            "' is a date/time format, but neither operand is a date, time or timestamp "
+            "field — factor 1 is blank on a plain character or numeric " + op);
         return;
     }
     const bool targetNumeric = isMoveNumeric(tt);
     if (!targetNumeric && tt != RPGType::CHAR) {
-        report_semantic_error(node.line, std::string(op) + ": result field '" + node.target +
-            "' is not a fixed-length character or numeric field — date/time and varying-length "
-            + op + " targets are not supported (their format-conversion semantics have no "
-            "equivalent here); see TODO.md");
+        report_semantic_error(node.line, op + ": result field '" + node.target +
+            "' is not a fixed-length character or numeric field — varying-length " + op +
+            " targets are not supported; see TODO.md");
         return;
     }
     // Both paths align against a DECLARED width the result field must have:
@@ -2004,7 +2300,7 @@ void CodeGen::visit(MoveStmt& node) {
                                        : (var_lengths_.count(node.target)
                                           ? var_lengths_.at(node.target) : 0);
     if (dstWidth <= 0) {
-        report_semantic_error(node.line, std::string(op) + ": result field '" + node.target +
+        report_semantic_error(node.line, op + ": result field '" + node.target +
             "' has no known declared " + (targetNumeric ? "digit count" : "length") +
             ", which " + op + " needs to align against");
         return;
@@ -2012,7 +2308,6 @@ void CodeGen::visit(MoveStmt& node) {
     const int dstDec = (targetNumeric && var_decimals_.count(node.target))
                        ? var_decimals_.at(node.target) : 0;
 
-    // --- Classify factor 2 ---
     // An identifier resolves through the symbol table; a numeric literal
     // carries its own digits; anything else (a BIF, a computed expression)
     // is taken at its word as producing a string, which %CHAR/%TRIM/%SUBST
@@ -2021,62 +2316,35 @@ void CodeGen::visit(MoveStmt& node) {
     std::string srcDigitsExpr;    // an RpgDigits expression, when srcNumeric
     std::string srcCharExpr;      // a std::string expression, otherwise
 
-    if (auto* sid = dynamic_cast<Identifier*>(node.source.get())) {
-        auto sit = var_types_.find(sid->name);
-        const RPGType st = (sit != var_types_.end()) ? sit->second : RPGType::CHAR;
-        if (sit != var_types_.end()) {
-            if (st == RPGType::FLOAT4 || st == RPGType::FLOAT8) {
-                report_semantic_error(node.line, std::string(op) + ": factor 2 '" + sid->name +
-                    "' is a float field — " + op + " is not allowed for float fields");
-                return;
-            }
-            if (!isMoveNumeric(st) && st != RPGType::CHAR && st != RPGType::VARCHAR) {
-                report_semantic_error(node.line, std::string(op) + ": factor 2 '" + sid->name +
-                    "' is a date/time field — " + op + " between date/time and character or "
-                    "numeric fields is not supported; see TODO.md");
-                return;
-            }
+    if (srcId && srcTyped && isMoveNumeric(st)) {
+        const int sd = declaredDigits(srcId->name);
+        if (sd <= 0) {
+            report_semantic_error(node.line, op + ": factor 2 '" + srcId->name +
+                "' has no known declared digit count, which " + op + " needs to align "
+                "against");
+            return;
         }
-        if (isMoveNumeric(st)) {
-            const int sd = declaredDigits(sid->name);
-            if (sd <= 0) {
-                report_semantic_error(node.line, std::string(op) + ": factor 2 '" + sid->name +
-                    "' has no known declared digit count, which " + op + " needs to align "
-                    "against");
-                return;
-            }
-            const int sdec = var_decimals_.count(sid->name) ? var_decimals_.at(sid->name) : 0;
-            srcNumeric = true;
-            srcDigitsExpr = "rpg_digits_of(" + emitExpr(*node.source) + ", " +
-                            std::to_string(sd) + ", " + std::to_string(sdec) + ")";
-        } else if (st == RPGType::CHAR) {
-            // A fixed-length factor 2 must be aligned against its DECLARED
-            // length, not whatever shorter string a plain assignment left
-            // in it. VARCHAR is genuinely its current length, so it is
-            // left be.
-            auto sln = var_lengths_.find(sid->name);
-            if (sln != var_lengths_.end() && sln->second > 0) {
-                srcCharExpr = "rpg_fixed_len(" + emitExpr(*node.source) + ", " +
-                              std::to_string(sln->second) + ")";
-            }
+        const int sdec = var_decimals_.count(srcId->name) ? var_decimals_.at(srcId->name) : 0;
+        srcNumeric = true;
+        srcDigitsExpr = "rpg_digits_of(" + emitExpr(*node.source) + ", " +
+                        std::to_string(sd) + ", " + std::to_string(sdec) + ")";
+    } else if (srcId && srcTyped && st == RPGType::CHAR) {
+        // A fixed-length factor 2 must be aligned against its DECLARED
+        // length, not whatever shorter string a plain assignment left
+        // in it. VARCHAR is genuinely its current length, so it is
+        // left be.
+        auto sln = var_lengths_.find(srcId->name);
+        if (sln != var_lengths_.end() && sln->second > 0) {
+            srcCharExpr = "rpg_fixed_len(" + emitExpr(*node.source) + ", " +
+                          std::to_string(sln->second) + ")";
         }
-    } else if (auto* iv = dynamic_cast<IntLiteral*>(node.source.get())) {
+    } else if (srcInt) {
         // An integer literal's digit count is exactly the digits written,
         // so it can align without a declaration behind it.
-        long long v = iv->value;
+        long long v = srcInt->value;
         std::string digits = std::to_string(v < 0 ? -v : v);
         srcNumeric = true;
         srcDigitsExpr = "RpgDigits{\"" + digits + "\", " + (v < 0 ? "true" : "false") + "}";
-    } else if (dynamic_cast<FloatLiteral*>(node.source.get())) {
-        // A decimal literal is stored here as a double, which has lost the
-        // trailing zeros that decide its digit count — and the digit count
-        // is the whole basis of the alignment. Refused rather than guessed
-        // at: '1.00' and '1.0' move differently and are indistinguishable
-        // by the time they reach codegen.
-        report_semantic_error(node.line, std::string(op) +
-            ": factor 2 is a decimal literal — its declared digit count, which " + op +
-            " aligns against, is not recoverable here; move a declared field instead");
-        return;
     }
 
     emitIndent();

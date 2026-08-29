@@ -549,8 +549,11 @@ public:
 // the (P) extender asks for it to be blanked. That "unchanged remainder"
 // is why this is not plain assignment and needs the result field's
 // declared length, which only codegen knows (var_lengths_).
-// Character-to-character only — codegen rejects other operand types
-// rather than guessing at numeric/date conversion semantics.
+// A numeric operand moves the same way over the field's DIGITS instead of
+// its characters, and a date/time/timestamp operand converts through the
+// factor 1 format first and then runs that same positional move on the
+// text — so all three forms share one rule. Codegen is where the operand
+// types are checked, since it is the first stage with a symbol table.
 // Fixed-format C-spec only (SC09-2508: no free-form syntax exists for
 // either); see g_allow_fixed_only_stmts in free_bridge.h.
 // CALL — traditional dynamic program call with its parameters supplied by
@@ -580,7 +583,13 @@ public:
     std::string target;
     bool left = false; // MOVEL (left-adjusted) rather than MOVE
     bool pad  = false; // (P) — blank the untouched remainder
-    MoveStmt(std::unique_ptr<Expression> source, std::string target, bool left, bool pad);
+    // Factor 1: the date/time format of whichever operand is the character
+    // or numeric one, with its optional separator still attached (*MDY/,
+    // *ISO0, ...). Empty when the C-spec left factor 1 blank, which the
+    // manual requires whenever both operands are date/time/timestamp.
+    std::string fmt;
+    MoveStmt(std::unique_ptr<Expression> source, std::string target, bool left, bool pad,
+             std::string fmt = std::string());
     void accept(ASTVisitor& visitor) override;
 };
 

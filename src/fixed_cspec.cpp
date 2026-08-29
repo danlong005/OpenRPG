@@ -294,9 +294,11 @@ static const std::unordered_map<std::string, OpcodeInfo>& opcodeTable() {
 
         // MOVE/MOVEL — like GOTO/TAG, no free-form syntax exists, so the
         // MoveStmt text these build is only accepted by parser.y when
-        // g_allow_fixed_only_stmts is set. Character-to-character only;
-        // the operand-type check that enforces that lives in codegen,
-        // the first place with a symbol table. (P) is the one extender.
+        // g_allow_fixed_only_stmts is set. Character, numeric and
+        // date/time operands are all supported; which combinations are
+        // legal is decided in codegen, the first place with a symbol
+        // table. (P) is the one extender. Factor 1, when present, is the
+        // date/time format of the character or numeric operand.
         {"MOVE",  {CSpecShape::TRADITIONAL, true}},
         {"MOVEL", {CSpecShape::TRADITIONAL, true}},
 
@@ -1022,13 +1024,18 @@ void feedCSpecLine(CSpecRunState& state, const std::string& line, int lineNo) {
             else               state.callParms.push_back(parm);
             return; // feeds the CALL or PLIST, not a statement of its own
         } else if (opcodeName == "MOVE" || opcodeName == "MOVEL") {
-            // Factor 1 on MOVE/MOVEL holds a date/time format for the
-            // conversion forms — refused here rather than approximated,
-            // and refusable at this level because it needs no type info.
-            if (!factor1.empty()) {
-                report_fixed_format_error(lineNo, "C-spec: " + opcodeName + " with a date/time "
-                    "format in Factor 1 is not supported — this compiler's " + opcodeName +
-                    " moves characters and digits, not date/time conversions; see TODO.md");
+            // Factor 1 on MOVE/MOVEL is a date/time format naming the shape
+            // of whichever operand is the character or numeric one, with an
+            // optional separator or a trailing 0 for "no separators". It is
+            // passed through verbatim: whether it is a format this compiler
+            // knows, and whether it is even allowed here (the manual
+            // requires factor 1 blank when both operands are date/time
+            // types), both need the declared operand types, so codegen
+            // makes those calls. Only the leading * is checkable here.
+            if (!factor1.empty() && factor1.front() != '*') {
+                report_fixed_format_error(lineNo, "C-spec: " + opcodeName + " Factor 1 '" +
+                    factor1 + "' is not a date/time format — Factor 1 on " + opcodeName +
+                    " is either blank or a format such as *ISO, *MDY/ or *MDY0");
                 return;
             }
             if (factor2.empty() || result.empty()) {
@@ -1041,7 +1048,14 @@ void feedCSpecLine(CSpecRunState& state, const std::string& line, int lineNo) {
                     "(P) extender in this compiler, not '" + extender + "'");
                 return;
             }
-            built = opcodeName + upper(extender) + " " + factor2 + " " + result;
+            // The bridge text carries factor 1 as a quoted string right
+            // after the opcode (see parser.y's move_stmt); a format is
+            // letters, digits and a separator, so it can never need
+            // escaping inside those quotes.
+            std::string f1 = upper(factor1);
+            built = opcodeName + upper(extender) +
+                    (f1.empty() ? "" : (":'" + f1 + "'")) +
+                    " " + factor2 + " " + result;
         } else if (opcodeName == "Z-ADD" || opcodeName == "Z-SUB") {
             if (factor2.empty() || result.empty() || !factor1.empty()) {
                 report_fixed_format_error(lineNo, "C-spec: " + opcodeName +

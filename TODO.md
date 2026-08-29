@@ -90,6 +90,9 @@
 - Date: *ISO, *USA, *EUR, *JIS, *MDY, *DMY, *YMD, *JUL, *CYMD, *CMDY, *CDMY, *LONGJUL
 - Time: *HMS, *ISO, *USA, *EUR, *JIS
 - Timestamp: *ISO, *ISO0
+- On `MOVE`/`MOVEL` a format may also carry its separator (`*MDY/`,
+  `*MDY-`, `*MDY.`, `*MDY,`, `*MDY&`) or a trailing `0` for none at all
+  (`*MDY0`, `*ISO0`) — Tests 208-211. `*JOBRUN` is refused (Test 213).
 
 ### Figurative Constants
 - *BLANKS, *ZEROS, *HIVAL, *LOVAL, *ON, *OFF, *NULL, *INLR, *ALL'x', *OMIT
@@ -814,22 +817,78 @@ about what a *program with parameters* compiles to at all.
   call — so items #14 and #15 meet end to end. 205-207 are the
   rejections.
 
-### Fixed C-spec — Deferred Fast-Follow (ranked by real-world necessity)
-Items explicitly deferred (not silently dropped) out of items #1 and #3
-above when each shipped — called out here as their own trackable list
-instead of staying buried in a completed item's writeup. Entry 2 is now
-closed by items #14 and #15; only the date/time move remains.
+**16. `MOVE`/`MOVEL` date/time conversion ✅.** The last of the deferred
+fast-follow list, and what items #7 and #13 both left out: a date, time or
+timestamp on either side of the move, plus the Factor-1 format form
+(`C  *MDY  MOVE  chr  datefld`) that #7 rejected outright.
+- **It turned out not to be a different kind of move at all.** The reason
+  this was deferred — "genuine format conversions rather than positional
+  moves" — held only for the *conversion*. SC09-2508 p.406 settles the
+  rest: "If character or numeric data is longer than required, only the
+  leftmost data (rightmost for the MOVE operation) is used." That is the
+  same left/right positional rule #7 and #13 already implement. So the
+  conversion produces a text exactly as wide as the format defines, and
+  `rpg_move_fixed`/`rpg_move_num_fixed` then place it unchanged — one
+  new step in front of machinery that already existed, not a second
+  move implementation. Test 211 pins both directions of that.
+- **Thirteen combinations, and the manual lists them by name** (p.405):
+  each of Date/Time/Timestamp to its own type, Date and Time *to* a
+  timestamp, Timestamp *to* a date and to a time, each of the three to
+  character or numeric, and character or numeric to each of the three.
+  Date-to-Time and Time-to-Date are absent, and are refused with a
+  message pointing at the timestamp, which is the only thing that
+  carries both (Test 171, repurposed from #7's date rejection).
+- **Factor 1 is the format of the character or numeric operand, never of
+  the date field.** "Factor 1 must be blank if both the source and the
+  target of the move are Date, Time or Timestamp fields. If factor 1 is
+  blank, the format of the Date, Time, or Timestamp field is used." Both
+  halves are implemented: a factor 1 with two date/time operands is an
+  error (as is a factor 1 with neither — Test 172, likewise repurposed),
+  and a blank one falls back to the field's own DATFMT/TIMFMT, then the
+  H-spec's, then `*ISO`.
+- **A format carries its own separator.** `*MDY/` names one explicitly,
+  `*MDY0` says the character field has none at all, and a bare `*MDY`
+  takes the format's default. Codegen validates the separator against
+  the set the format allows (Tables 13, 15 and 16) — and needs no
+  separate default-separator table, since the default is the first entry
+  in each of those sets. Numeric operands never carry separators, per
+  "If the result field is numeric, separator characters will be removed."
+- **The year-range rules are enforced, not just documented.** A 2-digit
+  year format reaches 1940-2039 and a 3-digit one 1900-2899 (p.193), and
+  a value outside the *result* field's range is error 114 with the result
+  left unchanged — which is what Figure 287's own `*HIVAL` move produces.
+  This is checked even on a plain date-to-date move, where the internal
+  value is format-independent here, so that example reproduces exactly.
+- **Fixed a pre-existing bug this uncovered**: `*CYMD`/`*CMDY`/`*CDMY`
+  were being rendered and parsed as `c/yy/mm/dd` — ten characters with
+  the century digit separated — where Table 15 gives `cyy/mm/dd`, nine,
+  with the century digit joined to the year. The century digit was also
+  treated as a 19xx/20xx flag rather than its documented `1900 + c*100`
+  range. Both were wrong in `%CHAR(date:*CYMD)` and `%DATE(str:*CYMD)`
+  too, so the fix is in the shared legacy helpers, not just the new path.
+- **Fixed-format D-specs now read per-field `DATFMT`/`TIMFMT`.** Only the
+  H-spec forms were parsed before; the free-format `DCL-S` has always
+  had the per-field keywords, and a blank factor 1 needs them.
+- **Still refused, each with its own message**: `*JOBRUN` (Test 213),
+  which takes its format and separator from runtime job attributes this
+  compiler has no equivalent of; time format `*USA` against a numeric
+  field, which the manual disallows outright and whose AM/PM suffix is
+  not a digit anyway (Test 214); and a varying-length result, which was
+  already out of scope for the character form.
+- **`(P)` on a date/time *result* is accepted and does nothing** — there
+  is no remainder to blank in a date field. It still pads a character
+  result the conversion did not fill (Figure 289's `*ISO0` timestamp).
+- Tests 208-210 reproduce Figures 287, 288 and 289 value for value, so
+  the manual is the oracle rather than this compiler's own output. 211 is
+  the alignment/truncation pinning above, 212 the runtime failures
+  (status 112, result unchanged), 213-214 the rejections.
 
-1. **`MOVE`/`MOVEL` date/time conversion.** What items #7 and #13 both
-   left out, and all that remains of this entry now that #13 has shipped
-   the numeric forms: a date, time or timestamp *result* field, a
-   date/time *factor 2*, and the Factor-1 date-format conversion form
-   (`C  *MDY  MOVE  chr  datefld`). Unlike the numeric case, these are
-   genuine format conversions rather than positional moves — the operand
-   list on p.634 spans twelve source/target combinations, each with its
-   own format and 2-/3-/4-digit-year range rules — so they need the
-   date-format machinery, not the digit-string machinery #13 built. Each
-   is rejected with its own message today (Tests 171, 172).
+### Fixed C-spec — Deferred Fast-Follow ✅ (cleared)
+Items explicitly deferred (not silently dropped) out of items #1 and #3
+above when each shipped — kept here as their own trackable list instead of
+staying buried in a completed item's writeup. Both entries are now closed.
+
+1. ~~**`MOVE`/`MOVEL` date/time conversion.**~~ — done: item #16 above.
 2. ~~**Named `PLIST`, `*ENTRY PLIST`, and `PARM` factor 1/2.**~~ — done:
    items #14 and #15 above. The one piece deliberately left behind is
    **factor 2 on an `*ENTRY` PARM**, the return-time copy back to the
@@ -837,7 +896,8 @@ closed by items #14 and #15; only the date/time move remains.
    transpiler cannot place, and it is refused rather than approximated
    (Test 205). Doing it properly means a control-flow pass over the
    mainline — a single exit rewrite, or a scope guard — which is a
-   bigger change than this entry ever covered.
+   bigger change than this entry ever covered. This is the only thing
+   still outstanding from either entry.
 
 ### ~~Fixed-Format File I/O~~ — Not Planned
 ~~Native record format / INFSR / legacy PLIST-based file I/O~~ — item #4
@@ -916,6 +976,128 @@ operations, neither of which item #4 touches.
 |---|---------|
 | 46 | XML-SAX (%HANDLER) |
 | 47 | Remaining CTL-OPT keywords (USRPRF, VALIDATE) |
+
+---
+
+## 🗳 Community-Requested Features (IBM Ideas Portal)
+
+**Source:** <https://ibm-power-systems.ideas.ibm.com/ideas/?category=7078724330326335155>
+Append `&sort=popular&page=N` to walk the list vote-ranked, highest first
+(~290 ideas over 29 pages as of the last pull).
+
+**Last pulled: 2026-08-29** — vote-sorted walk down to a 20-vote floor
+(~60 of ~290 ideas reviewed).
+
+Why this list exists: the portal is a free, continuously-updated, vote-ranked
+backlog of what real RPG shops actually want from the language. IBM marks many
+of the *highest*-voted entries "Not under consideration" — usually because of
+ILE/IBM i compatibility constraints this compiler doesn't carry. Those are the
+**highest**-value entries here, not the lowest: they're things RPG developers
+demonstrably want and will never get from IBM.
+
+### Maintenance rule (followed by the monthly automated re-pull)
+
+1. Walk `…&sort=popular&page=N` from N=1 upward, one page at a time, collecting
+   each idea's title, vote count and IBM status. Stop once vote counts drop
+   below **20** (~6 pages, ~60 ideas). If page 1 comes back *not* vote-ordered,
+   the sort parameter has broken — say so, and walk unsorted pages 1–10 instead.
+2. Diff against **this whole file**, not just this section. Skip anything
+   already covered under Implemented Features, Remaining Work, or Not Planned,
+   or already listed in a tier below. Vote counts drift — refresh them in place
+   rather than adding duplicate rows.
+3. For genuinely new ideas, judge fit by **reading the actual code**
+   (`src/lexer.l`, `src/parser.y`, `src/codegen.cpp`, `runtime/`, `OpenDSPF/`)
+   before estimating effort — don't guess. Keep each row's note concrete and
+   specific to this codebase; effort notes here are first-read judgments against
+   the code, not designs.
+4. Sort into the tiers below. **Tier 1 (IBM declined it, and it's cheap here) is
+   the highest-value tier, not the lowest** — those are things RPG shops
+   demonstrably want and will never get from IBM, because IBM carries ILE/IBM i
+   compatibility constraints this compiler doesn't.
+5. Update the **Last pulled** date in this section's header.
+6. If nothing changed, don't open a PR — just report that. Otherwise commit to a
+   branch `ideas-pull-YYYY-MM` and open a PR against `main` titled
+   `TODO: IBM Ideas portal pull YYYY-MM`, whose body lists what was added, which
+   vote counts moved, and anything deliberately skipped and why. **`TODO.md`
+   only — the re-pull never changes code.**
+
+### Tier 1 — IBM declined it, and it's cheap here
+
+The differentiators. Every row is "Not under consideration" at IBM.
+
+| Votes | Idea | Why it's cheap here |
+|-------|------|---------------------|
+| **93** | RPG block comments (`/* … */`) | Highest-voted RPG idea in the whole portal. One flex rule in `lexer.l` (alongside the existing `"//".*`). Caveat: fixed-format needs separate handling in `fixed_reader.cpp`, where `*` in column 7 is already the comment marker. |
+| **90** | DSPF/PRTF definitions from an open format (XML/JSON) | OpenDSPF *already* compiles DDS → a JSON descriptor. Accepting that JSON as `dspfc` **input** is mostly plumbing — shipping the exact thing IBM declined. |
+| 40 | `%FKEY` built-in function | `rpg_dspf_runtime.h` already decodes `KEY_F(1)`–`KEY_F(24)` into a function-key number; this is a BIF over state already tracked. |
+| 39 | Multiple definitions in one `DCL-S` | Grammar-only change. |
+| 37 | String interpolation | Lexer change + desugar to concatenation in codegen. No runtime work. |
+| 30 | Procedure inside a procedure | Subroutines already codegen as C++ lambdas — the mechanism exists. |
+| 30 | A `NOT IN` operator | `IN` already ships (Test 58). |
+| 28 | Regular-expression BIFs | `std::regex` — the compiler already uses it (`sql_utils.cpp`); generated code would too. |
+| 27 | Relax the `%SUBST` "length exceeds data" error | Diagnostic policy, not new machinery. |
+| 25 | `%CHAR` with `%EDITC` formatting | Both BIFs already ship; this merges them. |
+| 15 | Multiple conditions in one `/IF` directive | Directive handling already lives in the lexer. |
+| 13 | `*TRUE` / `*FALSE` figurative constants | `BOOLEAN` already ships (Test 71). |
+
+### Tier 2 — "Future consideration" at IBM, small-to-medium here
+
+| Votes | Idea | Note |
+|-------|------|------|
+| **93** | Conditional (ternary) operator `?:` in EVAL | Ties for #1 overall. C++ has it natively, so codegen is a passthrough; grammar is the work. |
+| 49 | Keyword parameters in prototyped calls | |
+| 49 | `%SCANRPL` limited to `*FIRST` / `*LAST` occurrence | `SCANRPL` already in `codegen.cpp`. |
+| 48 | `OPTION(*UPPER)` / `OPTION(*LOWER)` on parameters | |
+| 44 | Dynamic strings (declare CHAR without a length) | `CHAR` is already a `std::string`. |
+| 41 | Initialize arrays with `%LIST` | `%LIST` already ships. |
+| 39 | `%XFOOT` over subfields of a DS array | |
+| 38 | BIF for comparing data structures | |
+| 35 | `DEPRECATED` keyword on procedures | Just a compiler warning. |
+| 34 | `%LOOKUP` searching more than one subfield | |
+| 29 | `%REPEAT` BIF | |
+| 28 | Default values for `*NOPASS` / `*OMIT` parameters | |
+| 27 | `%PROGNAME` BIF | |
+| 26 | Binary literals, like the hex form | Hex literals already ship (Test 112). |
+| 22 | Named index of the current `FOR-EACH` iteration | |
+| 22 | Comparison procedure for `SORTA` / `%LOOKUPxx` | |
+| 22 | `WHEN-IS-NOT` on the newer `SELECT` | Needs `SELECT`/`WHEN-IS` first. |
+| 18 | `%SCANRPL` first/last (duplicate filing of the 49-vote entry) | |
+| 16 | `*EMPTY` figurative constant | |
+| 14 | `%HEX` / `%TOHEX` / `%FROMHEX` | |
+| 12 | `/MESSAGE` compiler directive | |
+
+### Larger, but worth their vote count
+
+| Votes | Idea | Note |
+|-------|------|------|
+| 86 | Restrict global-variable use in subprocedures | A `DCL-PROC` keyword plus a codegen-time scope check — the `report_semantic_error` channel built for `MOVE` is the right home. |
+| 45 | `FOR-EACH` over record-level access | RLA over ODBC already ships (Tests 103–108); this is a real but tractable iterator. |
+| 38 / 33 | Consistent null handling / full NULL support | Partly touched by SQL indicator variables; genuinely deep otherwise. |
+
+### Already satisfied here (confirm + document, no work)
+
+| Votes | Idea | Status in this compiler |
+|-------|------|-------------------------|
+| 60 | Make `%DEC()` 2nd & 3rd parms optional | Already true — `%DEC` codegen is `static_cast<double>(…)` and ignores digits/decimals entirely. |
+| 30 | Expand the 16,773,104-byte limit within data structures | No such limit exists here. |
+| 26 | Raise maximum variable length to 4GB | No such limit exists here — strings are `std::string`. |
+
+### Reviewed and not planned
+
+Cross-check against **❌ Not Planned** below before re-adding any of these.
+
+| Votes | Idea | Why not |
+|-------|------|---------|
+| 76 | Rename "ILE/RPG" to "RPG for i" | Not a compiler feature. |
+| 38 / 1 | Native CLOB/BLOB in RPG | Already declined under *Embedded SQL — Not Planned* (LOB support varies wildly by ODBC driver). |
+| 36 | Control joblog writes with `ON-ERROR` | IBM i runtime. |
+| 36 | Mixed-case DB2 column names in DS | IBM i catalog behavior. |
+| 34 | `EXTNAME`/`LIKEREC(*NULL)` SQL indicator subfields | `LIKEREC`/`EXTNAME` options are already Not Planned. |
+| 27 | `*NODEBUGSQL` control option | IBM i compilation directive. |
+| 24 | Exclude hidden fields from externally-described DS | IBM i catalog behavior. |
+| 23 | `DECFLOAT` data type | Needs a real decimal library — large, standalone. |
+| 20 | Better UTF-8 (CCSID 1208) support | `CCSID` is already Not Planned; real work, deep. |
+| 16 | Prohibit changing a program's activation group | Activation groups are parsed for compatibility only. |
 
 ---
 
@@ -1162,8 +1344,8 @@ member's C-spec to host modern free-format statements.
 | 168 | Fixed C-spec: reject orphan AN line |
 | 169 | Fixed C-spec: reject dangling cond ind line |
 | 170 | Fixed C-spec: MOVE/MOVEL character move |
-| 171 | Fixed C-spec: reject MOVE to date field |
-| 172 | Fixed C-spec: reject MOVE date/time format |
+| 171 | Fixed C-spec: reject MOVE date to time |
+| 172 | Fixed C-spec: reject MOVE format, no date operand |
 | 173 | Free-format: reject MOVE (fixed-format only) |
 | 174 | CALL callee module (NOMAIN) |
 | 175 | Fixed C-spec: CALL/PARM program call |
@@ -1199,3 +1381,10 @@ member's C-spec to host modern free-format statements.
 | 205 | Fixed C-spec: reject *ENTRY PARM factor 2 |
 | 206 | Fixed C-spec: reject undeclared *ENTRY parm |
 | 207 | Fixed C-spec: reject CALL naming *ENTRY |
+| 208 | Fixed C-spec: MOVE date conversions (Figure 287) |
+| 209 | Fixed C-spec: MOVE date/time without separators (Figure 288) |
+| 210 | Fixed C-spec: MOVE timestamp (Figure 289) |
+| 211 | Fixed C-spec: MOVE date alignment/truncation |
+| 212 | Fixed C-spec: MOVE invalid date -> 112 |
+| 213 | Fixed C-spec: reject MOVE *JOBRUN |
+| 214 | Fixed C-spec: reject MOVE time *USA to numeric |

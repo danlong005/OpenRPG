@@ -374,6 +374,15 @@ static void handleDSpecLine(Program* program, DSpecState& state,
         if (it != kw.end()) n->like_var = upper(it->second);
         it = kw.find("DIM");
         if (it != kw.end() && !it->second.empty()) n->dim = atoi(it->second.c_str());
+        // Per-field DATFMT/TIMFMT. The H-spec forms already set the
+        // program-wide default; these are the per-field overrides the
+        // free-format DCL-S has always had (ast.h's DclS::datfmt), and
+        // MOVE/MOVEL needs them: with factor 1 blank, "the format of the
+        // Date, Time, or Timestamp field is used" (SC09-2508 p.405).
+        it = kw.find("DATFMT");
+        if (it != kw.end()) n->datfmt = upper(it->second);
+        it = kw.find("TIMFMT");
+        if (it != kw.end()) n->timfmt = upper(it->second);
         program->statements.emplace_back(n);
     }
 }

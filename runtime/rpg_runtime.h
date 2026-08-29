@@ -494,21 +494,18 @@ inline std::string rpg_parse_date_fmt(const std::string& s, const std::string& f
         int doy;
         sscanf(s.c_str(), "%d/%d", &y, &doy);
         rpg_from_day_of_year(y, doy, m, d);
-    } else if (fmt == "*CYMD") {
-        // C/YY/MM/DD  (C: 0=19xx, 1=20xx)
-        int c;
-        sscanf(s.c_str(), "%d/%d/%d/%d", &c, &y, &m, &d);
-        y += (c == 0) ? 1900 : 2000;
-    } else if (fmt == "*CMDY") {
-        // C/MM/DD/YY
-        int c;
-        sscanf(s.c_str(), "%d/%d/%d/%d", &c, &m, &d, &y);
-        y += (c == 0) ? 1900 : 2000;
-    } else if (fmt == "*CDMY") {
-        // C/DD/MM/YY
-        int c;
-        sscanf(s.c_str(), "%d/%d/%d/%d", &c, &d, &m, &y);
-        y += (c == 0) ? 1900 : 2000;
+    } else if (fmt == "*CYMD" || fmt == "*CMDY" || fmt == "*CDMY") {
+        // cyy/mm/dd, cmm/dd/yy, cdd/mm/yy — SC09-2508 Table 15: the
+        // century digit is joined to the group that follows it, not
+        // separated from it, so these are 9 characters, not 10. Note 2
+        // there gives c its full range: c=0 is 1900-1999, c=1 2000-2099,
+        // up to c=9 for 2800-2899 — not a 19xx/20xx flag.
+        int a, b, e;
+        sscanf(s.c_str(), "%3d%*c%2d%*c%2d", &a, &b, &e);
+        int century = 1900 + (a / 100) * 100;
+        if (fmt == "*CYMD")      { y = century + (a % 100); m = b; d = e; }
+        else if (fmt == "*CMDY") { m = a % 100; d = b; y = century + e; }
+        else                     { d = a % 100; m = b; y = century + e; }
     } else {
         return s; // unknown format, pass through
     }
@@ -543,14 +540,11 @@ inline std::string rpg_format_date_fmt(const std::string& iso, const std::string
         int doy = rpg_day_of_year(y, m, d);
         snprintf(buf, sizeof(buf), "%04d/%03d", y, doy);
     } else if (fmt == "*CYMD") {
-        int c = (y >= 2000) ? 1 : 0;
-        snprintf(buf, sizeof(buf), "%d/%02d/%02d/%02d", c, y % 100, m, d);
+        snprintf(buf, sizeof(buf), "%d%02d/%02d/%02d", (y - 1900) / 100, y % 100, m, d);
     } else if (fmt == "*CMDY") {
-        int c = (y >= 2000) ? 1 : 0;
-        snprintf(buf, sizeof(buf), "%d/%02d/%02d/%02d", c, m, d, y % 100);
+        snprintf(buf, sizeof(buf), "%d%02d/%02d/%02d", (y - 1900) / 100, m, d, y % 100);
     } else if (fmt == "*CDMY") {
-        int c = (y >= 2000) ? 1 : 0;
-        snprintf(buf, sizeof(buf), "%d/%02d/%02d/%02d", c, d, m, y % 100);
+        snprintf(buf, sizeof(buf), "%d%02d/%02d/%02d", (y - 1900) / 100, d, m, y % 100);
     } else {
         return iso;
     }
@@ -1224,6 +1218,373 @@ template <typename T>
 inline void rpg_movel_num(T& dst, int dstDigits, int dstDec,
                           const RpgDigits& src, bool pad) {
     rpg_move_num_fixed(dst, dstDigits, dstDec, src, pad, true);
+}
+// --- MOVE/MOVEL with a date, time or timestamp operand ---
+// SC09-2508 "Moving Date-Time Data" p.405, plus MOVE (p.629) and MOVEL
+// (p.650). The manual allows exactly thirteen operand combinations:
+// Date/Time/Timestamp to their own type, Date and Time to Timestamp,
+// Timestamp to Date and to Time, each of the three to character or
+// numeric, and character or numeric to each of the three.
+//
+// Factor 1 "must be blank if both the source and the target of the move
+// are Date, Time or Timestamp fields. If factor 1 is blank, the format of
+// the Date, Time, or Timestamp field is used." Otherwise it names the
+// format of whichever operand is the character or numeric one. Codegen
+// resolves that to (format name, separator) and passes both in; a
+// separator of '\0' is the manual's trailing zero (*MDY0), meaning the
+// character operand carries no separators at all. Numeric operands never
+// carry separators ("If the result field is numeric, separator characters
+// will be removed, prior to the operation"), so codegen passes '\0'.
+//
+// The move itself is still the same positional move the character and
+// numeric forms already do: the conversion produces a fixed-width text
+// exactly as wide as the format defines, and rpg_move_fixed /
+// rpg_move_num_fixed then place it in the result. That is what makes
+// "if character or numeric data is longer than required, only the
+// leftmost data (rightmost for the MOVE operation) is used" fall out
+// rather than needing its own rule.
+
+// Every RPG date and time format is a run of fixed-width digit groups
+// joined by a single separator character, so one digit-layout description
+// covers all of them. The two exceptions are handled on their own below:
+// time *USA (a 12-hour clock with an AM/PM suffix, not a separator) and
+// the timestamp (six separators that are not all the same character).
+inline int rpg_dt_digit_width(int kind, const std::string& f) {
+    if (kind == 2) return 20;                       // timestamp: yyyymmddhhmmss+6
+    if (kind == 1) return 6;                        // time: hhmmss
+    if (f == "*JUL") return 5;                      // yyddd
+    if (f == "*CYMD" || f == "*CMDY" || f == "*CDMY") return 7;   // cyymmdd
+    if (f == "*LONGJUL") return 7;                  // yyyyddd
+    if (f == "*ISO" || f == "*JIS" || f == "*USA" || f == "*EUR") return 8;
+    return 6;                                       // *MDY, *DMY, *YMD
+}
+
+// Offsets into the digit string at which this format's separators fall,
+// and the character each one uses when it is not the caller's separator
+// (only the timestamp needs per-position characters).
+inline int rpg_dt_sep_positions(int kind, const std::string& f, int* pos,
+                                const char** perPos) {
+    *perPos = nullptr;
+    if (kind == 2) {                                // yyyy-mm-dd-hh.mm.ss.mmmmmm
+        pos[0] = 4; pos[1] = 6; pos[2] = 8; pos[3] = 10; pos[4] = 12; pos[5] = 14;
+        *perPos = "---...";
+        return 6;
+    }
+    if (kind == 1) { pos[0] = 2; pos[1] = 4; return 2; }
+    if (f == "*JUL")     { pos[0] = 2; return 1; }
+    if (f == "*LONGJUL") { pos[0] = 4; return 1; }
+    if (f == "*CYMD" || f == "*CMDY" || f == "*CDMY") { pos[0] = 3; pos[1] = 5; return 2; }
+    if (f == "*ISO" || f == "*JIS") { pos[0] = 4; pos[1] = 6; return 2; }
+    pos[0] = 2; pos[1] = 4; return 2;               // *MDY/*DMY/*YMD/*USA/*EUR
+}
+
+// The default separator (Table 13/15/16's "Format (Default Separator)").
+inline char rpg_dt_default_sep(int kind, const std::string& f) {
+    if (kind == 2) return '-';                      // per-position, see above
+    if (kind == 1) return (f == "*ISO" || f == "*EUR") ? '.' : ':';
+    if (f == "*ISO" || f == "*JIS") return '-';
+    if (f == "*EUR") return '.';
+    return '/';
+}
+
+// Full width of the rendered text: digits plus separators, unless the
+// caller asked for none. Time *USA is "hh:mm AM", eight characters, and
+// has no separator-free form.
+inline int rpg_dt_width(int kind, const std::string& f, char sep) {
+    if (kind == 1 && f == "*USA") return 8;
+    int pos[6];
+    const char* perPos;
+    int nsep = rpg_dt_sep_positions(kind, f, pos, &perPos);
+    return rpg_dt_digit_width(kind, f) + (sep ? nsep : 0);
+}
+
+// Days-in-month check, so an impossible date is a status 112 rather than
+// a silently normalized one.
+inline bool rpg_dt_valid_ymd(int y, int m, int d) {
+    if (y < 1 || y > 9999 || m < 1 || m > 12 || d < 1) return false;
+    static const int dim[] = {31,28,31,30,31,30,31,31,30,31,30,31};
+    int mx = dim[m - 1];
+    if (m == 2 && ((y % 4 == 0 && y % 100 != 0) || y % 400 == 0)) mx = 29;
+    return d <= mx;
+}
+
+inline int rpg_dt_num(const std::string& s, int off, int len) {
+    int v = 0;
+    for (int i = 0; i < len; i++) {
+        char c = s[static_cast<size_t>(off + i)];
+        if (c < '0' || c > '9') return -1;
+        v = v * 10 + (c - '0');
+    }
+    return v;
+}
+
+inline std::string rpg_dt_pad(int v, int w) {
+    std::string s = std::to_string(v);
+    if (static_cast<int>(s.size()) < w) s = std::string(static_cast<size_t>(w) - s.size(), '0') + s;
+    return s.substr(s.size() - static_cast<size_t>(w));
+}
+
+// A date's year range is decided by how many year digits its format has
+// (SC09-2508 p.193): 2 digits reach 1940-2039, 3 (the century digit plus
+// two) reach 1900-2899, 4 reach the whole range. A date outside the
+// target format's range is the manual's error 114, not a wrapped year.
+inline int rpg_date_year_digits(const std::string& f) {
+    if (f == "*MDY" || f == "*DMY" || f == "*YMD" || f == "*JUL") return 2;
+    if (f == "*CYMD" || f == "*CMDY" || f == "*CDMY") return 3;
+    return 4;
+}
+
+inline bool rpg_date_fits(const std::string& iso, const std::string& f) {
+    if (iso.size() < 4) return false;
+    int y = rpg_dt_num(iso, 0, 4);
+    switch (rpg_date_year_digits(f)) {
+        case 2:  return y >= 1940 && y <= 2039;
+        case 3:  return y >= 1900 && y <= 2899;
+        default: return y >= 1 && y <= 9999;
+    }
+}
+
+// ISO internal value -> this format's digit string. Returns "" (and sets
+// status 114) when the value cannot be represented in the format.
+inline std::string rpg_dt_digits(const std::string& iso, int kind, const std::string& f) {
+    if (kind == 2) {   // yyyy-mm-dd-hh.mm.ss.mmmmmm -> 20 digits
+        std::string d;
+        for (char c : iso) if (c >= '0' && c <= '9') d += c;
+        d.resize(20, '0');
+        return d;
+    }
+    if (kind == 1) {   // hh:mm:ss -> hhmmss
+        std::string d;
+        for (char c : iso) if (c >= '0' && c <= '9') d += c;
+        d.resize(6, '0');
+        return d;
+    }
+    if (!rpg_date_fits(iso, f)) {
+        rpg_status_code() = 114;   // date mapping error
+        rpg_error_flag() = true;
+        return std::string();
+    }
+    int y = rpg_dt_num(iso, 0, 4), m = rpg_dt_num(iso, 5, 2), d = rpg_dt_num(iso, 8, 2);
+    std::string yy = rpg_dt_pad(y % 100, 2);
+    std::string c  = rpg_dt_pad((y - 1900) / 100, 1);
+    std::string mm = rpg_dt_pad(m, 2), dd = rpg_dt_pad(d, 2);
+    if (f == "*MDY") return mm + dd + yy;
+    if (f == "*DMY") return dd + mm + yy;
+    if (f == "*YMD") return yy + mm + dd;
+    if (f == "*JUL") return yy + rpg_dt_pad(rpg_day_of_year(y, m, d), 3);
+    if (f == "*USA") return mm + dd + rpg_dt_pad(y, 4);
+    if (f == "*EUR") return dd + mm + rpg_dt_pad(y, 4);
+    if (f == "*CYMD") return c + yy + mm + dd;
+    if (f == "*CMDY") return c + mm + dd + yy;
+    if (f == "*CDMY") return c + dd + mm + yy;
+    if (f == "*LONGJUL") return rpg_dt_pad(y, 4) + rpg_dt_pad(rpg_day_of_year(y, m, d), 3);
+    return rpg_dt_pad(y, 4) + mm + dd;   // *ISO, *JIS
+}
+
+// This format's digit string -> ISO internal value. Returns "" (and sets
+// status 112) when the digits are not a valid date or time.
+inline std::string rpg_dt_from_digits(const std::string& g, int kind, const std::string& f) {
+    for (char c : g) if (c < '0' || c > '9') { rpg_status_code() = 112; rpg_error_flag() = true; return std::string(); }
+    char buf[40];
+    if (kind == 2) {
+        int y = rpg_dt_num(g,0,4), mo = rpg_dt_num(g,4,2), d = rpg_dt_num(g,6,2);
+        int h = rpg_dt_num(g,8,2), mi = rpg_dt_num(g,10,2), s = rpg_dt_num(g,12,2);
+        if (!rpg_dt_valid_ymd(y, mo, d) || h > 24 || mi > 59 || s > 59) {
+            rpg_status_code() = 112; rpg_error_flag() = true; return std::string();
+        }
+        snprintf(buf, sizeof(buf), "%04d-%02d-%02d-%02d.%02d.%02d.%s",
+                 y, mo, d, h, mi, s, g.substr(14, 6).c_str());
+        return buf;
+    }
+    if (kind == 1) {
+        int h = rpg_dt_num(g,0,2), mi = rpg_dt_num(g,2,2), s = rpg_dt_num(g,4,2);
+        if (h > 24 || mi > 59 || s > 59) {
+            rpg_status_code() = 112; rpg_error_flag() = true; return std::string();
+        }
+        snprintf(buf, sizeof(buf), "%02d:%02d:%02d", h, mi, s);
+        return buf;
+    }
+    int y = 0, m = 0, d = 0, doy = 0;
+    // A 2-digit year reaches 1940-2039; a century digit c reaches
+    // 1900+c*100 .. 1999+c*100 (SC09-2508 Table 15 note 2).
+    if (f == "*MDY")       { m = rpg_dt_num(g,0,2); d = rpg_dt_num(g,2,2); y = rpg_dt_num(g,4,2); y += (y < 40) ? 2000 : 1900; }
+    else if (f == "*DMY")  { d = rpg_dt_num(g,0,2); m = rpg_dt_num(g,2,2); y = rpg_dt_num(g,4,2); y += (y < 40) ? 2000 : 1900; }
+    else if (f == "*YMD")  { y = rpg_dt_num(g,0,2); m = rpg_dt_num(g,2,2); d = rpg_dt_num(g,4,2); y += (y < 40) ? 2000 : 1900; }
+    else if (f == "*JUL")  { y = rpg_dt_num(g,0,2); doy = rpg_dt_num(g,2,3); y += (y < 40) ? 2000 : 1900; }
+    else if (f == "*USA")  { m = rpg_dt_num(g,0,2); d = rpg_dt_num(g,2,2); y = rpg_dt_num(g,4,4); }
+    else if (f == "*EUR")  { d = rpg_dt_num(g,0,2); m = rpg_dt_num(g,2,2); y = rpg_dt_num(g,4,4); }
+    else if (f == "*CYMD") { y = 1900 + rpg_dt_num(g,0,1) * 100 + rpg_dt_num(g,1,2); m = rpg_dt_num(g,3,2); d = rpg_dt_num(g,5,2); }
+    else if (f == "*CMDY") { y = 1900 + rpg_dt_num(g,0,1) * 100; m = rpg_dt_num(g,1,2); d = rpg_dt_num(g,3,2); y += rpg_dt_num(g,5,2); }
+    else if (f == "*CDMY") { y = 1900 + rpg_dt_num(g,0,1) * 100; d = rpg_dt_num(g,1,2); m = rpg_dt_num(g,3,2); y += rpg_dt_num(g,5,2); }
+    else if (f == "*LONGJUL") { y = rpg_dt_num(g,0,4); doy = rpg_dt_num(g,4,3); }
+    else                   { y = rpg_dt_num(g,0,4); m = rpg_dt_num(g,4,2); d = rpg_dt_num(g,6,2); }
+    if (doy > 0) {
+        bool leap = (y % 4 == 0 && y % 100 != 0) || (y % 400 == 0);
+        if (doy > (leap ? 366 : 365)) { rpg_status_code() = 112; rpg_error_flag() = true; return std::string(); }
+        rpg_from_day_of_year(y, doy, m, d);
+    }
+    if (!rpg_dt_valid_ymd(y, m, d)) {
+        rpg_status_code() = 112; rpg_error_flag() = true; return std::string();
+    }
+    snprintf(buf, sizeof(buf), "%04d-%02d-%02d", y, m, d);
+    return buf;
+}
+
+// Rendered text for a date/time/timestamp, exactly rpg_dt_width wide.
+inline std::string rpg_dt_text(const std::string& iso, int kind,
+                               const std::string& f, char sep) {
+    if (kind == 1 && f == "*USA") {
+        int h = rpg_dt_num(iso, 0, 2), mi = rpg_dt_num(iso, 3, 2);
+        const char* ap = (h >= 12) ? "PM" : "AM";
+        int h12 = h % 12; if (h12 == 0) h12 = 12;
+        char buf[16];
+        snprintf(buf, sizeof(buf), "%02d%c%02d %s", h12, sep ? sep : ':', mi, ap);
+        return buf;
+    }
+    std::string g = rpg_dt_digits(iso, kind, f);
+    if (g.empty()) return g;
+    if (!sep) return g;
+    int pos[6];
+    const char* perPos;
+    int nsep = rpg_dt_sep_positions(kind, f, pos, &perPos);
+    std::string out;
+    int prev = 0;
+    for (int i = 0; i < nsep; i++) {
+        out += g.substr(static_cast<size_t>(prev), static_cast<size_t>(pos[i] - prev));
+        out += perPos ? perPos[i] : sep;
+        prev = pos[i];
+    }
+    out += g.substr(static_cast<size_t>(prev));
+    return out;
+}
+
+// The inverse: text of exactly rpg_dt_width characters back to the ISO
+// internal value. Separator characters are checked to be where the format
+// puts them ("separator characters must be valid for the specified
+// format"), so a mis-shaped field is a status 112 rather than digits read
+// out of position.
+inline std::string rpg_dt_parse(const std::string& t, int kind,
+                                const std::string& f, char sep) {
+    if (kind == 1 && f == "*USA") {
+        int h = rpg_dt_num(t, 0, 2), mi = rpg_dt_num(t, 3, 2);
+        if (h < 0 || mi < 0 || h > 12 || mi > 59) { rpg_status_code() = 112; rpg_error_flag() = true; return std::string(); }
+        char ap = t.size() > 6 ? static_cast<char>(toupper((unsigned char)t[6])) : 'A';
+        if (ap == 'P' && h != 12) h += 12;
+        if (ap == 'A' && h == 12) h = 0;
+        char buf[16];
+        snprintf(buf, sizeof(buf), "%02d:%02d:00", h, mi);
+        return buf;
+    }
+    std::string g;
+    if (!sep) {
+        g = t;
+    } else {
+        int pos[6];
+        const char* perPos;
+        int nsep = rpg_dt_sep_positions(kind, f, pos, &perPos);
+        int prev = 0, take = 0;
+        for (int i = 0; i < nsep; i++) {
+            int n = pos[i] - prev;
+            g += t.substr(static_cast<size_t>(take), static_cast<size_t>(n));
+            take += n;
+            char want = perPos ? perPos[i] : sep;
+            if (static_cast<size_t>(take) >= t.size() || t[static_cast<size_t>(take)] != want) {
+                rpg_status_code() = 112; rpg_error_flag() = true; return std::string();
+            }
+            take++;
+            prev = pos[i];
+        }
+        g += t.substr(static_cast<size_t>(take));
+    }
+    return rpg_dt_from_digits(g, kind, f);
+}
+
+// --- The moves themselves ---
+// Kind and internal value are read off the operand's own type, so the
+// combination table is enforced by which overloads exist plus codegen's
+// own check (which is what produces the diagnostic).
+inline int rpg_dt_kind(const RpgDate&)      { return 0; }
+inline int rpg_dt_kind(const RpgTime&)      { return 1; }
+inline int rpg_dt_kind(const RpgTimestamp&) { return 2; }
+
+// Date/Time/Timestamp -> character. The conversion yields exactly the
+// format's width; the positional character move then places it.
+template <typename D>
+inline void rpg_move_dt_char(std::string& dst, int dstLen, const D& src,
+                             const std::string& f, char sep, bool pad, bool left) {
+    std::string t = rpg_dt_text(src.value, rpg_dt_kind(src), f, sep);
+    if (t.empty()) return;                  // conversion failed; result unchanged
+    rpg_move_fixed(dst, t, dstLen, pad, left);
+}
+
+// Date/Time/Timestamp -> numeric. Same conversion with separators removed
+// ("If the result field is numeric, separator characters will be removed,
+// prior to the operation"), then the positional digit move.
+template <typename T, typename D>
+inline void rpg_move_dt_num(T& dst, int dstDigits, int dstDec, const D& src,
+                            const std::string& f, bool pad, bool left) {
+    std::string t = rpg_dt_text(src.value, rpg_dt_kind(src), f, '\0');
+    if (t.empty()) return;
+    rpg_move_num_fixed(dst, dstDigits, dstDec, RpgDigits{t, false}, pad, left);
+}
+
+// Character or numeric -> Date/Time/Timestamp. `text` is the operand at
+// its declared width (a character field padded to its declared length, a
+// numeric one reduced to its declared digits). Only as much of it as the
+// format needs is used, taken from the left for MOVEL and from the right
+// for MOVE. `dstFmt` is the RESULT field's own declared format: the
+// internal value is always ISO here, but a 2- or 3-digit-year result
+// format still cannot represent every date.
+template <typename D>
+inline void rpg_move_text_dt(D& dst, const std::string& text,
+                             const std::string& f, char sep, bool left,
+                             const std::string& dstFmt) {
+    int kind = rpg_dt_kind(dst);
+    int need = rpg_dt_width(kind, f, sep);
+    int have = static_cast<int>(text.size());
+    if (have < need) {                       // not a valid representation
+        rpg_status_code() = 112; rpg_error_flag() = true; return;
+    }
+    std::string piece = left ? text.substr(0, static_cast<size_t>(need))
+                             : text.substr(static_cast<size_t>(have - need));
+    std::string iso = rpg_dt_parse(piece, kind, f, sep);
+    if (iso.empty()) return;
+    if (kind == 0 && !rpg_date_fits(iso, dstFmt)) {
+        rpg_status_code() = 114; rpg_error_flag() = true; return;
+    }
+    dst.value = iso;
+}
+
+// Date/Time/Timestamp -> Date/Time/Timestamp: factor 1 must be blank, and
+// the internal representation is format-independent here, so the seven
+// allowed pairings are copies or field extractions rather than
+// conversions. `dstFmt` still gates a date result, since its declared
+// format is what decides whether the value is representable at all
+// (Figure 287 moves *HIVAL into a *YMD date and gets error 114).
+inline void rpg_move_dt(RpgDate& dst, const RpgDate& src, const std::string& dstFmt) {
+    if (!rpg_date_fits(src.value, dstFmt)) { rpg_status_code() = 114; rpg_error_flag() = true; return; }
+    dst.value = src.value;
+}
+inline void rpg_move_dt(RpgDate& dst, const RpgTimestamp& src, const std::string& dstFmt) {
+    std::string iso = src.value.substr(0, 10);
+    if (!rpg_date_fits(iso, dstFmt)) { rpg_status_code() = 114; rpg_error_flag() = true; return; }
+    dst.value = iso;
+}
+inline void rpg_move_dt(RpgTime& dst, const RpgTime& src) { dst.value = src.value; }
+inline void rpg_move_dt(RpgTime& dst, const RpgTimestamp& src) {
+    dst.value = src.value.substr(11, 2) + ":" + src.value.substr(14, 2) + ":" + src.value.substr(17, 2);
+}
+inline void rpg_move_dt(RpgTimestamp& dst, const RpgTimestamp& src) { dst.value = src.value; }
+// "When moving from a Date to a Timestamp field, the time and microsecond
+// portion of the timestamp are unaffected."
+inline void rpg_move_dt(RpgTimestamp& dst, const RpgDate& src) {
+    dst.value = src.value + dst.value.substr(10);
+}
+// "When moving from a Time to a Timestamp field, the microseconds part of
+// the timestamp is set to 000000. The date portion remains unaffected."
+inline void rpg_move_dt(RpgTimestamp& dst, const RpgTime& src) {
+    dst.value = dst.value.substr(0, 11) + src.value.substr(0, 2) + "." +
+                src.value.substr(3, 2) + "." + src.value.substr(6, 2) + ".000000";
 }
 
 inline std::string rpg_all(const std::string& pattern, int len = 50) {

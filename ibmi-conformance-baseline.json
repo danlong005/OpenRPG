@@ -232,7 +232,14 @@
    "verdict": "accept"
   },
   "test118_fixed_rla_chain.rpgle": {
-   "codes": [],
+   "codes": [
+    "RNF0289",
+    "RNF0622",
+    "RNF0623",
+    "RNF3438",
+    "RNF7030",
+    "RNF7503"
+   ],
    "rpgc": "accept",
    "sha256": "174715155806ad9be38b425ff78715f67e0cc48c9023608d90e8e3cd3a83d498",
    "verdict": "reject"
@@ -1676,5 +1683,5 @@
    "verdict": "reject"
   }
  },
- "generated": "2026-08-30T22:25:09+00:00"
+ "generated": "2026-08-30T22:46:16+00:00"
 }

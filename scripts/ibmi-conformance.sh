@@ -166,7 +166,13 @@ while IFS= read -r f; do
         # No COMPILEOPT: nesting quotes inside a CL string inside a shell string
         # is what broke every .sqlrpgle last run. Nothing here needs INCDIR (no
         # .sqlrpgle uses /COPY) and TGTCCSID does not affect acceptance.
-        out=$($SYS "CRTSQLRPGI OBJ($LIB/CONFTMP) SRCSTMF('$src') OBJTYPE(*PGM) COMMIT(*NONE)" </dev/null 2>&1)
+        # OPTION(*PERIOD) is REQUIRED. The verification job runs in a
+        # German-locale job, so the SQL precompiler reads ',' as a decimal
+        # point by default and "VALUES(1,'Alpha')" fails with
+        # SQL0104 "Token ,1 was not valid". *PERIOD pins the decimal point
+        # regardless of job locale. DECMPT() is not a parameter of this
+        # command -- the decimal point is an OPTION value.
+        out=$($SYS "CRTSQLRPGI OBJ($LIB/CONFTMP) SRCSTMF('$src') OBJTYPE(*PGM) COMMIT(*NONE) OPTION(*PERIOD)" </dev/null 2>&1)
         rc=$?
         ;;
       rpg)

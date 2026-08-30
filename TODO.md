@@ -1106,16 +1106,47 @@ Three more parameters that are not guessable, all found by failure:
    type as first key field"). The tests' own `EXEC SQL CREATE TABLE` declares
    `VARCHAR`, which is what the setup script now creates.
 
-### Open environmental blocker: SQL decimal comma
+### SQL decimal comma — SOLVED (2026-08-30)
 
-The German-locale job also breaks the **tests' own** embedded SQL:
-`INSERT ... VALUES('C001','Alice Smith',1500.00)` fails with
-`SQL0104 Token ,1500 was not valid`. This is job configuration, not a language
-incompatibility, and it currently masks whether the embedded SQL is otherwise
-valid. `CHGJOB` does not help — each `system` invocation is its own job. Worth
-investigating whether a compiled CL wrapper (`CHGJOB` + `CRTSQLRPGI` in one
-job) or a `CRTSQLRPGI` parameter can set the decimal format. Until then the
-~24 EXEC SQL files cannot be meaningfully assessed.
+`CRTSQLRPGI ... OPTION(*PERIOD)`. The verification job is German-locale, so the
+SQL precompiler read `,` as a decimal point and `VALUES(1,'Alpha')` failed with
+`SQL0104 "Token ,1 was not valid"`. `*PERIOD` pins the decimal point regardless
+of job locale. Note `DECMPT()` is **not** a parameter of this command — the
+decimal point is an `OPTION` value, which is not obvious from the name.
+
+Effect: `Token ,NNN` errors went from pervasive to one. It did not move the
+accepted count, because it was *masking* the real blocker rather than being it —
+but it converted "16 files failing for unclear reasons" into "16 files failing
+for one well-understood reason", which is what made the next finding visible.
+
+### SQL connection model — a platform divergence
+
+What is left in the SQL group is `SQL0199 "Keyword USING not expected"` on:
+
+```rpg
+EXEC SQL CONNECT USING :connStr;
+EXEC SQL DISCONNECT;
+```
+
+OpenRPG connects with an **ODBC connection string**
+(`Driver={SQLite3};Database=/tmp/x.sqlite`). DB2 for i connects to a
+**relational database** named in the RDB directory:
+`CONNECT TO :rdb USER :u USING :pw`. A connection string has no expression as
+an RDB name, so this is not a syntax difference that could be reconciled — the
+two connect to different kinds of thing.
+
+Verified by removing just the connection statements from `test79_sql_core`:
+every SQL error at severity >= 20 cleared. (An `RNF0637` remained from the RPG
+side, in SQL-generated code; likely an artefact of the crude line removal, not
+chased.)
+
+Same category as record formats and free-format DDS: a divergence that follows
+from the target platform, not a defect. 14 `CONNECT` and 13 `DISCONNECT`
+statements across the tests.
+
+**Not decided:** whether rpgc should also *accept* `CONNECT TO :rdb ...` so
+that shop code carrying it can compile. That is the coverage question again,
+and the same one raised by database record formats.
 
 ### Harness fix: route by content, not extension
 

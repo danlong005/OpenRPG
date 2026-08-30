@@ -32,6 +32,12 @@ on:
   schedule:
     - cron: '0 6 * * 1'      # Mondays 06:00 UTC
   workflow_dispatch:
+    inputs:
+      mode:
+        description: 'changed = verify sources whose hash moved; smoke = compile one file to prove the connection'
+        type: choice
+        options: [changed, smoke]
+        default: changed
 
 permissions:
   contents: read
@@ -74,10 +80,19 @@ jobs:
           # pin the host key rather than trusting on first use
           ssh-keyscan -p 2222 -H pub400.com >> ~/.ssh/known_hosts 2>/dev/null
 
-      - name: Compile changed sources on IBM i and refresh the baseline
+      # A 'changed' run with nothing changed never contacts the machine at
+      # all, which is efficient but leaves the SSH path unproven. 'smoke'
+      # compiles a single file so the connection itself is exercised, and
+      # leaves the baseline untouched.
+      - name: Compile on IBM i
         env:
           PUB400_USER: ${{ secrets.PUB400_USER }}
-        run: scripts/ibmi-conformance.sh --changed-only
+        run: |
+          if [ "${{ github.event.inputs.mode }}" = "smoke" ]; then
+            scripts/ibmi-conformance.sh --limit 1 --no-baseline
+          else
+            scripts/ibmi-conformance.sh --changed-only
+          fi
 
       - name: Publish the run artefacts
         if: always()

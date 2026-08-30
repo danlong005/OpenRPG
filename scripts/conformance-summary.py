@@ -38,6 +38,12 @@ real source through both compilers.
   need a File-Designation (18).
 - **Specification order is H, F, D, I, C, O** — output specs come after the
   calculations, not before them.
+- **`KEYED` is a free-form `DCL-F` keyword only.** In a fixed-format F-spec,
+  keyed access is the Record-Address-Type entry: `K` in position 34.
+
+  ```rpg
+  FCUSTFILE  IF   E           K DISK
+  ```
 
 ### Free-format inside fixed-format source
 
@@ -63,6 +69,15 @@ Assign to a field first:
 ```rpg
 C                   EVAL      msg = %CHAR(count)
 C     msg           DSPLY
+```
+
+`TAG` and `GOTO` are mirror images, which is easy to get backwards: **`GOTO`
+names its target in Factor 2, `TAG` declares its label in Factor 1** with
+Factor 2 blank.
+
+```rpg
+C     LOOPTOP       TAG
+C                   GOTO      LOOPTOP
 ```
 
 ### Record-level access

@@ -979,6 +979,125 @@ operations, neither of which item #4 touches.
 
 ---
 
+## 🔬 IBM i Conformance (real-compiler oracle)
+
+**What this is:** the test corpus is compiled on a *real* IBM i (PUB400,
+`V7R5M0`) by IBM's own ILE RPG compiler, and its accept/reject verdict is
+compared against rpgc's. This is the only check that can find the one class of
+bug the local suite structurally cannot: **source rpgc accepts that real RPG
+rejects.** `tests/expected_output/` is regenerated from rpgc's own output by
+`run_tests.sh --update`, so the local suite can only ever verify what rpgc
+already does. An independent compiler is the only oracle that breaks that
+circularity.
+
+| Script | Purpose |
+|--------|---------|
+| `scripts/ibmi-probe.sh` | One-shot recon: what works on the box and how. Not needed routinely; kept because every parameter in it was found by failure. |
+| `scripts/ibmi-conformance.sh` | Uploads the corpus, compiles each source, reports accept/reject grouped by diagnostic. Writes `ibmi-conformance-report.txt` + `-transcript.txt`. |
+| `scripts/fix-fixed-format-columns.py` | Corrects fixed-format sources to what IBM actually requires (see findings 1 and 2 below). Re-runnable. |
+
+### Non-obvious parameters (all found by failure, none guessable)
+
+- Source must be tagged **CCSID 819**. UTF-8/1208 fails `RNS9339 "unable to open
+  file"`, which reads like an authority problem and is not.
+- **`TGTCCSID(*JOB)` is mandatory.** The job CCSID is **273** (German; PUB400 is
+  German-hosted) despite the profile being LANGID ENU / CNTRYID US. The default
+  target is `*SRC` (500), under which `[ ] { }` in literals come back as
+  `Ä Ü ä ü` *in real program output*. `TGTCCSID(37)` is worse — it breaks `!`.
+- **Each `system` invocation is its own job.** QTEMP does not survive between
+  calls and `CHGJOB` does not stick. Compile into a real library; `CRTLIB` is
+  not authorized, but the profile's *current library* (`LONGDM1`, not `LONGDM`)
+  works — read it from `DSPUSRPRF`, do not derive it from the profile name.
+- Compile listings arrive on **stdout**, severity totals included. No spool
+  retrieval, no `EVFEVENT`, no `CPYSPLF` needed.
+- `DFTACTGRP(*NO)` is required for prototypes/subprocedures/`ON-EXIT`; `NOMAIN`
+  sources need `CRTRPGMOD`, not `CRTBNDRPG`.
+- **DSPLY output is unreachable from stdout** — it posts to the job's external
+  message queue, which dies with the job (verified against all 14 `system`
+  flags). `printf` via `BNDDIR(QC2LE)` reaches real stdout; EBCDIC newline is
+  `x'25'`. This is what a future *differential execution* run would need.
+- PASE `grep` is AIX-derived: **no `-o`**.
+
+### Results — 2026-08-29
+
+**221 compiled, 72 accepted.** That headline number is not a quality metric: it
+conflates four unrelated things, and a large share of the rejections are the
+*correct* outcome.
+
+| Bucket | Files | Meaning |
+|--------|-------|---------|
+| A. Needs IBM i objects | 17 | `*FILE`/`*DTAARA` referenced via `EXTDESC`/`DTAARA` don't exist on the box. Not a language issue. |
+| B. **rpgc leniency — real findings** | 35 | rpgc accepts source IBM rejects. The actual deliverable. |
+| C. Not a valid standalone program | 22 | Declaration-only tests, spec-ordering. `RNF7023 "cannot determine how the program can end"`. |
+| D. Negative tests | 43 | IBM rejecting may be *correct* — see caveat below. |
+| E. Individual review | 19 | — |
+| SQL dialect | 13 | `CONNECT USING :connStr` is ODBC-flavoured; DB2 for i wants `CONNECT TO :rdb USER :u USING :pw` (`SQL0199`). |
+
+### Findings (the point of the exercise)
+
+1. **Column adjustment is not enforced.** `fixed_columns.h::extractCol()` trims
+   *both* ends, so `"0 "` and `" 0"` are indistinguishable. IBM requires numeric
+   entries right-adjusted and reports `RNF0263` at **severity 20**. 89 D-specs
+   across 67 corpus files were malformed and nothing ever flagged them.
+   *Corpus fixed; rpgc still does not diagnose this.*
+2. **Blank Definition-Type accepted as "standalone".** IBM reads blank
+   positions 24-25 as *subfield of the enclosing group*; with no group open
+   that is `RNF3703`, severity 20. rpgc infers "standalone". 94 declarations
+   across 72 files. *Corpus fixed; rpgc still does not diagnose this.*
+3. **BIFs permitted in Factor 1 of traditional C-specs.** `C  %CHAR(i)  DSPLY`
+   is accepted by rpgc; IBM allows built-ins only in extended Factor 2
+   (`RNF0372` + `RNF5261`, 16 files). **Not corrected** — the fix restructures
+   the test (`EVAL` to a temp, then `DSPLY`) rather than reformatting it, so it
+   needs a decision about what those tests are meant to demonstrate.
+4. **`DSPLY` caps at 52 characters**, enforced at *compile* time on the declared
+   length, not the runtime value (`RNF7016`). 8 files still declare wider fields.
+   No expected-output line exceeds 40 chars, so `%SUBST(f:1:52)` is viable.
+5. **UTF-8 em-dashes cannot survive the required CCSID 819 tag** (U+2014 has no
+   Latin-1 code point). 37 files carry them in comments; the conformance script
+   folds them to ASCII at staging time.
+
+**Decision needed on 1-3:** should rpgc *enforce* these, or only warn? Being
+more permissive than IBM costs nothing for the goal of eating real-world source
+— real source is well-formed. But silently accepting is exactly what let 183
+malformed declarations accumulate unnoticed across 72 test files. Recommendation:
+**warn, don't reject.**
+
+### Caveat on bucket D — needs a human pass
+
+Bucket D mixes two things the diagnostics cannot separate:
+
+- Genuinely invalid RPG (`test11a_missing_semi`, `test11c_unmatched_if`,
+  `test184_err_cas_unclosed`) — IBM rejecting is the **pass** condition.
+- The `unsupported/` quadrant (`test135_err_ctllevel`, `test138_err_legacy`,
+  `test148_goto_tag`) — **valid** RPG that rpgc rejects on purpose. IBM ought to
+  *accept* these. It didn't: `test135` returned `RNF5002`, which suggests the
+  test's own control-level usage is malformed rather than IBM agreeing with
+  rpgc. **Some of bucket D is hiding further source bugs.**
+
+Splitting these requires reading each test's intent; it is not inferable from
+the output.
+
+### Next steps (ranked)
+
+1. **Object setup for bucket A** — generate DDL from the `.extdesc` sidecars and
+   create the `*FILE`/`*DTAARA` objects once in `LONGDM1`. Cheapest real win:
+   17 files stop failing for reasons unrelated to the language.
+2. **Bucket B → diagnostic work** on the fixed-format reader (findings 1-3).
+3. **Cache the oracle.** Commit `sha256(source) -> {verdict, diagnostics}` so CI
+   compares against cached results offline and PUB400 is consulted only for
+   changed files. This is what turns the exercise into a build step.
+4. **Human pass over bucket D** (above).
+5. **Differential *execution*** — needs a mechanical `DSPLY` -> `printf`
+   transform. Proven feasible; not built.
+
+### Load discipline
+
+PUB400 is a free community box run on donated hardware. This is a **manual or
+weekly** job, never a per-PR gate: serial, objects deleted as they go. Once the
+oracle cache (step 3) exists, day-to-day CI needs no network at all.
+
+---
+
 ## 🗳 Community-Requested Features (IBM Ideas Portal)
 
 **Source:** <https://ibm-power-systems.ideas.ibm.com/ideas/?category=7078724330326335155>

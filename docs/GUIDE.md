@@ -1,6 +1,6 @@
 # OpenRPG User's Guide
 
-OpenRPG transpiles IBM RPG IV free-format source code into portable C++17 and optionally compiles it to a native executable. Programs can run on macOS, Linux, or any platform with a C++ compiler — no IBM i required.
+OpenRPG transpiles IBM RPG IV source code into portable C++17 and optionally compiles it to a native executable. Both free-format and classic column-based [fixed-format](#fixed-format-source) source are accepted, and the two can be mixed in one file. Programs can run on macOS, Linux, or any platform with a C++ compiler — no IBM i required.
 
 ---
 
@@ -27,12 +27,15 @@ OpenRPG transpiles IBM RPG IV free-format source code into portable C++17 and op
 19. [SND-MSG](#snd-msg)
 20. [Embedded SQL](#embedded-sql)
 21. [Record-Level Access](#record-level-access)
-22. [DATA-INTO and DATA-GEN](#data-into-and-data-gen)
-23. [XML-INTO](#xml-into)
-24. [Database Connections](#database-connections)
-25. [Multi-Module Programs](#multi-module-programs)
-26. [Environment Variables](#environment-variables)
-27. [Testing](#testing)
+22. [Display Files (WORKSTN)](#display-files-workstn)
+23. [Program-Described Files (I-Specs and O-Specs)](#program-described-files-i-specs-and-o-specs)
+24. [DATA-INTO and DATA-GEN](#data-into-and-data-gen)
+25. [XML-INTO](#xml-into)
+26. [Fixed-Format Source](#fixed-format-source)
+27. [Database Connections](#database-connections)
+28. [Multi-Module Programs](#multi-module-programs)
+29. [Environment Variables](#environment-variables)
+30. [Testing](#testing)
 
 ---
 
@@ -146,7 +149,13 @@ rpgc <source-file> [options]
 |------|-------------|
 | `-o file` | Output file (executable by default, or C++ file with `-S`) |
 | `-S` | Emit C++ source only, do not compile |
+| `-c` | Compile to an object file, do not link |
+| `-g` | Compile with debug info, for GDB/LLDB/VS Code |
 | `--keep-cpp` | Keep the intermediate `.cpp` file after compiling |
+| `-v`, `--version` | Print the version and exit |
+
+Additional `.o` files listed after the source file are passed through to the
+linker — see [Multi-Module Programs](#multi-module-programs).
 
 ### File Extensions
 
@@ -155,7 +164,9 @@ rpgc <source-file> [options]
 | `.rpgle` | Standard RPG IV source |
 | `.sqlrpgle` | RPG IV with embedded SQL (automatically links ODBC) |
 
-When the input file has a `.sqlrpgle` extension, OpenRPG automatically adds ODBC include paths and linker flags during compilation.
+When the input file has a `.sqlrpgle` extension, OpenRPG automatically adds ODBC include paths and linker flags during compilation. A program that declares a `WORKSTN` file likewise gets the screen runtime's linker flag added automatically — see [Display Files](#display-files-workstn).
+
+The extension does **not** select the source format. Free-format and fixed-format are distinguished by the content of the source itself; see [Fixed-Format Source](#fixed-format-source).
 
 ### Examples
 
@@ -2042,6 +2053,657 @@ DCL-PROC formatFloat EXPORT;
   RETURN 'FLT:' + %CHAR(%INT(n));
 END-PROC;
 ```
+
+---
+
+## Display Files (WORKSTN)
+
+A WORKSTN file is an interactive 5250-style screen. The screen itself is
+described in a separate `.dspf` source file and compiled by **dspfc** (the
+OpenDSPF compiler); OpenRPG then reads the compiled descriptor and gives the
+RPG program a variable for every field on the screen.
+
+### The Two-Step Compile
+
+```bash
+dspfc CUSTMENU.dspf     # produces CUSTMENU.dspfd and CUSTMENU_dspf.h
+rpgc  myprogram.rpgle   # reads CUSTMENU.dspfd, links the screen runtime
+```
+
+`rpgc` looks for `NAME.dspfd` in the same directory as the RPG source, trying
+the uppercase name first and then the lowercase one. If it finds no descriptor
+the program still compiles, but the screen opcodes become comments — check the
+generated C++ if a screen silently does nothing.
+
+Screen rendering uses curses, and `rpgc` adds the right linker flag for the
+platform automatically (`-lncurses`, or `-lpdcurses` on Windows). You do not
+pass anything extra on the command line.
+
+### Declaring the File
+
+```rpgle
+DCL-F CUSTMENU WORKSTN;
+```
+
+Every field in every record format of the display file becomes a program-scope
+variable with the field's own name. Character, date, time and timestamp fields
+become strings; binary fields become integers; the rest become numeric.
+
+Two things worth knowing about those variables:
+
+- **`HIDDEN` fields get a variable too.** Hidden means "not rendered", not "no
+  data" — `SFLRCDNBR` is the common case.
+- **`DFTVAL('text')` seeds the initial value**, so the field displays that text
+  before the program ever assigns to it.
+
+### EXFMT — Write and Read in One Step
+
+`EXFMT` displays a record format and waits for the user:
+
+```rpgle
+DCL-F CUSTMENU WORKSTN;
+DCL-S choice CHAR(1);
+
+EXFMT MAINMENU;
+
+IF *IN03;
+  DSPLY 'F3 pressed — exiting';
+ELSE;
+  choice = OPTION;
+  DSPLY ('You selected option: ' + choice);
+ENDIF;
+```
+
+Function keys defined in the display file set their indicators, so the program
+tests `*IN03`, `*IN12` and so on after the `EXFMT` returns. Only input, both and
+hidden fields are copied back — the program already knows what it sent out.
+
+### WRITE and READ
+
+`WRITE` renders a record format without waiting, and `READ` sends the current
+field values to the screen and reads the user's input back. `EXFMT` is the
+combination of the two and is what most programs use.
+
+### Subfiles
+
+A subfile is a scrollable list. It needs two record formats in the display
+file — an `SFL` record holding one row's fields, and an `SFLCTL` record that
+controls the display. The RPG side is three steps:
+
+```rpgle
+DCL-F CUSTLIST WORKSTN;
+DCL-S i INT(10);
+
+WRITE CUSTCTL;            // 1. clears the subfile
+
+FOR i = 1 TO 5;           // 2. one WRITE per row
+  CUSTNO   = ('C' + %CHAR(i));
+  CUSTNAME = ('Customer ' + %CHAR(i));
+  CUSTBAL  = (i * 1000.00);
+  WRITE CUSTSFL;
+ENDFOR;
+
+EXFMT CUSTCTL;            // 3. displays it as a scrollable table
+
+IF NOT *IN03 AND NOT *IN12;
+  DSPLY ('You selected row: ' + %CHAR(SFLRCDNBR));
+ENDIF;
+```
+
+| Step | Opcode | Effect |
+|------|--------|--------|
+| 1 | `WRITE` on the SFLCTL record | Clears the subfile's row store |
+| 2 | `WRITE` on the SFL record | Appends one row |
+| 3 | `EXFMT` on the SFLCTL record | Displays the scrollable list |
+
+At runtime the user scrolls with the arrow keys and Page Up/Page Down, and
+exits with Enter or any defined function key. If the SFLCTL record has a field
+named `SFLRCDNBR`, the 1-based relative record number of the selected row is
+written into it.
+
+### READC — Read Changed Records
+
+`READC` walks the rows the user actually modified:
+
+```rpgle
+READC CUSTSFL;
+DOW NOT %EOF(CUSTSFL);
+  IF OPTION = '4';
+    DSPLY ('Deleting ' + %TRIM(CUSTNO));
+  ENDIF;
+  READC CUSTSFL;
+ENDDO;
+```
+
+`%EOF(recordformat)` becomes true when there are no more changed rows. Unlike
+`EXFMT`, `READC` copies back *every* field of the row including output-only
+ones — that is how the program knows which row's option was typed into.
+
+### UPDATE — Rewrite the Current Row
+
+After a `READC`, `UPDATE` writes the field variables back into that same row:
+
+```rpgle
+READC CUSTSFL;
+DOW NOT %EOF(CUSTSFL);
+  OPTION = ' ';           // clear the option field
+  UPDATE CUSTSFL;
+  READC CUSTSFL;
+ENDDO;
+```
+
+Unlike a DISK `UPDATE`, no key is involved — it targets whichever row `READC`
+last returned.
+
+For the display-file side of all this — record formats, field keywords,
+literals, function keys, `SFLPAG`/`SFLSIZ`, conditioning indicators, `EDTCDE`
+and `EDTWRD` — see the OpenDSPF User's Guide in `OpenDSPF/docs/GUIDE.md`.
+
+---
+
+## Fixed-Format Source
+
+OpenRPG accepts classic column-based RPG IV source as well as free-format. This
+is a second *parsing* frontend only — it builds the same AST, so every language
+feature described elsewhere in this guide is reachable from fixed-format source.
+
+### How the Format Is Chosen
+
+The format is detected from the content of columns 1-6 of the first substantive
+line, not from the file extension and not from a `**FREE` directive. A file can
+also mix the two: H/F/D specs in columns with the calculations already
+modernized inside `/free`...`/end-free` blocks is a common
+incremental-modernization pattern and works as-is.
+
+### Spec Types
+
+Position 6 selects the spec type. Positions 1-5 are the sequence number and are
+ignored; a `*` in position 7 makes the whole line a comment.
+
+| Position 6 | Spec | Purpose |
+|------------|------|---------|
+| `H` | Control | Compile options — same set as `CTL-OPT` |
+| `F` | File Description | File declarations — same as `DCL-F` |
+| `D` | Definition | Standalone fields and data structures — same as `DCL-S` and `DCL-DS` |
+| `I` | Input | Program-described input record layout (see next chapter) |
+| `C` | Calculation | Executable statements |
+| `O` | Output | Program-described output record layout (see next chapter) |
+
+There is no `P`-spec support, so fixed-format source cannot declare a
+procedure. Anything needing `DCL-PROC` — including `ON-EXIT` — has to live in a
+`/free` block.
+
+### H-Spec — Control Options
+
+Positions 7-80 are a free keyword list, identical to what `CTL-OPT` accepts:
+
+```rpgle
+     HDFTACTGRP(*NO) DATFMT(*ISO) TIMFMT(*HMS)
+```
+
+### F-Spec — File Description
+
+```rpgle
+     FCUSTFL    IF   E             DISK    KEYED EXTDESC('customers')
+     FCUSTMENU  CF   E             WORKSTN
+     FTESTFL    O    F  25         DISK
+```
+
+| Positions | Field |
+|-----------|-------|
+| 7-16 | File name |
+| 17 | File type (`I`/`O`/`U`/`C`) |
+| 18 | File designation |
+| 19 | End-of-file flag |
+| 20 | Add flag |
+| 21 | Sequence |
+| 22 | File format (`E` externally described, `F` program described) |
+| 23-27 | Record length (program-described files) |
+| 28 | Process mode |
+| 29-33 | Key field length |
+| 34 | Record address type |
+| 35 | File organization |
+| 36-42 | Device — `DISK` and `WORKSTN` are implemented |
+| 44-80 | Keyword tail, continuable across lines |
+
+### D-Spec — Definitions
+
+```rpgle
+     DcustName         S             30A
+     DorderDS          DS
+     D  orderNo                       7P 0
+     D  custName2                    30A   VARYING
+     D  qty                           5P 0 DIM(12)
+```
+
+| Positions | Field |
+|-----------|-------|
+| 7-21 | Name — continuable with a trailing `...` |
+| 22 | External-description flag |
+| 23 | Data structure type |
+| 24-25 | Definition type (blank, `C`, `DS`, `PR`, `PI`, `S`) |
+| 26-32 | From position |
+| 33-39 | To position or length |
+| 40 | Data type |
+| 41-42 | Decimal positions |
+| 44-80 | Keyword tail, continuable across lines |
+
+Only definition types `S` (standalone field), `DS` (data structure) and blank
+(a subfield) are accepted. `C` for a named constant, and `PR`/`PI` for
+prototypes and procedure interfaces, are rejected — declare those in a `/free`
+block instead.
+
+Supported in the keyword tail: `VARYING{(2|4)}` (which produces a `VARCHAR` —
+free-format spells this `VARCHAR(n)` instead), `DIM(n)` on the data structure
+itself for an array of elements, and per-subfield `OVERLAY(field)`,
+`OVERLAY(field:pos)`, `POS(n)`, `LIKEDS(name)`, `LIKE(other)` and `DIM(n)`.
+
+A subfield `DIM(n)` is an array *inside* the structure, and is subscripted with
+the `ds.field(index)` form:
+
+```rpgle
+     DorderDS          DS
+     D  qty                           5P 0 DIM(12)
+      /free
+  orderDS.qty(1) = 5;
+      /end-free
+```
+
+A subfield `LIKE(other)` resolves against a field declared **earlier in the same
+data structure**. Combining `LIKE` and `DIM` on one subfield is not supported,
+and a subfield `DIM` is fixed-size only — no `DIM(*VAR)`/`DIM(*AUTO)`.
+
+### C-Spec — Calculations
+
+Calculations come in three shapes, and all three can be mixed freely in one
+file.
+
+| Positions | Field |
+|-----------|-------|
+| 7-8 | `SR`, or `AN`/`OR` for a multi-indicator group |
+| 9-11 | Conditioning indicator |
+| 12-25 | Factor 1 |
+| 26-35 | Operation code, plus any `(extender)` |
+| 36-49 | Factor 2 (traditional syntax) |
+| 36-80 | The whole expression (extended factor 2) |
+| 50-63 | Result (traditional syntax) |
+| 71-76 | Resulting indicators — blank except on `COMP` |
+
+Positions 64-70 (inline field length and decimals) must be blank; declare the
+field on a D-spec instead.
+
+**Extended factor 2** puts a normal free-format expression in positions 36-80,
+and continues onto further lines that leave 7-35 blank:
+
+```rpgle
+     C                   IF        custBal > 1000 AND status = 'A'
+     C                   EVAL      msg = 'Dear ' + %TRIM(firstName) +
+     C                                   ', your account is current.'
+     C                   ENDIF
+```
+
+**Traditional syntax** uses Factor 1, Factor 2 and Result:
+
+```rpgle
+     C     custKey       CHAIN     CUSTFL
+     C                   EXSR      PRTLINE
+     C     total         DSPLY
+```
+
+**`/free` blocks** hand their contents to the free-format parser unchanged:
+
+```rpgle
+      /free
+  total = qty * price;
+  DSPLY %CHAR(total);
+      /end-free
+```
+
+### Supported Operation Codes
+
+| Group | Opcodes |
+|-------|---------|
+| Block structure | `IF` `ELSEIF` `ELSE` `ENDIF` `DOW` `DOU` `ENDDO` `FOR` `FOR-EACH` `ENDFOR` `SELECT` `WHEN` `OTHER` `ENDSL` `MONITOR` `ON-ERROR` `ENDMON` `ITER` `LEAVE` |
+| Subroutines | `BEGSR` `ENDSR` `EXSR` `LEAVESR` |
+| Assignment | `EVAL` `EVALR` `EVAL-CORR` `CLEAR` `RESET` `MOVE` `MOVEL` `Z-ADD` `Z-SUB` |
+| Arithmetic | `ADD` `SUB` `MULT` `DIV` |
+| Comparison / branching | `COMP` `CASxx` `CABxx` `GOTO` `TAG` |
+| Calls | `CALLP` `CALL` `PARM` `PLIST` `RETURN` |
+| File I/O | `CHAIN` `READ` `READP` `READE` `READPE` `WRITE` `UPDATE` `DELETE` `SETLL` `SETGT` |
+| Other | `DSPLY` `SORTA` `XML-INTO` `DATA-INTO` `DATA-GEN` `SND-MSG` |
+
+Two notes on the file opcodes: none of them takes a data-structure result
+operand, and `DELETE` takes no key — it deletes the last record read.
+`SETLL` and `SETGT` do not accept an operation extender; the other file opcodes
+do.
+
+### Conditioning Indicators
+
+Position 9 holds a blank or `N`, and positions 10-11 the indicator number. The
+statement runs only when the indicator matches:
+
+```rpgle
+     C   10              EVAL      msg = 'Ten is on'
+     C  N10              EVAL      msg = 'Ten is off'
+```
+
+Only self-contained statements can be conditioned — assignments, calls,
+`ITER`/`LEAVE`/`LEAVESR`, the file opcodes, `GOTO`, `DSPLY`, and the arithmetic
+set. Conditioning a block-structure opcode is a compile error, because the
+wrapper would leave the block unbalanced; fold the test into the block's own
+condition instead. `TAG` cannot be conditioned either.
+
+A C-spec line has room for exactly one indicator, so `AN`/`OR` in positions 7-8
+combine the indicators of consecutive lines. The operation code sits on the
+last line of the group, and RPG relates the terms as an **OR of AND-groups**:
+
+```rpgle
+     C   10
+     CAN 30
+     COR 20              EVAL      msg = '(10 and 30) or 20'
+```
+
+Only `*IN01`-`*IN99` are supported. `LR`, `MR`, `RT`, `OV`, `1P`, `L1`-`L9`,
+`H1`-`H9`, `U1`-`U8`, `KA`-`KY` and `OA`-`OG` are recognized by name so they get
+a clear "not supported" message rather than being reported as a typo.
+
+### Legacy Operation Codes
+
+**`GOTO` and `TAG`** have no free-format equivalent at all, so they are accepted
+only from fixed columns — writing either inside a `/free` block is an error.
+Since subroutines generate as lambdas, a `GOTO` cannot cross a subroutine
+boundary, which is RPG's own rule. Both take their label in **Factor 2**, and
+leave Factor 1 and the Result field blank.
+
+```rpgle
+     C                   GOTO      SKIP
+     C                   EVAL      msg = 'not reached'
+     C                   TAG       SKIP
+```
+
+**`ADD`/`SUB`/`MULT`/`DIV`** use Factor 1 when it is present and accumulate into
+the result when it is blank. `Z-ADD`/`Z-SUB` never use Factor 1.
+
+| Written | Means |
+|---------|-------|
+| `C  a  ADD  b  c` | `c = a + b` |
+| `C     ADD  b  c` | `c = c + b` |
+| `C     Z-ADD b  c` | `c = b` |
+| `C     Z-SUB b  c` | `c = -b` |
+
+Extenders such as `(H)` half-adjust pass straight through.
+
+**`MOVE` and `MOVEL`** are positional moves, not assignments. `MOVE` aligns
+factor 2 against the right end of the result and `MOVEL` against the left, and
+whatever part of the result the move does not reach is left **unchanged** — the
+`(P)` extender blanks it instead. An over-long factor 2 truncates on the side
+away from the alignment.
+
+Numeric operands follow the same positional rule over the field's digits, and
+both operands' decimal positions are ignored: moving `1.00` into a
+three-position field with one decimal gives `10.0`.
+
+A date, time or timestamp on either side converts first and then moves. Factor 1
+carries the format of the *character or numeric* operand, never of the date
+field, and must be blank when both sides are date/time types:
+
+```rpgle
+     C     *MDY          MOVE      chrDate       dateFld
+```
+
+Date-to-time and time-to-date are refused — go through a timestamp.
+
+Because `MOVE`, `MOVEL`, `GOTO` and `TAG` are now lexer keywords, free-format
+source can no longer use them as variable names.
+
+**`COMP`** sets its three resulting indicators — high, low and equal — in
+positions 71-72, 73-74 and 75-76. It is the only opcode for which those columns
+may be non-blank.
+
+**`CASxx` and `CABxx`** glue a comparison mnemonic (`EQ` `NE` `LT` `LE` `GT`
+`GE`, or nothing for the unconditional form) onto the opcode. `CABxx` is a
+comparison guarding a branch. `CASxx` lines chain like `SELECT`/`WHEN` — the
+first true comparison runs its subroutine and the rest are skipped — and the
+group is closed by `ENDCS`.
+
+Both take the branch target — a label for `CABxx`, a subroutine name for
+`CASxx` — in the **Result** field, with the two values being compared in
+Factor 1 and Factor 2. The unconditional `CAS`/`CAB` forms leave both factors
+blank.
+
+```rpgle
+     C     amt           CABGT     limit         OVER
+     C     code          CASEQ     'A'           SUBA
+     C     code          CASEQ     'B'           SUBB
+     C                   CAS                     SUBOTHER
+     C                   ENDCS
+```
+
+### Traditional Program Calls
+
+`CALL` with its `PARM` lines names the program in Factor 2:
+
+```rpgle
+     C                   CALL      'ORD100'
+     C                   PARM                    custNo
+     C                   PARM                    total
+```
+
+There is no prototype, so the callee's signature is synthesized from the
+`PARM` operands' declared types, every parameter passed by reference. If caller
+and callee disagree, the link fails — an ugly error, but not a silent one.
+
+A named `PLIST` can appear anywhere in the source, including after the calls
+that use it:
+
+```rpgle
+     C                   CALL      'ORD100'      ORDPARMS
+     C     ORDPARMS      PLIST
+     C                   PARM                    custNo
+     C                   PARM                    total
+```
+
+The one ordering rule is that the `PLIST` must be in the same run of C-spec
+lines as its `CALL` or a later one — a `CALL` in an *earlier* run than its
+`PLIST` is refused by name.
+
+`PARM` also supports Factor 1 and Factor 2 operands, which move data into the
+parameter before the call and out of it afterwards.
+
+### Program Parameters — `*ENTRY PLIST`
+
+A member with an `*ENTRY PLIST` does not compile to a `main()`. It becomes a
+callable function taking each parameter by reference, which is exactly the
+signature a caller's `CALL`/`PARM` synthesizes:
+
+```rpgle
+     C     *ENTRY        PLIST
+     C                   PARM                    inCustNo
+     C                   PARM                    outTotal
+```
+
+The function's name comes from the **source file name**, upper-cased with the
+directory and extension stripped — `ORD100.rpgle` is reachable as
+`CALL 'ORD100'`. A file name that is not a usable symbol is refused with a
+message telling you to rename the file.
+
+### `/COPY` and `/INCLUDE`
+
+Both work outside `/free` blocks, as a line-splicing pass that runs before
+anything else, so a copied H/F/D/C line is indistinguishable from one that was
+physically present:
+
+```rpgle
+      /COPY custdefs.rpgleinc
+```
+
+The text after the directive is a literal filename opened relative to the
+current working directory — there is no library or member catalog and no search
+path. Nesting is capped at 10 levels. Line numbers after an expansion point
+refer to the flattened line stream rather than the original file.
+
+### Embedded SQL in Fixed Columns
+
+`C/EXEC SQL` opens the statement, `C+` continues it, and `C/END-EXEC` closes it:
+
+```rpgle
+     C/EXEC SQL
+     C+ SELECT COUNT(*) INTO :rowCount
+     C+   FROM customers WHERE status = 'A'
+     C/END-EXEC
+```
+
+The gathered text goes to the same SQL handling free-format `EXEC SQL` uses, so
+everything in the [Embedded SQL](#embedded-sql) chapter applies unchanged.
+
+### What Is Not Supported
+
+The RPG cycle is not implemented and will not be. Concretely, in fixed-format
+source that means:
+
+| Rejected | Where | Note |
+|----------|-------|------|
+| Control levels `L0`, `L1`-`L9`, `LR` | C-spec positions 7-8 | Cycle-only |
+| Resulting indicators | C-spec 71-76 | Except on `COMP` |
+| Inline field length/decimals | C-spec 64-70 | Use a D-spec |
+| `P`-specs | — | No procedure declaration; use a `/free` block |
+| D-spec types `C`, `PR`, `PI` | D-spec 24-25 | Constants and prototypes; use a `/free` block |
+| `DO` | — | Use `FOR` |
+| Matching fields | I-spec 65-66 | Cycle-adjacent |
+| Sequence checking | I-spec 17-20 | Must be blank |
+
+Every one of these produces a distinct compile error naming the problem, rather
+than being silently ignored.
+
+---
+
+## Program-Described Files (I-Specs and O-Specs)
+
+Everything in the [Record-Level Access](#record-level-access) chapter runs
+against a database table over ODBC. Program-described files are the other kind:
+**flat files with a byte-position field layout**, described by I-specs and
+O-specs rather than by an external descriptor. They are available from
+fixed-format source only.
+
+### The On-Disk Format
+
+Real IBM i program-described files are pure fixed-width bytes on a
+record-oriented file system, which has no equivalent on macOS, Linux or
+Windows. OpenRPG uses a portable convention instead: **one record per line** —
+exactly the declared record length in bytes, right-padded with spaces or
+truncated to fit, followed by a newline. Fixed width makes byte-offset seeking
+for `UPDATE` trivial.
+
+Numeric fields are stored as plain ASCII digits, right-justified and
+zero-padded, with an implied decimal point and an optional leading `-`. This is
+an OpenRPG interchange format, not literal IBM i on-disk semantics.
+
+### A Complete Example
+
+```rpgle
+     HDFTACTGRP(*NO)
+     FTESTFL          25           DISK
+     ITESTFL
+     I                             A1    20     NAME
+     I                             S21   25   0 AGE
+     OTESTFL
+     O                       NAME             20
+     O                       AGE              25
+      /free
+  NAME = 'Alice';
+  AGE = 30;
+  WRITE TESTFL;
+      /end-free
+     C                   READ      TESTFL
+     C                   DOW       NOT %EOF(TESTFL)
+     C     %TRIM(NAME)   DSPLY
+     C                   READ      TESTFL
+     C                   ENDDO
+     C                   RETURN
+```
+
+The F-spec gives the record length in positions 23-27 and leaves the file
+format column blank (program-described). Field names from the I-spec become
+ordinary program variables.
+
+### I-Spec — Input Layout
+
+An I-spec file has one **record identification** line per record type,
+optionally followed by **field description** lines.
+
+Record identification:
+
+| Positions | Field |
+|-----------|-------|
+| 7-16 | File name |
+| 21-22 | Record identifying indicator |
+| 23-30, 31-38, 39-46 | Up to three identification code sets |
+
+Each code set is a position, an optional `N`, a code part and a character —
+which together say "the byte at this position is (or is not) this character".
+Only code part `C` (character) is supported; the EBCDIC-era zone (`Z`) and digit
+(`D`) tests are rejected.
+
+Field description:
+
+| Positions | Field |
+|-----------|-------|
+| 36 | Data format |
+| 37-41 | From byte position |
+| 42-46 | To byte position |
+| 47-48 | Decimal positions |
+| 49-62 | Field name |
+| 63-64 | Control level (`L1`-`L9`) |
+| 69-70 | Plus indicator |
+| 71-72 | Minus indicator |
+| 73-74 | Zero-or-blank indicator |
+
+Date, time, timestamp, graphic and indicator formats (`D`/`T`/`Z`/`G`/`N`) are
+rejected at parse time — a `CHAR` field still works fine for date text if you
+do not need real date parsing.
+
+Control levels in positions 63-64 parse and are accepted, but do not yet set
+anything at run time.
+
+### O-Spec — Output Layout
+
+One record identification line per file, followed by one field or constant line
+each:
+
+| Positions | Field |
+|-----------|-------|
+| 30-43 | Field name — blank if a constant is given instead |
+| 44 | Edit code |
+| 45 | Blank-after (`B`) |
+| 47-51 | End position |
+| 53-80 | Constant or edit word |
+
+Field width is inferred from the gap to the previous field's end position, not
+from the field's own declared length. End positions must be absolute — the
+relative `+n`/`-n` forms are not supported. Edit codes use the same engine as
+`%EDITC`.
+
+**A file may have exactly one O-spec record format.** A second one is rejected
+with a clear error rather than silently overwriting the first, because
+disambiguating them needs the record-type and `EXCEPT` mechanisms, which are
+not implemented.
+
+### Supported Operations
+
+| Opcode | Behavior |
+|--------|----------|
+| `READ` | Sequential read, dispatching on record type |
+| `WRITE` | Append a record |
+| `UPDATE` | Rewrite the record just read, in place |
+
+`CHAIN`, `SETLL`, `SETGT` and `DELETE` are **not** supported on
+program-described files — keyed access needs F-spec key-field columns that are
+not modeled for them. `EXCEPT`, O-spec spacing and skipping, and printer paging
+are also unavailable; there is no PRINTER runtime in this compiler for any file
+type.
+
+A program just writes `READ MYFILE;` regardless of which kind of file `MYFILE`
+is — the compiler picks the flat-file or the RLA path from the declaration.
 
 ---
 

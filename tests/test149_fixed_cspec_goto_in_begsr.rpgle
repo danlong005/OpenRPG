@@ -10,6 +10,6 @@
      C                   EVAL      total = 1
      C                   GOTO      SKIPIT
      C                   EVAL      total = 99
-     C                   TAG       SKIPIT
+     C     SKIPIT        TAG
      C                   EVAL      total = total + 10
      C                   ENDSR

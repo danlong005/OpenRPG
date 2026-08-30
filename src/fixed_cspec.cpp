@@ -931,13 +931,30 @@ void feedCSpecLine(CSpecRunState& state, const std::string& line, int lineNo) {
                 return;
             }
             built = opcodeName + extender + " " + factor2;
-        } else if (opcodeName == "GOTO" || opcodeName == "TAG") {
+        } else if (opcodeName == "GOTO") {
+            // GOTO names its target in Factor 2 (SC09-2508 p.562).
             if (factor2.empty() || !factor1.empty()) {
                 report_fixed_format_error(lineNo,
-                    "C-spec: " + opcodeName + " requires a label in Factor 2 only");
+                    "C-spec: GOTO requires a label in Factor 2 only");
                 return;
             }
             built = opcodeName + " " + factor2;
+        } else if (opcodeName == "TAG") {
+            // TAG is the mirror image of GOTO: the label it DECLARES goes in
+            // Factor 1, and Factor 2 must be blank. This reader previously
+            // treated the two identically and wanted the label in Factor 2 for
+            // both, which IBM rejects with RNF5009 ("Factor 1 operand is
+            // required") plus RNF5025 ("Factor 2 entry is not blank").
+            // Verified on IBM i 7.5: `C  LOOPTOP  TAG` compiles,
+            // `C  TAG  LOOPTOP` does not.
+            if (factor1.empty() || !factor2.empty()) {
+                report_fixed_format_error(lineNo,
+                    "C-spec: TAG declares its label in Factor 1 (positions 12-25) and "
+                    "Factor 2 must be blank — the reverse of GOTO, which names its "
+                    "target in Factor 2 (IBM: RNF5009/RNF5025)");
+                return;
+            }
+            built = opcodeName + " " + factor1;
         } else if (opcodeName == "ADD" || opcodeName == "SUB" ||
                    opcodeName == "MULT" || opcodeName == "DIV") {
             if (factor2.empty() || result.empty()) {

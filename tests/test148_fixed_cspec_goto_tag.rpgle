@@ -2,7 +2,7 @@
      Dn                S             10I 0
      DTMPDSP           S             52A
      C                   EVAL      n = 0
-     C                   TAG       LOOPTOP
+     C     LOOPTOP       TAG
      C                   EVAL      n = n + 1
      C                   EVAL      TMPDSP = %CHAR(n)
      C     TMPDSP        DSPLY
@@ -11,6 +11,6 @@
      C                   ENDIF
      C                   GOTO      SKIPOVER
      C     'skipped'     DSPLY
-     C                   TAG       SKIPOVER
+     C     SKIPOVER      TAG
      C     'done'        DSPLY
      C                   RETURN

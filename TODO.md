@@ -1354,6 +1354,29 @@ defect in the work queue.
 - Bucket F grew to 18 as files shed their bulk diagnostics and reached
   single, individual causes — that is progress, not regression.
 
+### TAG label position — fixed (2026-08-30)
+
+`TAG` is the mirror image of `GOTO`: **`GOTO` names its target in Factor 2,
+`TAG` declares its label in Factor 1** with Factor 2 blank. rpgc treated the two
+identically and wanted the label in Factor 2 for both, which IBM rejects with
+`RNF5009` ("Factor 1 operand is required") plus `RNF5025` ("Factor 2 entry is
+not blank").
+
+Verified on the machine before changing anything: `C  LOOPTOP  TAG` compiles,
+`C  TAG  LOOPTOP` does not. Fixed in `fixed_cspec.cpp` and in 6 lines across 4
+tests. Accepted 103 -> 106.
+
+**Still open, one file:** `test182_fixed_cspec_cas_cab` uses a bare `CAB` for an
+unconditional branch:
+
+```rpg
+C                   CAB                     done
+```
+
+IBM requires both factors even with no comparison operator (`RNF5009` +
+`RNF5023`), though a bare `CAS` on the same file is accepted. Either supply the
+factors or use `GOTO` for the unconditional case. Narrow, one file, not chased.
+
 ### Caveat on bucket D — needs a human pass
 
 Bucket D mixes two things the diagnostics cannot separate:

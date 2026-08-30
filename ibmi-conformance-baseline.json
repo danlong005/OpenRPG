@@ -521,27 +521,16 @@
    "verdict": "accept"
   },
   "test148_fixed_cspec_goto_tag.rpgle": {
-   "codes": [
-    "RNF5009",
-    "RNF5025",
-    "RNF7030",
-    "RNF7043",
-    "RNF7260"
-   ],
+   "codes": [],
    "rpgc": "accept",
-   "sha256": "985513bbeea86229f32916c811f5335f5e7b834af0bb2f9eaca45748906a089f",
-   "verdict": "reject"
+   "sha256": "10dd6290c218babd31ec422da6ad4612049591dedd09e7d7b571f569456ba128",
+   "verdict": "accept"
   },
   "test149_fixed_cspec_goto_in_begsr.rpgle": {
-   "codes": [
-    "RNF5009",
-    "RNF5025",
-    "RNF7030",
-    "RNF7043"
-   ],
+   "codes": [],
    "rpgc": "accept",
-   "sha256": "962b959246e6a44141756c989e00ec36a1420324b79f6bc1d7c9b17058a962ff",
-   "verdict": "reject"
+   "sha256": "6430806a8d6623a1e26509fbf5bc0e261e70a941b0ee930a261dd394c0b0cd26",
+   "verdict": "accept"
   },
   "test14_indicators.rpgle": {
    "codes": [],
@@ -670,15 +659,10 @@
    "verdict": "reject"
   },
   "test164_fixed_cspec_cond_ind.rpgle": {
-   "codes": [
-    "RNF5009",
-    "RNF5025",
-    "RNF7030",
-    "RNF7043"
-   ],
+   "codes": [],
    "rpgc": "accept",
-   "sha256": "12f1d4d052442908163a65fe7ef0b19d777df6f760c5f5bccdc174ee0e511d0e",
-   "verdict": "reject"
+   "sha256": "3c9bf1fd2919bfea62dbfd75528f595be1a71cf6e669f50fbb386fbf50bcce5e",
+   "verdict": "accept"
   },
   "test165_fixed_cspec_err_cond_block.rpgle": {
    "codes": [
@@ -841,13 +825,10 @@
   "test182_fixed_cspec_cas_cab.rpgle": {
    "codes": [
     "RNF5009",
-    "RNF5023",
-    "RNF5025",
-    "RNF7030",
-    "RNF7043"
+    "RNF5023"
    ],
    "rpgc": "accept",
-   "sha256": "df2d1b68ccf598203a74a077c17b01a5cb815288744f4c4cd737e56e4e92f351",
+   "sha256": "c66bfcf6bb0ae64e1158c32d26ba2bb915d0a2c76bfcb25af0bdb2074c2b8e6e",
    "verdict": "reject"
   },
   "test183_fixed_cspec_err_endcs_orphan.rpgle": {
@@ -1683,5 +1664,5 @@
    "verdict": "reject"
   }
  },
- "generated": "2026-08-30T22:46:16+00:00"
+ "generated": "2026-08-30T22:58:21+00:00"
 }

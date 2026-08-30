@@ -11,11 +11,11 @@
      C                   EVAL      n = 2
      C     n             CABEQ     2             skip
      C     'not skipped' DSPLY
-     C                   TAG       skip
+     C     skip          TAG
      C     'after cabeq' DSPLY
      C                   CAB                     done
      C     'not reached' DSPLY
-     C                   TAG       done
+     C     done          TAG
      C     'after cab'   DSPLY
      C                   RETURN
      C     subone        BEGSR

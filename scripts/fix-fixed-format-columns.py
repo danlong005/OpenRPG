@@ -17,6 +17,7 @@ Two transforms, both driven by diagnostics IBM emitted against this corpus:
      preceding EVAL (RNF0372).
   8. Moves the KEYED keyword off fixed-format F-specs into the
      Record-Address-Type entry in position 34 (RNF2367).
+  9. Moves a TAG label from Factor 2 into Factor 1 (RNF5009 / RNF5025).
 
 IBM's ILE RPG compiler requires numeric entries in fixed-format specifications
 to be right-adjusted within their column range, and reports RNF0263 ("Entry not
@@ -457,6 +458,36 @@ def fix_keyed_fspec(lines):
     return out, changes
 
 
+def fix_tag_label(lines):
+    """Moves a TAG label from Factor 2 into Factor 1.
+
+    TAG is the mirror image of GOTO: GOTO names its target in Factor 2, while
+    TAG declares its label in Factor 1 with Factor 2 blank. Writing the label
+    in Factor 2 draws RNF5009 ("Factor 1 operand is required") and RNF5025
+    ("Factor 2 entry is not blank"), both at severity 20+.
+
+    Verified on IBM i 7.5 before changing anything: `C  LOOPTOP  TAG` compiles;
+    `C  TAG  LOOPTOP` does not.
+
+    Factor 1 is positions 12-25, Factor 2 is 36-49; both are left-adjusted.
+    """
+    out, changes = list(lines), 0
+    for i, ln in fixed_only(lines):
+        if len(ln) < 6 or ln[5:6].upper() != 'C' or get(ln, 7, 7) == '*':
+            continue
+        if get(ln, 26, 35).strip().upper() != 'TAG':
+            continue
+        label = get(ln, 36, 49).strip()
+        if not label or get(ln, 12, 25).strip():
+            continue                      # already in Factor 1, or nothing to move
+        r = list(ln.ljust(100))
+        for k in range(35, 49): r[k] = ' '          # clear Factor 2
+        for k, ch in enumerate(label): r[11 + k] = ch  # write Factor 1
+        out[i] = ''.join(r).rstrip()
+        changes += 1
+    return out, changes
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("target", help="directory of .rpgle/.sqlrpgle sources")
@@ -488,7 +519,8 @@ def main():
         lines, n_bf = fix_bif_in_factor(
             lines, declare='copybook' not in os.path.basename(p).lower())
         lines, n_kf = fix_keyed_fspec(lines)
-        newlines, n, infree = [], n_dt + n_fs + n_ri + n_fb + n_oo + n_bf + n_kf, False
+        lines, n_tg = fix_tag_label(lines)
+        newlines, n, infree = [], n_dt + n_fs + n_ri + n_fb + n_oo + n_bf + n_kf + n_tg, False
         for ln in lines:
             u = ln.strip().upper()
             # a mixed source embeds free-format between /FREE and /END-FREE;

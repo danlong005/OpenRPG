@@ -44,7 +44,7 @@
      C                   ENDDO
      C   10              GOTO      skip
      C     'skipped=no'  DSPLY
-     C                   TAG       skip
+     C     skip          TAG
      C     'after tag'   DSPLY
      C                   RETURN
      C     bump          BEGSR

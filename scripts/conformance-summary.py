@@ -65,6 +65,21 @@ C                   EVAL      msg = %CHAR(count)
 C     msg           DSPLY
 ```
 
+### Record-level access
+
+On IBM i, `WRITE`, `UPDATE` and `DELETE` against an externally-described file
+name the record **format**, not the file:
+
+```rpg
+C                   WRITE     CUSTFL146R
+```
+
+OpenRPG names the file, because record formats are an IBM i concept: DB2 for i
+tables are native file objects with a format name, while the SQL databases
+OpenRPG runs against have no such layer. Source using record-level access on
+externally-described files is therefore not portable between the two without
+change.
+
 ### Other limits worth knowing
 
 - **`DSPLY` caps at 52 characters**, enforced at *compile* time against the

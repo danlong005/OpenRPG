@@ -1263,13 +1263,40 @@ machine before changing anything.
 Accepted 100 -> 103.
 
 **Still open in bucket B:**
-- **`test146_fixed_cspec_write_upd_del` — record formats.** `WRITE`, `UPDATE`
-  and `DELETE` against an *externally-described* file take the record FORMAT
-  name in Factor 2, not the file name (`RNF5063`, `RNF5198`). rpgc's RLA model
-  has no notion of record formats and uses the file name throughout. Fixing the
-  test means naming the format (`CUSTFL146R`), which rpgc would then have to
-  understand — real compiler work, not a source transform, and it couples the
-  test to whatever `RCDFMT` the setup script chose. Needs a design decision.
+- `test118_fixed_rla_chain` is **not** an RLA problem: it fails the SQL
+  precompile on the decimal-comma locale, so it belongs in bucket E.
+
+### Record formats — a platform divergence, not a defect
+
+`WRITE`, `UPDATE` and `DELETE` against an externally-described file take the
+record FORMAT name in Factor 2 on IBM i, not the file name (`RNF5063`,
+`RNF5198` on `test146_fixed_cspec_write_upd_del`).
+
+**This is not something to "fix" in rpgc.** Record formats exist on IBM i
+because DB2 for i tables *are* native `*FILE` objects underneath — `CREATE
+TABLE` produces a file with a record format (named for the table, or set by
+`RCDFMT`). On SQLite, PostgreSQL, DB2 LUW — anywhere rpgc actually runs — no
+such layer exists. A table is a table. rpgc's RLA resolves against `table=` in
+the `.extdesc` sidecar, and there is no format name to resolve because the
+concept has no referent off IBM i.
+
+(The `IRecordFormat`/`ORecordFormat` types in the AST are unrelated: they model
+I-spec/O-spec record *identification* for program-described flat files.)
+
+Two separate questions follow, and only the second is worth doing:
+
+1. **Should rpgc require format names?** No. It would be inventing an IBM i
+   concept its runtime cannot honour, and coupling test sources to whatever
+   `RCDFMT` the setup script happened to pick.
+2. **Should rpgc *accept* a format name where a file name is expected?**
+   Probably yes, as a coverage item rather than a conformance one. Real shop
+   RPG names record formats constantly — in `WRITE`, `UPDATE`, `DELETE`,
+   `EXFMT`, `READ`. A compiler aiming to eat real-world source has to parse
+   them. Treating a format name as an alias for its file is cheap and needs no
+   new runtime concept. **Not started.**
+
+`test146` should be counted as a platform divergence alongside free-format DDS,
+not as a defect in the work queue.
 - `test118_fixed_rla_chain` is **not** an RLA problem: it fails the SQL
   precompile on the decimal-comma locale, so it belongs in bucket E.
 - Bucket F grew to 18 as files shed their bulk diagnostics and reached

@@ -1311,20 +1311,39 @@ trusting on first use.
 Note the transcript is per-run, not cumulative: a `--changed-only` run leaves a
 transcript covering only those files. The baseline is what accumulates.
 
-### Compatibility report (run by hand)
+### Compatibility page (run by hand)
 
-`scripts/conformance-summary.py` renders the current baseline as a
-human-readable Markdown report: how many sources IBM's compiler accepts, and a
-breakdown of the rejections by cause, so the raw count is not read as a defect
-count (42 of them are negative tests doing their job).
+`scripts/conformance-summary.py` generates the **whole** wiki page — statistics
+*and* the authored portability guidance — so the published page cannot drift
+from the data it describes. Edit the script, never the wiki.
 
 ```
-scripts/conformance-summary.py --release v0.9.21 --out ibmi-compatibility.md
+scripts/conformance-baseline.py rpgc      # refresh this compiler's verdicts
+scripts/conformance-summary.py --out IBM-i-Compatibility.md
+```
+
+The first step matters: the page reports an **agreement rate**, which needs
+both compilers' verdicts. `conformance-baseline.py rpgc` records what rpgc
+makes of each source next to what IBM made of it. Without it the generator
+refuses to run rather than reporting a one-sided number.
+
+Publishing is a wiki push:
+
+```
+git clone git@github.com:danlong005/OpenRPG.wiki.git
+scripts/conformance-summary.py --out OpenRPG.wiki/IBM-i-Compatibility.md
+cd OpenRPG.wiki && git commit -am "Regenerate" && git push
 ```
 
 Deliberately **not** wired into CI or the release workflow. It reads the
-committed baseline, so it needs no network and reflects whatever the last
-verified run recorded.
+committed baseline, so it needs no network.
+
+**Why agreement rather than an accepted count.** A shared rejection is a
+success: it means rpgc refuses the same invalid RPG IBM refuses. Reporting
+"121 rejected" buried 41 negative tests working exactly as designed. The page
+reports raw agreement first and the environment-adjusted figure second,
+explicitly labelled — the adjusted number is defensible but only one of them is
+defensible as *the* number.
 
 ### The conformance matrix
 

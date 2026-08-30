@@ -161,6 +161,18 @@ namespace OSpec {
 // and clamping to the line's actual length (a physical source line is
 // often shorter than 80 columns — trailing blanks are typically not
 // stored). Returns "" if the range starts past the end of the line.
+// Like extractCol but WITHOUT trimming, so a caller can tell " 0" from "0 ".
+// IBM requires numeric entries right-adjusted within their field and reports
+// RNF0263 at severity 20 when they are not; extractCol's trim makes the two
+// forms indistinguishable, which is why 89 malformed D-specs accumulated in
+// the test corpus unnoticed. Short lines are padded, since a right-adjusted
+// entry can legitimately end past the physical end of the line.
+inline std::string extractColRaw(const std::string& line, const ColSpec& spec) {
+    std::string padded = line;
+    if ((int)padded.size() < spec.endCol) padded.resize(spec.endCol, ' ');
+    return padded.substr(spec.startCol - 1, spec.endCol - spec.startCol + 1);
+}
+
 inline std::string extractCol(const std::string& line, const ColSpec& spec) {
     int start0 = spec.startCol - 1;
     if (start0 >= static_cast<int>(line.size()) || start0 < 0) return "";

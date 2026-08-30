@@ -218,6 +218,27 @@ static void finalizeFSpec(Program* program, PendingFSpec& pending) {
     pending.tailText.clear();
 }
 
+// IBM requires numeric entries right-adjusted within their column range and
+// reports RNF0263 ("Entry not right-adjusted") at severity 20 -- the program is
+// not created. This compiler trims both ends of every field, so it accepts
+// either form; warn so the divergence is at least visible. Only all-digit
+// entries are checked: alphanumeric fields (names, keywords) are left-adjusted
+// by rule, and a blank field carries no adjustment at all.
+static void warnIfNotRightAdjusted(const std::string& line, const ColSpec& spec,
+                                   int lineNo, const char* what) {
+    std::string raw = extractColRaw(line, spec);
+    std::string val = trim(raw);
+    if (val.empty()) return;
+    if (val.find_first_not_of("0123456789") != std::string::npos) return;
+    int width = spec.endCol - spec.startCol + 1;
+    std::string want = std::string(width - (int)val.size(), ' ') + val;
+    if (raw == want) return;
+    report_fixed_format_warning(lineNo,
+        std::string(what) + ": entry '" + val + "' is not right-adjusted in positions " +
+        std::to_string(spec.startCol) + "-" + std::to_string(spec.endCol) +
+        " (IBM rejects this: RNF0263)");
+}
+
 static void handleFSpecLine(Program* program, PendingFSpec& pending,
                              const std::string& line, int lineNo) {
     std::string name = extractCol(line, FSpec::FileName);
@@ -238,6 +259,26 @@ static void handleFSpecLine(Program* program, PendingFSpec& pending,
         report_fixed_format_error(lineNo, "F-spec: unsupported or missing device '" + device +
                                    "' for file " + name + " (Phase 1 supports DISK/PRINTER/WORKSTN)");
         return;
+    }
+
+    // Entries IBM requires that this reader has never looked at. A
+    // program-described file needs a File-Type (position 17) and a
+    // File-Format (position 22); omitting them is RNF2003/RNF2006 at
+    // severity 20, and the record length must be right-adjusted (RNF0263).
+    warnIfNotRightAdjusted(line, FSpec::RecordLen,   lineNo, "F-spec Record-Length");
+    warnIfNotRightAdjusted(line, FSpec::KeyFieldLen, lineNo, "F-spec Key-Field-Length");
+
+    std::string fileType = upper(extractCol(line, FSpec::FileType));
+    if (fileType.empty() || fileType.find_first_not_of("IOUC") != std::string::npos) {
+        report_fixed_format_warning(lineNo,
+            "F-spec: File-Type in position 17 is '" + (fileType.empty() ? std::string("blank") : fileType) +
+            "'; IBM requires I, O, U or C (RNF2003)");
+    }
+    std::string fileFormat = upper(extractCol(line, FSpec::FileFormat));
+    if (fileFormat.empty() || fileFormat.find_first_not_of("FE") != std::string::npos) {
+        report_fixed_format_warning(lineNo,
+            "F-spec: File-Format in position 22 is '" + (fileFormat.empty() ? std::string("blank") : fileFormat) +
+            "'; IBM requires F (program-described) or E (externally described) (RNF2006)");
     }
 
     pending.dclf = new DclF(upper(name), usage);
@@ -266,6 +307,10 @@ static void handleDSpecLine(Program* program, DSpecState& state,
     }
     state.pendingName.clear();
 
+    warnIfNotRightAdjusted(line, DSpec::FromPos,  lineNo, "D-spec From-Position");
+    warnIfNotRightAdjusted(line, DSpec::ToLen,   lineNo, "D-spec To/Length");
+    warnIfNotRightAdjusted(line, DSpec::Decimals, lineNo, "D-spec Decimal-Positions");
+
     std::string defType = upper(extractCol(line, DSpec::DefType));
     std::string dataTypeStr = extractCol(line, DSpec::DataType);
     char dataTypeChar = dataTypeStr.empty() ? '\0' : dataTypeStr[0];
@@ -275,6 +320,12 @@ static void handleDSpecLine(Program* program, DSpecState& state,
     int toLen = toLenStr.empty() ? 0 : atoi(toLenStr.c_str());
     std::string keywordTail = extractCol(line, DSpec::KeywordTail);
     auto kw = rpg::parseKeywordList(keywordTail);
+
+    // Any non-blank definition type ends an open group: DS/PR/PI open a new
+    // one, S/C are standalone. Only a blank type continues the current group
+    // as a subfield. Without this, an 'S' field following a DS was absorbed
+    // into it, which is not what IBM does.
+    if (!defType.empty()) state.currentDS = nullptr;
 
     if (defType == "DS") {
         auto* ds = new DclDS(upper(name));
@@ -368,6 +419,17 @@ static void handleDSpecLine(Program* program, DSpecState& state,
         if (it != kw.end() && !it->second.empty()) f.dim = atoi(it->second.c_str());
         state.currentDS->fields.push_back(f);
     } else {
+        // Reaching here with a blank definition type means a subfield-shaped
+        // line with no group open. IBM reads blank positions 24-25 as "subfield
+        // of the enclosing data structure" and rejects it with RNF3703 at
+        // severity 20; this compiler infers "standalone" instead. 94 such
+        // declarations were sitting in the test corpus unnoticed.
+        if (defType.empty()) {
+            report_fixed_format_warning(lineNo,
+                "D-spec: field '" + upper(name) + "' has a blank Definition-Type in "
+                "positions 24-25 and no open DS/PR/PI group; IBM reads this as a "
+                "subfield and rejects it (RNF3703). Specify 'S' for a standalone field");
+        }
         auto* n = new DclS(upper(name), type, length, digits, decimals);
         n->line = lineNo;
         auto it = kw.find("LIKE");
@@ -466,6 +528,9 @@ static void handleISpecLine(Program* program, ISpecState& state,
         rf->line = lineNo;
         rf->recordIdIndicator = upper(extractCol(line, ISpec::RecordIdInd));
         bool ok = true;
+        warnIfNotRightAdjusted(line, ISpec::Set1Position, lineNo, "I-spec record-ID Position (set 1)");
+        warnIfNotRightAdjusted(line, ISpec::Set2Position, lineNo, "I-spec record-ID Position (set 2)");
+        warnIfNotRightAdjusted(line, ISpec::Set3Position, lineNo, "I-spec record-ID Position (set 3)");
         ok &= parseIdTestSet(line, lineNo, ISpec::Set1Position, ISpec::Set1Not, ISpec::Set1CodePart, ISpec::Set1Character, rf->idTests);
         ok &= parseIdTestSet(line, lineNo, ISpec::Set2Position, ISpec::Set2Not, ISpec::Set2CodePart, ISpec::Set2Character, rf->idTests);
         ok &= parseIdTestSet(line, lineNo, ISpec::Set3Position, ISpec::Set3Not, ISpec::Set3CodePart, ISpec::Set3Character, rf->idTests);
@@ -494,6 +559,10 @@ static void handleISpecLine(Program* program, ISpecState& state,
     }
     std::string fmtStr = extractCol(line, ISpec::DataFormat);
     char fmtChar = fmtStr.empty() ? '\0' : fmtStr[0];
+    warnIfNotRightAdjusted(line, ISpec::FromPos,  lineNo, "I-spec From-Position");
+    warnIfNotRightAdjusted(line, ISpec::ToPos,    lineNo, "I-spec To-Position");
+    warnIfNotRightAdjusted(line, ISpec::Decimals, lineNo, "I-spec Decimal-Positions");
+
     std::string fromStr = extractCol(line, ISpec::FromPos);
     std::string toStr = extractCol(line, ISpec::ToPos);
     std::string decStr = extractCol(line, ISpec::Decimals);
@@ -613,6 +682,8 @@ static void handleOSpecLine(Program* program, OSpecState& state,
     }
     std::string fname = extractCol(line, OSpec::FieldName);
     std::string constantRaw = trim(extractCol(line, OSpec::Constant));
+    warnIfNotRightAdjusted(line, OSpec::EndPos, lineNo, "O-spec End-Position");
+
     std::string endStr = extractCol(line, OSpec::EndPos);
     if (endStr.empty() || (endStr[0] == '+' || endStr[0] == '-')) {
         report_fixed_format_error(lineNo,

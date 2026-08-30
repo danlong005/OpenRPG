@@ -1123,6 +1123,52 @@ job) or a `CRTSQLRPGI` parameter can set the decimal format. Until then the
 which parsed `EXEC SQL ...` as an `EVAL` (`RNF5347`). That looked like a
 language finding and was purely a routing bug. Routing is now by file content.
 
+### Bucket B — fixed-format tightening (in progress, 2026-08-30)
+
+rpgc now diagnoses the divergences the IBM i oracle found. All are **warnings**,
+not errors: being more permissive than IBM costs nothing for real-world source,
+which is well formed, but silently accepting malformed source is what let 183
+bad declarations accumulate across 72 test files unnoticed.
+
+New machinery:
+- `report_fixed_format_warning()` (parser.y) — prints, does **not** touch
+  `g_error_count`, so it cannot fail a build.
+- `extractColRaw()` (fixed_columns.h) — untrimmed slice. `extractCol()` trims
+  both ends, which is precisely why adjustment was invisible to this compiler.
+- `warnIfNotRightAdjusted()` (fixed_reader.cpp) — shared across F/D/I/O specs.
+
+Checks added, each naming the IBM diagnostic it mirrors:
+
+| Spec | Check | IBM |
+|------|-------|-----|
+| F | Record-Length, Key-Field-Length right-adjusted | RNF0263 |
+| F | File-Type (pos 17) is I/O/U/C | RNF2003 |
+| F | File-Format (pos 22) is F or E | RNF2006 |
+| D | From-Position, To/Length, Decimal-Positions right-adjusted | RNF0263 |
+| D | blank Definition-Type with no open group | RNF3703 |
+| I | From/To-Position, Decimals, record-ID positions right-adjusted | RNF0263 |
+| O | End-Position right-adjusted | RNF0263 |
+
+**Also a correctness fix, not just a diagnostic:** a non-blank definition type
+now ends an open DS group. Previously only a *non-D specification* did, so an
+`S` standalone declared after a data structure was silently absorbed into it as
+a subfield — which is not what IBM does.
+
+Validated both directions: replaying the pre-fix corpus (`git show 21b987e^`)
+raises the warnings on the files IBM rejected, and the current corpus raises
+exactly 24 warnings across exactly the 7 files IBM still flags
+(`test154`-`test160`) — an independent match with the oracle.
+
+Note `tests/run_tests.sh` discards stderr for passing tests, so warnings do not
+surface there. Run rpgc directly to see them.
+
+**Still open in bucket B:**
+- Those 7 files need fixing: F-spec Record-Length is mechanical, but the missing
+  File-Type and File-Format entries need a judgment call per test (I vs O vs U,
+  and program-described F).
+- BIFs in Factor 1 of traditional C-specs (finding 3, 16 files) — no check yet.
+- Once the corpus is clean, consider promoting these warnings to errors.
+
 ### Caveat on bucket D — needs a human pass
 
 Bucket D mixes two things the diagnostics cannot separate:

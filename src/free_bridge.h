@@ -42,6 +42,10 @@ void report_semantic_error(int line, const std::string& msg);
 // changes needed to main.cpp's existing `if (errors > 0)` check.
 void report_fixed_format_error(int line, const std::string& msg);
 
+// Reports source that IBM's compiler rejects but this one accepts. Does not
+// fail the compile -- see the definition in parser.y for the rationale.
+void report_fixed_format_warning(int line, const std::string& msg);
+
 // Some opcodes have no free-form syntax at all (SC09-2508 explicitly says
 // so — "not allowed, use other operation codes"): GOTO, TAG, MOVE and
 // MOVEL. parser.y's rules for them reject the statement unless this is

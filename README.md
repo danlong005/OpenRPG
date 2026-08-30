@@ -369,12 +369,15 @@ See the [User's Guide](docs/GUIDE.md#multi-module-programs) for details.
 
 ## Documentation
 
-- **[User's Guide](docs/GUIDE.md)** — Full language reference with examples
+- **[User's Guide](https://github.com/danlong005/OpenRPG/wiki)** — Full language reference with examples, browsable on the wiki (source: [docs/GUIDE.md](docs/GUIDE.md))
 - **[TODO.md](TODO.md)** — Feature tracker
 
 ### Highlights
 
 - Full free-format RPG IV support (declarations, control flow, expressions)
+- Fixed-format (column-based) source, mixable with free-format in one file
+- Display files (WORKSTN) with subfiles, via the OpenDSPF compiler
+- Program-described flat files (I-specs and O-specs)
 - 90+ built-in functions
 - Data structures (QUALIFIED, DIM, LIKEDS, OVERLAY, POS, PREFIX)
 - Procedures with prototypes, optional parameters (*NOPASS, *OMIT)

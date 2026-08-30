@@ -56,8 +56,8 @@ def main():
     title = f"IBM i compatibility — {a.release}" if a.release else "IBM i compatibility"
     L.append(f"# {title}")
     L.append("")
-    L.append(f"Every test source compiled by **IBM's own ILE RPG compiler** on IBM i 7.5 "
-             f"(PUB400), using `CRTBNDRPG` / `CRTSQLRPGI`. This is the independent check "
+    L.append(f"Every test source compiled by **IBM's own ILE RPG compiler** on IBM i 7.5, "
+             f"using `CRTBNDRPG` / `CRTSQLRPGI`. This is the independent check "
              f"on rpgc: `tests/expected_output` is regenerated from rpgc's own output, so "
              f"the local suite can only verify what rpgc already does.")
     L.append("")

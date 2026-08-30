@@ -15,6 +15,8 @@ Two transforms, both driven by diagnostics IBM emitted against this corpus:
      RNF0256).
   7. Lifts built-in functions out of traditional-syntax C-spec factors into a
      preceding EVAL (RNF0372).
+  8. Moves the KEYED keyword off fixed-format F-specs into the
+     Record-Address-Type entry in position 34 (RNF2367).
 
 IBM's ILE RPG compiler requires numeric entries in fixed-format specifications
 to be right-adjusted within their column range, and reports RNF0263 ("Entry not
@@ -421,6 +423,40 @@ def fix_bif_in_factor(lines, declare=True):
     return out, len(sites)
 
 
+def fix_keyed_fspec(lines):
+    """Moves KEYED off a fixed-format F-spec into position 34.
+
+    KEYED is a FREE-FORM `DCL-F` keyword. In a fixed-format F-spec, keyed
+    access is the Record-Address-Type entry: 'K' in position 34. IBM rejects
+    the keyword with RNF2367 ("The keyword is valid only for a free-form File
+    declaration") at severity 20.
+
+    Confirmed on IBM i 7.5: making only this change is enough to compile the
+    affected tests. The `RNF7055 Factor 1 ... is not valid` errors that also
+    appeared on their CHAIN statements were a knock-on from the malformed
+    F-spec, not a separate type problem, and clear with it.
+
+    Free-format `DCL-F ... KEYED` is untouched -- the keyword is correct there.
+    """
+    out, changes = list(lines), 0
+    for i, ln in fixed_only(lines):
+        if len(ln) < 6 or ln[5:6].upper() != 'F' or get(ln, 7, 7) == '*':
+            continue
+        tail = get(ln, 44, 80)
+        if not re.search(r'\bKEYED\b', tail, re.I):
+            continue
+        r = list(ln.ljust(100))
+        # strip the keyword from the tail, keeping the columns of anything else
+        for m in re.finditer(r'\bKEYED\b', tail, re.I):
+            for k in range(m.start(), m.end()):
+                r[43 + k] = ' '
+        if r[33] == ' ':
+            r[33] = 'K'
+        out[i] = ''.join(r).rstrip()
+        changes += 1
+    return out, changes
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("target", help="directory of .rpgle/.sqlrpgle sources")
@@ -451,7 +487,8 @@ def main():
         lines, n_oo = fix_ospec_order(lines)
         lines, n_bf = fix_bif_in_factor(
             lines, declare='copybook' not in os.path.basename(p).lower())
-        newlines, n, infree = [], n_dt + n_fs + n_ri + n_fb + n_oo + n_bf, False
+        lines, n_kf = fix_keyed_fspec(lines)
+        newlines, n, infree = [], n_dt + n_fs + n_ri + n_fb + n_oo + n_bf + n_kf, False
         for ln in lines:
             u = ln.strip().upper()
             # a mixed source embeds free-format between /FREE and /END-FREE;

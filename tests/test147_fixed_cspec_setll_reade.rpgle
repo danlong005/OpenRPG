@@ -1,5 +1,5 @@
      HDFTACTGRP(*NO)
-     FCUSTFL147 IF   E             DISK    KEYED
+     FCUSTFL147 IF   E           K DISK
      F                                     EXTDESC('CUSTFL147')
      Dkey              S             10A
       /free

@@ -1,5 +1,5 @@
      HDFTACTGRP(*NO)
-     FCUSTFL118 IF   E             DISK    KEYED
+     FCUSTFL118 IF   E           K DISK
      F                                     EXTDESC('CUSTFL118')
      DcustomerNumb...  S
      Der               S             10I 0

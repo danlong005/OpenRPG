@@ -1246,8 +1246,32 @@ their parent declares it.
 
 **Progress: accepted 88 -> 100 of 221; bucket B 46 -> 29.**
 
+**RLA C-spec group resolved (2026-08-30), 3 of 5.**
+
+`KEYED` is a **free-form `DCL-F` keyword**. In a fixed-format F-spec, keyed
+access is the Record-Address-Type entry: `K` in position 34. IBM rejects the
+keyword with `RNF2367` at severity 20. rpgc accepted it in the keyword tail as
+a deliberate extension (the comment in `finalizeFSpec` said so), and never read
+position 34 at all — `FSpec::RecAddrType` was defined and unused.
+
+*Both fixed:* rpgc now reads position 34 and rejects the keyword in fixed
+format; five F-specs moved. The `RNF7055 "Factor 1 ... is not valid"` errors on
+their CHAIN statements turned out to be knock-on from the malformed F-spec and
+cleared with it — not the CHAR/VARCHAR mismatch first suspected. Verified on the
+machine before changing anything.
+
+Accepted 100 -> 103.
+
 **Still open in bucket B:**
-- `RNF5014`/`RNF5375`/`RNF5001`/`RNF2367` on the RLA C-spec group (6 files).
+- **`test146_fixed_cspec_write_upd_del` — record formats.** `WRITE`, `UPDATE`
+  and `DELETE` against an *externally-described* file take the record FORMAT
+  name in Factor 2, not the file name (`RNF5063`, `RNF5198`). rpgc's RLA model
+  has no notion of record formats and uses the file name throughout. Fixing the
+  test means naming the format (`CUSTFL146R`), which rpgc would then have to
+  understand — real compiler work, not a source transform, and it couples the
+  test to whatever `RCDFMT` the setup script chose. Needs a design decision.
+- `test118_fixed_rla_chain` is **not** an RLA problem: it fails the SQL
+  precompile on the decimal-comma locale, so it belongs in bucket E.
 - Bucket F grew to 18 as files shed their bulk diagnostics and reached
   single, individual causes — that is progress, not regression.
 

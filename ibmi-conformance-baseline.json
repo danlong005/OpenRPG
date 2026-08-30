@@ -234,7 +234,7 @@
   "test118_fixed_rla_chain.rpgle": {
    "codes": [],
    "rpgc": "accept",
-   "sha256": "72c7d7a372d807061a3834742d323dc178d8cc2d6d834e66d15b28384f31ec21",
+   "sha256": "174715155806ad9be38b425ff78715f67e0cc48c9023608d90e8e3cd3a83d498",
    "verdict": "reject"
   },
   "test119_fixed_free_error.rpgle": {
@@ -310,13 +310,10 @@
    "verdict": "accept"
   },
   "test122_fixed_rla_chain_varchar.rpgle": {
-   "codes": [
-    "RNF2367",
-    "RNF7055"
-   ],
+   "codes": [],
    "rpgc": "accept",
-   "sha256": "fb1a086279801c7a5af6bfc8b0990153d2ca10db59cfd200ec9ffe755f1e92d0",
-   "verdict": "reject"
+   "sha256": "2829fa57ed58f51c3817434b0754c9dc45575fb7e6338bc8beec51bac31436bf",
+   "verdict": "accept"
   },
   "test123_fixed_ds_dim.rpgle": {
    "codes": [],
@@ -490,13 +487,10 @@
    "verdict": "reject"
   },
   "test144_fixed_cspec_chain.rpgle": {
-   "codes": [
-    "RNF2367",
-    "RNF7055"
-   ],
+   "codes": [],
    "rpgc": "accept",
-   "sha256": "d7cde3e6b70120165fdea5c79b6b05945d1f0b800ae334ca30e896b38138bcdf",
-   "verdict": "reject"
+   "sha256": "94dfa622c07e8bab8b5da6ac6452147a7e4a6245424e43e048304e1c22378f8e",
+   "verdict": "accept"
   },
   "test145_fixed_cspec_read.rpgle": {
    "codes": [],
@@ -506,24 +500,18 @@
   },
   "test146_fixed_cspec_write_upd_del.rpgle": {
    "codes": [
-    "RNF2367",
     "RNF5063",
-    "RNF5198",
-    "RNF7055"
+    "RNF5198"
    ],
    "rpgc": "accept",
-   "sha256": "092a14729d980c78045569383e02c56cafd9a33e7b9d3014d140df03c204a0ae",
+   "sha256": "862e08e19961fda38aaaf1137623736decc8add8201524b17a86faaf731d2340",
    "verdict": "reject"
   },
   "test147_fixed_cspec_setll_reade.rpgle": {
-   "codes": [
-    "RNF2367",
-    "RNF5201",
-    "RNF7055"
-   ],
+   "codes": [],
    "rpgc": "accept",
-   "sha256": "15468f3032cec795712c4f86306b3476f8b567f73afe8f1ae138dbef841f689c",
-   "verdict": "reject"
+   "sha256": "d35384f96419ffc12be71bb63e5963eaea1dc88c5da19a4301860fca767bbe04",
+   "verdict": "accept"
   },
   "test148_fixed_cspec_goto_tag.rpgle": {
    "codes": [
@@ -1688,5 +1676,5 @@
    "verdict": "reject"
   }
  },
- "generated": "2026-08-30T21:52:48+00:00"
+ "generated": "2026-08-30T22:25:09+00:00"
 }

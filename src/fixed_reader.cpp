@@ -205,7 +205,17 @@ static void finalizeFSpec(Program* program, PendingFSpec& pending) {
     // aren't real legacy F-spec keywords, but are this compiler's
     // pragmatic equivalent for externally-described files, matching how
     // free-format DCL-F already spells them.
-    if (kw.count("KEYED")) pending.dclf->keyed = true;
+    // KEYED is a FREE-FORM DCL-F keyword. In a fixed-format F-spec, keyed
+    // access is the Record-Address-Type entry in position 34 ('K'), and IBM
+    // rejects the keyword outright with RNF2367 ("The keyword is valid only
+    // for a free-form File declaration") at severity 20. This reader used to
+    // accept it in the keyword tail as an extension, which left five tests
+    // uncompilable on a real system for a reason nothing local reported.
+    if (kw.count("KEYED")) {
+        report_fixed_format_error(pending.line,
+            "F-spec: KEYED is a free-form DCL-F keyword; in fixed format put 'K' in "
+            "position 34 (Record-Address-Type) instead (IBM: RNF2367)");
+    }
     if (kw.count("USROPN")) pending.dclf->usropn = true;
     auto it = kw.find("EXTDESC");
     if (it != kw.end()) pending.dclf->extdesc = it->second;
@@ -283,6 +293,16 @@ static void handleFSpecLine(Program* program, PendingFSpec& pending,
     }
 
     pending.dclf = new DclF(upper(name), usage);
+    // Record-Address-Type (position 34): 'K' means the file is accessed by key.
+    // This is the fixed-format spelling of what free-form DCL-F calls KEYED.
+    std::string rat = upper(extractCol(line, FSpec::RecAddrType));
+    if (rat == "K") {
+        pending.dclf->keyed = true;
+    } else if (!rat.empty()) {
+        report_fixed_format_error(lineNo,
+            "F-spec: Record-Address-Type '" + rat + "' in position 34 is not supported; "
+            "only 'K' (keyed) or blank");
+    }
     pending.tailText = extractCol(line, FSpec::KeywordTail);
     pending.line = lineNo;
     std::string recLenStr = extractCol(line, FSpec::RecordLen);

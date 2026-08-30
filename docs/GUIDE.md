@@ -41,81 +41,165 @@ OpenRPG transpiles IBM RPG IV source code into portable C++17 and optionally com
 
 ## Installation
 
-### Prerequisites
+Download a prebuilt installer from the
+[Releases page](https://github.com/danlong005/OpenRPG/releases). Each one puts
+`rpgc` on your PATH and brings the runtime headers with it — there is nothing
+to build and no compiler toolchain to set up first.
+
+| Platform | Download | Architectures |
+|----------|----------|---------------|
+| macOS | `openrpg-<version>.pkg` | Apple Silicon (arm64) |
+| Debian / Ubuntu | `rpgc_<version>_amd64.deb`, `rpgc_<version>_arm64.deb` | x86_64, ARM64 |
+| RHEL / Fedora | `rpgc-<version>-1.x86_64.rpm`, `rpgc-<version>-1.aarch64.rpm` | x86_64, ARM64 |
+| Windows | `openrpg-<version>-windows-x64.exe`, `openrpg-<version>-windows-arm64.exe` | x86_64, ARM64 |
+
+If your machine is not on that list, [build from
+source](#building-from-source) instead.
+
+### macOS
+
+The `.pkg` bundles both `rpgc` and the display file compiler `dspfc`. Install
+`unixodbc` first — the compiler links against it:
+
+```bash
+brew install unixodbc
+```
+
+OpenRPG is not code-signed with an Apple Developer certificate, so Gatekeeper
+will block the installer. Clear the quarantine flag, then open it:
+
+```bash
+xattr -cr ~/Downloads/openrpg-*.pkg
+```
+
+Double-click the `.pkg` and follow the prompts.
+
+### Linux
+
+The packages declare their ODBC dependencies, so the package manager pulls
+those in for you.
+
+**Debian / Ubuntu:**
+```bash
+sudo dpkg -i rpgc_*.deb
+sudo apt-get install -f      # resolves any missing dependencies
+```
+
+**RHEL / Fedora:**
+```bash
+sudo dnf install ./rpgc-*.rpm
+```
+
+On Linux the display file compiler ships as its own `dspfc` package. `rpgc`
+recommends it, so most package managers install it alongside — if you are
+writing [display file programs](#display-files-workstn) and `dspfc` is not on
+your PATH afterwards, install it the same way:
+
+```bash
+sudo dpkg -i dspfc_*.deb          # Debian/Ubuntu
+sudo dnf install ./dspfc-*.rpm    # RHEL/Fedora
+```
+
+### Windows
+
+Run the installer and follow the prompts. It adds `rpgc` to your PATH.
+
+**No other prerequisites are needed.** The installer bundles a self-contained
+C++ toolchain (a trimmed [llvm-mingw](https://github.com/mstorsjo/llvm-mingw))
+for `rpgc` and `dspfc` to build the programs they compile, plus a PDCurses
+build for display file programs. You do not need MSYS2 or Visual Studio.
+
+Embedded SQL is the one exception: it needs a platform ODBC driver installed
+separately — see [Database Connections](#database-connections).
+
+> **ARM64 note:** of the ODBC drivers this guide covers, only Microsoft's ODBC
+> Driver 18 for SQL Server (18.2+) ships a native ARM64 Windows build. The
+> SQLite, PostgreSQL and MySQL/MariaDB installers are x86_64-only, so SQL and
+> RLA features against those three are not available on Windows ARM64 without
+> building a driver yourself.
+
+### Checking the Install
+
+```bash
+rpgc -v          # prints the version
+dspfc -v         # only if you installed the display file compiler
+```
+
+### Database Drivers
+
+The installers cover the compiler itself. Embedded SQL and record-level access
+additionally need an ODBC driver for whichever database you are using — see
+[Database Connections](#database-connections) for per-database setup.
+
+---
+
+### Building from Source
+
+Build from source if there is no prebuilt package for your machine — an Intel
+Mac, a distribution that takes neither `.deb` nor `.rpm`, or any other
+platform with a C++17 compiler.
+
+**Prerequisites:**
 
 - **C++17 compiler** (clang++ or g++)
 - **Flex** (lexer generator)
 - **Bison** (parser generator)
-- **unixODBC + database driver** (only if using embedded SQL)
-
-### macOS (Homebrew)
-
-```bash
-brew install flex bison
-
-# For embedded SQL support:
-brew install unixodbc
-# Plus a database driver (see Database Connections section)
-```
-
-### Linux (Debian/Ubuntu)
+- **unixODBC + a database driver** — only for embedded SQL and RLA
+- **ncurses** — only for display file programs
 
 ```bash
-sudo apt install flex bison g++
+# macOS
+brew install flex bison unixodbc ncurses
 
-# For embedded SQL support:
-sudo apt install unixodbc-dev
-# Plus a database driver (see Database Connections section)
+# Debian/Ubuntu
+sudo apt install flex bison g++ unixodbc-dev libncurses-dev
+
+# RHEL/Fedora
+sudo dnf install flex bison gcc-c++ unixODBC-devel ncurses-devel
 ```
 
-### Windows (MSYS2/MinGW)
-
-1. Install [MSYS2](https://www.msys2.org/) and open the **MINGW64** shell.
+On Windows, install [MSYS2](https://www.msys2.org/) and build from the
+**MINGW64** shell (or **CLANGARM64** on ARM64, which has no native gcc):
 
 ```bash
 pacman -S mingw-w64-x86_64-gcc mingw-w64-x86_64-flex mingw-w64-x86_64-bison make
 ```
 
-Windows has a built-in ODBC driver manager, so `unixODBC` is not needed. Database ODBC drivers are installed via MSI installers and configured through the **ODBC Data Source Administrator** (search "ODBC" in the Start menu). See [Database Connections](#database-connections) for driver-specific setup.
+Windows has a built-in ODBC driver manager, so unixODBC is not needed there.
 
-> **Note:** You can also build with Visual Studio using [winflexbison](https://github.com/nicehash/winflexbison). Install via `choco install winflexbison` or download from the GitHub releases page. You'll need to adjust the `FLEX` and `BISON` paths in the Makefile or create a CMake/MSBuild project.
+**Build:**
 
-### Build
+The display file compiler lives in a submodule, so clone recursively:
 
-**macOS / Linux:**
 ```bash
-git clone <repo-url>
-cd rpg_compiler
+git clone --recursive https://github.com/danlong005/OpenRPG.git
+cd OpenRPG
 make
 ```
 
-**Windows (MSYS2 MINGW64 shell):**
-```bash
-git clone <repo-url>
-cd rpg_compiler
-make
-```
+This produces the `rpgc` executable in the working directory. If you cloned
+without `--recursive`, run `git submodule update --init` before building.
 
-This produces the `rpgc` executable.
-
-### Install (optional)
-
-To install OpenRPG system-wide:
+**Install:**
 
 ```bash
-sudo make install              # installs to /usr/local/bin
-make install PREFIX=~/.local   # or install to ~/.local/bin (no sudo needed)
+sudo make install-all               # rpgc + dspfc, into /usr/local
+make install-all PREFIX=~/.local    # or a user-local prefix, no sudo
 ```
 
-This installs:
-- `rpgc` binary to `$PREFIX/bin/`
-- Runtime headers to `$PREFIX/share/rpgc/runtime/`
+Use `make install` instead of `make install-all` to install `rpgc` on its own,
+without the display file compiler.
 
-When compiling RPG programs, OpenRPG automatically finds the runtime headers — it checks relative to the binary, the current directory, and the install prefix.
+This installs the `rpgc` binary to `$PREFIX/bin/` and the runtime headers to
+`$PREFIX/share/rpgc/runtime/`. When compiling a program, OpenRPG finds those
+headers automatically — it checks relative to the binary, then the current
+directory, then the install prefix.
 
-To uninstall:
+To remove it again:
+
 ```bash
 sudo make uninstall
+sudo make uninstall-dspf     # if you installed dspfc too
 ```
 
 ---

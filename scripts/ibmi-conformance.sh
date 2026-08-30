@@ -127,15 +127,21 @@ while IFS= read -r f; do
     [ -z "$f" ] && continue
     src="$WORK/tests/$f"
     echo "@@@FILE $f"
-    case "$f" in
-      *.sqlrpgle)
+    # Route by CONTENT, not extension: several .rpgle files carry embedded
+    # EXEC SQL and must go through the SQL precompiler too. Routing on the
+    # filename made CRTBNDRPG parse "EXEC SQL ..." as an EVAL statement
+    # (RNF5347 "assignment operator is expected"), which looked like a language
+    # finding and was purely a harness bug.
+    if grep -iE 'EXEC +SQL' "$src" >/dev/null 2>&1; then kind=sql; else kind=rpg; fi
+    case "$kind" in
+      sql)
         # No COMPILEOPT: nesting quotes inside a CL string inside a shell string
         # is what broke every .sqlrpgle last run. Nothing here needs INCDIR (no
         # .sqlrpgle uses /COPY) and TGTCCSID does not affect acceptance.
         out=$($SYS "CRTSQLRPGI OBJ($LIB/CONFTMP) SRCSTMF('$src') OBJTYPE(*PGM) COMMIT(*NONE)" </dev/null 2>&1)
         rc=$?
         ;;
-      *)
+      rpg)
         # Deliberately NOT OPTION(*NOGEN): with nothing to create, the compiler
         # appears not to signal failure through its exit status, which silently
         # scored invalid sources as accepted. A real compile gives a trustworthy

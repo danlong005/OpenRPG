@@ -1,6 +1,6 @@
      HDFTACTGRP(*NO)
      FCUSTFL118 I    E             DISK    KEYED
-     F                                     EXTDESC('custfl118')
+     F                                     EXTDESC('CUSTFL118')
      DcustomerNumb...  S
      Der               S             10I 0
       /free

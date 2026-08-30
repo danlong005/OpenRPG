@@ -1,7 +1,7 @@
 **FREE
 // Test 104: RLA — READ sequential loop, %EOF
 
-DCL-F CUSTFL104 DISK EXTDESC('custfl104');
+DCL-F CUSTFL104 DISK EXTDESC('CUSTFL104');
 
 DCL-S connStr VARCHAR(200);
 

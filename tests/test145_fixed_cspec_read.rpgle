@@ -1,6 +1,6 @@
      HDFTACTGRP(*NO)
      FCUSTFL145 I    E             DISK
-     F                                     EXTDESC('custfl145')
+     F                                     EXTDESC('CUSTFL145')
       /free
   EXEC SQL CREATE TABLE custfl145 (
     CUSTNO VARCHAR(10),

@@ -1062,6 +1062,67 @@ more permissive than IBM costs nothing for the goal of eating real-world source
 malformed declarations accumulate unnoticed across 72 test files. Recommendation:
 **warn, don't reject.**
 
+### Bucket A — object setup (done 2026-08-30)
+
+`scripts/ibmi-setup-objects.sh` creates everything the corpus references, all
+of it *derived* rather than hardcoded: tables from the `.extdesc` sidecars,
+program-described record lengths from the F-specs, data areas from `DTAARA()`
+keywords. Re-runnable. `NOSUCHDA96` is deliberately NOT created —
+`test96_da_status401` asserts the data-area-not-found status.
+
+Created: 12 tables, 7 program-described PFs, 1 data area, 1 printer file.
+Effect: `RNF2120` "external description not found" went from 13 files to 2, and
+the record-format clash is gone. The accepted count barely moved (72 -> 73)
+because those files each carry several independent problems; clearing the
+dependency layer exposes the next one rather than flipping the file green.
+
+Three more parameters that are not guessable, all found by failure:
+
+- **`DECIMAL(9,2)` is a parse error on this box.** The job is German-locale, so
+  `9,2` lexes as the *number* 9.2. `DECIMAL(9 , 2)` — spaces around the comma —
+  parses. Do not "tidy" those spaces away.
+- **`RCDFMT` is required on `CREATE TABLE`.** SQL names the record format after
+  the table, and RPG rejects a format whose name matches the file
+  (`RNF2121` + `RNF2109`).
+- **`RUNSQLSTM` needs `ERRLVL(30)`.** `SQL0204` (dropping a table that isn't
+  there) is severity 30 and the default stops the whole script at the first one.
+
+### Findings 6-8 (from the object-setup work)
+
+6. **Data area names longer than 10 characters.** `RPGCTEST97DA` and
+   `RPGCTEST98DA` are 12 chars; IBM i object names cap at 10 (`CPD0074`), so
+   these objects *cannot exist*. rpgc accepts arbitrary-length names. Fix is to
+   rename in the corpus — not creatable on the IBM i side.
+7. **`EXTDESC` literals are case-sensitive on IBM i.** RPG uses the quoted
+   literal verbatim as the object name, and IBM i object names are uppercase,
+   so a lowercase literal can never resolve (`RNF2120`). rpgc treats it
+   case-insensitively **and generates lowercase `table=` lines in the
+   `.extdesc` sidecars it writes.** *Corpus fixed (11 files uppercased, rpgc
+   output verified byte-identical); rpgc's sidecar generator still emits
+   lowercase.*
+8. **The `.extdesc` model cannot express CHAR vs VARCHAR.** Both are recorded as
+   `std::string(N)`, so rpgc cannot detect a `VARCHAR` key chained against a
+   `CHAR` key field. IBM enforces it (`RNF7080` "Factor 1 field is not the same
+   type as first key field"). The tests' own `EXEC SQL CREATE TABLE` declares
+   `VARCHAR`, which is what the setup script now creates.
+
+### Open environmental blocker: SQL decimal comma
+
+The German-locale job also breaks the **tests' own** embedded SQL:
+`INSERT ... VALUES('C001','Alice Smith',1500.00)` fails with
+`SQL0104 Token ,1500 was not valid`. This is job configuration, not a language
+incompatibility, and it currently masks whether the embedded SQL is otherwise
+valid. `CHGJOB` does not help — each `system` invocation is its own job. Worth
+investigating whether a compiled CL wrapper (`CHGJOB` + `CRTSQLRPGI` in one
+job) or a `CRTSQLRPGI` parameter can set the decimal format. Until then the
+~24 EXEC SQL files cannot be meaningfully assessed.
+
+### Harness fix: route by content, not extension
+
+11 `.rpgle` files carry embedded `EXEC SQL` and were being sent to `CRTBNDRPG`,
+which parsed `EXEC SQL ...` as an `EVAL` (`RNF5347`). That looked like a
+language finding and was purely a routing bug. Routing is now by file content.
+
 ### Caveat on bucket D — needs a human pass
 
 Bucket D mixes two things the diagnostics cannot separate:

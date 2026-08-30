@@ -180,6 +180,36 @@ static bool containsBuiltIn(const std::string& s) {
     return false;
 }
 
+// Rejects a built-in in any traditional-syntax operand. Returns true when it
+// reported, so callers can bail out.
+//
+// Traditional Factor 1, Factor 2 and the Result field take a field name, a
+// literal, or a named/figurative constant. A built-in is an expression and is
+// only legal in EXTENDED Factor 2. IBM reports RNF0372 at severity 20 for the
+// factors; a built-in in the Result field is rejected too, since the result
+// operand must be assignable.
+//
+// Every traditional path routes through here rather than checking inline: the
+// CAS/CAB group reads its own operands and returns before the shape switch, so
+// an inline check in one place left `C %LEN(s) CABGT n TAG1` accepted.
+static bool rejectBuiltInOperands(const std::string& opcodeName, int lineNo,
+                                  const std::string& factor1,
+                                  const std::string& factor2,
+                                  const std::string& result) {
+    struct { const char* what; const std::string& text; } ops[] = {
+        {"Factor 1", factor1}, {"Factor 2", factor2}, {"the Result field", result}
+    };
+    for (const auto& o : ops) {
+        if (!containsBuiltIn(o.text)) continue;
+        report_fixed_format_error(lineNo,
+            std::string("C-spec: built-in function in ") + o.what + " of '" + opcodeName +
+            "' — traditional-syntax operands take a field, literal or constant, not an "
+            "expression. Assign the built-in to a field with EVAL first (IBM: RNF0372)");
+        return true;
+    }
+    return false;
+}
+
 static std::string wrapCond(const std::string& cond, const std::string& stmt) {
     if (cond.empty()) return stmt;
     return "IF " + cond + "; " + stmt + " ENDIF;";
@@ -603,6 +633,7 @@ void feedCSpecLine(CSpecRunState& state, const std::string& line, int lineNo) {
         std::string factor1 = extractCol(line, CSpec::Factor1);
         std::string factor2 = extractCol(line, CSpec::Factor2);
         std::string result  = extractCol(line, CSpec::Result);
+        if (rejectBuiltInOperands(opcodeName, lineNo, factor1, factor2, result)) return;
 
         if (opcodeName == "ENDCS") {
             if (!state.inCasGroup) {
@@ -788,18 +819,7 @@ void feedCSpecLine(CSpecRunState& state, const std::string& line, int lineNo) {
     case CSpecShape::TRADITIONAL: {
         std::string factor2 = extractCol(line, CSpec::Factor2);
         std::string result = extractCol(line, CSpec::Result);
-        // Built-ins are expressions and belong only in extended Factor 2.
-        for (int which = 0; which < 2; ++which) {
-            const std::string& f = which == 0 ? factor1 : factor2;
-            if (containsBuiltIn(f)) {
-                report_fixed_format_error(lineNo,
-                    std::string("C-spec: built-in function in Factor ") + (which == 0 ? "1" : "2") +
-                    " of '" + opcodeName + "' — traditional-syntax factors take a field, "
-                    "literal or constant, not an expression. Assign the built-in to a field "
-                    "with EVAL first (IBM: RNF0372)");
-                return;
-            }
-        }
+        if (rejectBuiltInOperands(opcodeName, lineNo, factor1, factor2, result)) return;
         if (opcodeName == "COMP") {
             // The one opcode whose resulting indicators are its entire
             // effect — and, unlike the resulting indicators free-form

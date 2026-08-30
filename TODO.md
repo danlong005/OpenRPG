@@ -1283,20 +1283,27 @@ concept has no referent off IBM i.
 (The `IRecordFormat`/`ORecordFormat` types in the AST are unrelated: they model
 I-spec/O-spec record *identification* for program-described flat files.)
 
-Two separate questions follow, and only the second is worth doing:
+**DECISION (2026-08-30): rpgc does not support record formats for database
+files. It does support them for display files.**
 
-1. **Should rpgc require format names?** No. It would be inventing an IBM i
-   concept its runtime cannot honour, and coupling test sources to whatever
-   `RCDFMT` the setup script happened to pick.
-2. **Should rpgc *accept* a format name where a file name is expected?**
-   Probably yes, as a coverage item rather than a conformance one. Real shop
-   RPG names record formats constantly — in `WRITE`, `UPDATE`, `DELETE`,
-   `EXFMT`, `READ`. A compiler aiming to eat real-world source has to parse
-   them. Treating a format name as an alias for its file is cheap and needs no
-   new runtime concept. **Not started.**
+The line is drawn where the concept has a referent:
 
-`test146` should be counted as a platform divergence alongside free-format DDS,
-not as a defect in the work queue.
+| File type | Record formats | Why |
+|-----------|----------------|-----|
+| DISK (database) | **no** | The target is an SQL table. SQLite, PostgreSQL and DB2 LUW have no record-format layer, so there is nothing for a format name to denote. RLA resolves against `table=` in the `.extdesc` sidecar. |
+| WORKSTN (display) | **yes** | A display file genuinely *is* a set of named record formats, and `EXFMT` must name one. Already modelled: `ExFmt::format` in `ast.h`, and OpenDSPF's descriptor carries `records[]`. |
+
+Not a gap to close later — a deliberate boundary. Supporting DB record formats
+would mean inventing an IBM i concept the runtime cannot honour, and coupling
+source to whatever `RCDFMT` a file happened to be created with.
+
+*Consequence, stated plainly:* shop RPG that names a database record format in
+`WRITE`/`UPDATE`/`DELETE`/`READ` will not compile unmodified; the file name has
+to be substituted. That is a real coverage cost on the "compile real-world RPG"
+goal, accepted knowingly.
+
+`test146` counts as a platform divergence alongside free-format DDS, not as a
+defect in the work queue.
 - `test118_fixed_rla_chain` is **not** an RLA problem: it fails the SQL
   precompile on the decimal-comma locale, so it belongs in bucket E.
 - Bucket F grew to 18 as files shed their bulk diagnostics and reached

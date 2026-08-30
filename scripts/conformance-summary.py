@@ -74,11 +74,22 @@ name the record **format**, not the file:
 C                   WRITE     CUSTFL146R
 ```
 
-OpenRPG names the file, because record formats are an IBM i concept: DB2 for i
-tables are native file objects with a format name, while the SQL databases
-OpenRPG runs against have no such layer. Source using record-level access on
-externally-described files is therefore not portable between the two without
-change.
+OpenRPG names the file. Record formats are an IBM i concept: DB2 for i tables
+are native file objects carrying a format name, while the SQL databases OpenRPG
+runs against — SQLite, PostgreSQL, DB2 LUW — have no such layer, so a format
+name would denote nothing.
+
+This is a deliberate boundary rather than a gap. **Display files are the
+exception and do use record formats**, because a display file genuinely is a
+set of named formats and `EXFMT` must name one:
+
+```rpg
+EXFMT MAINMENU;
+```
+
+So: database access names the file, display access names the format. Source
+doing record-level access on externally-described database files needs the
+format name replaced with the file name to move between the two.
 
 ### Other limits worth knowing
 

@@ -59,6 +59,7 @@ jobs:
               --depends unixodbc \
               --depends unixodbc-dev \
               --depends g++ \
+              --depends libncurses-dev \
               --deb-recommends dspfc \
               -C /tmp/rpgc-root \
               usr/
@@ -75,6 +76,8 @@ jobs:
               --depends unixODBC \
               --depends unixODBC-devel \
               --depends gcc-c++ \
+              --depends ncurses-devel \
+              --rpm-tag "Recommends: dspfc" \
               -C /tmp/rpgc-root \
               usr/
 
@@ -164,6 +167,7 @@ jobs:
               --depends unixodbc \
               --depends unixodbc-dev \
               --depends g++ \
+              --depends libncurses-dev \
               --deb-recommends dspfc \
               -C /tmp/rpgc-root \
               usr/
@@ -180,6 +184,8 @@ jobs:
               --depends unixODBC \
               --depends unixODBC-devel \
               --depends gcc-c++ \
+              --depends ncurses-devel \
+              --rpm-tag "Recommends: dspfc" \
               -C /tmp/rpgc-root \
               usr/
 

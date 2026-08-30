@@ -58,12 +58,24 @@ source](#building-from-source) instead.
 
 ### macOS
 
-The `.pkg` bundles both `rpgc` and the display file compiler `dspfc`. Install
-`unixodbc` first — the compiler links against it:
+The `.pkg` bundles both `rpgc` and the display file compiler `dspfc`.
+
+Two things must be present first. **Xcode Command Line Tools** provide the
+`clang++` that `rpgc` invokes to build the programs it compiles, and the
+ncurses headers display file programs need:
+
+```bash
+xcode-select --install     # skip if `xcode-select -p` already prints a path
+```
+
+And **unixODBC**, which `rpgc` itself links against:
 
 ```bash
 brew install unixodbc
 ```
+
+(Installing Homebrew pulls in the Command Line Tools, so if you already have
+`brew` you almost certainly have them.)
 
 OpenRPG is not code-signed with an Apple Developer certificate, so Gatekeeper
 will block the installer. Clear the quarantine flag, then open it:
@@ -76,8 +88,9 @@ Double-click the `.pkg` and follow the prompts.
 
 ### Linux
 
-The packages declare their ODBC dependencies, so the package manager pulls
-those in for you.
+The packages declare everything they need — the C++ compiler `rpgc` shells out
+to, the unixODBC headers and library, and the ncurses headers display file
+programs link against — so the package manager pulls all of it in for you.
 
 **Debian / Ubuntu:**
 ```bash
@@ -141,15 +154,18 @@ platform with a C++17 compiler.
 
 **Prerequisites:**
 
-- **C++17 compiler** (clang++ or g++)
+- **C++17 compiler** (clang++ or g++) — `rpgc` also invokes it at runtime to
+  build the programs it compiles, so it is needed after installation too
 - **Flex** (lexer generator)
 - **Bison** (parser generator)
 - **unixODBC + a database driver** — only for embedded SQL and RLA
-- **ncurses** — only for display file programs
+- **ncurses** — only for display file programs; on macOS it comes with the
+  Command Line Tools, on Linux it is a separate `-dev`/`-devel` package
 
 ```bash
-# macOS
-brew install flex bison unixodbc ncurses
+# macOS — clang++ and ncurses come from the Xcode Command Line Tools
+xcode-select --install
+brew install flex bison unixodbc
 
 # Debian/Ubuntu
 sudo apt install flex bison g++ unixodbc-dev libncurses-dev

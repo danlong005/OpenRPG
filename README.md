@@ -10,11 +10,19 @@ Pre-built packages are available on the [Releases](../../releases) page.
 
 ### macOS
 
-Download `openrpg-<version>.pkg` from the Releases page — it bundles both `rpgc` and `dspfc`. The `unixodbc` library must be present before installing:
+Download `openrpg-<version>.pkg` from the Releases page — it bundles both `rpgc` and `dspfc`. Two things must be present before installing. The **Xcode Command Line Tools** supply the `clang++` that `rpgc` invokes to build the programs it compiles, plus the ncurses headers display-file programs need:
+
+```bash
+xcode-select --install     # skip if `xcode-select -p` already prints a path
+```
+
+And the `unixodbc` library, which `rpgc` itself links against:
 
 ```bash
 brew install unixodbc
 ```
+
+Installing Homebrew pulls in the Command Line Tools, so if you already have `brew` you almost certainly have them.
 
 Apple Silicon (arm64) only — GitHub's hosted macOS runners dropped Intel support, so there's no x86_64 build.
 
@@ -30,7 +38,7 @@ Then double-click the `.pkg` to install. This puts `rpgc` on your PATH system-wi
 
 ### Linux
 
-Download the `.deb` (Debian/Ubuntu) or `.rpm` (RHEL/Fedora) from the Releases page — each is available for both x86_64 (`amd64`/`x86_64`) and ARM64 (`arm64`/`aarch64`, e.g. AWS Graviton, Raspberry Pi). The packages declare their ODBC dependencies, so the package manager will pull them in automatically.
+Download the `.deb` (Debian/Ubuntu) or `.rpm` (RHEL/Fedora) from the Releases page — each is available for both x86_64 (`amd64`/`x86_64`) and ARM64 (`arm64`/`aarch64`, e.g. AWS Graviton, Raspberry Pi). The packages declare everything they need — the C++ compiler, the unixODBC headers and library, and the ncurses headers for display-file programs — so the package manager will pull it all in automatically.
 
 **Debian/Ubuntu:**
 ```bash

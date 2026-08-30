@@ -1,5 +1,5 @@
      HDFTACTGRP(*NO)
-     Dtotal                     10     I0
+     Dtotal            S             10I 0
      C                   EVAL      total = 1
      C     %CHAR(total)  DSPLY
       /INCLUDE tests/fixed_copybook_cspec.rpgle

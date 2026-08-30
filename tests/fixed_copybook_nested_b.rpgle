@@ -1,1 +1,1 @@
-     DfieldB                    10     I0
+     DfieldB           S             10I 0

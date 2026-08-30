@@ -1,5 +1,5 @@
      HDFTACTGRP(*NO)
-     Dx                         10     I0
+     Dx                S             10I 0
       /free
   x = ;
   *INLR = *ON;

@@ -1,8 +1,8 @@
      HDFTACTGRP(*NO)
      FCUSTFL118 I    E             DISK    KEYED
      F                                     EXTDESC('custfl118')
-     DcustomerNumb...
-     Der                        10     I0
+     DcustomerNumb...  S
+     Der               S             10I 0
       /free
   EXEC SQL CREATE TABLE custfl118 (
     CUSTNO INTEGER PRIMARY KEY,

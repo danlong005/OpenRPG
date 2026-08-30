@@ -1,2 +1,2 @@
       /COPY tests/fixed_copybook_nested_b.rpgle
-     DfieldA                    10     I0
+     DfieldA           S             10I 0

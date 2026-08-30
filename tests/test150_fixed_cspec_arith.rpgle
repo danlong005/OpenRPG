@@ -1,7 +1,7 @@
      HDFTACTGRP(*NO)
-     Da                         10     I0
-     Db                         10     I0
-     Dr                         10     I0
+     Da                S             10I 0
+     Db                S             10I 0
+     Dr                S             10I 0
      C                   EVAL      a = 5
      C                   EVAL      b = 3
      C     a             ADD       b             r

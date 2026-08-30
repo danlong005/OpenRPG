@@ -1,11 +1,11 @@
      HDFTACTGRP(*NO)
      FTESTFL154       25           DISK
      ITESTFL154
-     I                             A1    20     NAME
-     I                             S21   25   0 AGE
+     I                             A    1   20  NAME
+     I                             S   21   25 0AGE
      OTESTFL154
-     O                       NAME             20
-     O                       AGE              25
+     O                       NAME                20
+     O                       AGE                 25
       /free
   NAME = 'Alice';
   AGE = 30;

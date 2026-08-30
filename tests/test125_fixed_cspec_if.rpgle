@@ -1,5 +1,5 @@
      HDFTACTGRP(*NO)
-     Dn                         10     I0
+     Dn                S             10I 0
      C                   EVAL      n = 7
      C                   IF        n = 5
      C     'five'        DSPLY

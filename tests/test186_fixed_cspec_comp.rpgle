@@ -1,6 +1,6 @@
      HDFTACTGRP(*NO)
-     Dn                         10     I0
-     Dr                         10     A   VARYING
+     Dn                S             10I 0
+     Dr                S             10A   VARYING
      C                   EVAL      n = 5
      C     n             COMP      3                                  102030
      C   10              EVAL      r = 'hi'

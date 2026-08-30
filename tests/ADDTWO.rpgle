@@ -4,9 +4,9 @@
      H*program's traditional CALL, which resolves a program name to a
      H*same-named C++ function.
      HDFTACTGRP(*NO)
-     DN                S             10I0
+     DN                S             10I 0
      DMSG              S             10A
-     DSEEN             S             10I0
+     DSEEN             S             10I 0
      C*Factor 1 on an *ENTRY PARM is the entry-time copy: SEEN receives
      C*N once this program gets control (p.929 step 3).
      C     *ENTRY        PLIST

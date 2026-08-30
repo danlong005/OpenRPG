@@ -1,5 +1,5 @@
      HDFTACTGRP(*NO)
-     Di                         10     I0
+     Di                S             10I 0
      C                   FOR       i = 1 TO 3
      C     %CHAR(i)      DSPLY
      C                   ENDFOR

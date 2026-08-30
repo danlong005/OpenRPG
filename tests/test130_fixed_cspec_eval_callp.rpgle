@@ -1,7 +1,7 @@
      HDFTACTGRP(*NO)
-     Dtotal                     10     I0
-     Dmsg                       5      A
-     Di                         10     I0
+     Dtotal            S             10I 0
+     Dmsg              S              5A
+     Di                S             10I 0
      C                   EVAL      total = 5 + 3
      C                   EVALR     msg = 'HI'
      C                   FOR       i = 1 TO 6

@@ -3,9 +3,9 @@
      H*field is copied into factor 1. Both operands are optional, and
      H*each move is an ordinary assignment bracketing the call itself.
      HDFTACTGRP(*NO)
-     DSEEDN            S             10I0
-     DN                S             10I0
-     DOUTN             S             10I0
+     DSEEDN            S             10I 0
+     DN                S             10I 0
+     DOUTN             S             10I 0
      DSEEDMSG          S             10A
      DMSG              S             10A
      DOUTMSG           S             10A

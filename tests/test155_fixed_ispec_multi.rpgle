@@ -1,13 +1,13 @@
      HDFTACTGRP(*NO)
      FTESTFL155       25           DISK
      ITESTFL155     011     CC
-     I                             A2    21     NAME
+     I                             A    2   21  NAME
      ITESTFL155     021     CP
-     I                             A2    21     NAME
-     DTYPECODE                  1      A
+     I                             A    2   21  NAME
+     DTYPECODE         S              1A
      OTESTFL155
-     O                       TYPECODE         1
-     O                       NAME             21
+     O                       TYPECODE             1
+     O                       NAME                21
       /free
   TYPECODE = 'C';
   NAME = 'Acme Corp';

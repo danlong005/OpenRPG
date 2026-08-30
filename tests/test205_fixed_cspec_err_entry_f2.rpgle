@@ -2,8 +2,8 @@
      H*program returns — a copy at every exit point, which this
      H*line-by-line transpiler cannot place.
      HDFTACTGRP(*NO)
-     DN                S             10I0
-     DOUT              S             10I0
+     DN                S             10I 0
+     DOUT              S             10I 0
      C     *ENTRY        PLIST
      C                   PARM      OUT           N
      C                   RETURN

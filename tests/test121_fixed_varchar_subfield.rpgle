@@ -1,7 +1,7 @@
      HDFTACTGRP(*NO)
      DmyDS             DS                  QUALIFIED
-     DvarField                  20     A   VARYING
-     DfixField                  20     A
+     DvarField                       20A   VARYING
+     DfixField                       20A
       /free
   myDS.varField = 'Hello';
   myDS.fixField = 'World';

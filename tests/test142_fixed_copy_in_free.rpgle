@@ -1,5 +1,5 @@
      HDFTACTGRP(*NO)
-     Dlocal_val                 10     I0
+     Dlocal_val        S             10I 0
       /free
   /COPY tests/copybook1.rpgle
   local_val = shared_val + 1;

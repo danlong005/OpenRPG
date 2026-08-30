@@ -2,12 +2,12 @@
      H*These are DIGIT moves against declared digit counts, not value
      H*assignments: both operands decimal positions are ignored.
      HDFTACTGRP(*NO)
-     DSRC32            S              3P2
-     DDST31            S              3P1
-     DSRC5             S              5P0
-     DDST3             S              3P0
-     DDST5             S              5P0
-     DSRC2             S              2P0
+     DSRC32            S              3P 2
+     DDST31            S              3P 1
+     DSRC5             S              5P 0
+     DDST3             S              3P 0
+     DDST5             S              5P 0
+     DSRC2             S              2P 0
      DR                S             30A
      C*The manual's own worked example: moving 1.00 into a 3-digit,
      C*1-decimal field gives 10.0 -- the digits move, the decimal

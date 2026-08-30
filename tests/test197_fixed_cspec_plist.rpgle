@@ -3,7 +3,7 @@
      H*defined AFTER both CALLs that use it, which is legal and is why
      H*the transpiler resolves these at flush rather than in line order.
      HDFTACTGRP(*NO)
-     DN                S             10I0
+     DN                S             10I 0
      DMSG              S             10A
      DR                S             30A
      C                   EVAL      N = 10

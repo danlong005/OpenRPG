@@ -1,4 +1,4 @@
      HDFTACTGRP(*NO)
-     Da                         10     A
+     Da                S             10A
      C     'PGM'         CALL      OTHERPGM
      C                   RETURN

@@ -3,8 +3,8 @@
      H*The sign does not: real IBM i folds it into the EBCDIC zone of
      H*the rightmost character, which ASCII has no equivalent for.
      HDFTACTGRP(*NO)
-     DP5               S              5P0
-     DP32              S              3P2
+     DP5               S              5P 0
+     DP32              S              3P 2
      DCH8              S              8A
      DR                S             30A
      C*Right-aligned for MOVE, left-aligned for MOVEL, with the

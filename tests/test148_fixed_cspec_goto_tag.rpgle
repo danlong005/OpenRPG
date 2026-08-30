@@ -1,5 +1,5 @@
      HDFTACTGRP(*NO)
-     Dn                         10     I0
+     Dn                S             10I 0
      C                   EVAL      n = 0
      C                   TAG       LOOPTOP
      C                   EVAL      n = n + 1

@@ -1,5 +1,5 @@
      HDFTACTGRP(*NO)
-     Dn                         10     I0
+     Dn                S             10I 0
      C                   EVAL      n = 2
      C                   SELECT
      C                   WHEN      n = 1

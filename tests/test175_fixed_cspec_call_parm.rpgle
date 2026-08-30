@@ -1,6 +1,6 @@
      HDFTACTGRP(*NO)
-     Dn                         10     I0
-     Dmsg                       10     A
+     Dn                S             10I 0
+     Dmsg              S             10A
      C                   EVAL      n = 41
      C                   EVAL      msg = 'untouched'
      C                   CALL      'ADDONE'

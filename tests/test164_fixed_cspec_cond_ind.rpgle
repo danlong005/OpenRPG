@@ -1,7 +1,7 @@
      HDFTACTGRP(*NO)
-     Dn                         10     I0
-     Dtot                       10     I0
-     Di                         10     I0
+     Dn                S             10I 0
+     Dtot              S             10I 0
+     Di                S             10I 0
      C                   EVAL      *IN10 = *ON
      C                   EVAL      *IN20 = *OFF
      C   10              EVAL      n = 1

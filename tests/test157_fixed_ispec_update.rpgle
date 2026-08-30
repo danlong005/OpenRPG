@@ -1,9 +1,9 @@
      HDFTACTGRP(*NO)
      FTESTFL157       20           DISK
      ITESTFL157
-     I                             A1    20     NOTE
+     I                             A    1   20  NOTE
      OTESTFL157
-     O                       NOTE             20
+     O                       NOTE                20
       /free
   NOTE = 'original';
   WRITE TESTFL157;

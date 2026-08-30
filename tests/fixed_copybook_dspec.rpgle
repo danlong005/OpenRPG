@@ -1,2 +1,2 @@
-     Dgreeting                  20     A
-     Dcount                     10     I0
+     Dgreeting         S             20A
+     Dcount            S             10I 0

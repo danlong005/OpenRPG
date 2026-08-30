@@ -1,8 +1,8 @@
      HDFTACTGRP(*NO)
-     Dsrc5                       5     A
-     Dsrc12                     12     A
-     Ddst                       10     A
-     Dr                         20     A
+     Dsrc5             S              5A
+     Dsrc12            S             12A
+     Ddst              S             10A
+     Dr                S             20A
      C                   EVAL      src5 = 'AB'
      C                   EVAL      src12 = 'ABCDEFGHIJKL'
      C                   EVAL      dst = 'ZZZZZZZZZZ'

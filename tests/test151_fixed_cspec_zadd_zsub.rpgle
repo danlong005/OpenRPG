@@ -1,5 +1,5 @@
      HDFTACTGRP(*NO)
-     Dn                         10     I0
+     Dn                S             10I 0
      C                   EVAL      n = 999
      C                   Z-ADD     42            n
      C     %CHAR(n)      DSPLY

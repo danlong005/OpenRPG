@@ -1,6 +1,6 @@
      HDFTACTGRP(*NO)
-     DvarName                   20     A   VARYING
-     DfixName                   20     A
+     DvarName          S             20A   VARYING
+     DfixName          S             20A
       /free
   DSPLY %CHAR(%LEN(varName));
   DSPLY %CHAR(%LEN(fixName));

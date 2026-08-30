@@ -1,5 +1,5 @@
      HDFTACTGRP(*NO)
-     Dr                         20     A
+     Dr                S             20A
      C                   EVAL      *IN10 = *ON
      C                   EVAL      *IN20 = *ON
      C                   EVAL      *IN30 = *OFF

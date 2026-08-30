@@ -2,6 +2,6 @@
      H*numeric fields' (p.405) -- its AM/PM suffix is not a digit.
      HDFTACTGRP(*NO)
      DTFLD             S               T
-     DN6               S              6P0
+     DN6               S              6P 0
      C     *USA          MOVE      TFLD          N6
      C                   RETURN

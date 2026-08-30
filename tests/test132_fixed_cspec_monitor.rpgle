@@ -1,5 +1,5 @@
      HDFTACTGRP(*NO)
-     Dn                         10     I0
+     Dn                S             10I 0
      C                   MONITOR
      C                   EVAL      n = 42
      C     %CHAR(n)      DSPLY

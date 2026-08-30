@@ -8,8 +8,8 @@
      DDATE_EUR         S               D   DATFMT(*EUR)
      DDATE_JIS         S               D   DATFMT(*JIS)
      DDATE_USA         S               D   DATFMT(*USA)
-     DNUM_DATE1        S              6P0
-     DNUM_DATE2        S              7P0
+     DNUM_DATE1        S              6P 0
+     DNUM_DATE2        S              7P 0
      DCHAR_DATE        S              8A
      DCHAR_LJ          S              8A
      DDISP10           S             10A

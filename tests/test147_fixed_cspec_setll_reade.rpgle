@@ -1,7 +1,7 @@
      HDFTACTGRP(*NO)
      FCUSTFL147 I    E             DISK    KEYED
      F                                     EXTDESC('custfl147')
-     Dkey                       10     A
+     Dkey              S             10A
       /free
   EXEC SQL CREATE TABLE custfl147 (
     CUSTNO VARCHAR(10) PRIMARY KEY,

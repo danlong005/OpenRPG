@@ -1,6 +1,6 @@
      HDFTACTGRP(*NO)
-     Dn                         10     I0
-     Darr                       10     I0  DIM(3)
+     Dn                S             10I 0
+     Darr              S             10I 0 DIM(3)
      C                   EVAL      n = 99
      C                   CLEAR                   n
      C     %CHAR(n)      DSPLY

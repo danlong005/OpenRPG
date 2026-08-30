@@ -1,7 +1,7 @@
      HDFTACTGRP(*NO)
-     Dconn                      200    A   VARYING
-     Dnm                         50    A   VARYING
-     Dtot                        10    I 0
+     Dconn             S            200A   VARYING
+     Dnm               S             50A   VARYING
+     Dtot              S             10I 0
      C                   EVAL      conn = 'Driver={SQLite3};' +
      C                             'Database=/tmp/rpgc_test188.sqlite;'
      C/EXEC SQL

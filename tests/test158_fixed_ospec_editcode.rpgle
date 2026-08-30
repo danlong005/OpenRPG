@@ -1,8 +1,8 @@
      HDFTACTGRP(*NO)
      FTESTFL158       20           DISK
-     DAMT                       10     S
+     DAMT              S             10S
      OTESTFL158
-     O                       AMT           1  10
+     O                       AMT           1     10
       /free
   AMT = 123456;
   WRITE TESTFL158;

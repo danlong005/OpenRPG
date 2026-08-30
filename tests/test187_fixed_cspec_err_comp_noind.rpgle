@@ -1,4 +1,4 @@
      HDFTACTGRP(*NO)
-     Dn                         10     I0
+     Dn                S             10I 0
      C     n             COMP      3
      C                   RETURN

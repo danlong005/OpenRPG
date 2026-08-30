@@ -3,7 +3,7 @@
      H*the moved digits become zeros and the program can test %STATUS.
      HDFTACTGRP(*NO)
      DCH3              S              3A
-     DP5               S              5P0
+     DP5               S              5P 0
      DR                S             30A
      C                   EVAL      CH3 = 'A1'
      C                   EVAL      P5 = 77777

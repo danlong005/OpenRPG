@@ -4,8 +4,8 @@
      HDFTACTGRP(*NO)
      DCH5              S              5A
      DCH3              S              3A
-     DDST5             S              5P0
-     DDST52            S              5P2
+     DDST5             S              5P 0
+     DDST52            S              5P 2
      DR                S             30A
      C*Same width: every digit moves, either direction.
      C                   EVAL      CH5 = '00123'

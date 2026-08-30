@@ -1,5 +1,5 @@
      HDFTACTGRP(*NO)
-     Dn                         10     I0
-     Dpgmvar                    10     A
+     Dn                S             10I 0
+     Dpgmvar           S             10A
      C                   CALL      pgmvar
      C                   RETURN

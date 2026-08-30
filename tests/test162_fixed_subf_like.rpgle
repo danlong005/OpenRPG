@@ -1,7 +1,7 @@
      HDFTACTGRP(*NO)
      Dinvoice          DS                  QUALIFIED
-     DunitPrice                 9      P2
-     Dqty                       5      I0
+     DunitPrice                       9P 2
+     Dqty                             5I 0
      Dprice                                LIKE(unitPrice)
       /free
   invoice.unitPrice = 19.99;

@@ -1,7 +1,7 @@
      HDFTACTGRP(*NO)
      Dorder            DS                  QUALIFIED
-     DlineTotals                10     P2  DIM(3)
-     Dcount                     10     I0
+     DlineTotals                     10P 2 DIM(3)
+     Dcount                          10I 0
       /free
   order.lineTotals(1) = 12.50;
   order.lineTotals(2) = 7.25;

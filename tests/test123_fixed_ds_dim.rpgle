@@ -1,7 +1,7 @@
      HDFTACTGRP(*NO)
      Ditems            DS                  QUALIFIED DIM(3)
-     Ddesc                      20     A   VARYING
-     Dqty                       10     I0
+     Ddesc                           20A   VARYING
+     Dqty                            10I 0
       /free
   items(1).desc = 'Widget';
   items(1).qty = 10;

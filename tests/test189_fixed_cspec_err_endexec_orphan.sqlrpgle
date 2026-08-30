@@ -1,4 +1,4 @@
      HDFTACTGRP(*NO)
-     Dnm                         50    A   VARYING
+     Dnm               S             50A   VARYING
      C/END-EXEC
      C                   RETURN

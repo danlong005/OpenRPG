@@ -1,6 +1,6 @@
      H*Calls ADDTWO, whose parameter list comes from its *ENTRY PLIST.
      HDFTACTGRP(*NO)
-     DN                S             10I0
+     DN                S             10I 0
      DMSG              S             10A
      DR                S             30A
      C                   EVAL      N = 40

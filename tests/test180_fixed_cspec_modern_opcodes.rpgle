@@ -1,9 +1,9 @@
      HDFTACTGRP(*NO)
-     Djs                        200    A   VARYING
-     Dr                         60     A   VARYING
+     Djs               S            200A   VARYING
+     Dr                S             60A   VARYING
      Dperson           DS                  QUALIFIED
-     Dname                      40     A   VARYING
-     Dage                       10     I0
+     Dname                           40A   VARYING
+     Dage                            10I 0
      C                   EVAL      js = '{"name":"Alice","age":30}'
      C                   DATA-INTO person %DATA(js :
      C                             'case=any')

@@ -10,6 +10,12 @@ DCL-PR calcBoth;
   res LIKEDS(result);
 END-PR;
 
+calcBoth(5 : 7 : result);
+DSPLY %CHAR(result.sum);
+DSPLY %CHAR(result.product);
+
+*INLR = *ON;
+
 DCL-PROC calcBoth;
   DCL-PI calcBoth;
     a INT(10) VALUE;
@@ -19,9 +25,3 @@ DCL-PROC calcBoth;
   res.sum = a + b;
   res.product = a * b;
 END-PROC;
-
-calcBoth(5 : 7 : result);
-DSPLY %CHAR(result.sum);
-DSPLY %CHAR(result.product);
-
-*INLR = *ON;

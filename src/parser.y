@@ -3071,15 +3071,6 @@ void report_fixed_format_error(int line, const std::string& msg) {
     fprintf(stderr, "Error at line %d: %s\n", line, msg.c_str());
 }
 
-// Deliberately does NOT touch g_error_count. These report source that IBM's
-// ILE RPG compiler rejects but this one accepts -- being more permissive than
-// IBM costs nothing for real-world source, which is well formed, but silently
-// accepting malformed source is what let 183 bad declarations accumulate
-// across 72 test files before an independent compiler was ever pointed at
-// them. See TODO.md "IBM i Conformance" for the findings behind each check.
-void report_fixed_format_warning(int line, const std::string& msg) {
-    fprintf(stderr, "Warning at line %d: %s\n", line, msg.c_str());
-}
 
 void report_semantic_error(int line, const std::string& msg) {
     report_fixed_format_error(line, msg);

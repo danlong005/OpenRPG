@@ -5,16 +5,13 @@
      ITESTFL155 AA  02    1 CP
      I                             A    2   21  NAME
      DTYPECODE         S              1A
-     OTESTFL155 D
-     O                       TYPECODE             1
-     O                       NAME                21
       /free
-  TYPECODE = 'C';
-  NAME = 'Acme Corp';
-  WRITE TESTFL155;
-  TYPECODE = 'P';
-  NAME = 'Widget';
-  WRITE TESTFL155;
+       TYPECODE = 'C';
+       NAME = 'Acme Corp';
+       WRITE TESTFL155;
+       TYPECODE = 'P';
+       NAME = 'Widget';
+       WRITE TESTFL155;
       /end-free
      C                   READ      TESTFL155
      C                   DOW       NOT %EOF(TESTFL155)
@@ -28,3 +25,6 @@
      C                   READ      TESTFL155
      C                   ENDDO
      C                   RETURN
+     OTESTFL155 D
+     O                       TYPECODE             1
+     O                       NAME                21

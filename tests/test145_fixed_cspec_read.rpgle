@@ -2,12 +2,12 @@
      FCUSTFL145 IF   E             DISK
      F                                     EXTDESC('CUSTFL145')
       /free
-  EXEC SQL CREATE TABLE custfl145 (
-    CUSTNO VARCHAR(10),
-    CUSTNAME VARCHAR(50)
-  );
-  EXEC SQL INSERT INTO custfl145 VALUES('A001','Alice');
-  EXEC SQL INSERT INTO custfl145 VALUES('A002','Bob');
+       EXEC SQL CREATE TABLE custfl145 (
+         CUSTNO VARCHAR(10),
+         CUSTNAME VARCHAR(50)
+       );
+       EXEC SQL INSERT INTO custfl145 VALUES('A001','Alice');
+       EXEC SQL INSERT INTO custfl145 VALUES('A002','Bob');
       /end-free
      C                   READ      CUSTFL145
      C                   DOW       NOT %EOF(CUSTFL145)
@@ -15,6 +15,6 @@
      C                   READ      CUSTFL145
      C                   ENDDO
       /free
-  EXEC SQL DROP TABLE custfl145;
+       EXEC SQL DROP TABLE custfl145;
       /end-free
      C                   RETURN

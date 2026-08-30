@@ -3,10 +3,10 @@
      F                                     EXTDESC('CUSTFL146')
      Dkey              S             10A
       /free
-  EXEC SQL CREATE TABLE custfl146 (
-    CUSTNO VARCHAR(10) PRIMARY KEY,
-    CUSTNAME VARCHAR(50)
-  );
+       EXEC SQL CREATE TABLE custfl146 (
+         CUSTNO VARCHAR(10) PRIMARY KEY,
+         CUSTNAME VARCHAR(50)
+       );
       /end-free
      C                   EVAL      CUSTNO = 'W001'
      C                   EVAL      CUSTNAME = 'WriteTest'
@@ -28,6 +28,6 @@
      C     'deleted'     DSPLY
      C                   ENDIF
       /free
-  EXEC SQL DROP TABLE custfl146;
+       EXEC SQL DROP TABLE custfl146;
       /end-free
      C                   RETURN

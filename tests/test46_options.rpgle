@@ -4,6 +4,11 @@ DCL-PR greet VARCHAR(50);
   title VARCHAR(10) VALUE OPTIONS(*NOPASS);
 END-PR;
 
+DSPLY greet('Alice');
+DSPLY greet('Bob' : 'Mr.');
+
+*INLR = *ON;
+
 DCL-PROC greet;
   DCL-PI greet VARCHAR(50);
     name VARCHAR(20) VALUE;
@@ -15,8 +20,3 @@ DCL-PROC greet;
     RETURN 'Hello ' + name;
   ENDIF;
 END-PROC;
-
-DSPLY greet('Alice');
-DSPLY greet('Bob' : 'Mr.');
-
-*INLR = *ON;

@@ -17,13 +17,13 @@
      C                   CALLP     doubleIt(total)
      C                   RETURN
       /free
-DCL-PR doubleIt;
-  n INT(10) VALUE;
-END-PR;
-DCL-PROC doubleIt;
-  DCL-PI doubleIt;
-    n INT(10) VALUE;
-  END-PI;
-  DSPLY %CHAR(n * 2);
-END-PROC;
+       DCL-PR doubleIt;
+         n INT(10) VALUE;
+       END-PR;
+       DCL-PROC doubleIt;
+         DCL-PI doubleIt;
+           n INT(10) VALUE;
+         END-PI;
+         DSPLY %CHAR(n * 2);
+       END-PROC;
       /end-free

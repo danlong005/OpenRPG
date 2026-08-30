@@ -9,6 +9,10 @@ Two transforms, both driven by diagnostics IBM emitted against this corpus:
      (RNF2003 / RNF2006) and right-adjusts the F-spec Record-Length.
   4. Supplies the I-spec Sequence entry and the O-spec record Type entry
      (RNF4008 / RNF6005), which IBM requires and this corpus left blank.
+  5. Shifts /FREE block bodies into the positions 8-80 code area (RNF0257).
+  6. Reorders specifications into IBM's required sequence: O-specs last, and
+     main-procedure calculations before subprocedure definitions (RNF0257 /
+     RNF0256).
 
 IBM's ILE RPG compiler requires numeric entries in fixed-format specifications
 to be right-adjusted within their column range, and reports RNF0263 ("Entry not
@@ -241,6 +245,100 @@ def fix_recid_entries(lines):
     return out, changes
 
 
+def fix_free_block_indent(lines):
+    """Shifts /FREE block bodies so code starts at position 8.
+
+    Inside a fixed-format source, positions 1-5 are the sequence-number area
+    and 6-7 are the form type and comment flag; free-format code lives in
+    8-80. This corpus indents /FREE bodies by two spaces, so "  NAME = 'x';"
+    puts NAM in the sequence area and E in the form-type column -- IBM reads
+    it as a malformed specification and reports RNF0257 ("Form-Type entry for
+    main procedure not valid or out of sequence") at severity 30.
+
+    The whole block is shifted by one amount so relative indentation (nested
+    IF/DO bodies) is preserved. Blocks already at or past position 8 are left
+    alone. Verified against the corpus: the longest resulting line is 62
+    columns, well inside the 80-column limit.
+    """
+    out = list(lines)
+    infree, block_idx = False, []
+    total = 0
+
+    def flush(idxs):
+        nonlocal total
+        body = [out[i] for i in idxs if out[i].strip()]
+        if not body: return
+        shift = max(0, 7 - min(len(l) - len(l.lstrip()) for l in body))
+        if not shift: return
+        for i in idxs:
+            if out[i].strip():
+                out[i] = ' ' * shift + out[i]
+                total += 1
+
+    for i, ln in enumerate(lines):
+        u = ln.strip().upper()
+        if u.startswith('/FREE'):
+            infree, block_idx = True, []; continue
+        if u.startswith('/END-FREE'):
+            if infree: flush(block_idx)
+            infree, block_idx = False, []; continue
+        if infree: block_idx.append(i)
+    if infree: flush(block_idx)
+    return out, total
+
+
+def fix_ospec_order(lines):
+    """Moves O-specs after the calculations.
+
+    RPG requires specifications in H, F, D, I, C, O order. This corpus places
+    the O-specs immediately after the I-specs, ahead of the calculations, so
+    IBM reports RNF0257 ("Form-Type entry ... out of sequence") and then cannot
+    work out how the program ends (RNF7023) because the trailing C-specs are
+    misparsed. Only the relative position changes; the O-specs keep their own
+    order.
+    """
+    idx = [i for i, l in fixed_only(lines)
+           if len(l) > 5 and l[5:6].upper() == 'O' and get(l, 7, 7) != '*']
+    if not idx: return lines, 0
+    calc = [i for i, l in fixed_only(lines)
+            if len(l) > 5 and l[5:6].upper() == 'C' and get(l, 7, 7) != '*']
+    free_end = [i for i, l in enumerate(lines) if l.strip().upper().startswith('/END-FREE')]
+    last_calc = max(calc + free_end) if (calc or free_end) else -1
+    if last_calc < 0 or max(idx) > last_calc:
+        return lines, 0                      # already after the calculations
+    ospecs = [lines[i] for i in idx]
+    out = [l for i, l in enumerate(lines) if i not in set(idx)]
+    shift = sum(1 for i in idx if i < last_calc)
+    at = last_calc - shift + 1
+    return out[:at] + ospecs + out[at:], len(ospecs)
+
+
+def fix_proc_order(lines):
+    """Moves main-procedure calculations ahead of subprocedure definitions.
+
+    In RPG the cycle-main calculations must precede any DCL-PROC; statements
+    that follow END-PROC are "between procedures" and IBM rejects them with
+    RNF0256 at severity 30, then reports RNF7023 because it can no longer see
+    how the main procedure ends. Declarations (DCL-PR prototypes and the like)
+    may legitimately stay where they are -- only executable lines move.
+    """
+    up = [l.strip().upper() for l in lines]
+    first_proc = next((i for i, u in enumerate(up) if u.startswith('DCL-PROC')), None)
+    last_end   = next((i for i in range(len(up) - 1, -1, -1) if up[i].startswith('END-PROC')), None)
+    if first_proc is None or last_end is None or last_end < first_proc:
+        return lines, 0
+    tail = list(range(last_end + 1, len(lines)))
+    movable = [i for i in tail
+               if lines[i].strip() and not lines[i].strip().startswith('//')
+               and not lines[i].strip().startswith('/')          # compiler directives stay put
+               and not up[i].startswith(('DCL-PR', 'DCL-DS', 'DCL-S', 'DCL-C', 'END-'))]
+    if not movable: return lines, 0
+    block = [lines[i] for i in range(min(movable), len(lines))]
+    rest  = lines[:first_proc]
+    procs = lines[first_proc:min(movable)]
+    return rest + block + procs, len(movable)
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("target", help="directory of .rpgle/.sqlrpgle sources")
@@ -256,11 +354,20 @@ def main():
         nl = "\r\n" if "\r\n" in text else "\n"
         lines = text.split(nl)
         if is_free_format(text):
+            # Wholly free-format: no column rules apply, but IBM still requires
+            # main-procedure calculations before any subprocedure definition.
+            lines, n_po = fix_proc_order(lines)
+            if n_po and not a.dry_run:
+                open(p, "w", encoding="utf-8", errors="surrogateescape").write(nl.join(lines))
+            if n_po:
+                total_files += 1; total_lines += n_po
             continue
         lines, n_dt = fix_deftype(lines)
         lines, n_fs = fix_fspec_entries(lines)
         lines, n_ri = fix_recid_entries(lines)
-        newlines, n, infree = [], n_dt + n_fs + n_ri, False
+        lines, n_fb = fix_free_block_indent(lines)
+        lines, n_oo = fix_ospec_order(lines)
+        newlines, n, infree = [], n_dt + n_fs + n_ri + n_fb + n_oo, False
         for ln in lines:
             u = ln.strip().upper()
             # a mixed source embeds free-format between /FREE and /END-FREE;

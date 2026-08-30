@@ -139,7 +139,16 @@ static void parse_ctlopt(const char* text) {
 
 %%
 
-"**FREE"            { return KW_FREE; }
+"**FREE"            {
+    /* **FREE is a FILE-level format declaration, not a statement. A /COPY
+       member is its own source file and declares its own format, exactly as
+       on IBM i -- a copy member included into a **FREE source is still read
+       as fixed-format unless it says **FREE itself. So consume the directive
+       inside an include rather than handing the grammar a token it only
+       accepts at the very start of the program. */
+    if (include_stack_ptr > 0) { /* consumed */ }
+    else return KW_FREE;
+}
 
  /* EXEC SQL: switch to SQL mode and capture text until semicolon */
 [Ee][Xx][Ee][Cc][ \t]+[Ss][Qq][Ll][ \t]+ {

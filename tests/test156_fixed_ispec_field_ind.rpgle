@@ -2,15 +2,13 @@
      FTESTFL156 UF A F   10        DISK
      ITESTFL156 AA
      I                             S    1   10 0AMT                 010203
-     OTESTFL156 D
-     O                       AMT                 10
       /free
-  AMT = 50;
-  WRITE TESTFL156;
-  AMT = -50;
-  WRITE TESTFL156;
-  AMT = 0;
-  WRITE TESTFL156;
+       AMT = 50;
+       WRITE TESTFL156;
+       AMT = -50;
+       WRITE TESTFL156;
+       AMT = 0;
+       WRITE TESTFL156;
       /end-free
      C                   READ      TESTFL156
      C                   DOW       NOT %EOF(TESTFL156)
@@ -26,3 +24,5 @@
      C                   READ      TESTFL156
      C                   ENDDO
      C                   RETURN
+     OTESTFL156 D
+     O                       AMT                 10

@@ -2,6 +2,11 @@
 DCL-PR doWork;
 END-PR;
 
+doWork();
+DSPLY 'Done';
+
+*INLR = *ON;
+
 DCL-PROC doWork;
   DCL-PI doWork;
   END-PI;
@@ -9,8 +14,3 @@ DCL-PROC doWork;
   ON-EXIT;
     DSPLY 'Cleanup';
 END-PROC;
-
-doWork();
-DSPLY 'Done';
-
-*INLR = *ON;

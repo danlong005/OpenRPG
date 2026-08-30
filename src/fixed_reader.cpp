@@ -220,8 +220,9 @@ static void finalizeFSpec(Program* program, PendingFSpec& pending) {
 
 // IBM requires numeric entries right-adjusted within their column range and
 // reports RNF0263 ("Entry not right-adjusted") at severity 20 -- the program is
-// not created. This compiler trims both ends of every field, so it accepts
-// either form; warn so the divergence is at least visible. Only all-digit
+// not created. extractCol() trims both ends, so this compiler could not see the
+// difference at all until extractColRaw() existed; source that trips this would
+// not compile on a real IBM i either, so it is rejected here too. Only all-digit
 // entries are checked: alphanumeric fields (names, keywords) are left-adjusted
 // by rule, and a blank field carries no adjustment at all.
 static void warnIfNotRightAdjusted(const std::string& line, const ColSpec& spec,
@@ -233,10 +234,10 @@ static void warnIfNotRightAdjusted(const std::string& line, const ColSpec& spec,
     int width = spec.endCol - spec.startCol + 1;
     std::string want = std::string(width - (int)val.size(), ' ') + val;
     if (raw == want) return;
-    report_fixed_format_warning(lineNo,
-        std::string(what) + ": entry '" + val + "' is not right-adjusted in positions " +
+    report_fixed_format_error(lineNo,
+        std::string(what) + ": entry '" + val + "' must be right-adjusted in positions " +
         std::to_string(spec.startCol) + "-" + std::to_string(spec.endCol) +
-        " (IBM rejects this: RNF0263)");
+        " (IBM: RNF0263)");
 }
 
 static void handleFSpecLine(Program* program, PendingFSpec& pending,
@@ -270,15 +271,15 @@ static void handleFSpecLine(Program* program, PendingFSpec& pending,
 
     std::string fileType = upper(extractCol(line, FSpec::FileType));
     if (fileType.empty() || fileType.find_first_not_of("IOUC") != std::string::npos) {
-        report_fixed_format_warning(lineNo,
+        report_fixed_format_error(lineNo,
             "F-spec: File-Type in position 17 is '" + (fileType.empty() ? std::string("blank") : fileType) +
-            "'; IBM requires I, O, U or C (RNF2003)");
+            "'; must be I, O, U or C (IBM: RNF2003)");
     }
     std::string fileFormat = upper(extractCol(line, FSpec::FileFormat));
     if (fileFormat.empty() || fileFormat.find_first_not_of("FE") != std::string::npos) {
-        report_fixed_format_warning(lineNo,
+        report_fixed_format_error(lineNo,
             "F-spec: File-Format in position 22 is '" + (fileFormat.empty() ? std::string("blank") : fileFormat) +
-            "'; IBM requires F (program-described) or E (externally described) (RNF2006)");
+            "'; must be F (program-described) or E (externally described) (IBM: RNF2006)");
     }
 
     pending.dclf = new DclF(upper(name), usage);
@@ -425,10 +426,10 @@ static void handleDSpecLine(Program* program, DSpecState& state,
         // severity 20; this compiler infers "standalone" instead. 94 such
         // declarations were sitting in the test corpus unnoticed.
         if (defType.empty()) {
-            report_fixed_format_warning(lineNo,
+            report_fixed_format_error(lineNo,
                 "D-spec: field '" + upper(name) + "' has a blank Definition-Type in "
                 "positions 24-25 and no open DS/PR/PI group; IBM reads this as a "
-                "subfield and rejects it (RNF3703). Specify 'S' for a standalone field");
+                "subfield (IBM: RNF3703). Specify 'S' in positions 24-25 for a standalone field");
         }
         auto* n = new DclS(upper(name), type, length, digits, decimals);
         n->line = lineNo;
@@ -800,6 +801,24 @@ Program* parseFixedFormat(const std::string& src_text, const std::string& filena
                 inFreeBlock = false;
                 freeBlockText.clear();
             } else {
+                // Inside a fixed-format source, positions 1-5 are the
+                // sequence-number area and 6-7 are the form type and comment
+                // flag; free-format code lives in positions 8-80 (SC09-2508
+                // "Free-Form Statements"). Code starting earlier is read by
+                // IBM as a malformed specification -- "  NAME = 'x';" puts NAM
+                // in the sequence area and E in the form-type column, giving
+                // RNF0257 at severity 30. This compiler used to accept a
+                // /free body at any column, which hid the problem in 24 files.
+                if (!trimmed.empty() && !trimmed.empty()) {
+                    size_t indent = line.find_first_not_of(" \t");
+                    if (indent != std::string::npos && indent < 7) {
+                        report_fixed_format_error(lineNo,
+                            "/FREE block: code starts in position " + std::to_string(indent + 1) +
+                            "; free-form statements must begin at position 8 or later "
+                            "(positions 1-7 are the sequence area, form type and comment flag) "
+                            "(IBM: RNF0257)");
+                    }
+                }
                 freeBlockText += line + "\n";
             }
             continue;

@@ -6,6 +6,10 @@ DCL-PR formatName VARCHAR(50);
   last VARCHAR(20) VALUE;
 END-PR;
 
+DSPLY formatName('John' : *OMIT : 'Smith');
+
+*INLR = *ON;
+
 DCL-PROC formatName;
   DCL-PI formatName VARCHAR(50);
     first VARCHAR(20) VALUE;
@@ -24,6 +28,3 @@ DCL-PROC formatName;
 END-PROC;
 
 // Call with *OMIT
-DSPLY formatName('John' : *OMIT : 'Smith');
-
-*INLR = *ON;

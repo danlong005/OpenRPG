@@ -1188,6 +1188,38 @@ All transforms now share one `fixed_only()` guard. Column 6 is meaningless in a
 corrupted a test three separate times during development before the guard was
 centralised.
 
+**Enforcement (2026-08-30).** All conformance checks are now **errors**, not
+warnings. IBM reports every one at severity 20 (program not created), so source
+that trips them would not compile on a real IBM i either — rejecting it cannot
+break valid real-world code. `report_fixed_format_warning()` was removed once it
+had no callers.
+
+**Findings 10-12, all fixed on both sides:**
+
+10. **Free-format code inside a fixed-format source must start at position 8.**
+    Positions 1-5 are the sequence area and 6-7 the form type and comment flag.
+    The corpus indented `/FREE` bodies by two spaces, so `  NAME = 'x';` put
+    `NAM` in the sequence area and `E` in the form-type column — RNF0257 at
+    severity 30, across 24 files and 162 lines. rpgc accepted any column.
+    *Both fixed: blocks shifted (relative indentation preserved, longest
+    resulting line 62 columns), and rpgc now rejects code before position 8.*
+11. **`**FREE` is a file-level declaration, so a `/COPY` member is read as
+    fixed-format unless it declares `**FREE` itself** — exactly as on IBM i.
+    rpgc's lexer returned `KW_FREE` as a token the grammar only accepts at
+    program start, so a copy member could not declare its own format. *Fixed:
+    the directive is consumed inside an include.*
+12. **Specification order.** O-specs must follow the calculations, and
+    main-procedure calculations must precede any `DCL-PROC` — statements after
+    `END-PROC` are "between procedures" (RNF0256, severity 30). rpgc does not
+    care about either. *Corpus fixed; rpgc still does not enforce order.*
+
+Also recorded: `test61_no_free` asserts that rpgc accepts free-format **without**
+the `**FREE` directive. IBM requires it, so IBM rejecting that test is the
+CORRECT outcome — it belongs in the extension quadrant, not the work queue.
+
+**Progress:** accepted 73 -> 88 of 221. Bucket C (structural) fell 26 -> 8;
+RNF0256 is gone entirely, RNF0257 8 -> 4 files, RNF7023 16 -> 4.
+
 **Still open in bucket B:**
 - BIFs in Factor 1 of traditional C-specs (finding 3, 16 files) — no check yet,
   and not mechanically fixable: it restructures the test.

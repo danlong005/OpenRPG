@@ -3,8 +3,8 @@
      C                   EVAL      n = 1
      C     %CHAR(n)      DSPLY
       /free
-  n = n + 100;
-  DSPLY %CHAR(n);
+       n = n + 100;
+       DSPLY %CHAR(n);
       /end-free
      C                   EVAL      n = n + 1
      C     %CHAR(n)      DSPLY

@@ -1311,6 +1311,21 @@ trusting on first use.
 Note the transcript is per-run, not cumulative: a `--changed-only` run leaves a
 transcript covering only those files. The baseline is what accumulates.
 
+### Compatibility report (run by hand)
+
+`scripts/conformance-summary.py` renders the current baseline as a
+human-readable Markdown report: how many sources IBM's compiler accepts, and a
+breakdown of the rejections by cause, so the raw count is not read as a defect
+count (42 of them are negative tests doing their job).
+
+```
+scripts/conformance-summary.py --release v0.9.21 --out ibmi-compatibility.md
+```
+
+Deliberately **not** wired into CI or the release workflow. It reads the
+committed baseline, so it needs no network and reflects whatever the last
+verified run recorded.
+
 ### The conformance matrix
 
 The headline "accepted N of 221" understates agreement, because a rejection can

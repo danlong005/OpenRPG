@@ -1,11 +1,11 @@
      HDFTACTGRP(*NO)
-     FTESTFL155       25           DISK
-     ITESTFL155     011     CC
+     FTESTFL155 UF A F   25        DISK
+     ITESTFL155 AA  01    1 CC
      I                             A    2   21  NAME
-     ITESTFL155     021     CP
+     ITESTFL155 AA  02    1 CP
      I                             A    2   21  NAME
      DTYPECODE         S              1A
-     OTESTFL155
+     OTESTFL155 D
      O                       TYPECODE             1
      O                       NAME                21
       /free

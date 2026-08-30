@@ -515,9 +515,19 @@ static void handleISpecLine(Program* program, ISpecState& state,
     std::string fileName = extractCol(line, ISpec::FileName);
     if (!fileName.empty()) {
         // New record-identification line.
+        // Positions 17-18 (SC09-2508 p.546): an ALPHABETIC entry means "no
+        // sequence checking", which is exactly this compiler's behaviour, so
+        // accept it. A NUMERIC entry requests real sequence checking within
+        // the file, which is not implemented. IBM in turn *requires* a value
+        // here and reports RNF4008 when it is blank, so rejecting every
+        // non-blank entry made it impossible to write source both compilers
+        // accept.
         std::string seq = extractCol(line, ISpec::Sequence);
-        if (!seq.empty()) {
-            report_fixed_format_error(lineNo, "I-spec: sequence checking (positions 17-18) is not supported");
+        if (!seq.empty() && seq.find_first_of("0123456789") != std::string::npos) {
+            report_fixed_format_error(lineNo,
+                "I-spec: numeric sequence entry '" + seq + "' (positions 17-18) requests "
+                "sequence checking, which is not supported; use an alphabetic entry such "
+                "as 'AA' for no sequence checking");
             return;
         }
         if (!extractCol(line, ISpec::Number).empty() || !extractCol(line, ISpec::Option).empty()) {
@@ -623,10 +633,16 @@ static void handleOSpecLine(Program* program, OSpecState& state,
                              const std::string& line, int lineNo) {
     std::string fileName = extractCol(line, OSpec::FileName);
     if (!fileName.empty()) {
-        if (!extractCol(line, OSpec::RecType).empty()) {
+        // Position 17 (SC09-2508 p.572): D (detail) is the ordinary record type
+        // and matches what this compiler emits, so accept it. H (heading),
+        // T (total) and E (exception) need RPG-cycle timing that is not
+        // implemented. IBM *requires* a value here (RNF6005 when blank), so
+        // rejecting every non-blank entry left no mutually acceptable form.
+        std::string recType = upper(extractCol(line, OSpec::RecType));
+        if (!recType.empty() && recType != "D") {
             report_fixed_format_error(lineNo,
-                "O-spec: record type (position 17) is not supported — heading/total/exception "
-                "records need RPG-cycle timing this compiler doesn't implement; see TODO.md");
+                "O-spec: record type '" + recType + "' (position 17) needs RPG-cycle timing "
+                "this compiler doesn't implement; only 'D' (detail) is supported. See TODO.md");
             return;
         }
         if (!extractCol(line, OSpec::AddDel).empty()) {

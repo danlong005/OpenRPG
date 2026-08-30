@@ -1,8 +1,8 @@
      HDFTACTGRP(*NO)
-     FTESTFL156       10           DISK
-     ITESTFL156
+     FTESTFL156 UF A F   10        DISK
+     ITESTFL156 AA
      I                             S    1   10 0AMT                 010203
-     OTESTFL156
+     OTESTFL156 D
      O                       AMT                 10
       /free
   AMT = 50;

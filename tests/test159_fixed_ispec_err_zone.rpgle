@@ -1,4 +1,4 @@
      HDFTACTGRP(*NO)
-     FTESTFL159       10           DISK
-     ITESTFL159       1     ZA
+     FTESTFL159 IF   F   10        DISK
+     ITESTFL159 AA        1 ZA
      C                   RETURN

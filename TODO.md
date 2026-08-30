@@ -1162,11 +1162,36 @@ exactly 24 warnings across exactly the 7 files IBM still flags
 Note `tests/run_tests.sh` discards stderr for passing tests, so warnings do not
 surface there. Run rpgc directly to see them.
 
+**Finding 9 — a conflict, not a leniency (fixed 2026-08-30).** Two positions
+where rpgc *required blank* and IBM *requires a value*, so no source could
+satisfy both:
+
+| Position | was (rpgc) | IBM | now |
+|----------|-----------|-----|-----|
+| I-spec Sequence 17-18 | error if non-blank | required, RNF4008 if blank | alphabetic accepted (means "no sequence checking", which is what rpgc does); numeric still rejected |
+| O-spec record Type 17  | error if non-blank | required, RNF6005 if blank | `D` (detail) accepted; H/T/E still rejected (need cycle timing) |
+
+This is the *other* direction of the conformance matrix — rpgc rejecting valid
+RPG rather than over-accepting — and the first coverage fix the oracle produced.
+
+**Corpus (13 files) brought to IBM-acceptable form**, with the derivation rules
+encoded in `fix-fixed-format-columns.py` rather than hand-edited: File-Type from
+what the source does (I-specs only -> I, O-specs only -> O, both -> U plus A),
+File-Designation F for I/U/C and blank for O, File-Format F where a record
+length is present, Sequence `AA`, record Type `D`. Result: `test159` is now
+fully **accepted** by IBM, `test160` is down to its own deliberate error
+(RNF4059), and bucket B fell 53 -> 48 as those files moved into bucket C with
+only structural problems left.
+
+All transforms now share one `fixed_only()` guard. Column 6 is meaningless in a
+`/FREE` block, so `  record.id = 1;` looks exactly like an O-spec — that hazard
+corrupted a test three separate times during development before the guard was
+centralised.
+
 **Still open in bucket B:**
-- Those 7 files need fixing: F-spec Record-Length is mechanical, but the missing
-  File-Type and File-Format entries need a judgment call per test (I vs O vs U,
-  and program-described F).
-- BIFs in Factor 1 of traditional C-specs (finding 3, 16 files) — no check yet.
+- BIFs in Factor 1 of traditional C-specs (finding 3, 16 files) — no check yet,
+  and not mechanically fixable: it restructures the test.
+- `RNF5014`/`RNF5375`/`RNF5001`/`RNF2367` on the RLA C-spec group (6 files).
 - Once the corpus is clean, consider promoting these warnings to errors.
 
 ### Caveat on bucket D — needs a human pass

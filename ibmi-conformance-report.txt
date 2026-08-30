@@ -1,19 +1,19 @@
 IBM i conformance -- acceptance of the OpenRPG test corpus
 ==============================================================
 compiled : 221
-accepted : 73
-rejected : 148
+accepted : 74
+rejected : 147
 
 REJECTIONS GROUPED BY DIAGNOSTIC
 --------------------------------------------------------------
-RNF7030  x53   9 The name or indicator is not defined.
+RNF7030  x49   9 The name or indicator is not defined.
       test09_datastructs.rpgle
       test100_data_gen.rpgle
       test102_snd_msg.rpgle
       test112_data_into_csv.rpgle
       test113_data_gen_csv.rpgle
       test11_errors.rpgle
-      ... and 47 more
+      ... and 43 more
 
 RNF7023  x28   1 The Compiler cannot determine how the program can end.
       test116_fixed_hd.rpgle
@@ -105,15 +105,6 @@ RNF7016  x8   1 Display Length is greater than maximum allowed.
       test180_fixed_cspec_modern_opcodes.rpgle
       ... and 2 more
 
-RNF6005  x8   2 The Type entry is not H, D, T, or E; defaults to D.
-      test124_fixed_overlay.rpgle
-      test152_fixed_cspec_err_goto_in_free.rpgle
-      test154_fixed_ispec_single.rpgle
-      test155_fixed_ispec_multi.rpgle
-      test156_fixed_ispec_field_ind.rpgle
-      test157_fixed_ispec_update.rpgle
-      ... and 2 more
-
 RNF5377  x7   1 The end of the expression is expected.
       test102_snd_msg.rpgle
       test113_data_gen_csv.rpgle
@@ -132,41 +123,6 @@ RNF5014  x7   5 Operation code is not valid; specification is ignored.
       test147_fixed_cspec_setll_reade.rpgle
       ... and 1 more
 
-RNF0263  x7   1 Entry not right-adjusted; defaults to right-adjusted.
-      test154_fixed_ispec_single.rpgle
-      test155_fixed_ispec_multi.rpgle
-      test156_fixed_ispec_field_ind.rpgle
-      test157_fixed_ispec_update.rpgle
-      test158_fixed_ospec_editcode.rpgle
-      test159_fixed_ispec_err_zone.rpgle
-      ... and 1 more
-
-RNF2006  x7   1 The File-Format entry is not F or E; defaults to F.
-      test154_fixed_ispec_single.rpgle
-      test155_fixed_ispec_multi.rpgle
-      test156_fixed_ispec_field_ind.rpgle
-      test157_fixed_ispec_update.rpgle
-      test158_fixed_ospec_editcode.rpgle
-      test159_fixed_ispec_err_zone.rpgle
-      ... and 1 more
-
-RNF2003  x7   1 The File Type is not I, O, U, or C; defaults to O if File
-      test154_fixed_ispec_single.rpgle
-      test155_fixed_ispec_multi.rpgle
-      test156_fixed_ispec_field_ind.rpgle
-      test157_fixed_ispec_update.rpgle
-      test158_fixed_ospec_editcode.rpgle
-      test159_fixed_ispec_err_zone.rpgle
-      ... and 1 more
-
-RNF2093  x6   1 Blank File-Designation entry is not valid with File-Type
-      test118_fixed_rla_chain.rpgle
-      test122_fixed_rla_chain_varchar.rpgle
-      test144_fixed_cspec_chain.rpgle
-      test145_fixed_cspec_read.rpgle
-      test146_fixed_cspec_write_upd_del.rpgle
-      test147_fixed_cspec_setll_reade.rpgle
-
 RNF5001  x6   5 Control-Level entry is not valid; defaults to previous
       test118_fixed_rla_chain.rpgle
       test122_fixed_rla_chain_varchar.rpgle
@@ -174,22 +130,6 @@ RNF5001  x6   5 Control-Level entry is not valid; defaults to previous
       test145_fixed_cspec_read.rpgle
       test146_fixed_cspec_write_upd_del.rpgle
       test147_fixed_cspec_setll_reade.rpgle
-
-RNF4008  x6   1 Sequence entry is not valid; defaults to AA.
-      test154_fixed_ispec_single.rpgle
-      test155_fixed_ispec_multi.rpgle
-      test156_fixed_ispec_field_ind.rpgle
-      test157_fixed_ispec_update.rpgle
-      test159_fixed_ispec_err_zone.rpgle
-      test160_fixed_ispec_err_matching.rpgle
-
-RNF4071  x6   1 File is not input, update or combined; record ignored.
-      test154_fixed_ispec_single.rpgle
-      test155_fixed_ispec_multi.rpgle
-      test156_fixed_ispec_field_ind.rpgle
-      test157_fixed_ispec_update.rpgle
-      test159_fixed_ispec_err_zone.rpgle
-      test160_fixed_ispec_err_matching.rpgle
 
 RNF0256  x6   4 Specification found between procedures.  Specification
       test36_ds_params.rpgle
@@ -199,19 +139,19 @@ RNF0256  x6   4 Specification found between procedures.  Specification
       test59_passed_omitted.rpgle
       test64_omit.rpgle
 
-RNF0289  x5   1 Entry contains data that is not valid; only valid data is
-      test118_fixed_rla_chain.rpgle
-      test124_fixed_overlay.rpgle
-      test142_fixed_copy_in_free.rpgle
-      test162_fixed_subf_like.rpgle
-      test16_copy.rpgle
-
 RNF2367  x5   1 The keyword is valid only for a free-form File declaration.
       test118_fixed_rla_chain.rpgle
       test122_fixed_rla_chain_varchar.rpgle
       test144_fixed_cspec_chain.rpgle
       test146_fixed_cspec_write_upd_del.rpgle
       test147_fixed_cspec_setll_reade.rpgle
+
+RNF0289  x5   1 Entry contains data that is not valid; only valid data is
+      test118_fixed_rla_chain.rpgle
+      test124_fixed_overlay.rpgle
+      test142_fixed_copy_in_free.rpgle
+      test162_fixed_subf_like.rpgle
+      test16_copy.rpgle
 
 RNF5375  x5   3 The Operation Code is followed by data which is not valid.
       test118_fixed_rla_chain.rpgle
@@ -226,13 +166,13 @@ RNF0622  x4   1 A qualified name is not allowed in this context.
       test162_fixed_subf_like.rpgle
       test89.rpgle
 
-RNF5009  x4   2 Factor 1 operand is required for specified operation.
+RNF7043  x4   1 Target of GOTO or CABxx operation is not a label; the
       test148_fixed_cspec_goto_tag.rpgle
       test149_fixed_cspec_goto_in_begsr.rpgle
       test164_fixed_cspec_cond_ind.rpgle
       test182_fixed_cspec_cas_cab.rpgle
 
-RNF7043  x4   1 Target of GOTO or CABxx operation is not a label; the
+RNF5009  x4   2 Factor 1 operand is required for specified operation.
       test148_fixed_cspec_goto_tag.rpgle
       test149_fixed_cspec_goto_in_begsr.rpgle
       test164_fixed_cspec_cond_ind.rpgle
@@ -264,6 +204,11 @@ RNF6001  x3   2 The file or record name is not valid or defined, or is
       test152_fixed_cspec_err_goto_in_free.rpgle
       test162_fixed_subf_like.rpgle
 
+RNF6005  x3   2 The Type entry is not H, D, T, or E; defaults to D.
+      test124_fixed_overlay.rpgle
+      test152_fixed_cspec_err_goto_in_free.rpgle
+      test162_fixed_subf_like.rpgle
+
 RNF5005  x3   8 Operation entry following ENDSR operation is not valid;
       test13_subroutines.rpgle
       test66_pssr.rpgle
@@ -282,15 +227,15 @@ RNF7416  x2   1 The types of the right and left hand side do not match in the
       test101_user.rpgle
       test22_status_error.rpgle
 
+RNF6003  x2   3 The Output-Indicator entry is not valid, or is not defined;
+      test124_fixed_overlay.rpgle
+      test162_fixed_subf_like.rpgle
+
 RNF6019  x2   3 The Indicator-Negation entry is neither N nor blank with an
       test124_fixed_overlay.rpgle
       test162_fixed_subf_like.rpgle
 
 RNF6008  x2   1 The Fetch-Overflow/Release entry is not valid; defaults to
-      test124_fixed_overlay.rpgle
-      test162_fixed_subf_like.rpgle
-
-RNF6003  x2   3 The Output-Indicator entry is not valid, or is not defined;
       test124_fixed_overlay.rpgle
       test162_fixed_subf_like.rpgle
 
@@ -310,13 +255,13 @@ RNF5049  x2   3 The Operation Extender is not valid for the specified
       test94_extender_h.rpgle
       test95_extender_e.rpgle
 
-RNF3767  x1   3 The name in positions 7 - 21 does not match the name of the
-      test08_procedures.rpgle
-
 RNF3763  x1   3 A return value is expected for the procedure-interface
       test08_procedures.rpgle
 
 RNF0633  x1   3 An unexpected right parenthesis was encountered; right
+      test08_procedures.rpgle
+
+RNF3767  x1   3 The name in positions 7 - 21 does not match the name of the
       test08_procedures.rpgle
 
 RNF0203  x1   1 Refer to the compiler listing where this message was first
@@ -328,10 +273,10 @@ RNF5403  x1   4 The prototyped call cannot be used in an expression because
 RNF3551  x1   2 END-XX is not expected.
       test110_overload.rpgle
 
-RNF3244  x1   4 Return type of parameter of OVERLOAD keyword does not match
+RNF3245  x1   4 No prototype in the OVERLOAD keyword matches the parameters
       test110_overload.rpgle
 
-RNF3245  x1   4 No prototype in the OVERLOAD keyword matches the parameters
+RNF3244  x1   4 Return type of parameter of OVERLOAD keyword does not match
       test110_overload.rpgle
 
 RNF7563  x1   1 The expression is not valid for assignment to built-in
@@ -358,16 +303,13 @@ RNF0523  x1   3 Entry contains data that are not valid following an array
 RNF5002  x1   1 Blank Control-Level entry follows Control-Level entry that is
       test135_fixed_cspec_err_ctllevel.rpgle
 
-RNF5006  x1   1 Not entry is neither N nor blank; defaults to blank.
-      test136_fixed_cspec_err_indicator.rpgle
-
 RNF5007  x1   1 Conditioning-Indicator entry is not valid; defaults to
       test136_fixed_cspec_err_indicator.rpgle
 
-RNF0258  x1   4 Form-Type entry is not valid for subprocedures, or is out of
-      test142_fixed_copy_in_free.rpgle
+RNF5006  x1   1 Not entry is neither N nor blank; defaults to blank.
+      test136_fixed_cspec_err_indicator.rpgle
 
-RNF1508  x1   2 Unused positions for the Procedure specification are not
+RNF0258  x1   4 Form-Type entry is not valid for subprocedures, or is out of
       test142_fixed_copy_in_free.rpgle
 
 RNF1501  x1   1 The Begin/End entry of the Procedure specification is not
@@ -376,13 +318,16 @@ RNF1501  x1   1 The Begin/End entry of the Procedure specification is not
 RNF1502  x1   1 The Procedure specification ending the previous procedure is
       test142_fixed_copy_in_free.rpgle
 
+RNF1508  x1   2 Unused positions for the Procedure specification are not
+      test142_fixed_copy_in_free.rpgle
+
 RNF0273  x1   1 Compiler not able to open the /COPY or /INCLUDE file;
       test143_fixed_copy_err_missing.rpgle
 
-RNF5063  x1   2 Factor 2 operand must not be an externally described file for
+RNF5198  x1   1 File in Factor 2 is not allowed for UPDATE or DELETE
       test146_fixed_cspec_write_upd_del.rpgle
 
-RNF5198  x1   1 File in Factor 2 is not allowed for UPDATE or DELETE
+RNF5063  x1   2 Factor 2 operand must not be an externally described file for
       test146_fixed_cspec_write_upd_del.rpgle
 
 RNF5201  x1   1 The specified Factor 2 operand is not allowed for READE or
@@ -397,10 +342,10 @@ RNF0262  x1   1 Entry not left-adjusted; defaults to left-adjusted.
 RNF5010  x1   1 Factor 1 entry is not blank for the specified operation;
       test153_fixed_cspec_err_call_deferred.rpgle
 
-RNF3466  x1   1 The Decimal-Positions entry does not agree with the Data-Type
+RNF8003  x1   1 The field length is greater than the End-Position entry;
       test158_fixed_ospec_editcode.rpgle
 
-RNF8003  x1   1 The field length is greater than the End-Position entry;
+RNF3466  x1   1 The Decimal-Positions entry does not agree with the Data-Type
       test158_fixed_ospec_editcode.rpgle
 
 RNF4059  x1   1 Control-Levels and Matching-Fields entries are not allowed
@@ -415,25 +360,25 @@ RNF5003  x1   1 Control-Level entry of AN/OR is not valid; defaults to
 RNF5004  x1   1 AN/OR Calculation specification is missing.
       test169_fixed_cspec_err_anor_dangling.rpgle
 
-RNF4026  x1   1 Code-Part entry is not C, Z, or D; defaults to C.
-      test16_copy.rpgle
-
-RNF4020  x1   1 Record-Identifying-Indicator entry is not valid; defaults to
-      test16_copy.rpgle
-
-RNF4029  x1   2 Position entry is not valid; defaults to 1.
-      test16_copy.rpgle
-
-RNF4278  x1   1 Option entry must be blank with alphabetic sequence; defaults
-      test16_copy.rpgle
-
-RNF4027  x1   2 Not entry is neither N nor blank; defaults to blank.
+RNF4073  x1   1 Number entry is not valid; defaults to N if numeric sequence,
       test16_copy.rpgle
 
 RNF4005  x1   1 File-Name or Record-Name entry is not valid; input record is
       test16_copy.rpgle
 
-RNF4073  x1   1 Number entry is not valid; defaults to N if numeric sequence,
+RNF4027  x1   2 Not entry is neither N nor blank; defaults to blank.
+      test16_copy.rpgle
+
+RNF4278  x1   1 Option entry must be blank with alphabetic sequence; defaults
+      test16_copy.rpgle
+
+RNF4029  x1   2 Position entry is not valid; defaults to 1.
+      test16_copy.rpgle
+
+RNF4020  x1   1 Record-Identifying-Indicator entry is not valid; defaults to
+      test16_copy.rpgle
+
+RNF4026  x1   1 Code-Part entry is not C, Z, or D; defaults to C.
       test16_copy.rpgle
 
 RNF7515  x1   1 The move operation has operands that are not compatible.
@@ -463,10 +408,10 @@ RNF0274  x1   1 Compiler directive not recognized; directive ignored.
 RNF7547  x1   1 A float variable or literal is not allowed for the operation.
       test194_fixed_cspec_err_move_float.rpgle
 
-RNF5419  x1   1 *ENTRY PLIST is allowed only in a cycle module.
+RNF5418  x1   1 The operation entry is not allowed in the main source section
       test199_fixed_cspec_err_entry_nomain.rpgle
 
-RNF5418  x1   1 The operation entry is not allowed in the main source section
+RNF5419  x1   1 *ENTRY PLIST is allowed only in a cycle module.
       test199_fixed_cspec_err_entry_nomain.rpgle
 
 RNF5119  x1   1 Factor 1 entry of PLIST operation is already defined;
@@ -484,16 +429,16 @@ RNF7510  x1   1 The operand is too small to contain a complete date.
 RNF7505  x1   1 The Time format *USA can not be used with a numeric entry.
       test214_fixed_cspec_err_move_usa_num.rpgle
 
-RNF2109  x1   1 All Record Formats for externally-described file ignored or
-      test25_dclf.rpgle
-
 RNF2121  x1   1 Record-format name in externally-described file already
       test25_dclf.rpgle
 
-RNF5056  x1   1 Either the error indicator or the E operation extender must
-      test47_test.rpgle
+RNF2109  x1   1 All Record Formats for externally-described file ignored or
+      test25_dclf.rpgle
 
 RNF7523  x1   1 Operation-Code extender D, T and Z are not allowed with a
+      test47_test.rpgle
+
+RNF5056  x1   1 Either the error indicator or the E operation extender must
       test47_test.rpgle
 
 RNF0592  x1   2 The second parameter for %LOOKUPxx must be a sequenced array.
@@ -502,10 +447,10 @@ RNF0592  x1   2 The second parameter for %LOOKUPxx must be a sequenced array.
 RNF3529  x1   1 Keyword is not allowed for a program-described data
       test63_prefix.rpgle
 
-RNF0597  x1   3 The second parameter for %TLOOKUPxx is not valid.
+RNF5343  x1   3 Array has too many omitted indexes; specification is ignored.
       test75_tlookup_elem.rpgle
 
-RNF5343  x1   3 Array has too many omitted indexes; specification is ignored.
+RNF0597  x1   3 The second parameter for %TLOOKUPxx is not valid.
       test75_tlookup_elem.rpgle
 
 RNF0604  x1   5 The token is not valid; token is ignored.
@@ -541,7 +486,7 @@ REJECTED FILES
   test114_data_into_json_parser.rpgle           RNF0637,RNF5377,RNF5454,RNF7016
   test116_fixed_hd.rpgle                        RNF7023
   test117_fixed_free_hello.rpgle                RNF0257,RNF7023
-  test118_fixed_rla_chain.rpgle                 RNF0257,RNF0289,RNF0622,RNF0623,RNF2093,RNF2367,RNF3438,RNF5001,RNF5014,RNF5375,RNF7023
+  test118_fixed_rla_chain.rpgle                 RNF0257,RNF0289,RNF0622,RNF0623,RNF2367,RNF3438,RNF5001,RNF5014,RNF5375,RNF7023
   test119_fixed_free_error.rpgle                RNF0257,RNF7023
   test11_errors.rpgle                           RNF5347,RNF7030
   test11a_missing_semi.rpgle                    RNF5377,RNF7030
@@ -551,7 +496,7 @@ REJECTED FILES
   test11e_unmatched_paren.rpgle                 RNF0312
   test120_fixed_varchar.rpgle                   RNF0257,RNF7023
   test121_fixed_varchar_subfield.rpgle          RNF0257,RNF7023
-  test122_fixed_rla_chain_varchar.rpgle         RNF0257,RNF2093,RNF2367,RNF5001,RNF5014,RNF5375,RNF7023
+  test122_fixed_rla_chain_varchar.rpgle         RNF0257,RNF2367,RNF5001,RNF5014,RNF5375,RNF7023
   test123_fixed_ds_dim.rpgle                    RNF0257,RNF7023
   test124_fixed_overlay.rpgle                   RNF0257,RNF0289,RNF0622,RNF3555,RNF6001,RNF6003,RNF6005,RNF6008,RNF6019,RNF6108,RNF7023,RNF7030
   test126_fixed_cspec_dow_dou.rpgle             RNF0372,RNF5261
@@ -572,23 +517,22 @@ REJECTED FILES
   test141_fixed_copy_nested.rpgle               RNF0372,RNF5261
   test142_fixed_copy_in_free.rpgle              RNF0258,RNF0289,RNF1501,RNF1502,RNF1508,RNF7023
   test143_fixed_copy_err_missing.rpgle          RNF0273
-  test144_fixed_cspec_chain.rpgle               RNF0257,RNF2093,RNF2367,RNF5001,RNF5014,RNF5375,RNF7055
-  test145_fixed_cspec_read.rpgle                RNF0257,RNF2093,RNF5001,RNF5014,RNF5375
-  test146_fixed_cspec_write_upd_del.rpgle       RNF0257,RNF2093,RNF2367,RNF5001,RNF5014,RNF5063,RNF5198,RNF7055
-  test147_fixed_cspec_setll_reade.rpgle         RNF0257,RNF2093,RNF2367,RNF5001,RNF5014,RNF5201,RNF5375,RNF7055
+  test144_fixed_cspec_chain.rpgle               RNF0257,RNF2367,RNF5001,RNF5014,RNF5375,RNF7055
+  test145_fixed_cspec_read.rpgle                RNF0257,RNF5001,RNF5014,RNF5375
+  test146_fixed_cspec_write_upd_del.rpgle       RNF0257,RNF2367,RNF5001,RNF5014,RNF5063,RNF5198,RNF7055
+  test147_fixed_cspec_setll_reade.rpgle         RNF0257,RNF2367,RNF5001,RNF5014,RNF5201,RNF5375,RNF7055
   test148_fixed_cspec_goto_tag.rpgle            RNF0372,RNF5009,RNF5025,RNF5261,RNF7030,RNF7043,RNF7260
   test149_fixed_cspec_goto_in_begsr.rpgle       RNF0372,RNF5009,RNF5025,RNF5261,RNF7030,RNF7043
   test150_fixed_cspec_arith.rpgle               RNF0372,RNF5261
   test151_fixed_cspec_zadd_zsub.rpgle           RNF0372,RNF5261
   test152_fixed_cspec_err_goto_in_free.rpgle    RNF0262,RNF6001,RNF6005,RNF7023,RNF7030
   test153_fixed_cspec_err_call_deferred.rpgle   RNF5010,RNF7030
-  test154_fixed_ispec_single.rpgle              RNF0257,RNF0263,RNF2003,RNF2006,RNF4008,RNF4071,RNF6005,RNF7023,RNF7030
-  test155_fixed_ispec_multi.rpgle               RNF0257,RNF0263,RNF2003,RNF2006,RNF4008,RNF4071,RNF6005,RNF7023,RNF7030
-  test156_fixed_ispec_field_ind.rpgle           RNF0257,RNF0263,RNF2003,RNF2006,RNF4008,RNF4071,RNF6005,RNF7023,RNF7030
-  test157_fixed_ispec_update.rpgle              RNF0257,RNF0263,RNF2003,RNF2006,RNF4008,RNF4071,RNF6005,RNF7023,RNF7030
-  test158_fixed_ospec_editcode.rpgle            RNF0257,RNF0263,RNF2003,RNF2006,RNF3466,RNF6005,RNF7023,RNF8003
-  test159_fixed_ispec_err_zone.rpgle            RNF0263,RNF2003,RNF2006,RNF4008,RNF4071
-  test160_fixed_ispec_err_matching.rpgle        RNF0263,RNF2003,RNF2006,RNF4008,RNF4059,RNF4071,RNF7030
+  test154_fixed_ispec_single.rpgle              RNF0257,RNF7023
+  test155_fixed_ispec_multi.rpgle               RNF0257,RNF7023,RNF7030
+  test156_fixed_ispec_field_ind.rpgle           RNF0257,RNF7023
+  test157_fixed_ispec_update.rpgle              RNF0257,RNF7023
+  test158_fixed_ospec_editcode.rpgle            RNF0257,RNF3466,RNF7023,RNF8003
+  test160_fixed_ispec_err_matching.rpgle        RNF4059
   test161_fixed_subf_dim.rpgle                  RNF0257,RNF7023
   test162_fixed_subf_like.rpgle                 RNF0257,RNF0289,RNF0622,RNF6001,RNF6003,RNF6005,RNF6008,RNF6019,RNF6069,RNF7023,RNF7030
   test163_subfield_like_dim.rpgle               RNF7030,RNF7503

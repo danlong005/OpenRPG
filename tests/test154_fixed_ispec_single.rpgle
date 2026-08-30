@@ -1,9 +1,9 @@
      HDFTACTGRP(*NO)
-     FTESTFL154       25           DISK
-     ITESTFL154
+     FTESTFL154 UF A F   25        DISK
+     ITESTFL154 AA
      I                             A    1   20  NAME
      I                             S   21   25 0AGE
-     OTESTFL154
+     OTESTFL154 D
      O                       NAME                20
      O                       AGE                 25
       /free

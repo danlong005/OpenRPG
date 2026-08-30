@@ -1,7 +1,7 @@
      HDFTACTGRP(*NO)
-     FTESTFL158       20           DISK
+     FTESTFL158 O    F   20        DISK
      DAMT              S             10S
-     OTESTFL158
+     OTESTFL158 D
      O                       AMT           1     10
       /free
   AMT = 123456;

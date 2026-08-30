@@ -1,5 +1,5 @@
      HDFTACTGRP(*NO)
-     FCUSTFL145 I    E             DISK
+     FCUSTFL145 IF   E             DISK
      F                                     EXTDESC('CUSTFL145')
       /free
   EXEC SQL CREATE TABLE custfl145 (

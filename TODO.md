@@ -1144,9 +1144,23 @@ Same category as record formats and free-format DDS: a divergence that follows
 from the target platform, not a defect. 14 `CONNECT` and 13 `DISCONNECT`
 statements across the tests.
 
-**Not decided:** whether rpgc should also *accept* `CONNECT TO :rdb ...` so
-that shop code carrying it can compile. That is the coverage question again,
-and the same one raised by database record formats.
+**Both compilers do support an ambient connection**, which is worth stating
+because it bounds the problem: IBM i's job is implicitly connected to its local
+database, and rpgc reads `RPGC_DSN` (`src/conf.cpp`). Source carrying **no**
+`CONNECT` compiles on both — 8 of the 24 SQL tests are already in that shape,
+and it is how most shop RPG is written.
+
+**DECISION (2026-08-30): the 16 `CONNECT USING` tests stay as they are.**
+Connecting by connection string is a real rpgc feature and needs test coverage;
+rewriting those tests to use `RPGC_DSN` would make them compile on IBM i but
+would stop testing the thing they exist to test. The 16 files are counted as a
+platform divergence permanently, not as work.
+
+**Still open (small):** whether rpgc should also *accept* `CONNECT TO :rdb USER
+:u USING :pw` so shop code carrying the IBM spelling compiles. Narrow — it only
+affects source connecting to a *remote* database, since local access needs no
+`CONNECT` at all. Same coverage-versus-conformance question as database record
+formats. Not started.
 
 ### Harness fix: route by content, not extension
 

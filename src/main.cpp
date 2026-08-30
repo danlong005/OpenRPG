@@ -378,11 +378,14 @@ int main(int argc, char* argv[]) {
     }
 
     if (argc < 2) {
-        std::cerr << "Usage: rpgc <input.rpgle> [-c] [-g] [-o output] [file.o ...]\n";
-        std::cerr << "  -c           Compile to object file, do not link\n";
-        std::cerr << "  -g           Compile with debug info (for GDB/LLDB/VS Code)\n";
-        std::cerr << "  -o file      Output file\n";
+        std::cerr << "Usage: rpgc <input.rpgle> [-S|-c] [-g] [--keep-cpp] [-o output] [file.o ...]\n";
+        std::cerr << "  -S             Emit C++ source only, do not compile\n";
+        std::cerr << "  -c             Compile to object file, do not link\n";
+        std::cerr << "  -g             Compile with debug info (for GDB/LLDB/VS Code)\n";
+        std::cerr << "  --keep-cpp     Keep the intermediate .cpp file after compiling\n";
+        std::cerr << "  -o file        Output file (executable, object, or .cpp with -S)\n";
         std::cerr << "  -v, --version  Print version and exit\n";
+        std::cerr << "  file.o ...     Additional object files to link\n";
         return 1;
     }
 

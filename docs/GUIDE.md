@@ -1173,7 +1173,7 @@ END-PROC;
 ```rpgle
 **FREE
 
-DCL-PR Add INT(10) EXTPROC('Add');
+DCL-PR Add INT(10) EXTPROC('ADD');
   a INT(10) VALUE;
   b INT(10) VALUE;
 END-PR;
@@ -1190,6 +1190,11 @@ RETURN;
 rpgc -c mathlib.rpgle              # produces mathlib.o
 rpgc main.rpgle mathlib.o -o myapp # compiles main and links with module
 ```
+
+> **The `EXTPROC` name is case-sensitive, and procedure names are exported
+> upper-cased.** `DCL-PROC Add EXPORT` exports the symbol `ADD`, so the caller
+> must say `EXTPROC('ADD')` — `EXTPROC('Add')` compiles both sides cleanly and
+> then fails at link time with an undefined symbol.
 
 ---
 

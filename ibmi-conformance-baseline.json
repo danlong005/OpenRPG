@@ -2,26 +2,31 @@
  "files": {
   "ADDTWO.rpgle": {
    "codes": [],
+   "rpgc": "reject",
    "sha256": "3bc3409889a69747f23075f7be45069c595f6566fee395215726d8f2ceff606e",
    "verdict": "accept"
   },
   "test01_hello.rpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "e69f4962b809737e82c97fc7589d93e577e3cd2d2fbe65d067a5bd7e552cd56a",
    "verdict": "accept"
   },
   "test02_arithmetic.rpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "dea2d9696497d3f2fa6335d30f6b128928abd4dafaaede7e1631d941fe770a84",
    "verdict": "accept"
   },
   "test03_types.rpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "ce99cf73d6a6cd4122cbe33312eed617b06713715c95f7374d649ef2f908e208",
    "verdict": "accept"
   },
   "test04_bifs.rpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "3b352119f3f24331af9eb6e72349a86162fc674e0e7fc656773a08fa417d5f96",
    "verdict": "accept"
   },
@@ -29,16 +34,19 @@
    "codes": [
     "RNF7421"
    ],
+   "rpgc": "accept",
    "sha256": "7ca9b939a405fdb967c300851be4d07bd70658f46f77d698499638452682e3ef",
    "verdict": "reject"
   },
   "test06_loops.rpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "bc0c9b494a3e2261549da8be3214e5485892cad03c38efd91f3a9241d3337bc9",
    "verdict": "accept"
   },
   "test07_select.rpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "839d605c26c2714f47aa25c1a35d95f911115b4d0c2b6794ad1c1557c32bb78a",
    "verdict": "accept"
   },
@@ -50,6 +58,7 @@
     "RNF3767",
     "RNF7016"
    ],
+   "rpgc": "accept",
    "sha256": "ffee75c51afa3ecb2019a4f8d4b83597c5b7f9e4c6fd43977461b873906d5e87",
    "verdict": "reject"
   },
@@ -60,6 +69,7 @@
     "RNF7030",
     "RNF7503"
    ],
+   "rpgc": "accept",
    "sha256": "9327256027c172e63f22b458f2283da6110720c0d0671722906659b80cf85610",
    "verdict": "reject"
   },
@@ -72,6 +82,7 @@
     "RNF7030",
     "RNF7503"
    ],
+   "rpgc": "accept",
    "sha256": "170b158c56fb351240afd862a43026d056d76f2ba09fb871c6c4459b25accac1",
    "verdict": "reject"
   },
@@ -80,6 +91,7 @@
     "RNF7416",
     "RNF7421"
    ],
+   "rpgc": "accept",
    "sha256": "61c29dd37937685cbcf3d5313a50a53c861c268fdff9def0cb0f1d9e678afc58",
    "verdict": "reject"
   },
@@ -89,41 +101,49 @@
     "RNF5377",
     "RNF7030"
    ],
+   "rpgc": "accept",
    "sha256": "500dd30e0965b578497a378dc6d01c1a8d37c958c3462db397930f73cee72ec8",
    "verdict": "reject"
   },
   "test103_rla_chain.rpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "3b400a169d351ad7f7d4a75eaf730bec544ebe4c9288c3861ca63bcef818647f",
    "verdict": "reject"
   },
   "test104_rla_read.rpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "95bd073a85b497e58d0c527e465dbd16c4cf3b9213375eb4c679e8a9c3ea2b08",
    "verdict": "reject"
   },
   "test105_rla_write_upd_del.rpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "2cc21fd92d06de436f1cadcbf95f607dd41da02daff5b731eb4ed5589c7695b4",
    "verdict": "reject"
   },
   "test106_rla_setll_reade.rpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "386880f6ead8b6179180de64abf931089108ee54b94d1c58160b252662231592",
    "verdict": "reject"
   },
   "test107_sql_conf.sqlrpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "fa2cc66b3a2f43f4eae8034cc05e62644c8c2b2aa3e189d243db0d3db6f776d2",
    "verdict": "accept"
   },
   "test108_rla_conf.rpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "ccf95e9c64b02ef869930971867c96c1bfda66c617845b78c8a6bb6bd88cf41e",
    "verdict": "accept"
   },
   "test109_sql_indicator.sqlrpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "c317347e994e9d8c7949062bd40bc886bdcc312b3de3991ffc38d16d5aca5f40",
    "verdict": "reject"
   },
@@ -131,6 +151,7 @@
    "codes": [
     "RNF7016"
    ],
+   "rpgc": "accept",
    "sha256": "44f0d3b49cbdcfe8df4e418348ed978485c5d53ff2a515adbeee580ae57fcc26",
    "verdict": "reject"
   },
@@ -142,6 +163,7 @@
     "RNF3551",
     "RNF5403"
    ],
+   "rpgc": "accept",
    "sha256": "48475550368ec89d98e50e7fae62ea136a2ecbc34e7205667ddd58ee71d542bd",
    "verdict": "reject"
   },
@@ -150,6 +172,7 @@
     "RNF0637",
     "RNF7563"
    ],
+   "rpgc": "accept",
    "sha256": "912b22be390b46cc34fa44b2f4e3e16219d5fdb600c5d028385f116369b07d48",
    "verdict": "reject"
   },
@@ -161,6 +184,7 @@
     "RNF7030",
     "RNF7503"
    ],
+   "rpgc": "accept",
    "sha256": "5798d26841edc3802abecdba58b1823282570c5406047b644483212eb43694d1",
    "verdict": "reject"
   },
@@ -174,6 +198,7 @@
     "RNF7030",
     "RNF7503"
    ],
+   "rpgc": "accept",
    "sha256": "fa2ff9afca1bad247bede21ac9decf6bd840d338ac4464f3ac813d9c51c57391",
    "verdict": "reject"
   },
@@ -184,26 +209,31 @@
     "RNF5454",
     "RNF7016"
    ],
+   "rpgc": "accept",
    "sha256": "9186ef1e68a48ae2a037f68a60ec3dde0e13997d4d5201c540f54b67cb755192",
    "verdict": "reject"
   },
   "test115_dump.rpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "b479efb6137e93ea6f91fa7a524423a16eb4e6c400a0f27f2cba4c11b62b6dfa",
    "verdict": "accept"
   },
   "test116_fixed_hd.rpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "2d908398eeaa538d2f7c781bfae2937bb7cd6b579a1f1cf9e821d464a2e5d6b7",
    "verdict": "accept"
   },
   "test117_fixed_free_hello.rpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "35b853e51274958bed474d8a0c0e728d324ddae1d28bc12b29987b84e836f5a1",
    "verdict": "accept"
   },
   "test118_fixed_rla_chain.rpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "72c7d7a372d807061a3834742d323dc178d8cc2d6d834e66d15b28384f31ec21",
    "verdict": "reject"
   },
@@ -211,6 +241,7 @@
    "codes": [
     "RNF5358"
    ],
+   "rpgc": "reject",
    "sha256": "46abf9772d40eeb107065fe8df59f0de89be0ba77eb7f3d589a3f5fec5428851",
    "verdict": "reject"
   },
@@ -219,6 +250,7 @@
     "RNF5347",
     "RNF7030"
    ],
+   "rpgc": "reject",
    "sha256": "7721bdebfdd52044066ba9e77efdf2aeb7445139538a8928a2376404a9f1fbe3",
    "verdict": "reject"
   },
@@ -227,6 +259,7 @@
     "RNF5377",
     "RNF7030"
    ],
+   "rpgc": "reject",
    "sha256": "315fd9bbe849d83f4dc38ed81766f1afce9819fa5cb9196e82d12abf49c1784a",
    "verdict": "reject"
   },
@@ -236,6 +269,7 @@
     "RNF3438",
     "RNF7030"
    ],
+   "rpgc": "reject",
    "sha256": "a7a4945668f14e5bf2f9bec7d4f151438098962a938bc20f90940e5fa6408a69",
    "verdict": "reject"
   },
@@ -243,6 +277,7 @@
    "codes": [
     "RNF5177"
    ],
+   "rpgc": "reject",
    "sha256": "a243aeddb42a64dfd19e6aca1c4936d3718e001fb6e609a8b9de92943c66a4af",
    "verdict": "reject"
   },
@@ -250,6 +285,7 @@
    "codes": [
     "RNF5377"
    ],
+   "rpgc": "reject",
    "sha256": "8dbe463c9db90411c389719d1024309bf5c1a4e74ae64f516e8dd7e881bdda84",
    "verdict": "reject"
   },
@@ -257,16 +293,19 @@
    "codes": [
     "RNF0312"
    ],
+   "rpgc": "reject",
    "sha256": "797df5768ad5bbcb75ee26c683b2248e16afe84272ffeb5f7e7849d1f49f14f5",
    "verdict": "reject"
   },
   "test120_fixed_varchar.rpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "3b0dbd8d4466705ba85ccd1ff838228301ab08051f04a309b8453a68413956e5",
    "verdict": "accept"
   },
   "test121_fixed_varchar_subfield.rpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "33def5c1c7fe7c63448e29c93e2d1fb17333d00db6de326541a7fd4dc85370cd",
    "verdict": "accept"
   },
@@ -275,11 +314,13 @@
     "RNF2367",
     "RNF7055"
    ],
+   "rpgc": "accept",
    "sha256": "fb1a086279801c7a5af6bfc8b0990153d2ca10db59cfd200ec9ffe755f1e92d0",
    "verdict": "reject"
   },
   "test123_fixed_ds_dim.rpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "ec18b308b77ca6dfd049d2557254bceb8e824f8b1f3679d7071fd651e4dab564",
    "verdict": "accept"
   },
@@ -287,36 +328,43 @@
    "codes": [
     "RNF3555"
    ],
+   "rpgc": "accept",
    "sha256": "9e13b2e68197e7e6ece9a0b121652e91c5f152797b876f06e8ddaee450d39bcd",
    "verdict": "reject"
   },
   "test125_fixed_cspec_if.rpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "9abea2db289705bdb16399cfd089785b13fec97de4b10ae749d42311e4bfc13a",
    "verdict": "accept"
   },
   "test126_fixed_cspec_dow_dou.rpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "a67061c6f8d18020270a5a46638ae17b8d9fe9b9f51c3f9e1236edf208cd091f",
    "verdict": "accept"
   },
   "test127_fixed_cspec_for.rpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "4429b10c1355a2d15b7fdf08cf8e17d6e0c1b991c56dc7d5bebd0190d357975b",
    "verdict": "accept"
   },
   "test128_fixed_cspec_select.rpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "f9e888dfc9eeaad1477a3357751234bebb451923e4832377ac85bed5aa004538",
    "verdict": "accept"
   },
   "test129_fixed_cspec_subr.rpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "f864263af59efbc51b5ab64489d2264756a760b35e95ca4b1938d0cbf4d1a954",
    "verdict": "accept"
   },
   "test12_monitor.rpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "8d44e83f4c1f1dc67bd2712c11050f9163713824833dc1e72ffb5b6d03817602",
    "verdict": "accept"
   },
@@ -326,26 +374,31 @@
     "RNF5347",
     "RNF7030"
    ],
+   "rpgc": "accept",
    "sha256": "9c4479f4b8b0ad874727e97ade12f01b1268b222155adf393e109aa3a0722ee7",
    "verdict": "reject"
   },
   "test131_fixed_cspec_clear_sorta.rpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "7abeee696d63e461c16a15aafb2a0ecb3516266f43907b00f87e07aa5b462327",
    "verdict": "accept"
   },
   "test132_fixed_cspec_monitor.rpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "c4c508b2501ae4a222eeab0f473444f346209c6778daa3b7525a7145117ee22d",
    "verdict": "accept"
   },
   "test133_fixed_cspec_continuation.rpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "83ab1cbf31a2da7af598d8a2db9e2b2bdcad71eabb45b79b4773dd634852908a",
    "verdict": "accept"
   },
   "test134_fixed_cspec_mixed_free.rpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "e8161c77a816606668da50422ffd66ba200ffbf62f9feaf46434ed2fe5426bf6",
    "verdict": "accept"
   },
@@ -354,6 +407,7 @@
     "RNF5002",
     "RNF7030"
    ],
+   "rpgc": "reject",
    "sha256": "db9c24a7c4ca57664bce758284eb3461521e73163fd41e56c72b53fffa1d05d9",
    "verdict": "reject"
   },
@@ -362,6 +416,7 @@
     "RNF5006",
     "RNF5007"
    ],
+   "rpgc": "reject",
    "sha256": "147e675730302f37c7707edf0f1b8813a0590ed3a450f301b95ffe36c809c443",
    "verdict": "reject"
   },
@@ -370,6 +425,7 @@
     "RNF0637",
     "RNF7030"
    ],
+   "rpgc": "reject",
    "sha256": "97bba98ef7cc94dc57f4e1ded12546a0b0efa3a282c941abafcda82b42d8f303",
    "verdict": "reject"
   },
@@ -377,11 +433,13 @@
    "codes": [
     "RNF5053"
    ],
+   "rpgc": "reject",
    "sha256": "97eff20ba211ba41cca87af43a78344ee4e23b27bde0fa3d4004cb3b2c1b20e7",
    "verdict": "reject"
   },
   "test139_fixed_copy_dspec.rpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "0405bee3ed21585fcb52d07fa51f6640a36d5c25d8153e77659655a847e28ef2",
    "verdict": "accept"
   },
@@ -389,16 +447,19 @@
    "codes": [
     "RNF5005"
    ],
+   "rpgc": "accept",
    "sha256": "35a269c512a5701dfb81084b9934019b89ae179c98afe8ce76b7138b37734ca0",
    "verdict": "reject"
   },
   "test140_fixed_copy_cspec.rpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "a059378740b7ee8fe5fd8106642d2c370dbc8649853c778fa82ec38e5fa605de",
    "verdict": "accept"
   },
   "test141_fixed_copy_nested.rpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "1152b26455ccb0fa5cf5a007f2ab25bcf8d50b781f211c37190b78f73bf38427",
    "verdict": "accept"
   },
@@ -416,6 +477,7 @@
     "RNF7030",
     "RNF7503"
    ],
+   "rpgc": "accept",
    "sha256": "81af51af8cfa1604fb9a9217b45acee6cf93f5a3f7cae80e64b06105d5691c88",
    "verdict": "reject"
   },
@@ -423,6 +485,7 @@
    "codes": [
     "RNF0273"
    ],
+   "rpgc": "reject",
    "sha256": "2812bb9654834cfd0f0a5093a3fcdf7db35c8989c9680ba310bb8f208d30cf28",
    "verdict": "reject"
   },
@@ -431,11 +494,13 @@
     "RNF2367",
     "RNF7055"
    ],
+   "rpgc": "accept",
    "sha256": "d7cde3e6b70120165fdea5c79b6b05945d1f0b800ae334ca30e896b38138bcdf",
    "verdict": "reject"
   },
   "test145_fixed_cspec_read.rpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "6b2b7a822013d1117b32d1c0357a4ec5781ba58c100276c4928830ca9a6f7a58",
    "verdict": "accept"
   },
@@ -446,6 +511,7 @@
     "RNF5198",
     "RNF7055"
    ],
+   "rpgc": "accept",
    "sha256": "092a14729d980c78045569383e02c56cafd9a33e7b9d3014d140df03c204a0ae",
    "verdict": "reject"
   },
@@ -455,6 +521,7 @@
     "RNF5201",
     "RNF7055"
    ],
+   "rpgc": "accept",
    "sha256": "15468f3032cec795712c4f86306b3476f8b567f73afe8f1ae138dbef841f689c",
    "verdict": "reject"
   },
@@ -466,6 +533,7 @@
     "RNF7043",
     "RNF7260"
    ],
+   "rpgc": "accept",
    "sha256": "985513bbeea86229f32916c811f5335f5e7b834af0bb2f9eaca45748906a089f",
    "verdict": "reject"
   },
@@ -476,21 +544,25 @@
     "RNF7030",
     "RNF7043"
    ],
+   "rpgc": "accept",
    "sha256": "962b959246e6a44141756c989e00ec36a1420324b79f6bc1d7c9b17058a962ff",
    "verdict": "reject"
   },
   "test14_indicators.rpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "c5db3881b1dd2dcea8c99fef4bf3d355281a19d7d4404f30dfb68c2434f732c4",
    "verdict": "accept"
   },
   "test150_fixed_cspec_arith.rpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "8b4c330ff8d3de2def89e31b9df32a55ee69a8d455379ad6a5fa61259a6f5b92",
    "verdict": "accept"
   },
   "test151_fixed_cspec_zadd_zsub.rpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "9316c2df41c299133649a17425e1aeca403a1950c0fdace0ab1fdb3bd5679196",
    "verdict": "accept"
   },
@@ -500,6 +572,7 @@
     "RNF7023",
     "RNF7030"
    ],
+   "rpgc": "reject",
    "sha256": "642734e28c2f983443f0d5043430c2c36fdd23cf556f94a8461dc647734f987b",
    "verdict": "reject"
   },
@@ -508,6 +581,7 @@
     "RNF5010",
     "RNF7030"
    ],
+   "rpgc": "reject",
    "sha256": "39f3f66ef12dac1288d5f95505cf571966ceb5240d427f8685b3486ee6d93ec6",
    "verdict": "reject"
   },
@@ -515,6 +589,7 @@
    "codes": [
     "RNF5191"
    ],
+   "rpgc": "accept",
    "sha256": "527ed37ec6e858920c6e7f37456233bf0855dbe9fe02e4cc3362022c765a6de9",
    "verdict": "reject"
   },
@@ -525,6 +600,7 @@
     "RNF7030",
     "RNF7503"
    ],
+   "rpgc": "accept",
    "sha256": "3cba77b0f2ced919e7c05d9c763d6959a682788c40ecb4818a89fca19c6ea565",
    "verdict": "reject"
   },
@@ -532,6 +608,7 @@
    "codes": [
     "RNF5191"
    ],
+   "rpgc": "accept",
    "sha256": "cb7a27726e46282e5eb3e4a485bf39118853ceceb400b8d2d254b3bb95190494",
    "verdict": "reject"
   },
@@ -539,6 +616,7 @@
    "codes": [
     "RNF5191"
    ],
+   "rpgc": "accept",
    "sha256": "5564a8e30fc21f18be6d5f826f7edf5146723c741d10ed8bb6b3b93f3a5eabde",
    "verdict": "reject"
   },
@@ -548,16 +626,19 @@
     "RNF5191",
     "RNF8003"
    ],
+   "rpgc": "accept",
    "sha256": "99f5b002c6d9b98f7f4e27af55fdadc21921ba277f3491a5cd7d6b01aa2f5256",
    "verdict": "reject"
   },
   "test159_fixed_ispec_err_zone.rpgle": {
    "codes": [],
+   "rpgc": "reject",
    "sha256": "5ca2591ccb80dd941dca6936d90796f822214eb4ce8509515c598725fa10328a",
    "verdict": "accept"
   },
   "test15_dou.rpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "6753abba7a2acf88ebc3a3ed9771ca931a9e185b5caf36501945e016a05856a0",
    "verdict": "accept"
   },
@@ -565,11 +646,13 @@
    "codes": [
     "RNF4059"
    ],
+   "rpgc": "reject",
    "sha256": "adeebb4dae0f0df950fd1f0274355096d01191830467f1648c0176cc82137164",
    "verdict": "reject"
   },
   "test161_fixed_subf_dim.rpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "bcc0c136f71311b59774a9a24d4ed05cede70ae67c84525f4d75d6ee062a17fc",
    "verdict": "accept"
   },
@@ -578,6 +661,7 @@
     "RNF7030",
     "RNF7503"
    ],
+   "rpgc": "accept",
    "sha256": "26811e9c3bd76fc8ef0c9d25a80dc91c9e59b602e59f83ebbb33aec1eafad8c0",
    "verdict": "reject"
   },
@@ -586,6 +670,7 @@
     "RNF7030",
     "RNF7503"
    ],
+   "rpgc": "accept",
    "sha256": "c60d20b2dfaa8b9583e8604b0b7131a2a89107b047bbde5e80708f31627e8612",
    "verdict": "reject"
   },
@@ -596,6 +681,7 @@
     "RNF7030",
     "RNF7043"
    ],
+   "rpgc": "accept",
    "sha256": "12f1d4d052442908163a65fe7ef0b19d777df6f760c5f5bccdc174ee0e511d0e",
    "verdict": "reject"
   },
@@ -603,6 +689,7 @@
    "codes": [
     "RNF7030"
    ],
+   "rpgc": "reject",
    "sha256": "37e33281e40a1e46f30f37693e3f03c6d81a886637b2abd0917545d0c4ac9a76",
    "verdict": "reject"
   },
@@ -610,11 +697,13 @@
    "codes": [
     "RNF7030"
    ],
+   "rpgc": "reject",
    "sha256": "6248f8273c18190ee16d7143f33ce3a00f3482bb947fd07ec7923864d7f7ee7d",
    "verdict": "reject"
   },
   "test167_fixed_cspec_cond_anor.rpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "49aa1111c4dec3d87b7b17acba1a417600d40e1d2779687604f6eac29fe05e29",
    "verdict": "accept"
   },
@@ -623,6 +712,7 @@
     "RNF5003",
     "RNF7030"
    ],
+   "rpgc": "reject",
    "sha256": "b8ffde7ea0864d4d51055e3711578c3588867f440f7b9ac26c7e12aba2b5c328",
    "verdict": "reject"
   },
@@ -631,6 +721,7 @@
     "RNF5004",
     "RNF7030"
    ],
+   "rpgc": "reject",
    "sha256": "c621a864fc11032ce039e117ffb58547a70bbb3b60d5c72579b2856ac63244df",
    "verdict": "reject"
   },
@@ -649,11 +740,13 @@
     "RNF7030",
     "RNF7503"
    ],
+   "rpgc": "accept",
    "sha256": "3dd7c3bed7f22da604406adee0ec8f16e65a8b825ba697808408a98754321298",
    "verdict": "reject"
   },
   "test170_fixed_cspec_move.rpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "8767993ae135d4ad65cb6ee0e8b5637488063e3a1dacd15a8f15eeac542f1754",
    "verdict": "accept"
   },
@@ -661,6 +754,7 @@
    "codes": [
     "RNF7515"
    ],
+   "rpgc": "reject",
    "sha256": "3a4a6eebc28aac1704e050d9a62b079487be2a089bb8bfa33b95050d6bebd560",
    "verdict": "reject"
   },
@@ -668,6 +762,7 @@
    "codes": [
     "RNF7509"
    ],
+   "rpgc": "reject",
    "sha256": "94b3a1466416324b92e7c1d7600c9d5891ad56ce9733a48914c0e8174c6b7096",
    "verdict": "reject"
   },
@@ -677,16 +772,19 @@
     "RNF7023",
     "RNF7030"
    ],
+   "rpgc": "reject",
    "sha256": "24c83539ab5410f66c6a376954b60a7ef12d8498e19481a3db803bf7731ff6d0",
    "verdict": "reject"
   },
   "test174_call_callee_module.rpgle": {
    "codes": [],
+   "rpgc": "reject",
    "sha256": "6d7d65a572a02d0ac93a46756d92d6ceef738941d080ebf1611296b33af097b2",
    "verdict": "accept"
   },
   "test175_fixed_cspec_call_parm.rpgle": {
    "codes": [],
+   "rpgc": "reject",
    "sha256": "a94b47088a9b9d73c273cdfeba989d606f61d213f6e0304d65fb2515fb237aff",
    "verdict": "accept"
   },
@@ -694,11 +792,13 @@
    "codes": [
     "RNF5164"
    ],
+   "rpgc": "reject",
    "sha256": "d6991892865c865ce2b6734b61860f3d146ed838f5cc94389f456eed91f5c7df",
    "verdict": "reject"
   },
   "test177_fixed_cspec_err_call_dynamic.rpgle": {
    "codes": [],
+   "rpgc": "reject",
    "sha256": "088d02fc47f0d59c513743f65fc81b76291c574d61bd098e02f38f380f3edeef",
    "verdict": "accept"
   },
@@ -706,6 +806,7 @@
    "codes": [
     "RNF5121"
    ],
+   "rpgc": "reject",
    "sha256": "d2fc5f80c38cd8c66d038cd193abb1f1a9b109b108e8a4c29b968924cda59cba",
    "verdict": "reject"
   },
@@ -715,11 +816,13 @@
     "RNF7023",
     "RNF7030"
    ],
+   "rpgc": "reject",
    "sha256": "05a9f25f7b8b3c4c344a8a6cb6514c2920ae57edf9f661f28f466d4a64956d82",
    "verdict": "reject"
   },
   "test17_constants.rpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "65a012b7988260f7e31d91d341c64616c218f8c543de3de169b555e279dbfb4f",
    "verdict": "accept"
   },
@@ -728,6 +831,7 @@
     "RNF0637",
     "RNF7016"
    ],
+   "rpgc": "accept",
    "sha256": "3237457c3082ac51127702e68efc60ed93a9346eb89365aeb3a5e9deba098b4e",
    "verdict": "reject"
   },
@@ -735,6 +839,7 @@
    "codes": [
     "RNF5442"
    ],
+   "rpgc": "reject",
    "sha256": "ec872959b63ec82f31f1c85a49d06a5782add5597ac905ef0e01aba26b8e1b07",
    "verdict": "reject"
   },
@@ -746,6 +851,7 @@
     "RNF7030",
     "RNF7043"
    ],
+   "rpgc": "accept",
    "sha256": "df2d1b68ccf598203a74a077c17b01a5cb815288744f4c4cd737e56e4e92f351",
    "verdict": "reject"
   },
@@ -753,6 +859,7 @@
    "codes": [
     "RNF5141"
    ],
+   "rpgc": "reject",
    "sha256": "43b1a9c8a98dbe7b03f920a0f35b645e9f462856093f25bed90196e3c7fa15fe",
    "verdict": "reject"
   },
@@ -760,6 +867,7 @@
    "codes": [
     "RNF5094"
    ],
+   "rpgc": "reject",
    "sha256": "9b3c1abc9254548e6e9f2c8c429992a9894f77d9b3be6b6882b47302228b3273",
    "verdict": "reject"
   },
@@ -768,11 +876,13 @@
     "RNF5014",
     "RNF5141"
    ],
+   "rpgc": "reject",
    "sha256": "75b5c78267ef068e039c207a5735cfa18e035dcf942d68430a96720cf3598878",
    "verdict": "reject"
   },
   "test186_fixed_cspec_comp.rpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "c6f7cdab4fba8549d2423deb8942750b5ee36e3d74d1345d56d0b1933f662d37",
    "verdict": "accept"
   },
@@ -780,11 +890,13 @@
    "codes": [
     "RNF5053"
    ],
+   "rpgc": "reject",
    "sha256": "ae716889b7b5923887cefca504c5d0a17c9b2b1b31921c1f65e90521c2cdd4c5",
    "verdict": "reject"
   },
   "test188_fixed_cspec_exec_sql.sqlrpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "c892b582266917c7dc420ec83500df27792eba6471459ef9c7e10aa87656f4af",
    "verdict": "reject"
   },
@@ -792,31 +904,37 @@
    "codes": [
     "RNF0274"
    ],
+   "rpgc": "reject",
    "sha256": "ff79b75cebd0788998cc12694de4199ddda11a920fe1a59b224900eaa87868c8",
    "verdict": "reject"
   },
   "test18_datetime.rpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "0a7788e6a2256d1b2b1c45c371cce0e048cdd891e3aa973249e53aed9f6937e7",
    "verdict": "accept"
   },
   "test190_fixed_cspec_err_sql_unterminated.sqlrpgle": {
    "codes": [],
+   "rpgc": "reject",
    "sha256": "2c31e2e9e5f72973eea1e6510e2a1c7a8de599f260e092940f56426f7570e1db",
    "verdict": "reject"
   },
   "test191_fixed_cspec_move_num.rpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "63eb363f81ce89d1f92e2d65749405991aafdf25077614bdc7aebcd5f29c3b69",
    "verdict": "accept"
   },
   "test192_fixed_cspec_move_char_to_num.rpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "b41e03d0872e5bafd7466dbe3db057b897a7cfa7b5d4016d24d055ee55c28071",
    "verdict": "accept"
   },
   "test193_fixed_cspec_move_num_to_char.rpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "b43fae4223739360ee5ba0516f24bca488f78f76affa54dcbe1739f97d6ea753",
    "verdict": "accept"
   },
@@ -824,26 +942,31 @@
    "codes": [
     "RNF7547"
    ],
+   "rpgc": "reject",
    "sha256": "36ad26f3c1cf4470af79a3e3640fd2221f1da7a804e2bf6e430b259b765b9881",
    "verdict": "reject"
   },
   "test195_fixed_cspec_err_move_declit.rpgle": {
    "codes": [],
+   "rpgc": "reject",
    "sha256": "66830b57074811f28f4a2735aa3e8db7a0cd05a4c9d9d77dafef5086cb4aee78",
    "verdict": "accept"
   },
   "test196_fixed_cspec_move_data_exc.rpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "e1a6707759d25a2b827976aa49a83ef2c7343c778673b1e8995209eeb8253120",
    "verdict": "accept"
   },
   "test197_fixed_cspec_plist.rpgle": {
    "codes": [],
+   "rpgc": "reject",
    "sha256": "c4ae0cb004e9246b1e593ec11c8dcd9ee2852e5706c6646248f6fd0d4b1ac63a",
    "verdict": "accept"
   },
   "test198_fixed_cspec_parm_f1f2.rpgle": {
    "codes": [],
+   "rpgc": "reject",
    "sha256": "3d6b0218cae5898a14d21c14ab5e0611f03e33226bacf251b55517b3d6a5c017",
    "verdict": "accept"
   },
@@ -852,11 +975,13 @@
     "RNF5418",
     "RNF5419"
    ],
+   "rpgc": "reject",
    "sha256": "d02cb0ea24f191941a57ed5c9eee9fc219a04281f27eb7e7eba6119ebfc0cdf6",
    "verdict": "reject"
   },
   "test19_math_bifs.rpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "d9df54d6e38e543da85caa31022b2132d1e6eaf4dda57fd5e7257181004e2361",
    "verdict": "accept"
   },
@@ -865,6 +990,7 @@
     "RNF7030",
     "RNF7054"
    ],
+   "rpgc": "reject",
    "sha256": "4a8ee859dff4ede5fe6695dfebf7cdf2bfbaf4a54b0bc1699b4a1687d026bd58",
    "verdict": "reject"
   },
@@ -872,6 +998,7 @@
    "codes": [
     "RNF5119"
    ],
+   "rpgc": "reject",
    "sha256": "d9e8fd0568a7c693d08b35b4ddc536b5307cde65a135c52b92f6ccdc859dfc6c",
    "verdict": "reject"
   },
@@ -879,16 +1006,19 @@
    "codes": [
     "RNF7261"
    ],
+   "rpgc": "reject",
    "sha256": "04d21ba19bd64bd3c97f6e412e8e8a9e3d4a456063738af0c622506ee2852a68",
    "verdict": "reject"
   },
   "test204_fixed_cspec_entry_caller.rpgle": {
    "codes": [],
+   "rpgc": "reject",
    "sha256": "5b11f9ffe91f9b37a414b644d8653a02cec5982330bcc81275cac2c5bf586f1b",
    "verdict": "accept"
   },
   "test205_fixed_cspec_err_entry_f2.rpgle": {
    "codes": [],
+   "rpgc": "reject",
    "sha256": "76b9a3d383657ffb81fa287f791c6e1d19c40ba8efbf2af45a459eb1277027dd",
    "verdict": "accept"
   },
@@ -896,6 +1026,7 @@
    "codes": [
     "RNF7030"
    ],
+   "rpgc": "reject",
    "sha256": "586372cd24dea87785cc3bebc1976f054965e2d0d8414d0442a023c1d23b2fee",
    "verdict": "reject"
   },
@@ -903,26 +1034,31 @@
    "codes": [
     "RNF7054"
    ],
+   "rpgc": "reject",
    "sha256": "a3e586b6d884d76da3a71548e03981608a82dd02f1a6cbe11e6a30a0a478275d",
    "verdict": "reject"
   },
   "test208_fixed_cspec_move_date.rpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "5cbc11758f380b30daeda764ab9bf4dc88529c5ee8efff1f1052a2e4f71c0271",
    "verdict": "accept"
   },
   "test209_fixed_cspec_move_dt_nosep.rpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "6625f74b51991183e2956e91e842a668f866f8a7edc36247122d20148dcc4c41",
    "verdict": "accept"
   },
   "test20_memory_bifs.rpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "ce873e966ff68ad6abfab2172245bb3df3a8e8a42de9d30ea1b7d89e23701279",
    "verdict": "accept"
   },
   "test210_fixed_cspec_move_timestamp.rpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "f870041c376ef99e9336ffba6e6cb5f422ba0f80ce58a774ae0658aaf16e630d",
    "verdict": "accept"
   },
@@ -930,6 +1066,7 @@
    "codes": [
     "RNF7512"
    ],
+   "rpgc": "accept",
    "sha256": "7fd7d00b32723474beb372f86a4611c8caa06e052b4b6a537899ff0c6583bb47",
    "verdict": "reject"
   },
@@ -937,11 +1074,13 @@
    "codes": [
     "RNF7510"
    ],
+   "rpgc": "accept",
    "sha256": "4ed4f6e4e1fd1409939a3a2219c0c04d4eba2cbb7de0de220b63c326be058ab4",
    "verdict": "reject"
   },
   "test213_fixed_cspec_err_move_jobrun.rpgle": {
    "codes": [],
+   "rpgc": "reject",
    "sha256": "19fde2022bc67f52f98bcb9a547bedd01f4175a3fd898e54d903ba873d364368",
    "verdict": "accept"
   },
@@ -949,11 +1088,13 @@
    "codes": [
     "RNF7505"
    ],
+   "rpgc": "reject",
    "sha256": "67491bf13b7788f380abdb758e1feea70451f02378cdc3b5dbad07efa0eb118b",
    "verdict": "reject"
   },
   "test21_parms.rpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "fa8a0f4f9091aa62c027afa54ff8695ddadcbb5e7bc660420690ee4194a95673",
    "verdict": "accept"
   },
@@ -961,16 +1102,19 @@
    "codes": [
     "RNF7416"
    ],
+   "rpgc": "accept",
    "sha256": "fae59508724b0959a56251bf7554ce625e74bf556d1a27be21acaacd86e2ae58",
    "verdict": "reject"
   },
   "test23_reset_clear.rpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "d20ffa14125aa0c31703671981d6debc7febb82101eba80c093b93f48b781e41",
    "verdict": "accept"
   },
   "test24_max_min.rpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "375db5d58ebb471adbf702aeabd3ae2fd74d9c99b6a9915449cee5a1cecdae6c",
    "verdict": "accept"
   },
@@ -979,6 +1123,7 @@
     "RNF2109",
     "RNF2121"
    ],
+   "rpgc": "accept",
    "sha256": "865d39b8d7cd97ede590c6b4d156c1100d5d57cbdeae0d21596ae55921db8189",
    "verdict": "reject"
   },
@@ -988,16 +1133,19 @@
     "RNF7030",
     "RNF7503"
    ],
+   "rpgc": "accept",
    "sha256": "d1d6cf04d4a26a4d2bf0dd06ea043dd3e70d18e0e45658a94651029f2862883c",
    "verdict": "reject"
   },
   "test27_arrays.rpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "9bf92eae44ecc782097f600df8bf6daf24f49793292fc433ca5fcbbad9aeb30e",
    "verdict": "accept"
   },
   "test28_conditional.rpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "b04766e1d48767826d2c6f17c4469bd0a5ebbee5c2de9562e0dcee6aeb09f840",
    "verdict": "accept"
   },
@@ -1007,61 +1155,73 @@
     "RNF7030",
     "RNF7503"
    ],
+   "rpgc": "accept",
    "sha256": "d3b293b97844c474da40c4e398652f0b73cd169baf7094f409f334e487a46d1b",
    "verdict": "reject"
   },
   "test30_like.rpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "612d5f93d921210592e53659e1ae9e5cbf5db1caad8538c35d1549be6c2ddec1",
    "verdict": "accept"
   },
   "test31_lookup_sorta.rpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "31f06f993dbc233f2761378f3d6694c65b34086f517bf9bcbb3879b0222cfa29",
    "verdict": "accept"
   },
   "test32_editc_editw.rpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "e17539897306e1f9d011c2aa0bbf094fa1abae6d3f1a8b40a090a54aa897f763",
    "verdict": "accept"
   },
   "test33_replace.rpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "f613dd01a2544d8d24a39d2866359af2b6fc419d4178dcd857fc0e5b15c11017",
    "verdict": "accept"
   },
   "test34_check.rpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "413835c0968f4fa00934ec5ec906cb6d162fcc2fadd72a5492e948dfab6f7707",
    "verdict": "accept"
   },
   "test35_evalcorr.rpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "7d0f54e468aaad79ec11d44e455c44c1533d181da1c48a287c46e2efdfc36e43",
    "verdict": "accept"
   },
   "test36_ds_params.rpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "69bb27ee43ad6fe00f229eb385a63512f048b83dff5ec3ed21d7fad9d0bd324f",
    "verdict": "accept"
   },
   "test37_inzsr.rpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "3f1ff9a60d08f1bf66616052f8a02d761f4aad3f28217e7521d66570ed559c49",
    "verdict": "accept"
   },
   "test38_ctlopt.rpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "370d0e2cd118e11b714e87201178720a95e2dd114e782effd00ae8ebee933b7a",
    "verdict": "accept"
   },
   "test39_figconst.rpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "596f4c6905a7267bfbf88d229a6bb61c5c89097d91ca4c0416bb2e93cf3a9a52",
    "verdict": "accept"
   },
   "test40_evalr_leavesr.rpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "a8e22ead3de7e93244c7f96da6d3b4d1c1178254cc6d0a3c724d221fe846224c",
    "verdict": "accept"
   },
@@ -1071,31 +1231,37 @@
     "RNF7030",
     "RNF7503"
    ],
+   "rpgc": "accept",
    "sha256": "1e663ac953e7bb9dd3def036583c939f4166318ecfeba3ffb9d914923f0ef942",
    "verdict": "reject"
   },
   "test42_onexit.rpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "7126373e9444295f059d855968d2797e8cab584ba6501bef4c1260c78eedaf63",
    "verdict": "accept"
   },
   "test43_static.rpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "ac8cfa8cdbebd7c511f4904528f82f7a049597cc975dd99b1abbfb3ca659009e",
    "verdict": "accept"
   },
   "test44_alloc.rpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "b72d62d505c531cd113c0581cc338dcad9c14f6465f90d8f9e8704286ebcd29e",
    "verdict": "accept"
   },
   "test45_array_bifs.rpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "7287e294abddd32ea09ae64299a1e29b454c12bea069ed6d568b9149dc408da2",
    "verdict": "accept"
   },
   "test46_options.rpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "833c7693b7cb014d179cff8a2035dfd06a8087df1ca73d49a12b0702229dd650",
    "verdict": "accept"
   },
@@ -1104,21 +1270,25 @@
     "RNF5056",
     "RNF7523"
    ],
+   "rpgc": "accept",
    "sha256": "7f5ba449e9ba1f0e9ba34acea6279734b88c3e49e2b9ffaaf62e91bd4ab0356b",
    "verdict": "reject"
   },
   "test48_nomain.rpgle": {
    "codes": [],
+   "rpgc": "reject",
    "sha256": "06ca83fb0da851a7b1363e04d7fa12ba7ab74e4e3927c9b347811b4bafe3de0c",
    "verdict": "accept"
   },
   "test49_extproc.rpgle": {
    "codes": [],
+   "rpgc": "reject",
    "sha256": "33f359a25f50675a989d53d1344af4fb04276ae17e958a7d588f7bc6482d7be0",
    "verdict": "reject"
   },
   "test50_numeric_bifs.rpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "70c343b87859333125d8dec4b23a06ead4e8f2018fc43c3af7ee7462c9603fb5",
    "verdict": "accept"
   },
@@ -1128,6 +1298,7 @@
     "RNF7030",
     "RNF7503"
    ],
+   "rpgc": "accept",
    "sha256": "0fea503ab003f3370727d40a9a0e5a1324a885aef9edae5a51c34aa8fa4fb7ce",
    "verdict": "reject"
   },
@@ -1135,11 +1306,13 @@
    "codes": [
     "RNF0592"
    ],
+   "rpgc": "accept",
    "sha256": "cd395ca8ec66df15cb6a7cf9d409472851034af4916e5feca1ea1d11f349923d",
    "verdict": "reject"
   },
   "test53_datetime_bifs.rpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "75e94dde666616a32d67798b42f0a7322671f6885aca5a154944e481261e5627",
    "verdict": "accept"
   },
@@ -1149,36 +1322,43 @@
     "RNF7030",
     "RNF7503"
    ],
+   "rpgc": "accept",
    "sha256": "e35e350b261db4544f85b18e546f136ca45dadfd4f6cbe0ec40199a15b1efac7",
    "verdict": "reject"
   },
   "test55_figconst.rpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "987c9ebf8a331725e0aaa475c7082b0da069b58e2787d30e5eb39403bf36888e",
    "verdict": "accept"
   },
   "test56_ctlopt_main.rpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "1515003fdaa76871103448180ea379d577777efabda1eb3652a117c516c42397",
    "verdict": "accept"
   },
   "test57_datfmt.rpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "5017c1301409250b0b6c06ea5f896ff81d00fb352af6b9e001d8fd69efceebd3",
    "verdict": "accept"
   },
   "test58_foreach_in.rpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "9b3f34fc3176ef3e5574cc05a1aab3f21df1e6642633a51c9a37e82886e4dae6",
    "verdict": "accept"
   },
   "test59_passed_omitted.rpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "dabbe2e33be75b93e6ff0a41f1f0b6deb03f808029cb0f8cc2b23b9102df43f9",
    "verdict": "accept"
   },
   "test60_datatypes.rpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "179a80c6fa2d4883fbb8899fb42ffcd7220306d332bf3ab0cb4a1f7fc6ac960f",
    "verdict": "accept"
   },
@@ -1187,11 +1367,13 @@
     "RNF0257",
     "RNF7023"
    ],
+   "rpgc": "accept",
    "sha256": "bd62e8c7bffabf3c235221618bb6c8c6762e73a342ce726ff9611c1203997567",
    "verdict": "reject"
   },
   "test62_overlay_pos.rpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "65d619400064711da997c50a8cd58bd3bdb8011a49b2ca902813cb08bcfab519",
    "verdict": "accept"
   },
@@ -1201,16 +1383,19 @@
     "RNF7030",
     "RNF7503"
    ],
+   "rpgc": "accept",
    "sha256": "1cd702999e7112843d6f366eda032130488710506cdb78b6121d69c72d4b247f",
    "verdict": "reject"
   },
   "test64_omit.rpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "463698f29ca50dffe983a55fbc04fb0699a3e2c51ce12b3aabd6ccdca1633344",
    "verdict": "accept"
   },
   "test65_actgrp.rpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "3c49958da23f1e1fb8d26f9533089ffdb8dc1ed7a7b4ce80aadb85451591c890",
    "verdict": "accept"
   },
@@ -1218,6 +1403,7 @@
    "codes": [
     "RNF5005"
    ],
+   "rpgc": "accept",
    "sha256": "7d6eced11cb0c07b13dea29c1ae657dbfa33a199107f6fb1104c4a58ba7660e6",
    "verdict": "reject"
   },
@@ -1225,26 +1411,31 @@
    "codes": [
     "RNF5005"
    ],
+   "rpgc": "accept",
    "sha256": "dec33b5f569b1f2922f32fbd34b158a113c90f232b16011a81ddbce6d15d1ef2",
    "verdict": "reject"
   },
   "test68_bitwise_power.rpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "800e9cbb33812c7209b35a1c3b978c627d9ef99d173731df02fe397ef2db1f73",
    "verdict": "accept"
   },
   "test68_no_pssr.rpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "59a45d9682dd6ae4ff61659f5bdb9908b0d844464c69abede4586685fbd6838b",
    "verdict": "accept"
   },
   "test69_scanr.rpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "79ba4a130a1af140551bf3a2aeb6794d7d7ffca932c97dc50268576b6d00990f",
    "verdict": "accept"
   },
   "test70_editflt_unsh.rpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "942cd5a0307abbbb6d1a2b6ec32395b1ce4aee85faf31943880a2ac81f84bb0d",
    "verdict": "accept"
   },
@@ -1255,16 +1446,19 @@
     "RNF7030",
     "RNF7503"
    ],
+   "rpgc": "accept",
    "sha256": "9bd4704dc6daf71f063e81a5d08417535b1863f4c1c1a0ee3bc99f7a526c75f1",
    "verdict": "reject"
   },
   "test72_dim_var.rpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "5c045a8dd9dc5b005292635bb516c259130aae7c4badc53a43e0d473202fe01b",
    "verdict": "accept"
   },
   "test73_date_formats.rpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "3e4eef7f355abe9ee440fcb5580c4ea4986e1794a4e72e951ea75a52c74800e7",
    "verdict": "accept"
   },
@@ -1272,6 +1466,7 @@
    "codes": [
     "RNF7016"
    ],
+   "rpgc": "accept",
    "sha256": "ee8013c67870e08c98d00c48335b9398dc9f3b21149aab543a7c32daffb5e57f",
    "verdict": "reject"
   },
@@ -1283,51 +1478,61 @@
     "RNF7030",
     "RNF7503"
    ],
+   "rpgc": "accept",
    "sha256": "7eded4f8881f593823236fba6ff990e5538f5e901e823489934252068187a96e",
    "verdict": "reject"
   },
   "test76_ds_dim_var.rpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "4dbcbd43a6fe8dfc0628070409d7e8d67983f4feb25eb303829175a26ee9f52d",
    "verdict": "accept"
   },
   "test77_exec_sql.sqlrpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "c519920f3774f9ff9564cd5f29d2d7746b03b9ee24ba99a494c9925292c38520",
    "verdict": "reject"
   },
   "test78_exec_sql_proc.sqlrpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "e32ab6ee2643cd162842f5c8155a1f779179f47391949fd5ddfaff287b27645d",
    "verdict": "reject"
   },
   "test79_sql_core.sqlrpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "e80507794be6255747940bb3113ecd1d03fce715b17ff2ffc43bc76718488661",
    "verdict": "reject"
   },
   "test80_sql_cursors.sqlrpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "64fec4eebe90bf55c73457917afded131420062cacc3c4616537731fdc38b216",
    "verdict": "reject"
   },
   "test81_sql_dynamic.sqlrpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "5a259c3d84a1c4a64b140316748bd8352373ba6f25275d68c309dae497f40dca",
    "verdict": "reject"
   },
   "test82_sql_advanced.sqlrpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "bf58d36b1eeecbb38d04745e25da273f5c1d3fbf349ec5f0c15c81a7ad9bc230",
    "verdict": "reject"
   },
   "test83_sql_multirow.sqlrpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "4041119277711c3b83968cc34629bddd8635b82ebcd61796c05fe184a8ec4e89",
    "verdict": "reject"
   },
   "test84_sql_connect.sqlrpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "907476187c84db664ee13c341ca95071d0634919ad83ec622dbc649c7f45dde6",
    "verdict": "reject"
   },
@@ -1336,11 +1541,13 @@
     "RNF0604",
     "RNF7016"
    ],
+   "rpgc": "accept",
    "sha256": "01a53013b7fb840ae569ea51241bbd93ad698370e1112c49a3f48be3b30cd9dd",
    "verdict": "reject"
   },
   "test86.sqlrpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "6b208bf529cc4805ef53a7d790f0a3060439589eb8575d696ce3160152dee474",
    "verdict": "reject"
   },
@@ -1352,6 +1559,7 @@
     "RNF7030",
     "RNF7503"
    ],
+   "rpgc": "accept",
    "sha256": "657275d1f29e161811ef238509589207975d2cbf6b06e3cc80cea920870871a6",
    "verdict": "reject"
   },
@@ -1364,6 +1572,7 @@
     "RNF7030",
     "RNF7503"
    ],
+   "rpgc": "accept",
    "sha256": "8b29abd3749ca1db3db5381092a2907990bf67a1f6b84b123c4c5cf72f69b64f",
    "verdict": "reject"
   },
@@ -1377,16 +1586,19 @@
     "RNF7030",
     "RNF7503"
    ],
+   "rpgc": "accept",
    "sha256": "680c3c4c39d90fc2b759084cdc9a245c542c57e22237979122d02ce4776cdaff",
    "verdict": "reject"
   },
   "test90_psds_basic.rpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "160ec2c8deaec73b4a7f75d36579080726bc704904ea96ab7697056358a9e10c",
    "verdict": "accept"
   },
   "test91_psds_monitor.rpgle": {
    "codes": [],
+   "rpgc": "accept",
    "sha256": "e0feb90d876d264577f9a0400efb532d79b304575c84c6d19ab4c36bdb21f86d",
    "verdict": "accept"
   },
@@ -1394,6 +1606,7 @@
    "codes": [
     "RNF7091"
    ],
+   "rpgc": "accept",
    "sha256": "50bbe23493c7ac367b4284cb9261a7819f2e68c911bacbcfd117bddfe6eea04d",
    "verdict": "reject"
   },
@@ -1401,6 +1614,7 @@
    "codes": [
     "RNF7030"
    ],
+   "rpgc": "accept",
    "sha256": "a515397f1931dbc50589185416da8f9b1352e151aef95222390e959f0b0eea43",
    "verdict": "reject"
   },
@@ -1411,6 +1625,7 @@
     "RNF7030",
     "RNF7503"
    ],
+   "rpgc": "accept",
    "sha256": "75571c0f8db5a7fcaa92c8ef406cf24772c47e6322be9cf02b775e8096755b0a",
    "verdict": "reject"
   },
@@ -1421,6 +1636,7 @@
     "RNF7030",
     "RNF7503"
    ],
+   "rpgc": "accept",
    "sha256": "0343d2854d3a7ddd06576359543c222e67ccbbec372151f4f5917d0915e040b3",
    "verdict": "reject"
   },
@@ -1428,6 +1644,7 @@
    "codes": [
     "RNF7030"
    ],
+   "rpgc": "accept",
    "sha256": "d12f8e51bb7c2d07caecba822e3b18cfc20493b28904651240351f20ea54069e",
    "verdict": "reject"
   },
@@ -1435,6 +1652,7 @@
    "codes": [
     "RNF7030"
    ],
+   "rpgc": "accept",
    "sha256": "ed698e2b17a1e764cfc8c3e015922ebb4804026166b487b122dbe01cbee88e74",
    "verdict": "reject"
   },
@@ -1442,6 +1660,7 @@
    "codes": [
     "RNF7030"
    ],
+   "rpgc": "accept",
    "sha256": "dde775ea6423b4ab985b0e8437f379b4ce835d59522e0bc5ea6c63cbcabdd324",
    "verdict": "reject"
   },
@@ -1454,6 +1673,7 @@
     "RNF7030",
     "RNF7503"
    ],
+   "rpgc": "accept",
    "sha256": "e80a7e3ca8c46696567f2783133a7571dbbf0d9b0a3dfaf08f9d3a994390578a",
    "verdict": "reject"
   },
@@ -1463,6 +1683,7 @@
     "RNF7030",
     "RNF7503"
    ],
+   "rpgc": "accept",
    "sha256": "bf315e65a7cf38809265a94af86a30a1ede38890e32e8a45940891ab3f4f5be0",
    "verdict": "reject"
   }

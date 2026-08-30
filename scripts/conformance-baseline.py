@@ -19,6 +19,13 @@ verdict IBM's compiler gave it. That supports two very different checks:
   changed -- list sources whose hash differs from the baseline, so an online
           run can send only those to a shared, free machine rather than all 221.
 
+  rpgc    -- record what THIS compiler makes of each source, alongside IBM's
+          verdict. That turns the baseline into a two-compiler record, which is
+          what lets a negative test be classified by evidence rather than by its
+          filename: a test named *_err is only "correctly rejected" when BOTH
+          compilers reject it. Three tests were previously miscounted as
+          expected failures when rpgc was in fact accepting them.
+
 Usage:
   conformance-baseline.py check   [--baseline F] [--tests D]
   conformance-baseline.py changed [--baseline F] [--tests D]
@@ -66,7 +73,7 @@ def parse_transcript(path):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("action", choices=["check", "changed", "update"])
+    ap.add_argument("action", choices=["check", "changed", "update", "rpgc"])
     ap.add_argument("--baseline", default="ibmi-conformance-baseline.json")
     ap.add_argument("--tests", default="tests")
     ap.add_argument("--transcript")
@@ -110,6 +117,28 @@ def main():
               f"({acc} accepted, {len(files)-acc} rejected by IBM)")
         return 0
 
+    if a.action == "rpgc":
+        import subprocess, tempfile
+        exe = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(a.baseline))), "rpgc")
+        exe = exe if os.path.exists(exe) else "./rpgc"
+        if not os.path.exists(exe):
+            print("no rpgc binary; build it first (make)", file=sys.stderr); return 2
+        n_acc = 0
+        with tempfile.TemporaryDirectory() as td:
+            out = os.path.join(td, "o")
+            for pth in srcs:
+                nm = os.path.basename(pth)
+                ok = subprocess.run([exe, pth, "-o", out],
+                                    stdout=subprocess.DEVNULL,
+                                    stderr=subprocess.DEVNULL).returncode == 0
+                files.setdefault(nm, {})["rpgc"] = "accept" if ok else "reject"
+                n_acc += ok
+        base["files"] = dict(sorted(files.items()))
+        json.dump(base, open(a.baseline, "w"), indent=1, sort_keys=True)
+        open(a.baseline, "a").write("\n")
+        print(f"recorded rpgc verdicts for {len(srcs)} sources ({n_acc} accepted)")
+        return 0
+
     # update
     if not a.transcript:
         print("update needs --transcript", file=sys.stderr); return 2
@@ -127,7 +156,9 @@ def main():
             regressions.append((n, new["codes"][:4]))
         elif old["verdict"] == "reject" and new["verdict"] == "accept":
             improvements.append(n)
+        keep = files.get(n, {}).get("rpgc")
         files[n] = {"sha256": d, "verdict": new["verdict"], "codes": new["codes"]}
+        if keep: files[n]["rpgc"] = keep
     for n in [n for n in list(files) if n not in {os.path.basename(p) for p in srcs}]:
         del files[n]                       # source removed
 

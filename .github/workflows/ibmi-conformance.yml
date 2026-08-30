@@ -1,0 +1,95 @@
+name: IBM i conformance
+
+# Verifies the test corpus against a REAL IBM i (PUB400) using IBM's own ILE
+# RPG compiler, and compares its verdict with rpgc's. This is the only check
+# that can catch source rpgc accepts but real RPG rejects: tests/expected_output
+# is regenerated from rpgc's own output, so the local suite can only ever verify
+# what rpgc already does.
+#
+# Two jobs, deliberately split:
+#
+#   offline  — runs on every push and pull request, needs no network and no
+#              secrets (so it works from forks). Fails if any source has
+#              changed since it was last verified on IBM i, i.e. if someone
+#              edits a test without re-verifying it.
+#
+#   verify   — weekly and on demand. Sends only the sources whose hash moved,
+#              then refreshes the baseline. Fails on a REGRESSION: a source IBM
+#              accepted before and rejects now. The absolute accepted count is
+#              deliberately not a gate; it conflates unrelated causes (missing
+#              IBM i objects, deliberate negative tests, real findings) — see
+#              TODO.md's bucket triage.
+#
+# Load discipline: PUB400 is a free community machine run on donated hardware.
+# The schedule is weekly, the run is serial, it sends only changed files, and
+# it deletes every object it creates. Do not make this a per-PR gate.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: '0 6 * * 1'      # Mondays 06:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  # ── offline: no network, no secrets, runs everywhere ─────────────────────
+  offline:
+    name: baseline check (offline)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: recursive
+      - name: Every source matches a verified IBM i verdict
+        run: python3 scripts/conformance-baseline.py check
+
+  # ── verify: talks to the real machine ────────────────────────────────────
+  verify:
+    name: verify on IBM i
+    # Never on pull_request: fork PRs cannot see the SSH secret, and a shared
+    # free machine should not be reachable from untrusted branch contents.
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: recursive
+
+      - name: Configure SSH for PUB400
+        env:
+          KEY: ${{ secrets.PUB400_SSH_KEY }}
+        run: |
+          if [ -z "$KEY" ]; then
+            echo "::error::secret PUB400_SSH_KEY is not set — see TODO.md" >&2
+            exit 1
+          fi
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          printf '%s\n' "$KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          # pin the host key rather than trusting on first use
+          ssh-keyscan -p 2222 -H pub400.com >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: Compile changed sources on IBM i and refresh the baseline
+        env:
+          PUB400_USER: ${{ secrets.PUB400_USER }}
+        run: scripts/ibmi-conformance.sh --changed-only
+
+      - name: Publish the run artefacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ibmi-conformance
+          path: |
+            ibmi-conformance-report.txt
+            ibmi-conformance-transcript.txt
+            ibmi-conformance-baseline.json
+          if-no-files-found: ignore
+
+      - name: Show the baseline diff
+        if: always()
+        run: git --no-pager diff --stat -- ibmi-conformance-baseline.json || true

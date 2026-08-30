@@ -1279,6 +1279,56 @@ the output.
 5. **Differential *execution*** — needs a mechanical `DSPLY` -> `printf`
    transform. Proven feasible; not built.
 
+### The build step (2026-08-30)
+
+Three pieces turn the manual expedition into something CI runs.
+
+| Piece | Role |
+|-------|------|
+| `ibmi-conformance-baseline.json` | The record: SHA-256 of every source plus the verdict IBM gave it. Committed — this, not the transcript, is the durable artefact. |
+| `scripts/conformance-baseline.py` | `check` (offline gate), `changed` (what to send), `update` (merge a run, report regressions). |
+| `.github/workflows/ibmi-conformance.yml` | `offline` job on every push/PR; `verify` job weekly and on demand. |
+
+**The offline gate needs no network and no secrets**, so it runs on fork pull
+requests too. It fails when a source has changed since it was last verified —
+i.e. when someone edits a test without re-verifying it. That is the check that
+makes the whole thing durable: without it the baseline silently rots.
+
+**The online job sends only sources whose hash moved.** A no-op run exits
+immediately without contacting the machine at all.
+
+**What fails a build is a REGRESSION** — a source IBM accepted before and
+rejects now. The absolute accepted count is deliberately *not* a gate: it
+conflates missing IBM i objects, deliberate negative tests, and real findings,
+so gating on it would fail builds for reasons that say nothing about rpgc.
+
+**Setup required before the `verify` job can run:** two repository secrets,
+`PUB400_SSH_KEY` (the private key matching what `ssh-copy-id` installed) and
+`PUB400_USER`. Until they exist the job fails fast with a clear message rather
+than timing out. The workflow pins the host key with `ssh-keyscan` instead of
+trusting on first use.
+
+Note the transcript is per-run, not cumulative: a `--changed-only` run leaves a
+transcript covering only those files. The baseline is what accumulates.
+
+### The conformance matrix
+
+The headline "accepted N of 221" understates agreement, because a rejection can
+be the *correct* outcome. Comparing both compilers' verdicts as of
+2026-08-30:
+
+|                | rpgc accepts | rpgc rejects |
+|----------------|--------------|--------------|
+| **IBM accepts**|      88      |      12      |
+| **IBM rejects**|      80      |      41      |
+
+**129 of 221 agree (58%).** The 41 mutual rejections are negative tests working
+as intended. The 80 over-acceptances are the real work queue. The 12 nominal
+coverage gaps are partly a measurement artefact — several are *link* failures
+from compiling callee modules (`ADDTWO`, `test48_nomain`, `test174`,
+`test197`) standalone, not compile errors; a compile-only measurement would
+shrink that column.
+
 ### Load discipline
 
 PUB400 is a free community box run on donated hardware. This is a **manual or

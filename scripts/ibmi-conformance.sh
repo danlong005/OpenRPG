@@ -18,9 +18,17 @@
 #   - listings arrive on stdout, so diagnostics need no spool retrieval
 #
 # Usage:
-#   scripts/ibmi-conformance.sh                 # whole corpus
+#   scripts/ibmi-conformance.sh                 # whole corpus, refresh baseline
+#   scripts/ibmi-conformance.sh --changed-only  # only sources whose hash moved
 #   scripts/ibmi-conformance.sh --limit 20      # smoke run, first 20 files
+#   scripts/ibmi-conformance.sh --no-baseline   # leave the baseline alone
 #   PUB400_USER=longdm scripts/ibmi-conformance.sh
+#
+# The run refreshes ibmi-conformance-baseline.json and FAILS on a regression:
+# a source IBM accepted before and rejects now. The absolute accepted count is
+# deliberately NOT a gate -- it conflates unrelated causes (see TODO.md's
+# bucket triage). For a network-free check on every push, use
+# scripts/conformance-baseline.py check.
 #
 # Load discipline: PUB400 is a free community box. This is a manual/weekly job,
 # not a per-PR gate, and it runs serially on purpose.
@@ -30,9 +38,15 @@ USER_ID="${PUB400_USER:-}"
 HOST="${PUB400_HOST:-pub400.com}"
 PORT="${PUB400_PORT:-2222}"
 LIMIT=0
+CHANGED_ONLY=0
+UPDATE_BASELINE=1
+BASELINE="ibmi-conformance-baseline.json"
 while [ $# -gt 0 ]; do
     case "$1" in
         --limit) LIMIT="${2:-0}"; shift 2 ;;
+        --changed-only) CHANGED_ONLY=1; shift ;;
+        --no-baseline) UPDATE_BASELINE=0; shift ;;
+        --baseline) BASELINE="${2}"; shift 2 ;;
         *) echo "unknown argument: $1" >&2; exit 2 ;;
     esac
 done
@@ -62,6 +76,16 @@ WORKDIR="rpgc-conf"
 # ("/COPY tests/copybook1.rpgle"), so the remote compile passes INCDIR pointing
 # at the parent and the relative path has a chance to resolve.
 mkdir -p "$STAGE/pkg/tests"
+if [ "$CHANGED_ONLY" = "1" ]; then
+    CONF_ONLY="$(python3 "$REPO_ROOT/scripts/conformance-baseline.py" changed \
+                    --baseline "$REPO_ROOT/$BASELINE" --tests "$TESTDIR")"
+    export CONF_ONLY
+    if [ -z "$CONF_ONLY" ]; then
+        echo "no sources changed since the verified baseline; nothing to send"
+        exit 0
+    fi
+    echo "changed since baseline: $(echo "$CONF_ONLY" | wc -l | tr -d ' ') source(s)"
+fi
 python3 - "$TESTDIR" "$STAGE/pkg/tests" "$LIMIT" <<'PY'
 import sys, os, glob, re
 src, dst, limit = sys.argv[1], sys.argv[2], int(sys.argv[3])
@@ -84,6 +108,10 @@ for p in files:
     open(os.path.join(dst, os.path.basename(p)),'w').write(t)
     if not is_copybook(p): compiled.append(os.path.basename(p))
 if limit > 0: compiled = compiled[:limit]
+only = os.environ.get("CONF_ONLY")
+if only is not None:
+    keep = {l.strip() for l in only.split(chr(10)) if l.strip()}
+    compiled = [c for c in compiled if c in keep]
 open(os.path.join(dst,'MANIFEST'),'w').write('\n'.join(compiled)+'\n')
 print(f"staged {len(files)} sources ({changed} had non-ASCII folded to ASCII)")
 print(f"will compile {len(compiled)} (copybook fragments excluded)")
@@ -262,3 +290,14 @@ print(txt)
 open(out, 'w').write(txt + "\n")
 print(f"\nfull transcript parsed; report written to {out}")
 PY
+
+if [ "$UPDATE_BASELINE" = "1" ]; then
+    echo
+    echo "=================================================================="
+    if ! python3 "$REPO_ROOT/scripts/conformance-baseline.py" update \
+            --transcript "$LOG" --baseline "$REPO_ROOT/$BASELINE" --tests "$TESTDIR"; then
+        echo
+        echo "FAILING: a source IBM accepted before is rejected now." >&2
+        exit 1
+    fi
+fi

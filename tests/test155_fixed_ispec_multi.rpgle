@@ -5,6 +5,7 @@
      ITESTFL155 AA  02    1 CP
      I                             A    2   21  NAME
      DTYPECODE         S              1A
+     DTMPDSP           S             52A
       /free
        TYPECODE = 'C';
        NAME = 'Acme Corp';
@@ -21,7 +22,8 @@
      C                   IF        *IN02
      C     'prod:'       DSPLY
      C                   ENDIF
-     C     %TRIM(NAME)   DSPLY
+     C                   EVAL      TMPDSP = %TRIM(NAME)
+     C     TMPDSP        DSPLY
      C                   READ      TESTFL155
      C                   ENDDO
      C                   RETURN

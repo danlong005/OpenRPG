@@ -1220,11 +1220,36 @@ CORRECT outcome — it belongs in the extension quadrant, not the work queue.
 **Progress:** accepted 73 -> 88 of 221. Bucket C (structural) fell 26 -> 8;
 RNF0256 is gone entirely, RNF0257 8 -> 4 files, RNF7023 16 -> 4.
 
+**Finding 3 resolved (2026-08-30), and the rule is broader than first recorded.**
+Tested directly on IBM i 7.5 rather than inferred:
+
+| form | IBM |
+|------|-----|
+| built-in in Factor 1 (`DSPLY`, `IFGT`) | **rejected** |
+| built-in in *traditional* Factor 2 (`MOVE`) | **rejected** |
+| built-in in *extended* Factor 2 (`EVAL`) | accepted |
+| field or literal in Factor 1 | accepted |
+
+So built-ins are illegal in **both** traditional-syntax factors, not just
+Factor 1 — they are expressions, and traditional factors take a field, literal
+or constant. rpgc now rejects them there (`containsBuiltIn()` in
+`fixed_cspec.cpp`, applied only in the `TRADITIONAL` branch, skipping `%` inside
+character literals so `'100% done'` is not misread).
+
+Corpus: 44 `DSPLY` sites across 19 files rewritten as
+`EVAL TMPDSP = %CHAR(n)` followed by `DSPLY TMPDSP`, with one `CHAR(52)` work
+field per file — every built-in used was `%CHAR` or `%TRIM`, both character, and
+DSPLY caps at 52 anyway. No site carried a conditioning indicator, and the
+transform bails out if one ever does rather than silently dropping the
+condition. Copybook fragments get the rewrite but not the declaration, since
+their parent declares it.
+
+**Progress: accepted 88 -> 100 of 221; bucket B 46 -> 29.**
+
 **Still open in bucket B:**
-- BIFs in Factor 1 of traditional C-specs (finding 3, 16 files) — no check yet,
-  and not mechanically fixable: it restructures the test.
 - `RNF5014`/`RNF5375`/`RNF5001`/`RNF2367` on the RLA C-spec group (6 files).
-- Once the corpus is clean, consider promoting these warnings to errors.
+- Bucket F grew to 18 as files shed their bulk diagnostics and reached
+  single, individual causes — that is progress, not regression.
 
 ### Caveat on bucket D — needs a human pass
 

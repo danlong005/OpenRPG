@@ -2,6 +2,7 @@
      Dtotal            S             10I 0
      Dmsg              S              5A
      Di                S             10I 0
+     DTMPDSP           S             52A
      C                   EVAL      total = 5 + 3
      C                   EVALR     msg = 'HI'
      C                   FOR       i = 1 TO 6
@@ -11,7 +12,8 @@
      C                   IF        i = 5
      C                   LEAVE
      C                   ENDIF
-     C     %CHAR(i)      DSPLY
+     C                   EVAL      TMPDSP = %CHAR(i)
+     C     TMPDSP        DSPLY
      C                   ENDFOR
      C     msg           DSPLY
      C                   CALLP     doubleIt(total)

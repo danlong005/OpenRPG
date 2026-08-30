@@ -2,6 +2,7 @@
      Dconn             S            200A   VARYING
      Dnm               S             50A   VARYING
      Dtot              S             10I 0
+     DTMPDSP           S             52A
      C                   EVAL      conn = 'Driver={SQLite3};' +
      C                             'Database=/tmp/rpgc_test188.sqlite;'
      C/EXEC SQL
@@ -27,5 +28,6 @@
      C/EXEC SQL
      C+ SELECT COUNT(*) INTO :tot FROM fx188
      C/END-EXEC
-     C     %CHAR(tot)    DSPLY
+     C                   EVAL      TMPDSP = %CHAR(tot)
+     C     TMPDSP        DSPLY
      C                   RETURN

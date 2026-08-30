@@ -1,2 +1,3 @@
      C                   EVAL      total = total + 100
-     C     %CHAR(total)  DSPLY
+     C                   EVAL      TMPDSP = %CHAR(total)
+     C     TMPDSP        DSPLY

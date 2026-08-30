@@ -158,6 +158,28 @@ static bool parseResultIndicator(const std::string& raw, int lineNo,
 // the IF/ENDIF a conditioning indicator asks for. Deliberately stays on
 // the single buffer line this physical source line owns, so
 // parse_free_block's line numbers keep matching the original source.
+// A built-in function reference: '%' followed by a letter, outside any
+// character literal (so '100% done' is not mistaken for one).
+//
+// SC09-2508: traditional-syntax Factor 1 and Factor 2 hold a field name, a
+// literal, a named or figurative constant, or a special word -- never an
+// expression. A built-in function IS an expression, so IBM rejects it in
+// either factor with RNF0372 ("Built-in function not allowed"), at severity
+// 20. Confirmed empirically on IBM i 7.5: %CHAR(n) in Factor 1 of DSPLY,
+// %LEN(s) in Factor 1 of IFGT, and %TRIM(s) in traditional Factor 2 of MOVE
+// are all rejected, while the same built-in in EXTENDED Factor 2 (EVAL)
+// compiles cleanly -- which is why this check lives only in the TRADITIONAL
+// branch below.
+static bool containsBuiltIn(const std::string& s) {
+    bool inLiteral = false;
+    for (size_t i = 0; i < s.size(); ++i) {
+        if (s[i] == '\'') { inLiteral = !inLiteral; continue; }
+        if (inLiteral) continue;
+        if (s[i] == '%' && i + 1 < s.size() && isalpha((unsigned char)s[i + 1])) return true;
+    }
+    return false;
+}
+
 static std::string wrapCond(const std::string& cond, const std::string& stmt) {
     if (cond.empty()) return stmt;
     return "IF " + cond + "; " + stmt + " ENDIF;";
@@ -766,6 +788,18 @@ void feedCSpecLine(CSpecRunState& state, const std::string& line, int lineNo) {
     case CSpecShape::TRADITIONAL: {
         std::string factor2 = extractCol(line, CSpec::Factor2);
         std::string result = extractCol(line, CSpec::Result);
+        // Built-ins are expressions and belong only in extended Factor 2.
+        for (int which = 0; which < 2; ++which) {
+            const std::string& f = which == 0 ? factor1 : factor2;
+            if (containsBuiltIn(f)) {
+                report_fixed_format_error(lineNo,
+                    std::string("C-spec: built-in function in Factor ") + (which == 0 ? "1" : "2") +
+                    " of '" + opcodeName + "' — traditional-syntax factors take a field, "
+                    "literal or constant, not an expression. Assign the built-in to a field "
+                    "with EVAL first (IBM: RNF0372)");
+                return;
+            }
+        }
         if (opcodeName == "COMP") {
             // The one opcode whose resulting indicators are its entire
             // effect — and, unlike the resulting indicators free-form

@@ -13,6 +13,8 @@ Two transforms, both driven by diagnostics IBM emitted against this corpus:
   6. Reorders specifications into IBM's required sequence: O-specs last, and
      main-procedure calculations before subprocedure definitions (RNF0257 /
      RNF0256).
+  7. Lifts built-in functions out of traditional-syntax C-spec factors into a
+     preceding EVAL (RNF0372).
 
 IBM's ILE RPG compiler requires numeric entries in fixed-format specifications
 to be right-adjusted within their column range, and reports RNF0263 ("Entry not
@@ -33,7 +35,7 @@ Usage:
   scripts/fix-fixed-format-columns.py --dry-run tests/
   scripts/fix-fixed-format-columns.py tests/
 """
-import sys, os, glob, argparse
+import sys, os, glob, argparse, re
 
 # (start, end) 1-based inclusive, matching src/fixed_columns.h
 DSPEC = [("FromPos", 26, 32), ("ToLen", 33, 39), ("Decimals", 41, 42)]
@@ -339,6 +341,86 @@ def fix_proc_order(lines):
     return rest + block + procs, len(movable)
 
 
+BIF_RE = re.compile(r"%[A-Za-z]")
+TMP = "TMPDSP"          # verified absent from the corpus before adoption
+
+def fix_bif_in_factor(lines, declare=True):
+    """Lifts a built-in out of DSPLY's Factor 1 into a preceding EVAL.
+
+    Traditional-syntax factors take a field, literal or constant -- never an
+    expression -- so IBM rejects `C  %CHAR(n)  DSPLY` with RNF0372 at severity
+    20. Confirmed on IBM i 7.5: the same built-in in EXTENDED Factor 2 (EVAL)
+    compiles, which is what makes this rewrite the right shape:
+
+        C     %CHAR(n)      DSPLY
+    becomes
+        C                   EVAL      TMPDSP = %CHAR(n)
+        C     TMPDSP        DSPLY
+
+    `declare` is False for copybook fragments: they are spliced into a parent
+    that declares the work field itself, and a second declaration would be a
+    redefinition.
+
+    A single CHAR(52) work field per file suffices: every built-in used in the
+    corpus (%CHAR, %TRIM) returns character, and DSPLY caps at 52 characters
+    anyway. None of the affected sites carries a conditioning indicator, so
+    there is no condition to duplicate onto the EVAL -- the transform bails out
+    if that ever stops being true.
+    """
+    sites = []
+    infree = False
+    for i, ln in enumerate(lines):
+        u = ln.strip().upper()
+        if u.startswith('/FREE'): infree = True; continue
+        if u.startswith('/END-FREE'): infree = False; continue
+        if infree or len(ln) < 6 or ln[5:6].upper() != 'C' or get(ln, 7, 7) == '*':
+            continue
+        r = ln.ljust(100)
+        if r[25:35].strip().upper() != 'DSPLY': continue
+        f1 = r[11:25].strip()
+        if not BIF_RE.search(f1): continue
+        if r[6:11].strip():
+            return lines, 0          # conditioning indicator: needs a human
+        sites.append((i, f1))
+    if not sites: return lines, 0
+
+    def cline(f1, op, rest=""):
+        r = [' '] * 80
+        r[5] = 'C'
+        for k, c in enumerate(f1):   r[11 + k] = c
+        for k, c in enumerate(op):   r[25 + k] = c
+        for k, c in enumerate(rest): r[35 + k] = c
+        return ''.join(r).rstrip()
+
+    out = []
+    repl = dict(sites)
+    for i, ln in enumerate(lines):
+        if i in repl:
+            out.append(cline("", "EVAL", f"{TMP} = {repl[i]}"))
+            out.append(cline(TMP, "DSPLY"))
+        else:
+            out.append(ln)
+
+    if not declare:
+        return out, len(sites)
+    # declare the work field after the last D-spec, or before the first C-spec
+    dspec = [i for i, l in enumerate(out)
+             if len(l) > 5 and l[5:6].upper() == 'D' and get(l, 7, 7) != '*']
+    if dspec:
+        at = max(dspec) + 1
+    else:
+        cs = [i for i, l in enumerate(out) if len(l) > 5 and l[5:6].upper() in 'CIO']
+        at = min(cs) if cs else len(out)
+    decl = [' '] * 80
+    decl[5] = 'D'
+    for k, c in enumerate(TMP):  decl[6 + k] = c
+    decl[23] = 'S'
+    for k, c in enumerate("52"): decl[37 + k] = c
+    decl[39] = 'A'
+    out.insert(at, ''.join(decl).rstrip())
+    return out, len(sites)
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("target", help="directory of .rpgle/.sqlrpgle sources")
@@ -367,7 +449,9 @@ def main():
         lines, n_ri = fix_recid_entries(lines)
         lines, n_fb = fix_free_block_indent(lines)
         lines, n_oo = fix_ospec_order(lines)
-        newlines, n, infree = [], n_dt + n_fs + n_ri + n_fb + n_oo, False
+        lines, n_bf = fix_bif_in_factor(
+            lines, declare='copybook' not in os.path.basename(p).lower())
+        newlines, n, infree = [], n_dt + n_fs + n_ri + n_fb + n_oo + n_bf, False
         for ln in lines:
             u = ln.strip().upper()
             # a mixed source embeds free-format between /FREE and /END-FREE;

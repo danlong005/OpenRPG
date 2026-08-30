@@ -1,8 +1,10 @@
      HDFTACTGRP(*NO)
      Dtotal            S             10I 0
+     DTMPDSP           S             52A
      C                   EVAL      total = 0
      C                   EXSR      DOIT
-     C     %CHAR(total)  DSPLY
+     C                   EVAL      TMPDSP = %CHAR(total)
+     C     TMPDSP        DSPLY
      C                   RETURN
      C     DOIT          BEGSR
      C                   EVAL      total = 1

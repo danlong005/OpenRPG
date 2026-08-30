@@ -1,5 +1,6 @@
      HDFTACTGRP(*NO)
      FTESTFL154 UF A F   25        DISK
+     DTMPDSP           S             52A
      ITESTFL154 AA
      I                             A    1   20  NAME
      I                             S   21   25 0AGE
@@ -16,8 +17,10 @@
       /end-free
      C                   READ      TESTFL154
      C                   DOW       NOT %EOF(TESTFL154)
-     C     %TRIM(NAME)   DSPLY
-     C     %CHAR(AGE)    DSPLY
+     C                   EVAL      TMPDSP = %TRIM(NAME)
+     C     TMPDSP        DSPLY
+     C                   EVAL      TMPDSP = %CHAR(AGE)
+     C     TMPDSP        DSPLY
      C                   READ      TESTFL154
      C                   ENDDO
      C                   RETURN

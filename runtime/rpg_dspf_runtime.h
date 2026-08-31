@@ -279,59 +279,85 @@ static bool dspf__parseClrl(const DspfJVal& rec, int& startRow, int& endRow) {
     return false;
 }
 
-// Returns true when PROTECT is present and its indicator condition (if any) is met.
-static bool dspf__isProtected(const DspfJVal& rec) {
+// Is a record-level keyword present and, if it carries an indicator
+// condition, currently in effect?
+//
+// Bare `NAME` means always. `NAME(*INnn)` / `NAME(Nnn)` means only while that
+// indicator is on (or off, with the N). Real DDS conditions a record-level
+// keyword from the option-indicator columns (positions 8-16) rather than a
+// parameter; dds_reader folds that condition into the keyword's own text so
+// both source formats arrive here in one shape.
+//
+// The name must match exactly or be followed by '(' — SFLDSP is a prefix of
+// SFLDSPCTL, and a plain prefix test would report one as the other.
+// Is the keyword present at all, regardless of any condition on it? Uses the
+// same exact-name-or-'(' rule as dspf__recKwActive; dspf__hasRecKw is a plain
+// prefix test and would report SFLDSPCTL as SFLDSP.
+static bool dspf__hasRecKwExact(const DspfJVal& rec, const std::string& name) {
     const DspfJVal& kw = rec["keywords"];
     for (size_t i = 0; i < kw.size(); i++) {
         const std::string& k = kw[i].str();
-        if (k == "PROTECT") return true;
-        if (k.rfind("PROTECT(", 0) == 0) {
-            std::string inner = k.substr(8, k.size() > 9 ? k.size() - 9 : 0);
-            bool neg = (!inner.empty() && (inner[0]=='N' || inner[0]=='n'));
-            if (neg) inner = inner.substr(1);
-            int ind = 0;
-            if (inner.rfind("*IN", 0) == 0) {
-                try { ind = std::stoi(inner.substr(3)); } catch (...) {}
-            } else {
-                try { ind = std::stoi(inner); } catch (...) {}
-            }
-            if (ind >= 0 && ind < 100) {
-                bool on = g_dspf_indicators[ind];
-                return neg ? !on : on;
-            }
-            return true;
-        }
+        if (k == name) return true;
+        if (k.size() > name.size() &&
+            k.compare(0, name.size(), name) == 0 && k[name.size()] == '(') return true;
     }
     return false;
 }
 
-// SFLNXTCHG (record-level, on the SFL record): true when in effect for
-// *this* UPDATE call — bare SFLNXTCHG means always; SFLNXTCHG(*INxx)
-// means only when that indicator is on (the real-world case: the program
-// turns it on right before an UPDATE that should force-remark a row).
-static bool dspf__sflNxtChgActive(const DspfJVal& rec) {
+static bool dspf__recKwActive(const DspfJVal& rec, const std::string& name) {
     const DspfJVal& kw = rec["keywords"];
     for (size_t i = 0; i < kw.size(); i++) {
         const std::string& k = kw[i].str();
-        if (k == "SFLNXTCHG") return true;
-        if (k.rfind("SFLNXTCHG(", 0) == 0) {
-            std::string inner = k.substr(10, k.size() > 11 ? k.size() - 11 : 0);
-            bool neg = (!inner.empty() && (inner[0]=='N' || inner[0]=='n'));
-            if (neg) inner = inner.substr(1);
-            int ind = 0;
-            if (inner.rfind("*IN", 0) == 0) {
-                try { ind = std::stoi(inner.substr(3)); } catch (...) {}
-            } else {
-                try { ind = std::stoi(inner); } catch (...) {}
-            }
-            if (ind >= 0 && ind < 100) {
-                bool on = g_dspf_indicators[ind];
-                return neg ? !on : on;
-            }
-            return true;
+        if (k == name) return true;
+        if (k.size() <= name.size() + 1) continue;
+        if (k.compare(0, name.size(), name) != 0 || k[name.size()] != '(') continue;
+
+        std::string inner = k.substr(name.size() + 1,
+                                     k.size() - name.size() - 2);
+        bool neg = (!inner.empty() && (inner[0] == 'N' || inner[0] == 'n'));
+        if (neg) inner = inner.substr(1);
+        int ind = 0;
+        if (inner.rfind("*IN", 0) == 0) {
+            try { ind = std::stoi(inner.substr(3)); } catch (...) {}
+        } else {
+            try { ind = std::stoi(inner); } catch (...) {}
         }
+        if (ind >= 0 && ind < 100) {
+            bool on = g_dspf_indicators[ind];
+            return neg ? !on : on;
+        }
+        return true;   // unparseable condition: treat as unconditional
     }
     return false;
+}
+
+// Subfile display control: SFLDSP, SFLDSPCTL, SFLCLR.
+//
+// On IBM i these are required — a subfile is not displayed unless SFLDSP is
+// in effect, and the control record's WRITE clears the subfile only when
+// SFLCLR is. This compiler shipped for a long time doing all three
+// unconditionally, and display files written against it say none of them.
+//
+// So presence decides which rule applies: declare the keyword and it is
+// honoured exactly, including its indicator condition; omit it and the old
+// unconditional behaviour stands. That keeps existing display files working
+// while letting real DDS — where these are always conditioned, and where
+// writing the control record without SFLCLR must NOT wipe the subfile —
+// behave the way its author meant.
+static bool dspf__sflCtlFlag(const DspfJVal& rec, const std::string& name) {
+    return !dspf__hasRecKwExact(rec, name) || dspf__recKwActive(rec, name);
+}
+
+// PROTECT (record-level): write-protect every input-capable field.
+static bool dspf__isProtected(const DspfJVal& rec) {
+    return dspf__recKwActive(rec, "PROTECT");
+}
+
+// SFLNXTCHG (record-level, on the SFL record): in effect for *this* UPDATE
+// call — the real-world case is a program turning its indicator on right
+// before an UPDATE that should force-remark a row as changed.
+static bool dspf__sflNxtChgActive(const DspfJVal& rec) {
+    return dspf__recKwActive(rec, "SFLNXTCHG");
 }
 
 // =============================================================================
@@ -1236,11 +1262,25 @@ static int dspf__sflExfmt(const char* ctlName, const DspfJVal& ctl, void* ctlBuf
 
     // Render everything (control record + subfile rows)
     auto render = [&]() {
-        dspf__renderScreen(ctl, ctlVals, stdscr, 0, 0);
+        if (dspf__sflCtlFlag(ctl, "SFLDSPCTL")) {
+            dspf__renderScreen(ctl, ctlVals, stdscr, 0, 0);
+        } else if (!dspf__hasRecKw(ctl, "OVERLAY") && !dspf__hasRecKw(ctl, "NOCLEAR")) {
+            clear();
+        }
 
-        if (!sflRec) { refresh(); return; }
+        if (!sflRec || !dspf__sflCtlFlag(ctl, "SFLDSP")) { refresh(); return; }
         const DspfJVal& sf = (*sflRec)["fields"];
         int endPage = std::min(numRows, pageOff + sflpag);
+
+        // SFLEND: mark whether more rows exist below the page. IBM's parameter
+        // choices are a display style (*MORE gives More.../Bottom, *PLUS a '+',
+        // *SCRBAR a scroll bar); this renders the *MORE wording for all of
+        // them, since there is no scroll bar to draw here.
+        if (dspf__hasRecKwExact(ctl, "SFLEND") && dspf__recKwActive(ctl, "SFLEND")) {
+            mvprintw(sflBaseRow + std::min(sflpag, endPage - pageOff),
+                     sf.size() ? sf[0]["col"].num() - 1 : 0,
+                     "%s", endPage < numRows ? "More..." : "Bottom");
+        }
 
         for (int i = pageOff; i < endPage; i++) {
             int screenRow = sflBaseRow + (i - pageOff);
@@ -1613,12 +1653,17 @@ inline void dspf_write(const char* recname, const void* recbuf) {
     }
 
     if (recType == "sflctl") {
-        // Writing to the control record clears the associated subfile
-        std::string sflName = (*rec)["sfl"].str();
-        g_dspf_subfiles[sflName].clear();
-        std::string ctlKey(recname);
-        g_dspf_sfl_cursor[ctlKey] = 1;
-        g_dspf_sfl_page[ctlKey]   = 0;
+        // Writing the control record clears the subfile only when SFLCLR is in
+        // effect. A program that writes the control record to display it —
+        // with SFLCLR's indicator off — must keep its rows, which is the
+        // normal load-then-display idiom and used to wipe them here.
+        if (dspf__sflCtlFlag(*rec, "SFLCLR")) {
+            std::string sflName = (*rec)["sfl"].str();
+            g_dspf_subfiles[sflName].clear();
+            std::string ctlKey(recname);
+            g_dspf_sfl_cursor[ctlKey] = 1;
+            g_dspf_sfl_page[ctlKey]   = 0;
+        }
         return;
     }
 

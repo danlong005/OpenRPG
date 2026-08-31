@@ -26,7 +26,7 @@ jobs:
       - name: Install build dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y flex bison g++ unixodbc-dev unixodbc libsqliteodbc
+          sudo apt-get install -y flex bison g++ unixodbc-dev unixodbc libsqliteodbc libncurses-dev
 
       - name: Build
         run: make
@@ -54,7 +54,7 @@ jobs:
       - name: Install build dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y flex bison g++ unixodbc-dev unixodbc libsqliteodbc
+          sudo apt-get install -y flex bison g++ unixodbc-dev unixodbc libsqliteodbc libncurses-dev
 
       - name: Build
         run: make
@@ -105,7 +105,18 @@ jobs:
           ODBC_FLAGS: -lodbc32
         run: make test
 
+      # SKIP_DSPF_RUNTIME drops the two stages that compile and run a
+      # WORKSTN program. rpgc links those with -lpdcurses and MSYS2 has no
+      # curses installed here. Adding its pdcurses package would not buy
+      # much: it is not the build the installer ships, it puts curses.h
+      # under include/pdcurses/, and it defaults to the wingui port, which
+      # paints its own window rather than stdout — so the captures these
+      # tests diff would come back empty. Display-file behaviour is covered
+      # on Linux and macOS; Windows is untested here and knowingly so. The
+      # 39 dspfc compiler tests still run.
       - name: Run OpenDSPF test suite
+        env:
+          SKIP_DSPF_RUNTIME: "1"
         run: make -C OpenDSPF test
 
   # ── External DB smoke tests (Postgres, MySQL) ───────────────────────────────
@@ -144,7 +155,13 @@ jobs:
           --health-retries=10
 
     steps:
+      # Submodules are needed even though this job never tests OpenDSPF:
+      # `make` generates runtime/rpg_dspf_runtime.h from the OpenDSPF
+      # checkout, and fails loudly rather than silently shipping an rpgc
+      # that cannot compile a WORKSTN program.
       - uses: actions/checkout@v6
+        with:
+          submodules: recursive
 
       - name: Install build dependencies
         run: |
@@ -257,5 +274,16 @@ jobs:
           ODBC_FLAGS: -lodbc32
         run: make test
 
+      # SKIP_DSPF_RUNTIME drops the two stages that compile and run a
+      # WORKSTN program. rpgc links those with -lpdcurses and MSYS2 has no
+      # curses installed here. Adding its pdcurses package would not buy
+      # much: it is not the build the installer ships, it puts curses.h
+      # under include/pdcurses/, and it defaults to the wingui port, which
+      # paints its own window rather than stdout — so the captures these
+      # tests diff would come back empty. Display-file behaviour is covered
+      # on Linux and macOS; Windows is untested here and knowingly so. The
+      # 39 dspfc compiler tests still run.
       - name: Run OpenDSPF test suite
+        env:
+          SKIP_DSPF_RUNTIME: "1"
         run: make -C OpenDSPF test

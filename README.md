@@ -423,7 +423,7 @@ pacman -S mingw-w64-clang-aarch64-toolchain flex bison make
 ```
 
 ```bash
-git clone https://github.com/danlong005/OpenRPG.git
+git clone --recursive https://github.com/danlong005/OpenRPG.git
 cd OpenRPG
 make
 sudo make install        # installs to /usr/local

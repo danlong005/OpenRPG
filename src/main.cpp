@@ -637,14 +637,23 @@ int main(int argc, char* argv[]) {
     if (debug_mode) {
         cmd += " -g -O0";
     }
+    // Library flags go AFTER the source and any extra objects. GNU ld
+    // resolves left to right and, with --as-needed (the Ubuntu default),
+    // discards a library nothing has asked for *yet* — so `-lncurses foo.cpp`
+    // links no ncurses at all and foo.cpp's calls come back undefined. Apple's
+    // linker is order-independent, which is why this only ever showed up on
+    // Linux. tests/run_tests.sh has appended ODBC_FLAGS last for the same
+    // reason since it started compiling SQL tests by hand.
+    std::string libs;
     if (is_sql) {
-        cmd += RPGC_ODBC_FLAGS;
+        libs += RPGC_ODBC_FLAGS;
     }
     if (is_dspf) {
-        cmd += RPGC_DSPF_FLAGS;
+        libs += RPGC_DSPF_FLAGS;
     }
     cmd += " -o " + q(exe_path) + " " + q(cpp_path);
     for (const auto& obj : extra_objs) cmd += " " + q(obj);
+    cmd += libs;
     int rc = rpgc_system(cmd);
 
     if (!keep_cpp) {

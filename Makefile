@@ -73,7 +73,15 @@ DATADIR := $(PREFIX)/share/rpgc/runtime
 # Pass installed runtime path to main.cpp so rpgc can find headers after install
 CXXFLAGS += -DRPGC_RUNTIME_DIR='"$(DATADIR)"'
 
-all: $(TARGET)
+# OpenDSPF is vendored as a git submodule at $(DSPF_DIR). Run
+# `git submodule update --init` if it's empty. Both of these must be defined
+# before the `all` rule below: make expands a rule's prerequisites as the
+# makefile is read, so a variable assigned further down expands to nothing and
+# the dependency silently disappears.
+DSPF_DIR     ?= OpenDSPF
+DSPF_RUNTIME := runtime/rpg_dspf_runtime.h
+
+all: $(TARGET) $(DSPF_RUNTIME)
 
 $(BUILDDIR):
 	mkdir -p $(BUILDDIR)
@@ -123,11 +131,41 @@ $(TARGET): $(OBJS)
 	$(CXX) $(CXXFLAGS) $(ODBC_CFLAGS) -o $@ $^ $(LDFLAGS) $(ODBC_LIBS)
 
 clean:
-	rm -rf $(BUILDDIR) $(TARGET)
+	rm -rf $(BUILDDIR) $(TARGET) $(DSPF_RUNTIME)
 
-# OpenDSPF is vendored as a git submodule at $(DSPF_DIR). Run
-# `git submodule update --init` if it's empty.
-DSPF_DIR ?= OpenDSPF
+
+# rpgc compiles WORKSTN programs against runtime/rpg_dspf_runtime.h, but that
+# file belongs to OpenDSPF. It used to be a second tracked copy kept in step by
+# hand, which is exactly as reliable as it sounds: the two silently diverged,
+# and a whole set of display-runtime changes was developed and tested against
+# the copy here while the submodule — the one CI, install-dspf and the Windows
+# installer ship — still had the old code.
+#
+# So it is generated, not tracked. There is one copy of this file under source
+# control, in OpenDSPF, and `make` refreshes the build-time copy from whatever
+# $(DSPF_DIR) points at. Override DSPF_DIR to build against a different
+# OpenDSPF checkout.
+#
+# A copy rather than a symlink: git only checks symlinks out as symlinks when
+# core.symlinks is on, which it is not by default on Windows, and this header
+# is shipped by the NSIS installer.
+
+# FORCE, and a content compare rather than a timestamp one: the target is
+# generated and gitignored, so an edit made to it directly would leave it
+# NEWER than its source and make would consider it up to date forever —
+# precisely the stale copy this rule exists to prevent. cmp keeps the copy
+# from running when the bytes already match, so nothing downstream rebuilds
+# needlessly.
+$(DSPF_RUNTIME): $(DSPF_DIR)/runtime/rpg_dspf_runtime.h FORCE
+	@cmp -s $< $@ 2>/dev/null || { echo "cp $< $@"; cp $< $@; }
+
+FORCE:
+
+$(DSPF_DIR)/runtime/rpg_dspf_runtime.h:
+	@echo "error: $(DSPF_DIR)/runtime/rpg_dspf_runtime.h is missing."; \
+	 echo "  OpenDSPF is a git submodule and has not been checked out."; \
+	 echo "  Run: git submodule update --init"; \
+	 exit 1
 
 install: $(TARGET)
 	install -d $(DESTDIR)$(BINDIR)
@@ -164,4 +202,4 @@ test: $(TARGET)
 update-expected: $(TARGET)
 	@bash tests/run_tests.sh --update
 
-.PHONY: all clean install install-dspf install-all uninstall uninstall-dspf test update-expected
+.PHONY: FORCE all clean install install-dspf install-all uninstall uninstall-dspf test update-expected

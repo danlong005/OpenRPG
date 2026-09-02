@@ -2059,8 +2059,51 @@ subfield, a named constant and an indicator from two subprocedures and has
 the mainline observe the results. Negative control: with the change stashed
 it fails to compile, exactly as before.
 
-Still open from the same finding: **`EXSR` resolves only backwards.**
-Subroutines are still `auto sr_X = [&](){}` lambdas emitted in source order
-inside `main()`, so a subroutine may only call one defined textually above
-it, and mutual recursion is impossible. RPG places no ordering requirement
-on subroutines.
+Still open from the same finding: `EXSR` resolves only backwards — see the
+next section.
+
+### `EXSR` resolves only backwards — subroutines should be functions
+
+Subroutines are emitted as `auto sr_X = [&](){ ... };` lambdas, in source
+order, inside `main()`. A lambda is not in scope until its declaration is
+reached, so a subroutine can only call one defined **textually above it**:
+
+```
+BEGSR DoOpts;
+  EXSR FindCus;    // error: use of undeclared identifier 'sr_FINDCUS'
+ENDSR;
+BEGSR FindCus;
+  ...
+ENDSR;
+```
+
+RPG places no ordering requirement on subroutines at all, and the
+conventional layout — mainline first, then subroutines in the order a
+reader meets them — is exactly the one that fails. Mutual recursion is
+impossible. `OpenDSPF/tests/TEST27_CUSMNT.rpgle` has its subroutines
+ordered leaf-first purely to work around this, which is not how anyone
+writes RPG.
+
+**The fix is cheaper now than it was.** Hoisting the globals to file scope
+removed the reason subroutines had to be lambdas: they captured `[&]` to
+reach `main()`'s locals, and there are no longer any locals worth reaching.
+So emit each subroutine as an ordinary `static void sr_X();` at file scope
+— forward-declare them all first, then define them — and both the ordering
+restriction and mutual recursion fall out for free.
+
+Two things to get right when doing it:
+
+- **`RETURN` inside a subroutine.** In RPG that returns from the
+  *procedure*, ending the program; inside a lambda today `return` only
+  leaves the subroutine, which is already wrong and would stay wrong as a
+  plain function. Worth fixing in the same pass, or at least pinning with
+  a test so the divergence is recorded rather than assumed.
+- **`*INZSR` and `*PSSR`** are called specially (auto-called, and invoked
+  from the catch block respectively) and need to keep working. `*PSSR` in
+  particular is called from `main()`'s handler, so its definition has to
+  precede that.
+
+Guard the fix with a test whose subroutines are deliberately in the
+"wrong" order — a driver subroutine first, calling leaves defined below it
+— plus one pair that call each other, since that is the case no ordering
+can satisfy.

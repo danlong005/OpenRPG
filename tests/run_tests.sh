@@ -783,6 +783,7 @@ run_test "224" "Fixed D-spec INZ is honoured" "$TESTDIR/test224_fixed_dspec_inz.
 run_test "225" "Division yields a decimal quotient" "$TESTDIR/test225_decimal_division.rpgle" "run"
 run_test "226" "Reject INZ on a DS subfield" "$TESTDIR/test226_err_subfield_inz.rpgle" "error"
 run_test "227" "Subprocedures see module globals" "$TESTDIR/test227_proc_globals.rpgle" "run"
+run_test "228" "EXSR resolves in either direction" "$TESTDIR/test228_exsr_order.rpgle" "run"
 
 # ── Customer / drop-in tests ─────────────────────────────────────────────
 # Drop any .rpgle or .sqlrpgle file into tests/customer/ and it will be

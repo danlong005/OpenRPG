@@ -2059,10 +2059,10 @@ subfield, a named constant and an indicator from two subprocedures and has
 the mainline observe the results. Negative control: with the change stashed
 it fails to compile, exactly as before.
 
-Still open from the same finding: `EXSR` resolves only backwards — see the
-next section.
+Also from the same finding, and now fixed too: `EXSR` resolves in either
+direction — see the next section.
 
-### `EXSR` resolves only backwards — subroutines should be functions
+### `EXSR` resolves in either direction ✅ (2026-09-01)
 
 Subroutines are emitted as `auto sr_X = [&](){ ... };` lambdas, in source
 order, inside `main()`. A lambda is not in scope until its declaration is
@@ -2084,26 +2084,28 @@ impossible. `OpenDSPF/tests/TEST27_CUSMNT.rpgle` has its subroutines
 ordered leaf-first purely to work around this, which is not how anyone
 writes RPG.
 
-**The fix is cheaper now than it was.** Hoisting the globals to file scope
-removed the reason subroutines had to be lambdas: they captured `[&]` to
-reach `main()`'s locals, and there are no longer any locals worth reaching.
-So emit each subroutine as an ordinary `static void sr_X();` at file scope
-— forward-declare them all first, then define them — and both the ordering
-restriction and mutual recursion fall out for free.
+Hoisting the globals to file scope removed the reason subroutines had to be
+lambdas: they captured `[&]` to reach `main()`'s locals, and there are no
+longer any locals worth reaching. Each of the mainline's subroutines is now
+an ordinary `static void sr_X()` at file scope — the whole set
+forward-declared before the procedures, defined after them so a subroutine
+may also call a procedure — and both the ordering restriction and mutual
+recursion fall out for free.
 
-Two things to get right when doing it:
+A subroutine inside a `DCL-PROC` is a different thing: scoped to that
+procedure and needing its locals, so that case keeps the lambda.
+`*INZSR` and `*PSSR` keep their special handling — `*INZSR` auto-called
+before the first executable statement, `*PSSR` invoked from `main()`'s
+catch block.
 
-- **`RETURN` inside a subroutine.** In RPG that returns from the
-  *procedure*, ending the program; inside a lambda today `return` only
-  leaves the subroutine, which is already wrong and would stay wrong as a
-  plain function. Worth fixing in the same pass, or at least pinning with
-  a test so the divergence is recorded rather than assumed.
-- **`*INZSR` and `*PSSR`** are called specially (auto-called, and invoked
-  from the catch block respectively) and need to keep working. `*PSSR` in
-  particular is called from `main()`'s handler, so its definition has to
-  precede that.
+Guarded by test228: a driver subroutine calling two leaves defined below
+it, plus a `Ping`/`Pong` pair that call each other, which no ordering of
+definitions can satisfy. Without the change it fails to compile with
+`use of undeclared identifier 'sr_LEAF'`.
 
-Guard the fix with a test whose subroutines are deliberately in the
-"wrong" order — a driver subroutine first, calling leaves defined below it
-— plus one pair that call each other, since that is the case no ordering
-can satisfy.
+**Not fixed, and now pinned rather than assumed:** `RETURN` inside a
+subroutine returns from the *subroutine*, where IBM returns from the
+*procedure* and ends the program. The lambda did the same thing, so this
+preserves the behaviour rather than changing it silently while moving the
+code — the file-scope function is emitted with `void_return_` set so a bare
+RETURN stays `return;`. Worth a separate pass.

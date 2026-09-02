@@ -24,6 +24,9 @@ std::string CodeGen::generate(Program& program) {
     return out_.str();
 }
 
+// Defined below; needed by visit(Program&) to forward-declare subroutines.
+static std::string sanitizeSRName(const std::string& name);
+
 void CodeGen::emitIndent() {
     for (int i = 0; i < indent_; i++) out_ << "    ";
 }
@@ -827,9 +830,50 @@ void CodeGen::visit(Program& node) {
     at_file_scope_ = false;
     out_ << "} // namespace\n\n";
 
+    // Split the mainline's subroutines out of its executable statements.
+    // They are emitted as file-scope functions below; forward-declaring the
+    // whole set here is what lets EXSR resolve in either direction, and lets
+    // two subroutines call each other.
+    std::vector<Statement*> sr_stmts;
+    Statement* inzsr_stmt = nullptr;
+    Statement* pssr_stmt = nullptr;
+    {
+        std::vector<Statement*> rest;
+        for (auto* st : main_stmts) {
+            auto* bsr = dynamic_cast<BegSR*>(st);
+            if (bsr && bsr->name == "*INZSR")      inzsr_stmt = st;
+            else if (bsr && bsr->name == "*PSSR")  pssr_stmt  = st;
+            else if (bsr)                          sr_stmts.push_back(st);
+            else                                   rest.push_back(st);
+        }
+        main_stmts.swap(rest);
+    }
+    {
+        std::vector<Statement*> all_srs = sr_stmts;
+        if (pssr_stmt)  all_srs.push_back(pssr_stmt);
+        if (inzsr_stmt) all_srs.push_back(inzsr_stmt);
+        for (auto* st : all_srs) {
+            out_ << "static void sr_"
+                 << sanitizeSRName(static_cast<BegSR*>(st)->name) << "();\n";
+        }
+        if (!all_srs.empty()) out_ << "\n";
+    }
+
     // Emit prototypes and procedures
     for (auto* s : proc_stmts) {
         s->accept(*this);
+    }
+
+    // Subroutine definitions, after the procedures so a subroutine may call
+    // one, and after the globals it reads.
+    if (!sr_stmts.empty() || pssr_stmt || inzsr_stmt) {
+        sr_at_file_scope_ = true;
+        indent_ = 0;
+        for (auto* st : sr_stmts) { emitLineDirective(st->line); st->accept(*this); }
+        if (pssr_stmt)  { emitLineDirective(pssr_stmt->line);  pssr_stmt->accept(*this); }
+        if (inzsr_stmt) { emitLineDirective(inzsr_stmt->line); inzsr_stmt->accept(*this); }
+        sr_at_file_scope_ = false;
+        out_ << "\n";
     }
 
     // NOMAIN: no main() function
@@ -898,30 +942,9 @@ void CodeGen::visit(Program& node) {
         }
     }
 
-    // Separate declarations, subroutines, and executable statements
-    std::vector<Statement*> decl_stmts;
-    std::vector<Statement*> sr_stmts;   // subroutines (lambdas, emit before use)
-    std::vector<Statement*> exec_stmts;
-    Statement* inzsr_stmt = nullptr;
-    Statement* pssr_stmt = nullptr;
-    for (auto* s : main_stmts) {
-        auto* bsr = dynamic_cast<BegSR*>(s);
-        if (bsr && bsr->name == "*INZSR") {
-            inzsr_stmt = s;
-        } else if (bsr && bsr->name == "*PSSR") {
-            pssr_stmt = s;
-        } else if (bsr) {
-            sr_stmts.push_back(s);
-        } else {
-            exec_stmts.push_back(s);
-        }
-    }
-
-    // 1. Emit declarations (includes DCL-F which registers file structs)
-    for (auto* s : decl_stmts) {
-        emitLineDirective(s->line);
-        s->accept(*this);
-    }
+    // Subroutines were split out and defined at file scope above; what is
+    // left in main_stmts is the mainline's executable statements.
+    std::vector<Statement*>& exec_stmts = main_stmts;
 
     // 1.5 Auto-connect from rpgc.conf (if DSN provided and program uses SQL or RLA)
     if (!conf_dsn_.empty() && uses_sql_) {
@@ -947,22 +970,8 @@ void CodeGen::visit(Program& node) {
         out_ << "struct __DspfGuard { ~__DspfGuard() { dspf_close(); } } __dspf_guard;\n";
     }
 
-    // 2. Emit subroutine lambdas (so they can be called later)
-    for (auto* s : sr_stmts) {
-        emitLineDirective(s->line);
-        s->accept(*this);
-    }
-
-    // 2.5 Emit *PSSR lambda
-    if (pssr_stmt) {
-        emitLineDirective(pssr_stmt->line);
-        pssr_stmt->accept(*this);
-    }
-
-    // 3. Emit *INZSR and auto-call it
+    // *INZSR runs before any executable statement of the mainline.
     if (inzsr_stmt) {
-        emitLineDirective(inzsr_stmt->line);
-        inzsr_stmt->accept(*this);
         emitIndent();
         out_ << "sr__INZSR();\n";
     }
@@ -2082,6 +2091,31 @@ static std::string sanitizeSRName(const std::string& name) {
 }
 
 void CodeGen::visit(BegSR& node) {
+    // The mainline's subroutines are file-scope functions, forward-declared
+    // as a group, so EXSR resolves in either direction and two subroutines
+    // may call each other — RPG imposes no ordering on them. They were
+    // lambdas because they needed [&] to reach main()'s locals; the module
+    // globals live at file scope now, so there is nothing left to capture.
+    //
+    // A subroutine inside a DCL-PROC is a different thing — scoped to that
+    // procedure, and needing its locals — so that case keeps the lambda.
+    if (sr_at_file_scope_) {
+        out_ << "static void sr_" << sanitizeSRName(node.name) << "() {\n";
+        int saved_indent = indent_;
+        bool saved_void = void_return_;
+        // The function returns void, so a bare RETURN cannot carry main()'s
+        // exit status. That matches what the lambda did — return from the
+        // subroutine, not from the program — which is not what IBM does
+        // (see TODO.md); this preserves the behaviour rather than changing
+        // it silently while moving the code.
+        indent_ = 1;
+        void_return_ = true;
+        emitStatements(node.body);
+        void_return_ = saved_void;
+        indent_ = saved_indent;
+        out_ << "}\n";
+        return;
+    }
     // Emit as a lambda that can be called by EXSR
     emitIndent();
     out_ << "auto sr_" << sanitizeSRName(node.name) << " = [&]() {\n";

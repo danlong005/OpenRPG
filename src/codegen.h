@@ -184,6 +184,7 @@ private:
     int countRequiredParams(const std::vector<ParamDecl>& params);
     std::string fieldTypeDefault(RPGType type, int length);
     std::string figConstValue(const std::string& name, RPGType type, const std::string& var_name);
+    std::string emitInzValue(const rpg::DclS& node);
 
     // XML-INTO codegen helpers
     void emitXmlFieldAssignments(DclDS* ds, const std::string& target, const std::string& xml_src);

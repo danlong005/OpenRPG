@@ -1382,25 +1382,25 @@ void CodeGen::visit(DclS& node) {
     switch (node.type) {
         case RPGType::CHAR:
             if (node.is_const) {
-                out_ << "const std::string " << node.name << " = " << emitExpr(*node.inz_value) << ";\n";
+                out_ << "const std::string " << node.name << " = " << emitInzValue(node) << ";\n";
             } else if (node.inz_value) {
-                out_ << "std::string " << node.name << " = " << emitExpr(*node.inz_value) << ";\n";
+                out_ << "std::string " << node.name << " = " << emitInzValue(node) << ";\n";
             } else {
                 out_ << "std::string " << node.name << "(" << node.length << ", ' ');\n";
             }
             break;
         case RPGType::VARCHAR:
             if (node.inz_value) {
-                out_ << "std::string " << node.name << " = " << emitExpr(*node.inz_value) << ";\n";
+                out_ << "std::string " << node.name << " = " << emitInzValue(node) << ";\n";
             } else {
                 out_ << "std::string " << node.name << ";\n";
             }
             break;
         case RPGType::INT10:
             if (node.is_const) {
-                out_ << "const int " << node.name << " = " << emitExpr(*node.inz_value) << ";\n";
+                out_ << "const int " << node.name << " = " << emitInzValue(node) << ";\n";
             } else if (node.inz_value) {
-                out_ << "int " << node.name << " = " << emitExpr(*node.inz_value) << ";\n";
+                out_ << "int " << node.name << " = " << emitInzValue(node) << ";\n";
             } else {
                 out_ << "int " << node.name << " = 0;\n";
             }
@@ -1408,9 +1408,9 @@ void CodeGen::visit(DclS& node) {
         case RPGType::PACKED:
         case RPGType::ZONED:
             if (node.is_const) {
-                out_ << "const double " << node.name << " = " << emitExpr(*node.inz_value) << ";\n";
+                out_ << "const double " << node.name << " = " << emitInzValue(node) << ";\n";
             } else if (node.inz_value) {
-                out_ << "double " << node.name << " = " << emitExpr(*node.inz_value) << ";\n";
+                out_ << "double " << node.name << " = " << emitInzValue(node) << ";\n";
             } else {
                 out_ << "double " << node.name << " = 0.0;\n";
             }
@@ -1432,35 +1432,35 @@ void CodeGen::visit(DclS& node) {
             break;
         case RPGType::UNS:
             if (node.inz_value) {
-                out_ << "unsigned int " << node.name << " = " << emitExpr(*node.inz_value) << ";\n";
+                out_ << "unsigned int " << node.name << " = " << emitInzValue(node) << ";\n";
             } else {
                 out_ << "unsigned int " << node.name << " = 0;\n";
             }
             break;
         case RPGType::FLOAT4:
             if (node.inz_value) {
-                out_ << "float " << node.name << " = " << emitExpr(*node.inz_value) << ";\n";
+                out_ << "float " << node.name << " = " << emitInzValue(node) << ";\n";
             } else {
                 out_ << "float " << node.name << " = 0.0f;\n";
             }
             break;
         case RPGType::FLOAT8:
             if (node.inz_value) {
-                out_ << "double " << node.name << " = " << emitExpr(*node.inz_value) << ";\n";
+                out_ << "double " << node.name << " = " << emitInzValue(node) << ";\n";
             } else {
                 out_ << "double " << node.name << " = 0.0;\n";
             }
             break;
         case RPGType::BINDEC:
             if (node.inz_value) {
-                out_ << "int " << node.name << " = " << emitExpr(*node.inz_value) << ";\n";
+                out_ << "int " << node.name << " = " << emitInzValue(node) << ";\n";
             } else {
                 out_ << "int " << node.name << " = 0;\n";
             }
             break;
         case RPGType::UCS2:
             if (node.inz_value) {
-                out_ << "std::string " << node.name << " = " << emitExpr(*node.inz_value) << ";\n";
+                out_ << "std::string " << node.name << " = " << emitInzValue(node) << ";\n";
             } else {
                 out_ << "std::string " << node.name << ";\n";
             }
@@ -1474,6 +1474,19 @@ void CodeGen::visit(DclS& node) {
         emitIndent();
         out_ << "const auto _init_" << node.name << " = " << node.name << ";\n";
     }
+}
+
+// An INZ value naming a figurative constant needs the type-aware expansion
+// figConstValue() gives it: *BLANKS is six spaces on a CHAR(6) and zero on
+// a numeric field. Emitting it as a plain expression printed the internal
+// placeholder name instead, so "DCL-S c CHAR(6) INZ(*BLANKS)" generated
+// "std::string C = RPG_BLANKS;" -- C++ that does not compile.
+std::string CodeGen::emitInzValue(const rpg::DclS& node) {
+    if (auto* id = dynamic_cast<const rpg::Identifier*>(node.inz_value.get())) {
+        std::string v = figConstValue(id->name, node.type, node.name);
+        if (!v.empty()) return v;
+    }
+    return emitExpr(*node.inz_value);
 }
 
 std::string CodeGen::figConstValue(const std::string& name, RPGType type, const std::string& var_name) {
@@ -2668,6 +2681,21 @@ void CodeGen::visit(BinaryExpr& node) {
         expr_ << "std::pow(";
         node.left->accept(*this);
         expr_ << ", ";
+        node.right->accept(*this);
+        expr_ << ")";
+        return;
+    }
+    if (node.op == BinOp::DIV) {
+        // RPG division always produces a decimal result -- SC09-2508 defines
+        // the quotient's precision independently of the operands', so 10 / 3
+        // is 3.3333..., truncated or half-adjusted only when it lands in the
+        // result field. Emitting a bare C++ "/" made two integer operands do
+        // integer division, so 10 / 3 silently became 3. Forcing the left
+        // operand to double keeps the quotient decimal; %DIV() remains the
+        // way to ask for integer division.
+        expr_ << "(static_cast<double>(";
+        node.left->accept(*this);
+        expr_ << ") / ";
         node.right->accept(*this);
         expr_ << ")";
         return;

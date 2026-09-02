@@ -779,6 +779,9 @@ rm -f "$TESTDIR/../testfl221.txt"
 run_test "221" "O-spec numeric decimal round trip" "$TESTDIR/test221_ospec_decimals.rpgle" "run"
 run_test "222" "Half-adjust (H) at result decimals" "$TESTDIR/test222_half_adjust.rpgle" "run"
 run_test "223" "%EDITC honours declared decimals" "$TESTDIR/test223_editc_decimals.rpgle" "run"
+run_test "224" "Fixed D-spec INZ is honoured" "$TESTDIR/test224_fixed_dspec_inz.rpgle" "run"
+run_test "225" "Division yields a decimal quotient" "$TESTDIR/test225_decimal_division.rpgle" "run"
+run_test "226" "Reject INZ on a DS subfield" "$TESTDIR/test226_err_subfield_inz.rpgle" "error"
 
 # ── Customer / drop-in tests ─────────────────────────────────────────────
 # Drop any .rpgle or .sqlrpgle file into tests/customer/ and it will be

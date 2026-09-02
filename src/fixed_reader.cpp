@@ -310,6 +310,68 @@ static void handleFSpecLine(Program* program, PendingFSpec& pending,
 }
 
 // --- D-spec ---------------------------------------------------------------
+// INZ({value}) from the keyword tail. The free-format DCL-S has always
+// carried an initial value through DclS::inz_value; the fixed-format
+// reader used to drop the keyword on the floor, so "D N0 S 5P 0 INZ(15)"
+// generated "double N0 = 0.0;" and every program that relied on a
+// compile-time initial value started from zero instead.
+//
+// Returns nullptr for a bare INZ (no parentheses), which means "initialize
+// to the type default" -- already what the generated declaration does.
+static Expression* parseInzValue(const std::string& text, int lineNo,
+                                 const std::string& fieldName) {
+    std::string v = trim(text);
+    if (v.empty()) return nullptr;
+
+    if (v[0] == '*') {
+        std::string fig = upper(v);
+        if (fig == "*BLANK" || fig == "*BLANKS") return new Identifier("RPG_BLANKS");
+        if (fig == "*ZERO"  || fig == "*ZEROS")  return new Identifier("RPG_ZEROS");
+        if (fig == "*HIVAL") return new Identifier("RPG_HIVAL");
+        if (fig == "*LOVAL") return new Identifier("RPG_LOVAL");
+        if (fig == "*ON")    return new IntLiteral(1);
+        if (fig == "*OFF")   return new IntLiteral(0);
+        if (fig == "*NULL")  return new Identifier("nullptr");
+        report_fixed_format_error(lineNo, "D-spec: INZ(" + v + ") on field '" +
+                                   fieldName + "' — figurative constant not supported");
+        return nullptr;
+    }
+
+    if (v[0] == '\'') {
+        // Character literal; two adjacent quotes stand for one quote.
+        if (v.size() < 2 || v.back() != '\'') {
+            report_fixed_format_error(lineNo, "D-spec: INZ on field '" + fieldName +
+                                       "' — unterminated character literal");
+            return nullptr;
+        }
+        std::string body = v.substr(1, v.size() - 2);
+        std::string out;
+        for (size_t i = 0; i < body.size(); i++) {
+            out += body[i];
+            if (body[i] == '\'' && i + 1 < body.size() && body[i + 1] == '\'') i++;
+        }
+        return new StringLiteral(out);
+    }
+
+    // Numeric literal, with an optional sign. Anything else -- an
+    // expression, a named constant -- is rejected rather than dropped.
+    size_t start = (v[0] == '-' || v[0] == '+') ? 1 : 0;
+    bool seenDigit = false, seenDot = false, ok = start < v.size();
+    for (size_t i = start; i < v.size() && ok; i++) {
+        if (isdigit((unsigned char)v[i])) seenDigit = true;
+        else if (v[i] == '.' && !seenDot) seenDot = true;
+        else ok = false;
+    }
+    if (!ok || !seenDigit) {
+        report_fixed_format_error(lineNo, "D-spec: INZ(" + v + ") on field '" +
+                                   fieldName + "' — only literals and figurative "
+                                   "constants are supported");
+        return nullptr;
+    }
+    if (seenDot) return new FloatLiteral(atof(v.c_str()));
+    return new IntLiteral(atoi(v.c_str()));
+}
+
 // Name continuation (trailing "...") needs one line of carry-over state;
 // "current DS" tracks which DclDS subsequent blank-name subfield lines
 // belong to, cleared whenever a new standalone field or new DS starts.
@@ -438,6 +500,14 @@ static void handleDSpecLine(Program* program, DSpecState& state,
         if (it != kw.end()) f.like_var = upper(it->second);
         it = kw.find("DIM");
         if (it != kw.end() && !it->second.empty()) f.dim = atoi(it->second.c_str());
+        // A subfield initial value has nowhere to live on DSField, and
+        // silently dropping INZ is the bug this reader just stopped
+        // committing on standalone fields — so refuse it out loud.
+        if (kw.count("INZ")) {
+            report_fixed_format_error(lineNo, "D-spec: INZ on data structure subfield '" +
+                                       f.name + "' is not supported; initialize it in "
+                                       "*INZSR or the mainline instead");
+        }
         state.currentDS->fields.push_back(f);
     } else {
         // Reaching here with a blank definition type means a subfield-shaped
@@ -453,6 +523,11 @@ static void handleDSpecLine(Program* program, DSpecState& state,
         }
         auto* n = new DclS(upper(name), type, length, digits, decimals);
         n->line = lineNo;
+        auto inzIt = kw.find("INZ");
+        if (inzIt != kw.end()) {
+            Expression* v = parseInzValue(inzIt->second, lineNo, upper(name));
+            if (v) n->inz_value.reset(v);
+        }
         auto it = kw.find("LIKE");
         if (it != kw.end()) n->like_var = upper(it->second);
         it = kw.find("DIM");

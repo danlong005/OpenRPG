@@ -620,7 +620,10 @@ void CodeGen::visit(Program& node) {
         if (ds && ds->is_psds) uses_psds_ = true;
         auto* dclf = dynamic_cast<DclF*>(stmt.get());
         if (dclf && dclf->usage == "DISK") uses_rla_ = true;
-        if (dclf && dclf->usage == "WORKSTN") uses_dspf_ = true;
+        if (dclf && dclf->usage == "WORKSTN") {
+            uses_dspf_ = true;
+            dspf_includes_.push_back(dclf->name);
+        }
         if (auto* irf = dynamic_cast<IRecordFormat*>(stmt.get())) {
             flat_input_formats_[irf->fileName].push_back(irf);
             uses_flatfile_ = true;
@@ -683,6 +686,14 @@ void CodeGen::visit(Program& node) {
     out_ << "#include <iostream>\n";
     out_ << "#include <string>\n";
     out_ << "#include <vector>\n";
+    // The per-file display descriptors define the record-buffer structs.
+    // They used to be included from visit(DclF&), i.e. in the middle of
+    // main()'s body; they cannot stay there now that the declarations they
+    // type live at file scope, and a header that itself includes <string>
+    // must not land inside the anonymous namespace below.
+    for (const auto& dn : dspf_includes_) {
+        if (dspf_descs_.count(dn)) out_ << "#include \"" << dn << "_dspf.h\"\n";
+    }
 
     // Emit date/time format configuration if non-default
     if (!datfmt_.empty()) {
@@ -739,6 +750,83 @@ void CodeGen::visit(Program& node) {
         }
     }
 
+    // *ENTRY PLIST parameters become C++ reference parameters, and their
+    // D-specs are then suppressed rather than declared (entry_params_).
+    // That has to be settled before any declaration is emitted, because the
+    // declarations now go to file scope ahead of the procedures.
+    std::string entry_params_str;
+    bool entry_ok = true;
+    if (!node.entry_params.empty()) {
+        std::map<std::string, DclS*> decls;
+        for (auto* st : main_stmts)
+            if (auto* d = dynamic_cast<DclS*>(st)) decls[d->name] = d;
+        for (size_t i = 0; i < node.entry_params.size(); i++) {
+            const std::string& pname = node.entry_params[i].name;
+            auto dit = decls.find(pname);
+            if (dit == decls.end()) {
+                report_semantic_error(node.entry_params[i].line,
+                    "*ENTRY PLIST: parameter '" + pname +
+                    "' is not a declared standalone field — a caller passes it by address, "
+                    "so its type has to come from a D-spec in this member");
+                entry_ok = false;
+                continue;
+            }
+            entry_params_.insert(pname);
+            if (!entry_params_str.empty()) entry_params_str += ", ";
+            entry_params_str += typeToString(dit->second->type, dit->second->length) + "& " + pname;
+        }
+    }
+
+    // Module globals.
+    //
+    // RPG scopes everything declared in the main source section to the whole
+    // module: a subprocedure sees it, and so does the mainline. These used to
+    // be emitted as locals of main(), which made them invisible to every
+    // subprocedure — `gcount = gcount + 1` inside a DCL-PROC came out as
+    // "use of undeclared identifier". Emitting them at file scope, ahead of
+    // the procedures that reference them, is what gives them the lifetime and
+    // visibility RPG says they have.
+    //
+    // The anonymous namespace gives internal linkage, which matters once more
+    // than one module is linked together (NOMAIN/EXPORT): two modules that
+    // each declare a field called I must not collide. Genuinely shared
+    // variables go through EXPORT/IMPORT above, outside this namespace.
+    std::vector<Statement*> global_decls;
+    std::vector<Statement*> main_body;
+    for (auto* st : main_stmts) {
+        if (dynamic_cast<DclS*>(st) || dynamic_cast<DclC*>(st) || dynamic_cast<DclF*>(st))
+            global_decls.push_back(st);
+        else
+            main_body.push_back(st);
+    }
+    main_stmts.swap(main_body);
+
+    out_ << "\nnamespace { // module globals — visible to every subprocedure\n";
+    indent_ = 0;
+    at_file_scope_ = true;
+    out_ << "bool rpg_indicators[100] = {};\n";
+
+    // DS instances. Only the declaration belongs out here; anything that has
+    // to *run* (a vector's reserve, PSDS field initialisation) stays in main.
+    for (auto* s : ds_stmts) {
+        auto* ds = dynamic_cast<DclDS*>(s);
+        std::string type_name = ds->like_ds.empty() ? ds->name + "_t" : ds->like_ds + "_t";
+        if (ds->dim > 0 && (ds->dim_type == 1 || ds->dim_type == 2)) {
+            out_ << "std::vector<" << type_name << "> " << ds->name << ";\n";
+        } else if (ds->dim > 0) {
+            out_ << "std::array<" << type_name << ", " << ds->dim << "> " << ds->name << ";\n";
+        } else {
+            out_ << type_name << " " << ds->name << ";\n";
+        }
+    }
+
+    for (auto* s : global_decls) {
+        emitLineDirective(s->line);
+        s->accept(*this);
+    }
+    at_file_scope_ = false;
+    out_ << "} // namespace\n\n";
+
     // Emit prototypes and procedures
     for (auto* s : proc_stmts) {
         s->accept(*this);
@@ -766,56 +854,32 @@ void CodeGen::visit(Program& node) {
     // are suppressed below (entry_params_) and the C++ parameter is the
     // one storage location, exactly as p.929 describes.
     if (!node.entry_params.empty()) {
-        std::map<std::string, DclS*> decls;
-        for (auto* st : main_stmts)
-            if (auto* d = dynamic_cast<DclS*>(st)) decls[d->name] = d;
-        std::string params;
-        bool ok = true;
-        for (size_t i = 0; i < node.entry_params.size(); i++) {
-            const std::string& pname = node.entry_params[i].name;
-            auto dit = decls.find(pname);
-            if (dit == decls.end()) {
-                report_semantic_error(node.entry_params[i].line,
-                    "*ENTRY PLIST: parameter '" + pname +
-                    "' is not a declared standalone field — a caller passes it by address, "
-                    "so its type has to come from a D-spec in this member");
-                ok = false;
-                continue;
-            }
-            entry_params_.insert(pname);
-            if (!params.empty()) params += ", ";
-            params += typeToString(dit->second->type, dit->second->length) + "& " + pname;
-        }
-        if (!ok) return;
-        out_ << "void " << node.entry_name << "(" << params << ") {\n";
-        out_ << "    bool rpg_indicators[100] = {};\n";
+        if (!entry_ok) return;
+        out_ << "void " << node.entry_name << "(" << entry_params_str << ") {\n";
         void_return_ = true;
     } else if (uses_psds_) {
         // Emit main (use argc/argv when PSDS is declared)
         out_ << "int main(int argc, char* argv[]) {\n";
         out_ << "    (void)argc;\n";
         out_ << "    rpg_psds_init(argv[0]);\n";
-        out_ << "    bool rpg_indicators[100] = {};\n";
     } else {
         out_ << "int main() {\n";
-        out_ << "    bool rpg_indicators[100] = {};\n";
     }
     indent_ = 1;
 
-    // Emit DS instance declarations in main
+    // Anything a file-scope declaration needed to *run* rather than declare.
+    for (const auto& dline : deferred_init_) {
+        emitIndent();
+        out_ << dline << "\n";
+    }
+
+    // The DS instances themselves are declared at file scope above; what is
+    // left here is the part that has to execute.
     for (auto* s : ds_stmts) {
         auto* ds = dynamic_cast<DclDS*>(s);
-        std::string type_name = ds->like_ds.empty() ? ds->name + "_t" : ds->like_ds + "_t";
-        emitIndent();
         if (ds->dim > 0 && (ds->dim_type == 1 || ds->dim_type == 2)) {
-            // DIM(*VAR:max) or DIM(*AUTO:max) — use std::vector
-            out_ << "std::vector<" << type_name << "> " << ds->name << ";\n";
             emitIndent();
             out_ << ds->name << ".reserve(" << ds->dim << ");\n";
-        } else if (ds->dim > 0) {
-            out_ << "std::array<" << type_name << ", " << ds->dim << "> " << ds->name << ";\n";
-        } else {
-            out_ << type_name << " " << ds->name << ";\n";
         }
         // If this is a PSDS, initialize POS-mapped subfields from runtime
         if (ds->is_psds && ds->dim == 0) {
@@ -848,8 +912,6 @@ void CodeGen::visit(Program& node) {
             pssr_stmt = s;
         } else if (bsr) {
             sr_stmts.push_back(s);
-        } else if (dynamic_cast<DclS*>(s) || dynamic_cast<DclC*>(s) || dynamic_cast<DclF*>(s)) {
-            decl_stmts.push_back(s);
         } else {
             exec_stmts.push_back(s);
         }
@@ -1129,9 +1191,6 @@ void CodeGen::visit(DclF& node) {
         }
         const DspfFileInfo& dfi = dit->second;
 
-        // Include the generated header (struct types for each record format)
-        out_ << "#include \"" << node.name << "_dspf.h\"\n";
-
         // Emit struct instances and flat RPG field variables
         for (const DspfRecInfo& rec : dfi.records) {
             emitIndent();
@@ -1371,9 +1430,15 @@ void CodeGen::visit(DclS& node) {
         if (node.dim_type == 1 || node.dim_type == 2) {
             // DIM(*VAR:max) or DIM(*AUTO:max) — use std::vector
             out_ << "std::vector<" << typeToString(node.type, node.length) << "> " << node.name << ";\n";
-            // Reserve capacity for max elements
-            emitIndent();
-            out_ << node.name << ".reserve(" << node.dim << ");\n";
+            // Reserving capacity is a statement, not part of the
+            // declaration, so at file scope it has to be deferred into
+            // main() rather than emitted here.
+            if (at_file_scope_) {
+                deferred_init_.push_back(node.name + ".reserve(" + std::to_string(node.dim) + ");");
+            } else {
+                emitIndent();
+                out_ << node.name << ".reserve(" << node.dim << ");\n";
+            }
         } else {
             out_ << "std::array<" << typeToString(node.type, node.length) << ", " << node.dim << "> " << node.name << ";\n";
         }

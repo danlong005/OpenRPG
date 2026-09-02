@@ -1957,9 +1957,10 @@ Writing `OpenDSPF/tests/TEST27_CUSMNT.rpgle` — a full subfile maintenance
 program — turned these up before it would compile at all. The first two are
 the serious ones.
 
-**A subprocedure cannot see a global.** Every RPG global is emitted as a
-local of `main()`, and subprocedures are emitted as free functions above it,
-so any reference from a subprocedure fails to compile:
+**A subprocedure cannot see a global.** ✅ **Fixed 2026-09-01** — see the
+section below. Every RPG global was emitted as a local of `main()`, and
+subprocedures as free functions above it, so any reference from a
+subprocedure failed to compile:
 
 ```
 DCL-S gcount INT(5);
@@ -2018,3 +2019,48 @@ Smaller, all verified:
   at all.
 - `%EDITC(p:'3')` emits thousands separators. Worth checking against
   SC09-2508 — edit code 3 should suppress them.
+
+
+### Module globals now live at file scope ✅ (2026-09-01)
+
+RPG scopes everything declared in the main source section to the whole
+module — the mainline and every subprocedure see it. rpgc emitted those
+declarations as locals of `main()` and subprocedures as free functions
+above it, so a subprocedure referencing any of them failed to compile with
+`use of undeclared identifier`. That ruled out modular RPG generally and
+WORKSTN programs specifically, since `EXFMT` and `READC` move data through
+the record format's fields, which are globals.
+
+`visit(Program&)` now emits standalone fields, named constants, `DCL-F`
+declarations, data-structure instances and the indicator array into an
+anonymous namespace ahead of the procedures, instead of into `main()`.
+The anonymous namespace is what keeps them internal to the module, which
+matters as soon as two modules are linked together — two members that each
+declare a field called `I` must not collide, while genuinely shared
+variables keep going through `EXPORT`/`IMPORT` at true file scope.
+
+Three details the change had to get right:
+
+- **Declarations only.** Some declarations also emit something that has to
+  *run* — a `DIM(*VAR)` array's `reserve`, a PSDS's field initialisation.
+  Those are deferred into the top of `main()` rather than hoisted, via
+  `deferred_init_`.
+- **The `_dspf.h` include moved.** `visit(DclF&)` used to emit
+  `#include "NAME_dspf.h"` from the middle of `main()`'s body. It now goes
+  with the other includes: the declarations it types are at file scope, and
+  a header that itself includes `<string>` must not end up inside the
+  anonymous namespace.
+- **`*ENTRY PLIST` parameters resolve earlier.** They become C++ reference
+  parameters and their D-specs are suppressed rather than declared, so that
+  has to be settled before any declaration is emitted.
+
+Guarded by test227, which reads and writes a scalar, an array, a DS
+subfield, a named constant and an indicator from two subprocedures and has
+the mainline observe the results. Negative control: with the change stashed
+it fails to compile, exactly as before.
+
+Still open from the same finding: **`EXSR` resolves only backwards.**
+Subroutines are still `auto sr_X = [&](){}` lambdas emitted in source order
+inside `main()`, so a subroutine may only call one defined textually above
+it, and mutual recursion is impossible. RPG places no ordering requirement
+on subroutines.

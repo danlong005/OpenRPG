@@ -163,6 +163,9 @@ private:
 
     std::map<std::string, ExternalFileDesc> ext_file_descs_; // from pre-pass
     std::map<std::string, DspfFileInfo>     dspf_descs_;      // from .dspfd pre-pass
+    std::vector<std::string> dspf_includes_; // WORKSTN files whose _dspf.h to include, in source order
+    bool at_file_scope_ = false;             // emitting the module-global block
+    std::vector<std::string> deferred_init_; // statements a file-scope decl needs run in main()
     std::map<std::string, DclF*> file_defs_;  // DCL-F nodes by name
     // Program-described I-spec/O-spec layouts, collected in a first pass
     // over Program::statements (fixed_reader.cpp constructs these AST

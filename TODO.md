@@ -1906,3 +1906,115 @@ member's C-spec to host modern free-format statements.
 | 212 | Fixed C-spec: MOVE invalid date -> 112 |
 | 213 | Fixed C-spec: reject MOVE *JOBRUN |
 | 214 | Fixed C-spec: reject MOVE time *USA to numeric |
+
+### Compiler Directives — conditionals don't work in fixed format
+
+The Implemented Features list above claims `/DEFINE`, `/UNDEFINE`,
+`/IF DEFINED`, `/IF NOT DEFINED`, `/ELSEIF`, `/ELSE`, `/ENDIF`. They work in
+free-format source only. In fixed-format source they are silently dropped
+and **both branches compile** — no error, no warning:
+
+```
+      /IF DEFINED(DEBUG)
+     C                   EVAL      msg = 'debug on'
+      /ELSE
+     C                   EVAL      msg = 'debug off'
+      /ENDIF
+```
+
+emits both EVALs; the second assignment wins. Cause:
+`fixed_reader.cpp`'s `expandCopyDirectives()` handles `/COPY` and
+`/INCLUDE` itself and never routes anything else through the lexer's
+conditional machinery (`src/lexer.l:540-640`).
+
+Fixing it means evaluating conditionals *interleaved* with copy expansion
+rather than before or after it — `/IF` has to be able to guard a `/COPY`,
+a copybook has to be able to contain `/IF`, and `/DEFINE` is global to the
+compile as it is on IBM.
+
+Found alongside, same area, all verified:
+- `/EOF` is ignored in fixed-format source (same root cause).
+- `/EOF` inside a `/COPY` member terminates the **whole compile**: it is
+  `yyterminate()`, which ends the scan instead of popping the include
+  buffer. A copybook ending in `/EOF` silently discards every line of the
+  including program — exit status 0, a program that declares nothing and
+  does nothing. IBM's `/EOF` ends only the current member.
+- Conditionals inside a `/FREE` block are a hard syntax error. Loud, at
+  least.
+- No `-D` flag on rpgc, and nothing predefined (`*CRTBNDRPG`, `*ILERPG`,
+  `*VxRxMx`). A symbol can only be defined by the source that uses it,
+  which removes most of the reason to have `/IF` at all. IBM has `DEFINE()`
+  on CRTBNDRPG.
+- `/SET` is accepted and dropped, so `/SET DATFMT(*DMY)` changes nothing
+  with no diagnostic.
+
+`README.md:397` advertises conditional compilation in the feature list
+without the fixed-format caveat.
+
+### Found by writing an interactive program (2026-09-01)
+
+Writing `OpenDSPF/tests/TEST27_CUSMNT.rpgle` — a full subfile maintenance
+program — turned these up before it would compile at all. The first two are
+the serious ones.
+
+**A subprocedure cannot see a global.** Every RPG global is emitted as a
+local of `main()`, and subprocedures are emitted as free functions above it,
+so any reference from a subprocedure fails to compile:
+
+```
+DCL-S gcount INT(5);
+DCL-PROC Bump;
+  DCL-PI Bump; END-PI;
+  gcount = gcount + 1;   // error: use of undeclared identifier 'GCOUNT'
+  *IN10 = *ON;           // error: use of undeclared identifier 'rpg_indicators'
+END-PROC;
+```
+
+In RPG, anything declared in the main source section is global to every
+subprocedure in the module. As it stands subprocedures are usable only as
+pure functions over their parameters. It rules out WORKSTN programs
+entirely — `EXFMT` and `READC` move data through the record format's
+fields, which are globals — which is why TEST27 is written with
+subroutines.
+
+**`EXSR` only resolves backwards.** Subroutines become `auto sr_X = [&](){}`
+lambdas emitted in source order inside `main()`, so a subroutine may only
+call one defined textually above it. RPG places no ordering requirement on
+subroutines, and the conventional layout — mainline first, then subroutines
+in the order the reader meets them — is exactly the one that fails. Mutual
+recursion is impossible. TEST27 orders its subroutines leaf-first to work
+around it.
+
+**Character comparison does not blank-pad.** It compiles to plain
+`std::string ==`. So `if myfield = ' '` — the standard way to ask whether a
+field is blank — is **false** for any `CHAR(n)` with n > 1 that holds
+blanks. `*BLANKS` doesn't help: it works in an assignment but emits an
+undeclared `RPG_BLANKS` in a comparison. Two of the three normal ways to
+test a field for blank are broken.
+
+**DS subfields lose their declared attributes.** A `CHAR(n)` subfield is
+emitted as an uninitialised `std::string`, so it starts empty rather than
+as n blanks — while a standalone `CHAR(n)` is correctly blank-filled. A
+`PACKED(9:2)` subfield becomes a bare `double` with no scale, so
+`%CHAR(ds.field)` prints `1250.000000` where the same value in a standalone
+field prints `1250.00`. Same family as the four defects tests 215-219
+found: a value that is not what RPG says it is.
+
+Smaller, all verified:
+- `DCL-PROC` with no `DCL-PI` is a syntax error. IBM allows the interface
+  to be omitted for a procedure with no parameters and no return value.
+- `DCL-PI *N;` is a syntax error. `*N` is IBM's standard unnamed-interface
+  form and the recommended one in modern code.
+- A bare `procname(args);` statement is a syntax error; `CALLP` is
+  required. IBM made `CALLP` optional in free form.
+- An unqualified DS subfield cannot be referenced by its bare name — the
+  subfield is emitted inside the struct but referenced unqualified.
+- `IND` is not accepted as a DS subfield type.
+- `CONST` on a procedure-interface parameter is a syntax error.
+- `INZ` on a `ZONED` standalone is a syntax error, though `ZONED` itself
+  works.
+- `EXFMT` and `READC` are absent from the fixed-format C-spec opcode set,
+  so no legacy interactive program can be compiled in native fixed columns
+  at all.
+- `%EDITC(p:'3')` emits thousands separators. Worth checking against
+  SC09-2508 — edit code 3 should suppress them.

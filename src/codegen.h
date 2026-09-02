@@ -226,6 +226,17 @@ private:
     std::map<std::string, int> var_lengths_; // for CHAR length
     std::map<std::string, int> var_digits_;   // for PACKED/ZONED digit count
     std::map<std::string, int> var_decimals_; // for PACKED/ZONED decimal places (scale)
+
+    // Decimal positions declared for whatever `expr` names, or -1 when the
+    // expression is not a plain reference to a declared field (an arbitrary
+    // arithmetic expression has no declaration to consult).
+    int operandDecimals(const rpg::Expression* expr) const;
+
+    // DS name -> the subfields of it that are OVERLAY views rather than
+    // storage. A view is reached through a member function, so `ds.field`
+    // has to be emitted as `ds.field()`; this is what tells DotExpr which
+    // ones those are.
+    std::map<std::string, std::set<std::string>> overlay_subfields_;
     std::map<std::string, std::string> var_datfmt_; // per-field DATFMT (DATE fields)
     std::map<std::string, std::string> var_timfmt_; // per-field TIMFMT (TIME fields)
     std::set<std::string> has_inz_; // variables with INZ values

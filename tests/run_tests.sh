@@ -755,6 +755,31 @@ run_test "212" "Fixed C-spec: MOVE bad date -> 112" "$TESTDIR/test212_fixed_cspe
 run_test "213" "Fixed C-spec: reject MOVE *JOBRUN" "$TESTDIR/test213_fixed_cspec_err_move_jobrun.rpgle" "error"
 run_test "214" "Fixed C-spec: reject MOVE time *USA to numeric" "$TESTDIR/test214_fixed_cspec_err_move_usa_num.rpgle" "error"
 
+# ── Whole-program tests ──────────────────────────────────────────────────
+# Full-size members written the way real shop code is written, rather than
+# one construct per file: several hundred lines each, mixing H/F/D/I/C/O
+# specs, subroutines, tables, conditioning indicators and legacy opcodes in
+# one compilation unit. They exist to catch the interaction failures that
+# single-feature tests structurally cannot — every one of them is exercised
+# only when features meet.
+rm -f "$TESTDIR/../testfl215.txt"
+run_test "215" "Program: A/R aging report" "$TESTDIR/test215_prog_ar_aging.rpgle" "run"
+rm -f "$TESTDIR/../testfl216.txt"
+run_test "216" "Program: GL batch edit and posting" "$TESTDIR/test216_prog_gl_post.rpgle" "run"
+run_test "217" "Program: inventory reorder analysis" "$TESTDIR/test217_prog_inv_reorder.rpgle" "run"
+run_test "218b" "Program: NETPAY callee module" "$TESTDIR/NETPAY.rpgle" "compile-only"
+run_test "218" "Program: payroll register (CALL/PLIST)" "$TESTDIR/test218_prog_payroll.rpgle" "run" "$TMPDIR/test218b.o"
+run_test "219" "Program: order credit release (RLA+SQL)" "$TESTDIR/test219_prog_order_release.sqlrpgle" "run-sql"
+
+# --- Regression tests for the data-corruption defects the program corpus
+# --- above turned up.  Each one asserts a value that came out wrong before
+# --- the fix, so a re-regression shows up as a diff rather than as silence.
+run_test "220" "OVERLAY subfields alias the base" "$TESTDIR/test220_overlay_alias.rpgle" "run"
+rm -f "$TESTDIR/../testfl221.txt"
+run_test "221" "O-spec numeric decimal round trip" "$TESTDIR/test221_ospec_decimals.rpgle" "run"
+run_test "222" "Half-adjust (H) at result decimals" "$TESTDIR/test222_half_adjust.rpgle" "run"
+run_test "223" "%EDITC honours declared decimals" "$TESTDIR/test223_editc_decimals.rpgle" "run"
+
 # ── Customer / drop-in tests ─────────────────────────────────────────────
 # Drop any .rpgle or .sqlrpgle file into tests/customer/ and it will be
 # compile-tested automatically — no registration or expected output needed.

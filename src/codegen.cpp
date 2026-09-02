@@ -1293,6 +1293,19 @@ void CodeGen::visit(DclC& node) {
     }
 }
 
+int CodeGen::operandDecimals(const rpg::Expression* expr) const {
+    std::string name;
+    if (auto* id = dynamic_cast<const rpg::Identifier*>(expr)) {
+        name = id->name;
+    } else if (auto* arr = dynamic_cast<const rpg::ArrayAccess*>(expr)) {
+        // Every element of an array shares the array's declared scale.
+        name = arr->name;
+    }
+    if (name.empty()) return -1;
+    auto it = var_decimals_.find(name);
+    return (it == var_decimals_.end()) ? -1 : it->second;
+}
+
 void CodeGen::visit(DclS& node) {
     // Track variable info for RESET/CLEAR
     var_types_[node.name] = node.type;
@@ -1573,7 +1586,15 @@ void CodeGen::visit(EvalStmt& node) {
                           t == RPGType::BINDEC);
         }
         if (is_numeric) {
-            rhs = "static_cast<decltype(" + target_str + ")>(std::round(static_cast<double>(" + rhs + ")))";
+            // Round at the target's own decimal position. std::round alone
+            // rounds at the units position, which silently drops the cents
+            // of any scaled result; and decltype on a by-reference target
+            // (a *ENTRY PARM, say) names a reference type, which cannot be
+            // constructed from the rounded temporary at all.
+            int dec = var_decimals_.count(tgt_id->name)
+                      ? var_decimals_.at(tgt_id->name) : 0;
+            rhs = "rpg_half_adjust(static_cast<double>(" + rhs + "), " +
+                  std::to_string(dec) + ")";
         }
     }
 
@@ -1778,14 +1799,65 @@ void CodeGen::visit(DclDS& node) {
     // the fallback does apply. Unresolved LIKE falls back to the field's
     // own placeholder type, same as top-level DclS's LIKE handling above.
     std::map<std::string, std::pair<RPGType, int>> ds_local_types;
+    // subfield name -> (ultimate base subfield, 1-based position in it)
+    std::map<std::string, std::pair<std::string, int>> ds_overlay_bases;
     for (auto& f : node.fields) {
         if (!f.overlay_field.empty()) {
-            out_ << "    " << typeToString(f.type, f.length) << " " << f.name;
-            if (f.type == RPGType::INT10) out_ << " = 0";
-            else if (f.type == RPGType::PACKED || f.type == RPGType::ZONED) out_ << " = 0.0";
-            out_ << "; // OVERLAY(" << f.overlay_field;
-            if (f.overlay_pos > 0) out_ << ":" << f.overlay_pos;
-            out_ << ")\n";
+            // OVERLAY redefines bytes that belong to another subfield; it
+            // does not add storage. Emitting it as an independent member
+            // (which is what used to happen) meant writing either field
+            // left the other untouched -- exactly the opposite of what
+            // the keyword means -- so the subfield becomes a view instead.
+            //
+            // Resolve to the ultimate base, so an overlay of an overlay
+            // accumulates its offset rather than pointing at a view.
+            std::string base = f.overlay_field;
+            int absPos = (f.overlay_pos > 0) ? f.overlay_pos : 1;
+            for (int guard = 0; guard < 32; ++guard) {
+                auto bit = ds_overlay_bases.find(base);
+                if (bit == ds_overlay_bases.end()) break;
+                absPos += bit->second.second - 1;
+                base = bit->second.first;
+            }
+
+            auto bt = ds_local_types.find(base);
+            int width = (f.length > 0) ? f.length : f.digits;
+            bool baseIsChar = bt != ds_local_types.end() &&
+                              (bt->second.first == RPGType::CHAR ||
+                               bt->second.first == RPGType::VARCHAR);
+            bool ovlNumeric = (f.type == RPGType::PACKED || f.type == RPGType::ZONED ||
+                               f.type == RPGType::INT10  || f.type == RPGType::UNS);
+            bool ovlChar = (f.type == RPGType::CHAR || f.type == RPGType::VARCHAR);
+
+            if (bt == ds_local_types.end()) {
+                report_semantic_error(0, "OVERLAY(" + f.overlay_field + ") on subfield '" +
+                    f.name + "': no subfield named '" + base +
+                    "' is declared earlier in this data structure");
+            } else if (!baseIsChar) {
+                // A numeric subfield is a double here, with no byte layout
+                // to lay anything over. Saying so beats silently sharing
+                // nothing, which is the bug this change exists to fix.
+                report_semantic_error(0, "OVERLAY(" + f.overlay_field + ") on subfield '" +
+                    f.name + "': the overlaid field must be character; this compiler "
+                    "gives a numeric subfield no byte-level representation to redefine");
+            } else if (!ovlChar && !ovlNumeric) {
+                report_semantic_error(0, "OVERLAY(" + f.overlay_field + ") on subfield '" +
+                    f.name + "': only character and numeric subfields can overlay another field");
+            } else if (ovlChar) {
+                out_ << "    RpgCharOverlay " << f.name << "() { return RpgCharOverlay("
+                     << base << ", " << absPos << ", " << width << "); }"
+                     << " // OVERLAY(" << f.overlay_field;
+                if (f.overlay_pos > 0) out_ << ":" << f.overlay_pos;
+                out_ << ")\n";
+            } else {
+                out_ << "    RpgNumOverlay " << f.name << "() { return RpgNumOverlay("
+                     << base << ", " << absPos << ", " << width << ", " << f.decimals << "); }"
+                     << " // OVERLAY(" << f.overlay_field;
+                if (f.overlay_pos > 0) out_ << ":" << f.overlay_pos;
+                out_ << ")\n";
+            }
+            ds_overlay_bases[f.name] = {base, absPos};
+            overlay_subfields_[node.name].insert(f.name);
             ds_local_types[f.name] = {f.type, f.length};
         } else if (!f.likeds.empty()) {
             // LIKEDS subfield: emit nested struct type
@@ -1879,15 +1951,25 @@ void CodeGen::visit(DclEnum& node) {
 }
 
 void CodeGen::visit(DotExpr& node) {
+    // An OVERLAY subfield is a view built on demand, not a data member, so
+    // it is reached by calling its accessor.
+    auto isOverlay = [&](const std::string& dsName) {
+        auto it = overlay_subfields_.find(dsName);
+        return it != overlay_subfields_.end() && it->second.count(node.field) > 0;
+    };
+
     // Check if object is a FuncCall — treat as array(idx).field
     auto* fc = dynamic_cast<FuncCall*>(node.object.get());
     if (fc && fc->args.size() == 1) {
         expr_ << fc->name << "[";
         fc->args[0]->accept(*this);
         expr_ << " - 1]." << node.field;
+        if (isOverlay(fc->name)) expr_ << "()";
     } else {
         node.object->accept(*this);
         expr_ << "." << node.field;
+        auto* obj = dynamic_cast<Identifier*>(node.object.get());
+        if (obj && isOverlay(obj->name)) expr_ << "()";
     }
 }
 
@@ -2964,12 +3046,19 @@ void CodeGen::visit(BIFCall& node) {
         }
         expr_ << ")";
     } else if (node.name == "EDITC") {
-        // %EDITC(number : editcode)
+        // %EDITC(number : editcode). The edit codes carry no scale of
+        // their own, so the operand's declared decimal positions decide
+        // how many the result shows. An operand that is a computed
+        // expression rather than a declared field has no declaration to
+        // consult; two is kept for that case, which is what money --
+        // overwhelmingly what %EDITC is handed -- wants.
+        int dec = operandDecimals(node.args[0].get());
+        if (dec < 0) dec = 2;
         expr_ << "rpg_editc(";
         node.args[0]->accept(*this);
         expr_ << ", ";
         node.args[1]->accept(*this);
-        expr_ << ")";
+        expr_ << ", " << dec << ")";
     } else if (node.name == "EDITW") {
         // %EDITW(number : editword)
         expr_ << "rpg_editw(";
@@ -4522,13 +4611,21 @@ void CodeGen::visit(WriteStmt& node) {
                 if (width < 1) width = 1;
                 std::string valueExpr;
                 if (!f.fieldName.empty()) {
+                    // The O-spec entry carries no scale of its own, so the
+                    // field's declaration supplies it. Writing everything at
+                    // zero decimals while the I-spec reads at the declared
+                    // scale made a write/read round-trip through the same
+                    // file divide the value by 10^decimals.
+                    int fdec = var_decimals_.count(f.fieldName)
+                               ? var_decimals_[f.fieldName] : 0;
                     if (f.editCode != '\0') {
-                        valueExpr = "rpg_editc(" + f.fieldName + ", \"" + std::string(1, f.editCode) + "\")";
+                        valueExpr = "rpg_editc(" + f.fieldName + ", \"" + std::string(1, f.editCode) +
+                                    "\", " + std::to_string(fdec) + ")";
                     } else if (var_types_.count(f.fieldName) && typeToString(var_types_[f.fieldName]) == "std::string") {
                         valueExpr = f.fieldName;
                     } else {
                         valueExpr = "rpg_flatfile_format_numeric(static_cast<double>(" + f.fieldName +
-                                     "), " + std::to_string(width) + ", 0)";
+                                     "), " + std::to_string(width) + ", " + std::to_string(fdec) + ")";
                     }
                 } else {
                     valueExpr = "std::string(\"" + cppEscape(f.constant) + "\")";

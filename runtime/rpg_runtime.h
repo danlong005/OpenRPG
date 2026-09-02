@@ -12,6 +12,7 @@
 #include <ctime>
 #include <cstring>
 #include <sstream>
+#include <ostream>
 #include <iomanip>
 #include <cctype>
 
@@ -117,17 +118,168 @@ inline std::string rpg_replace(const std::string& newstr, const std::string& sou
     return result;
 }
 
-// %EDITC - format number with edit code
-inline std::string rpg_editc(double val, const std::string& code) {
+// ---------------------------------------------------------------------
+// OVERLAY subfield views.
+//
+// A subfield declared with OVERLAY is not storage of its own: it is a
+// window onto bytes belonging to the field it overlays, so writing either
+// one is visible through the other. These views hold their reference only
+// for the duration of one access -- a data structure exposes them through
+// member functions that build a view on the spot -- so the structure
+// itself stays a plain copyable aggregate.
+//
+// The overlaid field is character data. A numeric subfield laid over it
+// reads and writes plain ASCII digits with an implied decimal point, the
+// same convention this runtime's program-described flat files use, since
+// a numeric field here has no byte-level representation of its own.
+// ---------------------------------------------------------------------
+// A numeric overlay deliberately does NOT inherit the character view's
+// std::string conversion: a class offering conversions to both double and
+// std::string makes every runtime helper overloaded on the two ambiguous.
+class RpgOverlayBase {
+public:
+    RpgOverlayBase(std::string& base, int pos, int len)
+        : base_(base), pos_(static_cast<size_t>(pos - 1)),
+          len_(static_cast<size_t>(len)) {}
+
+protected:
+    // The overlaid field is padded, never truncated: a short assignment to
+    // the base leaves the trailing window readable as blanks rather than
+    // making the slice fall off the end.
+    void reserveBase() {
+        if (base_.size() < pos_ + len_) base_.resize(pos_ + len_, ' ');
+    }
+    std::string read() const {
+        if (base_.size() >= pos_ + len_) return base_.substr(pos_, len_);
+        std::string padded = base_;
+        padded.resize(pos_ + len_, ' ');
+        return padded.substr(pos_, len_);
+    }
+    void writeRaw(const std::string& value) {
+        reserveBase();
+        std::string v = value;
+        if (v.size() < len_) v.resize(len_, ' ');
+        else if (v.size() > len_) v.resize(len_);
+        base_.replace(pos_, len_, v);
+    }
+    std::string& base_;
+    size_t pos_;
+    size_t len_;
+};
+
+class RpgCharOverlay : public RpgOverlayBase {
+public:
+    RpgCharOverlay(std::string& base, int pos, int len)
+        : RpgOverlayBase(base, pos, len) {}
+
+    operator std::string() const { return read(); }
+    std::string str() const { return read(); }
+
+    RpgCharOverlay& operator=(const std::string& value) { writeRaw(value); return *this; }
+    RpgCharOverlay& operator=(const char* value) { writeRaw(std::string(value)); return *this; }
+    RpgCharOverlay& operator=(const RpgCharOverlay& other) { writeRaw(other.read()); return *this; }
+};
+
+class RpgNumOverlay : public RpgOverlayBase {
+public:
+    RpgNumOverlay(std::string& base, int pos, int len, int decimals)
+        : RpgOverlayBase(base, pos, len), decimals_(decimals < 0 ? 0 : decimals) {}
+
+    operator double() const {
+        std::string raw = read();
+        double v = 0.0;
+        try { v = std::stod(raw); } catch (...) { return 0.0; }
+        for (int i = 0; i < decimals_; i++) v /= 10.0;
+        return v;
+    }
+    double val() const { return static_cast<double>(*this); }
+
+    RpgNumOverlay& operator=(double value) {
+        bool neg = value < 0;
+        double scaled = neg ? -value : value;
+        for (int i = 0; i < decimals_; i++) scaled *= 10.0;
+        long long digits = static_cast<long long>(scaled + 0.5);
+        std::string text = std::to_string(digits);
+        size_t room = neg ? (len_ > 0 ? len_ - 1 : 0) : len_;
+        if (text.size() < room) text = std::string(room - text.size(), '0') + text;
+        else if (text.size() > room) text = text.substr(text.size() - room);
+        if (neg) text = "-" + text;
+        writeRaw(text);
+        return *this;
+    }
+    RpgNumOverlay& operator=(const RpgNumOverlay& other) { return *this = other.val(); }
+
+private:
+    int decimals_;
+};
+
+// The standard library's operator+, comparisons and operator<< for
+// std::string are function templates, and template argument deduction
+// never considers a user-defined conversion -- so `operator std::string()`
+// above is invisible to `"x" + ds.FLD()`. These non-template overloads give
+// an overlay view the ordinary string behaviour codegen assumes it has.
+inline std::string operator+(const RpgCharOverlay& a, const std::string& b) { return a.str() + b; }
+inline std::string operator+(const std::string& a, const RpgCharOverlay& b) { return a + b.str(); }
+inline std::string operator+(const RpgCharOverlay& a, const char* b) { return a.str() + b; }
+inline std::string operator+(const char* a, const RpgCharOverlay& b) { return a + b.str(); }
+inline std::string operator+(const RpgCharOverlay& a, const RpgCharOverlay& b) { return a.str() + b.str(); }
+
+inline bool operator==(const RpgCharOverlay& a, const std::string& b) { return a.str() == b; }
+inline bool operator==(const std::string& a, const RpgCharOverlay& b) { return a == b.str(); }
+inline bool operator==(const RpgCharOverlay& a, const char* b) { return a.str() == b; }
+inline bool operator==(const char* a, const RpgCharOverlay& b) { return a == b.str(); }
+inline bool operator==(const RpgCharOverlay& a, const RpgCharOverlay& b) { return a.str() == b.str(); }
+
+inline bool operator!=(const RpgCharOverlay& a, const std::string& b) { return !(a == b); }
+inline bool operator!=(const std::string& a, const RpgCharOverlay& b) { return !(a == b); }
+inline bool operator!=(const RpgCharOverlay& a, const char* b) { return !(a == b); }
+inline bool operator!=(const char* a, const RpgCharOverlay& b) { return !(a == b); }
+inline bool operator!=(const RpgCharOverlay& a, const RpgCharOverlay& b) { return !(a == b); }
+
+inline bool operator<(const RpgCharOverlay& a, const std::string& b) { return a.str() < b; }
+inline bool operator<(const std::string& a, const RpgCharOverlay& b) { return a < b.str(); }
+inline bool operator<(const RpgCharOverlay& a, const RpgCharOverlay& b) { return a.str() < b.str(); }
+inline bool operator>(const RpgCharOverlay& a, const std::string& b) { return b < a.str(); }
+inline bool operator>(const std::string& a, const RpgCharOverlay& b) { return b.str() < a; }
+inline bool operator>(const RpgCharOverlay& a, const RpgCharOverlay& b) { return b.str() < a.str(); }
+inline bool operator<=(const RpgCharOverlay& a, const std::string& b) { return !(a > b); }
+inline bool operator<=(const std::string& a, const RpgCharOverlay& b) { return !(a > b); }
+inline bool operator>=(const RpgCharOverlay& a, const std::string& b) { return !(a < b); }
+inline bool operator>=(const std::string& a, const RpgCharOverlay& b) { return !(a < b); }
+
+inline std::ostream& operator<<(std::ostream& os, const RpgCharOverlay& v) { return os << v.str(); }
+
+// Half-adjust (the (H) operation extender): round at the result field's
+// own decimal position, not at the units position. RPG defines it as
+// adding 5 one position to the right of the last retained digit, which is
+// round-half-away-from-zero at `decimals` places -- so a PACKED(11:2)
+// result keeps its cents instead of losing them to a whole-number round.
+inline double rpg_half_adjust(double val, int decimals) {
+    if (decimals < 0) decimals = 0;
+    double scale = 1.0;
+    for (int i = 0; i < decimals; i++) scale *= 10.0;
+    return std::round(val * scale) / scale;
+}
+
+// %EDITC - format number with edit code.
+//
+// `decimals` is the operand's own declared decimal position count. It is
+// a parameter rather than a fixed 2 because the edit codes never imply a
+// scale of their own: a PACKED(5:0) counter edits as "15", not "15.00".
+inline std::string rpg_editc(double val, const std::string& code, int decimals) {
     bool negative = val < 0;
     double absval = negative ? -val : val;
+    if (decimals < 0) decimals = 0;
 
-    // Split into integer and decimal parts
-    long long intpart = static_cast<long long>(absval * 100 + 0.5);
-    long long cents = intpart % 100;
-    long long dollars = intpart / 100;
+    // Split into whole and fractional parts at the operand's own scale
+    double scale = 1.0;
+    for (int i = 0; i < decimals; i++) scale *= 10.0;
+    long long scaled = static_cast<long long>(absval * scale + 0.5);
+    long long divisor = static_cast<long long>(scale);
+    long long fraction = (decimals > 0) ? scaled % divisor : 0;
+    long long whole = (decimals > 0) ? scaled / divisor : scaled;
 
-    std::string digits = std::to_string(dollars);
+    std::string digits = std::to_string(whole);
     char editcode = code.empty() ? '1' : code[0];
 
     bool use_commas = (editcode == '1' || editcode == '3');
@@ -138,7 +290,7 @@ inline std::string rpg_editc(double val, const std::string& code) {
     if (show_all_zeros) {
         // Edit code X: show all digits with leading zeros
         char buf[32];
-        snprintf(buf, sizeof(buf), "%07.2f", absval);
+        snprintf(buf, sizeof(buf), "%0*.*f", 7, decimals, absval);
         return std::string(buf);
     }
 
@@ -154,9 +306,13 @@ inline std::string rpg_editc(double val, const std::string& code) {
         digits = with_commas;
     }
 
-    char buf[8];
-    snprintf(buf, sizeof(buf), ".%02lld", cents);
-    result = digits + buf;
+    if (decimals > 0) {
+        char buf[32];
+        snprintf(buf, sizeof(buf), ".%0*lld", decimals, fraction);
+        result = digits + buf;
+    } else {
+        result = digits;
+    }
 
     if (show_sign && negative) {
         result += "CR";
@@ -165,8 +321,8 @@ inline std::string rpg_editc(double val, const std::string& code) {
     return result;
 }
 
-inline std::string rpg_editc(int val, const std::string& code) {
-    return rpg_editc(static_cast<double>(val), code);
+inline std::string rpg_editc(int val, const std::string& code, int decimals) {
+    return rpg_editc(static_cast<double>(val), code, decimals);
 }
 
 // %EDITW - format number with edit word

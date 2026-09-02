@@ -1,0 +1,23 @@
+A/R AGING AS OF 2026-06-30
+--------------------------------
+INV1001 15 1,250.00 Current
+INV1002 41 340.50 31-60 days
+INV1003 121 980.75 Over 90
+  TOTAL C001   Acme Manufacturing 2,571.25
+INV2001 2 75.25 Current
+INV2002 76 1,500.00 61-90 days
+INV2003 0 99.99 Current
+  TOTAL C002   Bolt & Nut Supply 1,475.26
+INV3001 140 225.00 Over 90
+INV3002 29 60.00 Current
+INV3003 56 410.10 31-60 days
+INV3004 97 1,875.00 Over 90
+  TOTAL C003   Consolidated Tool 2,570.10
+--------------------------------
+Current 4 1,285.26
+31-60 days 2 750.60
+61-90 days 1 1,500.00
+Over 90 3 3,080.75
+ITEMS READ   10
+CREDIT MEMOS 99.99
+GRAND TOTAL  6,616.61

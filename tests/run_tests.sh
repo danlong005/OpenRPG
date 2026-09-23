@@ -806,6 +806,7 @@ run_test "247" "Reject assignment to a CONST parm" "$TESTDIR/test247_err_const_a
 run_test "248" "DCL-PROC without DCL-PI" "$TESTDIR/test248_proc_no_pi.rpgle" "run"
 run_test "249" "Every scalar type as a DS subfield" "$TESTDIR/test249_ds_subfield_types.rpgle" "run"
 run_test "250" "DCL-S keywords in any combination" "$TESTDIR/test250_dcl_s_keywords.rpgle" "run"
+run_test "251" "DCL-DS header keywords, TEMPLATE" "$TESTDIR/test251_ds_template.rpgle" "run"
 
 # ── Customer / drop-in tests ─────────────────────────────────────────────
 # Drop any .rpgle or .sqlrpgle file into tests/customer/ and it will be

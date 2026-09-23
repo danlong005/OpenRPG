@@ -181,9 +181,20 @@ static int g_ret_len = 0, g_ret_digits = 0, g_ret_dec = 0;
     std::vector<rpg::EnumConstant>* enum_const_list;
     std::vector<std::string>* str_list;
     DclSKws* dcl_kws;
+    rpg::DclDS* ds_hdr;
 }
 
 %code {
+// Combines the header keywords written before and after LIKEDS or PSDS.
+static rpg::DclDS* merge_ds_hdr(rpg::DclDS* a, rpg::DclDS* b) {
+    a->qualified   = a->qualified || b->qualified;
+    a->is_template = a->is_template || b->is_template;
+    if (b->dim) { a->dim = b->dim; a->dim_type = b->dim_type; }
+    if (!b->prefix.empty()) { a->prefix = b->prefix; a->prefix_nbr = b->prefix_nbr; }
+    delete b;
+    return a;
+}
+
 // Builds a DCL-S from its type (a dcl_type result) and its keywords.
 static rpg::DclS* make_dcl_s(const char* name, rpg::ParamDecl* t, DclSKws* k) {
     auto* n = new rpg::DclS(name, t->type, t->length, t->digits, t->decimals, k->is_const,
@@ -306,6 +317,7 @@ static rpg::DclS* make_dcl_s(const char* name, rpg::ParamDecl* t, DclSKws* k) {
 %type <ival> pi_return_type proc_export
 %type <param_decl> dcl_type
 %type <dcl_kws> dcl_kws
+%type <ds_hdr> ds_hdr_kws
 %type <sval> ident
 %type <enum_const_list> enum_constants enum_constant
 %type <str_list> overload_list
@@ -1576,185 +1588,47 @@ enum_constant:
 
 /* --- Data Structures --- */
 
+/* A data structure: header keywords in any order, then its subfields and
+   END-DS — or, for LIKEDS, no subfields of its own. This replaced 18
+   alternatives, each a fixed subset of QUALIFIED, DIM, LIKEDS, PREFIX and
+   PSDS in a fixed order, so TEMPLATE, or QUALIFIED after DIM with PREFIX,
+   or any order nobody had spelled out, was a syntax error. PSDS/SDS have
+   a slot of their own. A DS that isn't LIKEDS ends with END-DS, as IBM
+   requires: the old grammar also took `DCL-DS x PSDS;` with nothing after
+   it, which is not valid RPG and made a PSDS's first subfield ambiguous
+   with a statement once the header keywords were generalized. */
 dcl_ds_stmt:
-    /* DCL-DS name QUALIFIED; fields END-DS; */
-    KW_DCL_DS IDENTIFIER KW_QUALIFIED SEMICOLON ds_fields KW_END_DS SEMICOLON {
-        auto* ds = new rpg::DclDS($2);
-        ds->qualified = true;
-        ds->fields = std::move($5->fields);
-        delete $5;
-        free($2);
+    KW_DCL_DS IDENTIFIER ds_hdr_kws SEMICOLON ds_fields KW_END_DS SEMICOLON {
+        auto* ds = $3; ds->name = $2; free($2);
+        ds->fields = std::move($5->fields); delete $5;
         $$ = ds;
     }
-    /* DCL-DS name; fields END-DS; (not qualified) */
-    | KW_DCL_DS IDENTIFIER SEMICOLON ds_fields KW_END_DS SEMICOLON {
-        auto* ds = new rpg::DclDS($2);
-        ds->qualified = false;
-        ds->fields = std::move($4->fields);
-        delete $4;
-        free($2);
-        $$ = ds;
-    }
-    /* DCL-DS name DIM(n) QUALIFIED; fields END-DS; */
-    | KW_DCL_DS IDENTIFIER KW_DIM LPAREN INTEGER_LITERAL RPAREN KW_QUALIFIED SEMICOLON ds_fields KW_END_DS SEMICOLON {
-        auto* ds = new rpg::DclDS($2);
-        ds->dim = $5;
-        ds->qualified = true;
-        ds->fields = std::move($9->fields);
-        delete $9;
-        free($2);
-        $$ = ds;
-    }
-    /* DCL-DS name QUALIFIED DIM(n); fields END-DS; */
-    | KW_DCL_DS IDENTIFIER KW_QUALIFIED KW_DIM LPAREN INTEGER_LITERAL RPAREN SEMICOLON ds_fields KW_END_DS SEMICOLON {
-        auto* ds = new rpg::DclDS($2);
-        ds->dim = $6;
-        ds->qualified = true;
-        ds->fields = std::move($9->fields);
-        delete $9;
-        free($2);
-        $$ = ds;
-    }
-    /* DCL-DS name DIM(*VAR:n) QUALIFIED; fields END-DS; */
-    | KW_DCL_DS IDENTIFIER KW_DIM LPAREN KW_DIM_VAR COLON INTEGER_LITERAL RPAREN KW_QUALIFIED SEMICOLON ds_fields KW_END_DS SEMICOLON {
-        auto* ds = new rpg::DclDS($2);
-        ds->dim = $7;
-        ds->dim_type = 1;
-        ds->qualified = true;
-        ds->fields = std::move($11->fields);
-        delete $11;
-        free($2);
-        $$ = ds;
-    }
-    /* DCL-DS name QUALIFIED DIM(*VAR:n); fields END-DS; */
-    | KW_DCL_DS IDENTIFIER KW_QUALIFIED KW_DIM LPAREN KW_DIM_VAR COLON INTEGER_LITERAL RPAREN SEMICOLON ds_fields KW_END_DS SEMICOLON {
-        auto* ds = new rpg::DclDS($2);
-        ds->dim = $8;
-        ds->dim_type = 1;
-        ds->qualified = true;
-        ds->fields = std::move($11->fields);
-        delete $11;
-        free($2);
-        $$ = ds;
-    }
-    /* DCL-DS name DIM(*AUTO:n) QUALIFIED; fields END-DS; */
-    | KW_DCL_DS IDENTIFIER KW_DIM LPAREN KW_DIM_AUTO COLON INTEGER_LITERAL RPAREN KW_QUALIFIED SEMICOLON ds_fields KW_END_DS SEMICOLON {
-        auto* ds = new rpg::DclDS($2);
-        ds->dim = $7;
-        ds->dim_type = 2;
-        ds->qualified = true;
-        ds->fields = std::move($11->fields);
-        delete $11;
-        free($2);
-        $$ = ds;
-    }
-    /* DCL-DS name QUALIFIED DIM(*AUTO:n); fields END-DS; */
-    | KW_DCL_DS IDENTIFIER KW_QUALIFIED KW_DIM LPAREN KW_DIM_AUTO COLON INTEGER_LITERAL RPAREN SEMICOLON ds_fields KW_END_DS SEMICOLON {
-        auto* ds = new rpg::DclDS($2);
-        ds->dim = $8;
-        ds->dim_type = 2;
-        ds->qualified = true;
-        ds->fields = std::move($11->fields);
-        delete $11;
-        free($2);
-        $$ = ds;
-    }
-    /* DCL-DS name LIKEDS(other); */
-    | KW_DCL_DS IDENTIFIER KW_LIKEDS LPAREN IDENTIFIER RPAREN SEMICOLON {
-        auto* ds = new rpg::DclDS($2);
-        ds->like_ds = $5;
-        free($2);
-        free($5);
-        $$ = ds;
-    }
-    /* DCL-DS name LIKEDS(other) DIM(n); */
-    | KW_DCL_DS IDENTIFIER KW_LIKEDS LPAREN IDENTIFIER RPAREN KW_DIM LPAREN INTEGER_LITERAL RPAREN SEMICOLON {
-        auto* ds = new rpg::DclDS($2);
-        ds->like_ds = $5;
-        ds->dim = $9;
-        free($2);
-        free($5);
-        $$ = ds;
-    }
-    /* DCL-DS name QUALIFIED PREFIX(pfx); fields END-DS; */
-    | KW_DCL_DS IDENTIFIER KW_QUALIFIED KW_PREFIX LPAREN IDENTIFIER RPAREN SEMICOLON ds_fields KW_END_DS SEMICOLON {
-        auto* ds = new rpg::DclDS($2);
-        ds->qualified = true;
-        ds->prefix = $6;
-        ds->fields = std::move($9->fields);
-        delete $9;
+    | KW_DCL_DS IDENTIFIER ds_hdr_kws KW_LIKEDS LPAREN IDENTIFIER RPAREN ds_hdr_kws SEMICOLON {
+        auto* ds = merge_ds_hdr($3, $8); ds->name = $2; ds->like_ds = $6;
         free($2); free($6);
         $$ = ds;
     }
-    /* DCL-DS name PREFIX(pfx:n) QUALIFIED; fields END-DS; */
-    | KW_DCL_DS IDENTIFIER KW_PREFIX LPAREN IDENTIFIER COLON INTEGER_LITERAL RPAREN KW_QUALIFIED SEMICOLON ds_fields KW_END_DS SEMICOLON {
-        auto* ds = new rpg::DclDS($2);
-        ds->qualified = true;
-        ds->prefix = $5;
-        ds->prefix_nbr = $7;
-        ds->fields = std::move($11->fields);
-        delete $11;
-        free($2); free($5);
+    | KW_DCL_DS IDENTIFIER ds_hdr_kws psds_kw ds_hdr_kws SEMICOLON ds_fields KW_END_DS SEMICOLON {
+        auto* ds = merge_ds_hdr($3, $5); ds->name = $2; ds->is_psds = true; free($2);
+        ds->fields = std::move($7->fields); delete $7;
         $$ = ds;
     }
-    /* DCL-DS name QUALIFIED PREFIX(pfx:n); fields END-DS; */
-    | KW_DCL_DS IDENTIFIER KW_QUALIFIED KW_PREFIX LPAREN IDENTIFIER COLON INTEGER_LITERAL RPAREN SEMICOLON ds_fields KW_END_DS SEMICOLON {
-        auto* ds = new rpg::DclDS($2);
-        ds->qualified = true;
-        ds->prefix = $6;
-        ds->prefix_nbr = $8;
-        ds->fields = std::move($11->fields);
-        delete $11;
-        free($2); free($6);
-        $$ = ds;
+    ;
+
+ds_hdr_kws:
+    /* empty */ { $$ = new rpg::DclDS(""); }
+    | ds_hdr_kws KW_QUALIFIED { $$ = $1; $$->qualified = true; }
+    | ds_hdr_kws KW_TEMPLATE  { $$ = $1; $$->is_template = true; }
+    | ds_hdr_kws KW_DIM LPAREN INTEGER_LITERAL RPAREN { $$ = $1; $$->dim = $4; }
+    | ds_hdr_kws KW_DIM LPAREN KW_DIM_VAR COLON INTEGER_LITERAL RPAREN {
+        $$ = $1; $$->dim = $6; $$->dim_type = 1;
     }
-    /* DCL-DS name PREFIX(pfx); fields END-DS; (not qualified) */
-    | KW_DCL_DS IDENTIFIER KW_PREFIX LPAREN IDENTIFIER RPAREN SEMICOLON ds_fields KW_END_DS SEMICOLON {
-        auto* ds = new rpg::DclDS($2);
-        ds->qualified = false;
-        ds->prefix = $5;
-        ds->fields = std::move($8->fields);
-        delete $8;
-        free($2); free($5);
-        $$ = ds;
+    | ds_hdr_kws KW_DIM LPAREN KW_DIM_AUTO COLON INTEGER_LITERAL RPAREN {
+        $$ = $1; $$->dim = $6; $$->dim_type = 2;
     }
-    /* DCL-DS name PSDS QUALIFIED; fields END-DS; */
-    | KW_DCL_DS IDENTIFIER psds_kw KW_QUALIFIED SEMICOLON ds_fields KW_END_DS SEMICOLON {
-        auto* ds = new rpg::DclDS($2);
-        ds->is_psds = true;
-        ds->qualified = true;
-        ds->fields = std::move($6->fields);
-        delete $6;
-        free($2);
-        $$ = ds;
-    }
-    /* DCL-DS name QUALIFIED PSDS; fields END-DS; */
-    | KW_DCL_DS IDENTIFIER KW_QUALIFIED psds_kw SEMICOLON ds_fields KW_END_DS SEMICOLON {
-        auto* ds = new rpg::DclDS($2);
-        ds->is_psds = true;
-        ds->qualified = true;
-        ds->fields = std::move($6->fields);
-        delete $6;
-        free($2);
-        $$ = ds;
-    }
-    /* DCL-DS name PSDS; fields END-DS; (not qualified) */
-    | KW_DCL_DS IDENTIFIER psds_kw SEMICOLON ds_fields KW_END_DS SEMICOLON {
-        auto* ds = new rpg::DclDS($2);
-        ds->is_psds = true;
-        ds->qualified = false;
-        ds->fields = std::move($5->fields);
-        delete $5;
-        free($2);
-        $$ = ds;
-    }
-    /* DCL-DS name PSDS; (empty — no subfields declared) */
-    | KW_DCL_DS IDENTIFIER psds_kw SEMICOLON {
-        auto* ds = new rpg::DclDS($2);
-        ds->is_psds = true;
-        ds->qualified = false;
-        free($2);
-        $$ = ds;
+    | ds_hdr_kws KW_PREFIX LPAREN IDENTIFIER RPAREN { $$ = $1; $$->prefix = $4; free($4); }
+    | ds_hdr_kws KW_PREFIX LPAREN IDENTIFIER COLON INTEGER_LITERAL RPAREN {
+        $$ = $1; $$->prefix = $4; $$->prefix_nbr = $6; free($4);
     }
     ;
 

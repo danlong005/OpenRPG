@@ -793,6 +793,7 @@ public:
     int prefix_nbr = 0;
     int occurs = 0;      // OCCURS(n), 0 = not multi-occurrence
     bool is_psds = false; // PSDS or SDS keyword
+    bool is_template = false; // TEMPLATE: a type for LIKEDS, with no storage of its own
     std::vector<DSField> fields;
     DclDS(std::string name);
     void accept(ASTVisitor& visitor) override;

@@ -847,6 +847,9 @@ void CodeGen::visit(Program& node) {
     // to *run* (a vector's reserve, PSDS field initialisation) stays in main.
     for (auto* s : ds_stmts) {
         auto* ds = dynamic_cast<DclDS*>(s);
+        // TEMPLATE: the struct type exists for LIKEDS to name, but there is
+        // no data structure of this name to store into.
+        if (ds->is_template) continue;
         std::string type_name = ds->like_ds.empty() ? ds->name + "_t" : ds->like_ds + "_t";
         if (ds->dim > 0 && (ds->dim_type == 1 || ds->dim_type == 2)) {
             out_ << "std::vector<" << type_name << "> " << ds->name << ";\n";
@@ -967,11 +970,13 @@ void CodeGen::visit(Program& node) {
                 bool is_numeric = (f.type == RPGType::INT10 || f.type == RPGType::PACKED ||
                                    f.type == RPGType::ZONED || f.type == RPGType::FLOAT8 ||
                                    f.type == RPGType::UNS);
-                if (is_numeric) {
-                    out_ << ds->name << "." << f.name << " = rpg_psds_field_int(" << f.pos << ");\n";
-                } else {
-                    out_ << ds->name << "." << f.name << " = rpg_psds_field_str(" << f.pos << ");\n";
-                }
+                // Fitted like any store into a declared subfield: a
+                // CHAR(10) program-name field holds the name padded to 10.
+                std::string src = is_numeric
+                    ? "rpg_psds_field_int(" + std::to_string(f.pos) + ")"
+                    : "rpg_psds_field_str(" + std::to_string(f.pos) + ")";
+                out_ << ds->name << "." << f.name << " = "
+                     << fitValue(f.type, f.length, f.decimals, src) << ";\n";
             }
         }
     }

@@ -2068,6 +2068,16 @@ Found alongside, all verified:
   which `DSField` has nowhere to store (test 226 rejects it rather than
   dropping it).
 - `TEMPLATE` on `DCL-DS` is a syntax error.
+  ✅ **Fixed 2026-09-22** (Test 251). The `DCL-DS` header is now any
+  order of `QUALIFIED`/`TEMPLATE`/`DIM`/`PREFIX`, with `LIKEDS` and
+  `PSDS`/`SDS` in slots of their own, replacing 18 fixed sequences. A
+  `TEMPLATE` DS emits its struct type for `LIKEDS` but no instance.
+  - Dropped: the fieldless `DCL-DS x PSDS;` (no `END-DS`), which isn't
+    valid RPG. It made a PSDS's first subfield ambiguous with a statement
+    once the header was generalized; dropping it removed the grammar's
+    reduce/reduce conflict (2 S/R remain).
+  - Found alongside: PSDS subfields were filled raw at program start, so a
+    `CHAR(10)` program-name field was 4 bytes long; they are fitted now.
 - A nested `a.b.c` is readable but is a syntax error as an assignment
   target.
 - A standalone `CHAR(n) DIM(m)` array starts as empty strings, not blanks.

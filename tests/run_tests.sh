@@ -804,6 +804,7 @@ run_test "245" "Bare procedure call statements" "$TESTDIR/test245_bare_call.rpgl
 run_test "246" "CONST parameters" "$TESTDIR/test246_const_params.rpgle" "run"
 run_test "247" "Reject assignment to a CONST parm" "$TESTDIR/test247_err_const_assign.rpgle" "error"
 run_test "248" "DCL-PROC without DCL-PI" "$TESTDIR/test248_proc_no_pi.rpgle" "run"
+run_test "249" "Every scalar type as a DS subfield" "$TESTDIR/test249_ds_subfield_types.rpgle" "run"
 
 # ── Customer / drop-in tests ─────────────────────────────────────────────
 # Drop any .rpgle or .sqlrpgle file into tests/customer/ and it will be

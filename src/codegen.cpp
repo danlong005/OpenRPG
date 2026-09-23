@@ -2193,9 +2193,12 @@ void CodeGen::visit(DclDS& node) {
     // an empty string, which is not a value RPG can produce.
     auto initFor = [](RPGType t, int len) -> std::string {
         if (t == RPGType::CHAR && len > 0) return " = std::string(" + std::to_string(len) + ", ' ')";
-        if (t == RPGType::INT10) return " = 0";
-        if (t == RPGType::PACKED || t == RPGType::ZONED) return " = 0.0";
-        return "";
+        if (t == RPGType::INT10 || t == RPGType::UNS || t == RPGType::BINDEC) return " = 0";
+        if (t == RPGType::PACKED || t == RPGType::ZONED ||
+            t == RPGType::FLOAT4 || t == RPGType::FLOAT8) return " = 0.0";
+        if (t == RPGType::IND) return " = false";
+        if (t == RPGType::POINTER) return " = nullptr";
+        return "";  // class types (dates, strings) construct themselves
     };
     // subfield name -> (ultimate base subfield, 1-based position in it)
     std::map<std::string, std::pair<std::string, int>> ds_overlay_bases;

@@ -84,6 +84,23 @@ static char* g_dclf_extdesc = nullptr;
 static char* g_dclf_usages = nullptr;
 static char* g_dclf_prefix = nullptr;
 
+// Builds a subfield from its name, its type (a param_type result, or null
+// for LIKEDS/LIKE, whose type comes from elsewhere) and its keywords.
+static rpg::DSField* make_ds_field(const char* name, rpg::ParamDecl* type, rpg::DSField* kws) {
+    auto* f = kws;
+    f->name = name;
+    if (type) {
+        f->type = type->type;
+        f->length = type->length;
+        f->digits = type->digits;
+        f->decimals = type->decimals;
+        delete type;
+    } else {
+        f->type = rpg::RPGType::CHAR;
+    }
+    return f;
+}
+
 // Parameter keyword bits collected by param_kws (see param_decl).
 enum { PK_VALUE = 1, PK_CONST = 2, PK_NOPASS = 4, PK_OMIT = 8,
        PK_VARSIZE = 16, PK_STRING = 32, PK_TRIM = 64 };
@@ -251,6 +268,7 @@ static int g_ret_len = 0, g_ret_digits = 0, g_ret_dec = 0;
 %type <ds_field> ds_field
 %type <param_list> pi_params pr_params
 %type <param_decl> pi_param pr_param param_decl param_type
+%type <ds_field> ds_kws
 %type <ival> param_kws param_kw param_opts param_opt
 %type <ival> pi_return_type dcl_s_keywords proc_export
 %type <sval> ident
@@ -1894,161 +1912,43 @@ psds_kw:
     | KW_SDS {}
     ;
 
+/* One data-structure subfield: a name (optionally DCL-SUBF), a type from
+   param_type — shared with procedure parameters — or LIKEDS/LIKE, then any
+   of POS, OVERLAY and DIM. This replaced 26 hand-enumerated alternatives
+   that covered only INT, CHAR, VARCHAR and PACKED, each with its own
+   fixed set of keywords, so a ZONED, IND, DATE, UNS or FLOAT subfield was
+   a syntax error, as was any keyword combination not spelled out. */
 ds_field:
-    IDENTIFIER KW_INT LPAREN INTEGER_LITERAL RPAREN SEMICOLON {
-        $$ = new rpg::DSField{$1, rpg::RPGType::INT10, 0, 0, 0};
-        free($1);
+    IDENTIFIER param_type ds_kws SEMICOLON {
+        $$ = make_ds_field($1, $2, $3); free($1);
     }
-    | IDENTIFIER KW_CHAR LPAREN INTEGER_LITERAL RPAREN SEMICOLON {
-        $$ = new rpg::DSField{$1, rpg::RPGType::CHAR, $4, 0, 0};
-        free($1);
+    | KW_DCL_SUBF IDENTIFIER param_type ds_kws SEMICOLON {
+        $$ = make_ds_field($2, $3, $4); free($2);
     }
-    | IDENTIFIER KW_VARCHAR LPAREN INTEGER_LITERAL RPAREN SEMICOLON {
-        $$ = new rpg::DSField{$1, rpg::RPGType::VARCHAR, $4, 0, 0};
-        free($1);
+    | IDENTIFIER KW_LIKEDS LPAREN IDENTIFIER RPAREN ds_kws SEMICOLON {
+        $$ = make_ds_field($1, nullptr, $6); $$->likeds = $4; free($1); free($4);
     }
-    | IDENTIFIER KW_PACKED LPAREN INTEGER_LITERAL COLON INTEGER_LITERAL RPAREN SEMICOLON {
-        $$ = new rpg::DSField{$1, rpg::RPGType::PACKED, 0, $4, $6};
-        free($1);
+    | KW_DCL_SUBF IDENTIFIER KW_LIKEDS LPAREN IDENTIFIER RPAREN ds_kws SEMICOLON {
+        $$ = make_ds_field($2, nullptr, $7); $$->likeds = $5; free($2); free($5);
     }
-    /* DCL-SUBF alternatives */
-    | KW_DCL_SUBF IDENTIFIER KW_INT LPAREN INTEGER_LITERAL RPAREN SEMICOLON {
-        $$ = new rpg::DSField{$2, rpg::RPGType::INT10, 0, 0, 0};
-        free($2);
+    | IDENTIFIER KW_LIKE LPAREN IDENTIFIER RPAREN ds_kws SEMICOLON {
+        $$ = make_ds_field($1, nullptr, $6); $$->like_var = $4; free($1); free($4);
     }
-    | KW_DCL_SUBF IDENTIFIER KW_CHAR LPAREN INTEGER_LITERAL RPAREN SEMICOLON {
-        $$ = new rpg::DSField{$2, rpg::RPGType::CHAR, $5, 0, 0};
-        free($2);
+    | KW_DCL_SUBF IDENTIFIER KW_LIKE LPAREN IDENTIFIER RPAREN ds_kws SEMICOLON {
+        $$ = make_ds_field($2, nullptr, $7); $$->like_var = $5; free($2); free($5);
     }
-    | KW_DCL_SUBF IDENTIFIER KW_VARCHAR LPAREN INTEGER_LITERAL RPAREN SEMICOLON {
-        $$ = new rpg::DSField{$2, rpg::RPGType::VARCHAR, $5, 0, 0};
-        free($2);
+    ;
+
+/* Subfield keywords, accumulated onto a scratch DSField (see make_ds_field). */
+ds_kws:
+    /* empty */ { $$ = new rpg::DSField{}; }
+    | ds_kws KW_POS LPAREN INTEGER_LITERAL RPAREN { $$ = $1; $$->pos = $4; }
+    | ds_kws KW_DIM LPAREN INTEGER_LITERAL RPAREN { $$ = $1; $$->dim = $4; }
+    | ds_kws KW_OVERLAY LPAREN IDENTIFIER RPAREN {
+        $$ = $1; $$->overlay_field = $4; free($4);
     }
-    | KW_DCL_SUBF IDENTIFIER KW_PACKED LPAREN INTEGER_LITERAL COLON INTEGER_LITERAL RPAREN SEMICOLON {
-        $$ = new rpg::DSField{$2, rpg::RPGType::PACKED, 0, $5, $7};
-        free($2);
-    }
-    /* Fields with POS(n) */
-    | IDENTIFIER KW_CHAR LPAREN INTEGER_LITERAL RPAREN KW_POS LPAREN INTEGER_LITERAL RPAREN SEMICOLON {
-        auto* f = new rpg::DSField{$1, rpg::RPGType::CHAR, $4, 0, 0};
-        f->pos = $8;
-        free($1);
-        $$ = f;
-    }
-    | IDENTIFIER KW_INT LPAREN INTEGER_LITERAL RPAREN KW_POS LPAREN INTEGER_LITERAL RPAREN SEMICOLON {
-        auto* f = new rpg::DSField{$1, rpg::RPGType::INT10, 0, 0, 0};
-        f->pos = $8;
-        free($1);
-        $$ = f;
-    }
-    | IDENTIFIER KW_PACKED LPAREN INTEGER_LITERAL COLON INTEGER_LITERAL RPAREN KW_POS LPAREN INTEGER_LITERAL RPAREN SEMICOLON {
-        auto* f = new rpg::DSField{$1, rpg::RPGType::PACKED, 0, $4, $6};
-        f->pos = $10;
-        free($1);
-        $$ = f;
-    }
-    /* Fields with OVERLAY(field) */
-    | IDENTIFIER KW_CHAR LPAREN INTEGER_LITERAL RPAREN KW_OVERLAY LPAREN IDENTIFIER RPAREN SEMICOLON {
-        auto* f = new rpg::DSField{$1, rpg::RPGType::CHAR, $4, 0, 0};
-        f->overlay_field = $8;
-        free($1); free($8);
-        $$ = f;
-    }
-    /* Fields with OVERLAY(field:pos) */
-    | IDENTIFIER KW_CHAR LPAREN INTEGER_LITERAL RPAREN KW_OVERLAY LPAREN IDENTIFIER COLON INTEGER_LITERAL RPAREN SEMICOLON {
-        auto* f = new rpg::DSField{$1, rpg::RPGType::CHAR, $4, 0, 0};
-        f->overlay_field = $8;
-        f->overlay_pos = $10;
-        free($1); free($8);
-        $$ = f;
-    }
-    | IDENTIFIER KW_INT LPAREN INTEGER_LITERAL RPAREN KW_OVERLAY LPAREN IDENTIFIER RPAREN SEMICOLON {
-        auto* f = new rpg::DSField{$1, rpg::RPGType::INT10, 0, 0, 0};
-        f->overlay_field = $8;
-        free($1); free($8);
-        $$ = f;
-    }
-    | IDENTIFIER KW_INT LPAREN INTEGER_LITERAL RPAREN KW_OVERLAY LPAREN IDENTIFIER COLON INTEGER_LITERAL RPAREN SEMICOLON {
-        auto* f = new rpg::DSField{$1, rpg::RPGType::INT10, 0, 0, 0};
-        f->overlay_field = $8;
-        f->overlay_pos = $10;
-        free($1); free($8);
-        $$ = f;
-    }
-    /* LIKEDS subfield: field LIKEDS(dsname); */
-    | IDENTIFIER KW_LIKEDS LPAREN IDENTIFIER RPAREN SEMICOLON {
-        auto* f = new rpg::DSField{$1, rpg::RPGType::CHAR, 0, 0, 0};
-        f->likeds = $4;
-        free($1); free($4);
-        $$ = f;
-    }
-    | KW_DCL_SUBF IDENTIFIER KW_LIKEDS LPAREN IDENTIFIER RPAREN SEMICOLON {
-        auto* f = new rpg::DSField{$2, rpg::RPGType::CHAR, 0, 0, 0};
-        f->likeds = $5;
-        free($2); free($5);
-        $$ = f;
-    }
-    /* Per-subfield LIKE(field): field LIKE(other); */
-    | IDENTIFIER KW_LIKE LPAREN IDENTIFIER RPAREN SEMICOLON {
-        auto* f = new rpg::DSField{$1, rpg::RPGType::CHAR, 0, 0, 0};
-        f->like_var = $4;
-        free($1); free($4);
-        $$ = f;
-    }
-    | KW_DCL_SUBF IDENTIFIER KW_LIKE LPAREN IDENTIFIER RPAREN SEMICOLON {
-        auto* f = new rpg::DSField{$2, rpg::RPGType::CHAR, 0, 0, 0};
-        f->like_var = $5;
-        free($2); free($5);
-        $$ = f;
-    }
-    /* Per-subfield DIM(n): field TYPE(...) DIM(n); — subfield is itself an array */
-    | IDENTIFIER KW_INT LPAREN INTEGER_LITERAL RPAREN KW_DIM LPAREN INTEGER_LITERAL RPAREN SEMICOLON {
-        auto* f = new rpg::DSField{$1, rpg::RPGType::INT10, 0, 0, 0};
-        f->dim = $8;
-        free($1);
-        $$ = f;
-    }
-    | IDENTIFIER KW_CHAR LPAREN INTEGER_LITERAL RPAREN KW_DIM LPAREN INTEGER_LITERAL RPAREN SEMICOLON {
-        auto* f = new rpg::DSField{$1, rpg::RPGType::CHAR, $4, 0, 0};
-        f->dim = $8;
-        free($1);
-        $$ = f;
-    }
-    | IDENTIFIER KW_VARCHAR LPAREN INTEGER_LITERAL RPAREN KW_DIM LPAREN INTEGER_LITERAL RPAREN SEMICOLON {
-        auto* f = new rpg::DSField{$1, rpg::RPGType::VARCHAR, $4, 0, 0};
-        f->dim = $8;
-        free($1);
-        $$ = f;
-    }
-    | IDENTIFIER KW_PACKED LPAREN INTEGER_LITERAL COLON INTEGER_LITERAL RPAREN KW_DIM LPAREN INTEGER_LITERAL RPAREN SEMICOLON {
-        auto* f = new rpg::DSField{$1, rpg::RPGType::PACKED, 0, $4, $6};
-        f->dim = $10;
-        free($1);
-        $$ = f;
-    }
-    | KW_DCL_SUBF IDENTIFIER KW_INT LPAREN INTEGER_LITERAL RPAREN KW_DIM LPAREN INTEGER_LITERAL RPAREN SEMICOLON {
-        auto* f = new rpg::DSField{$2, rpg::RPGType::INT10, 0, 0, 0};
-        f->dim = $9;
-        free($2);
-        $$ = f;
-    }
-    | KW_DCL_SUBF IDENTIFIER KW_CHAR LPAREN INTEGER_LITERAL RPAREN KW_DIM LPAREN INTEGER_LITERAL RPAREN SEMICOLON {
-        auto* f = new rpg::DSField{$2, rpg::RPGType::CHAR, $5, 0, 0};
-        f->dim = $9;
-        free($2);
-        $$ = f;
-    }
-    | KW_DCL_SUBF IDENTIFIER KW_VARCHAR LPAREN INTEGER_LITERAL RPAREN KW_DIM LPAREN INTEGER_LITERAL RPAREN SEMICOLON {
-        auto* f = new rpg::DSField{$2, rpg::RPGType::VARCHAR, $5, 0, 0};
-        f->dim = $9;
-        free($2);
-        $$ = f;
-    }
-    | KW_DCL_SUBF IDENTIFIER KW_PACKED LPAREN INTEGER_LITERAL COLON INTEGER_LITERAL RPAREN KW_DIM LPAREN INTEGER_LITERAL RPAREN SEMICOLON {
-        auto* f = new rpg::DSField{$2, rpg::RPGType::PACKED, 0, $5, $7};
-        f->dim = $11;
-        free($2);
-        $$ = f;
+    | ds_kws KW_OVERLAY LPAREN IDENTIFIER COLON INTEGER_LITERAL RPAREN {
+        $$ = $1; $$->overlay_field = $4; $$->overlay_pos = $6; free($4);
     }
     ;
 

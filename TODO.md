@@ -2060,6 +2060,13 @@ Found alongside, all verified:
   `CHAR`, `VARCHAR` and `PACKED` (with a few keyword combinations each). So
   `ZONED`, `IND`, `DATE`, `UNS`, `FLOAT` and others are syntax errors in a
   DS. This subsumes the `IND` entry below.
+  ✅ **Fixed 2026-09-22** (Test 249). `ds_field` is now one rule: a name,
+  a type from `param_type` (shared with procedure parameters) or
+  `LIKEDS`/`LIKE`, then any of `POS`/`OVERLAY`/`DIM`. Every scalar type is
+  accepted, and each starts at its type's initial value (`IND` off,
+  `UNS`/`FLOAT` zero, `POINTER` null). Still open: `INZ` on a subfield,
+  which `DSField` has nowhere to store (test 226 rejects it rather than
+  dropping it).
 - `TEMPLATE` on `DCL-DS` is a syntax error.
 - A nested `a.b.c` is readable but is a syntax error as an assignment
   target.
@@ -2093,6 +2100,7 @@ Smaller, all verified:
 - An unqualified DS subfield cannot be referenced by its bare name — the
   subfield is emitted inside the struct but referenced unqualified.
 - `IND` is not accepted as a DS subfield type.
+  ✅ **Fixed 2026-09-22** (Test 249) — see the subfield-grammar entry below.
 - `CONST` on a procedure-interface parameter is a syntax error.
   ✅ **Fixed 2026-09-22** (Tests 246-247). The parameter grammar spelled
   out 30 alternatives per rule, one per type × keyword combination, and

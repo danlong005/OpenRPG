@@ -893,6 +893,13 @@ eval_stmt:
         );
     }
     | KW_EVAL_EXT eval_target EQUALS expression SEMICOLON {
+        /* (T) is internal: the fixed-format transpiler marks the EVAL an
+           ADD/SUB/MULT/DIV/Z-ADD/Z-SUB becomes with it, so the result
+           drops excess high-order digits as those opcodes do instead of
+           raising status 103 as EVAL does. It is not an RPG extender. */
+        if (strchr($1, 'T') && !g_allow_fixed_only_stmts) {
+            yyerror("EVAL(T) is not a valid operation extender");
+        }
         auto* s = new rpg::EvalStmt(
             std::unique_ptr<rpg::Expression>($2),
             std::unique_ptr<rpg::Expression>($4)

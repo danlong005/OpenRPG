@@ -1,4 +1,5 @@
 %{
+#include <climits>
 #include <cstdlib>
 #include <cstring>
 #include <cstdio>
@@ -282,7 +283,7 @@ static void parse_ctlopt(const char* text) {
     return KW_EVALR_EXT;
 }
 "EVALR"             { return KW_EVALR; }
-"EVAL("[EHMNRP]+")" {
+"EVAL("[EHMNRPT]+")" {
     char *p = strchr(yytext, '(') + 1;
     char ext[16] = {0}; int i = 0;
     while (*p && *p != ')') ext[i++] = (char)toupper((unsigned char)*p++);
@@ -732,7 +733,16 @@ static void parse_ctlopt(const char* text) {
 }
 
 [0-9]+\.[0-9]+      { yylval.fval = atof(yytext); return FLOAT_LITERAL; }
-[0-9]+              { yylval.ival = atoi(yytext); return INTEGER_LITERAL; }
+[0-9]+              {
+    /* A literal beyond int's range was atoi'd into it and silently wrapped
+       (3000000000 became -1294967296). Such a literal is a numeric value,
+       not a size or an index, so it is returned as a decimal literal,
+       which a double holds exactly up to 2**53. */
+    long long v = strtoll(yytext, nullptr, 10);
+    if (v > INT_MAX) { yylval.fval = static_cast<double>(v); return FLOAT_LITERAL; }
+    yylval.ival = static_cast<int>(v);
+    return INTEGER_LITERAL;
+}
 
 [Xx]'[0-9A-Fa-f]*'  { yylval.sval = process_hex_string(yytext); return STRING_LITERAL; }
 '([^']|'')*'        { yylval.sval = process_rpg_string(yytext); return STRING_LITERAL; }

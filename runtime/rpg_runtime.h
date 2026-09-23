@@ -2,6 +2,10 @@
 #define RPG_RUNTIME_H
 
 #include <string>
+#include <iostream>
+#include <cstdio>
+#include <exception>
+#include <stdexcept>
 #include <string_view>
 #include <functional>
 #include <type_traits>
@@ -502,6 +506,103 @@ inline int& rpg_status_code() { static int s = 0; return s; }
 inline bool& rpg_error_flag() { static bool e = false; return e; }
 inline int rpg_status() { return rpg_status_code(); }
 inline int rpg_error() { return rpg_error_flag() ? 1 : 0; }
+
+// --- Raising an RPG runtime error ---------------------------------------------
+// An error RPG itself detects (a numeric target too small for its result,
+// division by zero) sets %STATUS and ends the operation. MONITOR/ON-ERROR
+// and *PSSR are C++ catch(...) blocks, so throwing is how control reaches
+// them. Unmonitored, the error ends the program with its message, as it
+// does in a batch job on IBM i, rather than as a bare C++ abort.
+struct RpgError : std::runtime_error {
+    int status;
+    RpgError(int st, const std::string& msg) : std::runtime_error(msg), status(st) {}
+};
+
+[[noreturn]] inline void rpg_raise(int status, const std::string& msg) {
+    rpg_status_code() = status;
+    rpg_error_flag() = true;
+    throw RpgError(status, msg);
+}
+
+[[noreturn]] inline void rpg__unhandled_error() {
+    if (std::exception_ptr ep = std::current_exception()) {
+        try { std::rethrow_exception(ep); }
+        catch (const RpgError& e) {
+            std::cout.flush();
+            std::fprintf(stderr, "%s\n", e.what());
+            std::_Exit(1);
+        }
+        catch (...) {}
+    }
+    std::abort();
+}
+inline const bool rpg__unhandled_error_installed =
+    (std::set_terminate(rpg__unhandled_error), true);
+
+// Status 103 — EVAL (and a RETURN or VALUE parameter, which assign the same
+// way) into a PACKED/ZONED field whose integer digits cannot hold the
+// value. `digits` 0 means the declaration isn't known; only the scale is
+// applied then.
+inline double rpg_fit_dec(double v, int digits, int decimals) {
+    double t = rpg_trunc_dec(v, decimals);
+    if (digits > 0) {
+        double limit = 1.0;
+        for (int i = 0; i < digits - (decimals > 0 ? decimals : 0); i++) limit *= 10.0;
+        if (!std::isfinite(v) || std::fabs(t) >= limit)
+            rpg_raise(103, "RNX0103: The target for a numeric operation is too small to hold the result.");
+    }
+    return t;
+}
+
+// The fixed-format arithmetic operations (ADD, SUB, MULT, DIV, Z-ADD,
+// Z-SUB) do not raise 103: SC09-2508 has them drop the result's excess
+// high-order digits. Codegen marks those assignments with the internal
+// (T) extender (see fixed_cspec.cpp).
+inline double rpg_fit_dec_hi(double v, int digits, int decimals) {
+    double t = rpg_trunc_dec(v, decimals);
+    if (digits > 0 && std::isfinite(t)) {
+        double limit = 1.0;
+        for (int i = 0; i < digits - (decimals > 0 ? decimals : 0); i++) limit *= 10.0;
+        if (std::fabs(t) >= limit) t = rpg_trunc_dec(std::fmod(t, limit), decimals);
+    }
+    return t;
+}
+
+// INT and UNS are 4-byte here whatever width was declared, so this checks
+// that range. The fractional part is dropped, as C++ conversion also does.
+inline int rpg_fit_int(double v) {
+    double t = std::trunc(v);
+    if (!std::isfinite(v) || t < static_cast<double>(INT_MIN) || t > static_cast<double>(INT_MAX))
+        rpg_raise(103, "RNX0103: The target for a numeric operation is too small to hold the result.");
+    return static_cast<int>(t);
+}
+inline unsigned int rpg_fit_uns(double v) {
+    double t = std::trunc(v);
+    if (!std::isfinite(v) || t < 0.0 || t > static_cast<double>(UINT_MAX))
+        rpg_raise(103, "RNX0103: The target for a numeric operation is too small to hold the result.");
+    return static_cast<unsigned int>(t);
+}
+
+// Status 102 — division by zero. A double quotient by zero used to come
+// out as inf and carry on.
+template <typename A, typename B>
+inline double rpg_div(const A& a, const B& b) {
+    if (static_cast<double>(b) == 0.0)
+        rpg_raise(102, "RNX0102: Attempt to divide by zero.");
+    return static_cast<double>(a) / static_cast<double>(b);
+}
+template <typename A, typename B>
+inline long long rpg_int_div(const A& a, const B& b) {
+    if (static_cast<double>(b) == 0.0)
+        rpg_raise(102, "RNX0102: Attempt to divide by zero.");
+    return static_cast<long long>(static_cast<double>(a) / static_cast<double>(b));
+}
+template <typename A, typename B>
+inline long long rpg_int_rem(const A& a, const B& b) {
+    if (static_cast<double>(b) == 0.0)
+        rpg_raise(102, "RNX0102: Attempt to divide by zero.");
+    return static_cast<long long>(a) % static_cast<long long>(b);
+}
 
 // --- PSDS — Program Status Data Structure ---
 // Cross-platform PID

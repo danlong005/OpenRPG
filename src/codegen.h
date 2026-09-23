@@ -195,10 +195,14 @@ private:
     FieldAttrs attrsOf(const Expression& e) const;
     FieldAttrs attrsOfName(const std::string& cppName) const;
     // Wraps `rhs` so the value assigned fits a target of this declaration.
+    // Scale: CHAR/VARCHAR length and numeric scale only (data arriving from
+    // SQL, XML or a file). Overflow: also raise status 103 when a numeric
+    // value's integer digits don't fit (EVAL, RETURN, VALUE parameters).
+    // HighTrunc: drop excess high-order digits instead (the fixed-format
+    // arithmetic opcodes, marked EVAL(T)).
+    enum class FitMode { Scale, Overflow, HighTrunc };
     std::string fitValue(RPGType type, int length, int decimals, const std::string& rhs) const;
-    std::string fitValue(const FieldAttrs& a, const std::string& rhs) const {
-        return a.known ? fitValue(a.type, a.length, a.decimals, rhs) : rhs;
-    }
+    std::string fitValue(const FieldAttrs& a, const std::string& rhs, FitMode mode = FitMode::Scale) const;
     // "X = fit(X);" for a target assigned by something other than EVAL, or "".
     std::string refitStmt(const FieldAttrs& a, const std::string& target) const;
     void emitSqlIntoRefit(const std::string& decl, const std::string& target);

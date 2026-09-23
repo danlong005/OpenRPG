@@ -2243,8 +2243,39 @@ pushed 99999999.99 past a whole unit (Test 221 caught it).
     reports types exactly, the two agree and nothing changes.
   - The 13 committed test caches gained their kinds. Regenerating four of
     them live from SQLite produced the same kinds.
-- **Integer-digit overflow isn't detected.** RPG `EVAL` of 123456 into a
-  `PACKED(5:0)` raises RNX0103 (status 103). Here it stores the value.
+- **Integer-digit overflow isn't detected.** ✅ **Fixed 2026-09-22**
+  (Tests 239-241).
+  - **What was wrong:** RPG `EVAL` of 123456 into a `PACKED(5:0)` is
+    RNX0103 (status 103), and it used to store the value. Division by zero,
+    listed as done in the status table, wasn't raised either: `a / 0`
+    produced `inf` and carried on, and `%DIV(x:0)` crashed with SIGFPE.
+  - **The mechanism:** `rpg_raise` sets `%STATUS` and throws `RpgError`,
+    which `MONITOR`/`*PSSR` catch. Unmonitored, a terminate handler prints
+    the RNX message and exits 1, as a batch job ends on IBM i.
+  - **Where it is raised:** EVAL, `RETURN` and `VALUE` parameters into
+    `PACKED`/`ZONED` raise 103 when the integer digits don't fit, after
+    truncation or `(H)` rounding (999.995 half-adjusted into a
+    `PACKED(5:2)` is 1000.00 and raises). `INT`/`UNS` raise 103 outside
+    their 4-byte range, since the declared width isn't tracked. `/`,
+    `%DIV` and `%REM` by zero raise 102.
+  - **The fixed-format arithmetic opcodes** (`ADD`, `SUB`, `MULT`, `DIV`,
+    `Z-ADD`, `Z-SUB`) do not raise. SC09-2508 has them drop the result's
+    high-order digits, and they are transpiled to EVAL, so the
+    transpiler marks that EVAL with an internal `(T)` extender, which
+    `parser.y` rejects in hand-written source. Test 221's golden had
+    recorded 99,999,999.99 in a `9S 2` field via `Z-ADD`; it is now
+    9,999,999.99, as IBM would give.
+  - **Stores from SQL, XML and file reads** still only fit length and
+    scale. On IBM i those report a too-small target through their own
+    channels (SQLCODE and so on), not status 103.
+  - **Found alongside:** integer literals beyond `int` range were
+    `atoi`'d into an `int` and silently wrapped (3000000000 became
+    -1294967296). The lexer now returns such a literal as a decimal
+    literal.
+  - **Still open:** `INT(3)`/`INT(5)`/`INT(20)` all compile to a 4-byte
+    `int`, so their own ranges aren't enforced (INT(20) can't even hold
+    its range). Integer arithmetic that overflows `int` before the
+    assignment still wraps in C++.
 - **Float literals are emitted with 10 fixed decimals**
   (`setprecision(10)`), so `99999999.99` becomes `99999999.9899999946` in
   the generated C++. Truncation absorbs it, but the literal itself is

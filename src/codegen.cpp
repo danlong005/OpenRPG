@@ -1137,8 +1137,9 @@ void CodeGen::visit(DclProc& node) {
         var_digits_[p.name]   = p.digits;
         var_decimals_[p.name] = p.decimals;
         if (!p.by_value) continue;
-        std::string stmt = refitStmt(attrsOfName(p.name), p.name);
-        if (!stmt.empty()) { emitIndent(); out_ << stmt << "\n"; }
+        FieldAttrs pa = attrsOfName(p.name);
+        std::string fitted = fitValue(pa, p.name, FitMode::Overflow);
+        if (fitted != p.name) { emitIndent(); out_ << p.name << " = " << fitted << ";\n"; }
     }
     current_return_attrs_ = FieldAttrs{};
     if (node.interface.has_return) {
@@ -1747,6 +1748,23 @@ std::string CodeGen::fitValue(RPGType type, int length, int decimals, const std:
     return rhs;
 }
 
+std::string CodeGen::fitValue(const FieldAttrs& a, const std::string& rhs, FitMode mode) const {
+    if (!a.known) return rhs;
+    if (mode == FitMode::Scale || a.type == RPGType::CHAR || a.type == RPGType::VARCHAR)
+        return fitValue(a.type, a.length, a.decimals, rhs);
+    int digits = a.digits > 0 ? a.digits : a.length;
+    if (a.type == RPGType::PACKED || a.type == RPGType::ZONED) {
+        const char* fn = (mode == FitMode::HighTrunc) ? "rpg_fit_dec_hi" : "rpg_fit_dec";
+        return std::string(fn) + "(static_cast<double>(" + rhs + "), " + std::to_string(digits) +
+               ", " + std::to_string(a.decimals) + ")";
+    }
+    if (mode == FitMode::Overflow && a.type == RPGType::INT10)
+        return "rpg_fit_int(static_cast<double>(" + rhs + "))";
+    if (mode == FitMode::Overflow && a.type == RPGType::UNS)
+        return "rpg_fit_uns(static_cast<double>(" + rhs + "))";
+    return rhs;
+}
+
 std::string CodeGen::refitStmt(const FieldAttrs& a, const std::string& target) const {
     if (!a.known) return "";
     std::string fitted = fitValue(a, target);
@@ -1889,10 +1907,12 @@ void CodeGen::visit(EvalStmt& node) {
     // assignment does not: a CHAR(5) assigned 'AB' must hold 'AB   ', and
     // a PACKED(9:2) assigned 1.239 must hold 1.23.
     {
+        // (H) has already rounded at the scale, so the truncation part is a
+        // no-op after it; the overflow check still applies. (T) is the
+        // fixed-format arithmetic opcodes' high-order truncation.
         FieldAttrs fa = attrsOf(*node.target);
-        // (H) has already rounded at the scale; truncating after it is a no-op.
-        if (fa.known && !(half_adj && (fa.type == RPGType::PACKED || fa.type == RPGType::ZONED)))
-            rhs = fitValue(fa, rhs);
+        bool hiTrunc = node.extenders.find('T') != std::string::npos;
+        rhs = fitValue(fa, rhs, hiTrunc ? FitMode::HighTrunc : FitMode::Overflow);
     }
 
     if (error_ext) {
@@ -1918,7 +1938,7 @@ void CodeGen::visit(ReturnStmt& node) {
         // A procedure returns a value of its declared return type: RETURN
         // 'AB' from one declared CHAR(10) returns 'AB' plus eight blanks.
         std::string val = emitExpr(*node.expr);
-        if (in_procedure_) val = fitValue(current_return_attrs_, val);
+        if (in_procedure_) val = fitValue(current_return_attrs_, val, FitMode::Overflow);
         out_ << "return " << val << ";\n";
     } else if (void_return_) {
         // A bare RETURN in a function with no return value. `node.code` is
@@ -3015,9 +3035,11 @@ void CodeGen::visit(BinaryExpr& node) {
         // integer division, so 10 / 3 silently became 3. Forcing the left
         // operand to double keeps the quotient decimal; %DIV() remains the
         // way to ask for integer division.
-        expr_ << "(static_cast<double>(";
+        // rpg_div also raises status 102 for a zero divisor, which a bare
+        // double division turned into inf.
+        expr_ << "rpg_div(";
         node.left->accept(*this);
-        expr_ << ") / ";
+        expr_ << ", ";
         node.right->accept(*this);
         expr_ << ")";
         return;
@@ -3276,15 +3298,17 @@ void CodeGen::visit(BIFCall& node) {
         node.args[0]->accept(*this);
         expr_ << ")";
     } else if (node.name == "DIV") {
-        expr_ << "(";
+        // Integer quotient; a zero divisor raises status 102 rather than
+        // crashing the process with SIGFPE.
+        expr_ << "rpg_int_div(";
         node.args[0]->accept(*this);
-        expr_ << " / ";
+        expr_ << ", ";
         node.args[1]->accept(*this);
         expr_ << ")";
     } else if (node.name == "REM") {
-        expr_ << "(";
+        expr_ << "rpg_int_rem(";
         node.args[0]->accept(*this);
-        expr_ << " % ";
+        expr_ << ", ";
         node.args[1]->accept(*this);
         expr_ << ")";
     } else if (node.name == "DATE") {

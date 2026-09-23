@@ -5,6 +5,16 @@
 #include <unordered_map>
 #include <unordered_set>
 
+// The extender for the EVAL an arithmetic opcode (ADD, SUB, MULT, DIV,
+// Z-ADD, Z-SUB) transpiles to: its own extender plus the internal T, which
+// makes the assignment drop excess high-order digits, as SC09-2508 has
+// those opcodes do, instead of raising status 103 as EVAL does. "" ->
+// "(T)", "(H)" -> "(HT)". parser.y rejects T anywhere else.
+static std::string truncExt(const std::string& extender) {
+    if (extender.empty()) return "(T)";
+    return extender.substr(0, extender.size() - 1) + "T)";
+}
+
 namespace rpg {
 namespace fixed {
 
@@ -970,7 +980,7 @@ void feedCSpecLine(CSpecRunState& state, const std::string& line, int lineNo) {
                       opcodeName == "SUB" ? '-' :
                       opcodeName == "MULT" ? '*' : '/';
             std::string lhs = factor1.empty() ? result : factor1;
-            built = "EVAL" + extender + " " + result + " = " + lhs + " " + op + " " + factor2;
+            built = "EVAL" + truncExt(extender) + " " + result + " = " + lhs + " " + op + " " + factor2;
         } else if (opcodeName == "CALL") {
             if (!factor1.empty()) {
                 report_fixed_format_error(lineNo,
@@ -1134,8 +1144,8 @@ void feedCSpecLine(CSpecRunState& state, const std::string& line, int lineNo) {
                 return;
             }
             built = (opcodeName == "Z-ADD")
-                ? ("EVAL" + extender + " " + result + " = " + factor2)
-                : ("EVAL" + extender + " " + result + " = -(" + factor2 + ")");
+                ? ("EVAL" + truncExt(extender) + " " + result + " = " + factor2)
+                : ("EVAL" + truncExt(extender) + " " + result + " = -(" + factor2 + ")");
         }
         state.bufLines[idx] = wrapCond(cond, built + ";");
         return;

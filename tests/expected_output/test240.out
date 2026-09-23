@@ -1,0 +1,4 @@
+RESULT:ADD=0                  
+RESULT:ZADD=345.67            
+RESULT:MULT=230               
+RESULT:EVAL=103               

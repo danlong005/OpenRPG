@@ -791,6 +791,8 @@ run_test "232" "Fixed-format conditional directives" "$TESTDIR/test232_fixed_con
 run_test "233" "Reject a stray /ENDIF" "$TESTDIR/test233_err_stray_endif.rpgle" "error"
 run_test "234" "Reject /IF left open in a /COPY" "$TESTDIR/test234_err_copy_open_if.rpgle" "error"
 run_test "235" "/EOF in a /COPY ends only it" "$TESTDIR/test235_copy_eof.rpgle" "run"
+run_test "236" "Non-EVAL stores fit the declaration" "$TESTDIR/test236_assign_fit_paths.rpgle" "run"
+run_test "237" "SQL INTO host vars fit" "$TESTDIR/test237_sql_into_fit.sqlrpgle" "run-sql"
 
 # ── Customer / drop-in tests ─────────────────────────────────────────────
 # Drop any .rpgle or .sqlrpgle file into tests/customer/ and it will be

@@ -193,6 +193,16 @@ private:
     // DS subfield reached as ds.f, ds(i).f or through nested LIKEDS.
     struct FieldAttrs { bool known = false; RPGType type = RPGType::INT10; int length = 0; int digits = 0; int decimals = 0; };
     FieldAttrs attrsOf(const Expression& e) const;
+    FieldAttrs attrsOfName(const std::string& cppName) const;
+    // Wraps `rhs` so the value assigned fits a target of this declaration.
+    std::string fitValue(RPGType type, int length, int decimals, const std::string& rhs) const;
+    std::string fitValue(const FieldAttrs& a, const std::string& rhs) const {
+        return a.known ? fitValue(a.type, a.length, a.decimals, rhs) : rhs;
+    }
+    // "X = fit(X);" for a target assigned by something other than EVAL, or "".
+    std::string refitStmt(const FieldAttrs& a, const std::string& target) const;
+    void emitSqlIntoRefit(const std::string& decl, const std::string& target);
+    FieldAttrs current_return_attrs_; // declared return of the procedure being emitted
     const DclDS* dsOfExpr(const Expression& e) const;
     const DclDS* resolveDsDef(const std::string& name) const;
     std::string emitInzValue(const rpg::DclS& node);

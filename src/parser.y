@@ -116,6 +116,8 @@ static rpg::FuncCall* make_func(const char* name, std::vector<rpg::Expression*>*
     }
     return new rpg::FuncCall(name, std::move(args));
 }
+// Length/digits/scale of the most recent pi_return_type (see that rule).
+static int g_ret_len = 0, g_ret_digits = 0, g_ret_dec = 0;
 %}
 
 %union {
@@ -1100,9 +1102,9 @@ dcl_pr_stmt:
         if ($3 >= 0) {
             iface.has_return = true;
             iface.return_type = static_cast<rpg::RPGType>($3);
-            iface.return_length = 0;
-            iface.return_digits = 0;
-            iface.return_decimals = 0;
+            iface.return_length = g_ret_len;
+            iface.return_digits = g_ret_digits;
+            iface.return_decimals = g_ret_dec;
         } else {
             iface.has_return = false;
         }
@@ -1117,9 +1119,9 @@ dcl_pr_stmt:
         if ($3 >= 0) {
             iface.has_return = true;
             iface.return_type = static_cast<rpg::RPGType>($3);
-            iface.return_length = 0;
-            iface.return_digits = 0;
-            iface.return_decimals = 0;
+            iface.return_length = g_ret_len;
+            iface.return_digits = g_ret_digits;
+            iface.return_decimals = g_ret_dec;
         } else {
             iface.has_return = false;
         }
@@ -1176,9 +1178,9 @@ dcl_proc_stmt:
         if ($6 >= 0) {
             iface.has_return = true;
             iface.return_type = static_cast<rpg::RPGType>($6);
-            iface.return_length = 0;
-            iface.return_digits = 0;
-            iface.return_decimals = 0;
+            iface.return_length = g_ret_len;
+            iface.return_digits = g_ret_digits;
+            iface.return_decimals = g_ret_dec;
         } else {
             iface.has_return = false;
         }
@@ -1200,9 +1202,9 @@ dcl_proc_stmt:
         if ($7 >= 0) {
             iface.has_return = true;
             iface.return_type = static_cast<rpg::RPGType>($7);
-            iface.return_length = 0;
-            iface.return_digits = 0;
-            iface.return_decimals = 0;
+            iface.return_length = g_ret_len;
+            iface.return_digits = g_ret_digits;
+            iface.return_decimals = g_ret_dec;
         } else {
             iface.has_return = false;
         }
@@ -1226,9 +1228,9 @@ dcl_proc_stmt:
         if ($6 >= 0) {
             iface.has_return = true;
             iface.return_type = static_cast<rpg::RPGType>($6);
-            iface.return_length = 0;
-            iface.return_digits = 0;
-            iface.return_decimals = 0;
+            iface.return_length = g_ret_len;
+            iface.return_digits = g_ret_digits;
+            iface.return_decimals = g_ret_dec;
         } else {
             iface.has_return = false;
         }
@@ -1253,9 +1255,9 @@ dcl_proc_stmt:
         if ($7 >= 0) {
             iface.has_return = true;
             iface.return_type = static_cast<rpg::RPGType>($7);
-            iface.return_length = 0;
-            iface.return_digits = 0;
-            iface.return_decimals = 0;
+            iface.return_length = g_ret_len;
+            iface.return_digits = g_ret_digits;
+            iface.return_decimals = g_ret_dec;
         } else {
             iface.has_return = false;
         }
@@ -1279,14 +1281,20 @@ proc_export:
     ;
 
 /* Return type for PI/PR: returns -1 if void, or RPGType enum value */
+/* The value is the return type's code; its length, digits and scale are
+   left in g_ret_* for the enclosing DCL-PR/DCL-PI action to copy, since
+   they used to be discarded here and every interface came out with a
+   length and scale of 0. Nothing between this reduction and that action
+   parses another return type, so the side channel cannot be clobbered. */
 pi_return_type:
-    /* void */ { $$ = -1; }
-    | KW_INT LPAREN INTEGER_LITERAL RPAREN { $$ = (int)rpg::RPGType::INT10; }
-    | KW_CHAR LPAREN INTEGER_LITERAL RPAREN { $$ = (int)rpg::RPGType::CHAR; }
-    | KW_VARCHAR LPAREN INTEGER_LITERAL RPAREN { $$ = (int)rpg::RPGType::VARCHAR; }
-    | KW_PACKED LPAREN INTEGER_LITERAL COLON INTEGER_LITERAL RPAREN { $$ = (int)rpg::RPGType::PACKED; }
+    /* void */ { $$ = -1; g_ret_len = g_ret_digits = g_ret_dec = 0; }
+    | KW_INT LPAREN INTEGER_LITERAL RPAREN { $$ = (int)rpg::RPGType::INT10; g_ret_len = 0; g_ret_digits = $3; g_ret_dec = 0; }
+    | KW_CHAR LPAREN INTEGER_LITERAL RPAREN { $$ = (int)rpg::RPGType::CHAR; g_ret_len = $3; g_ret_digits = g_ret_dec = 0; }
+    | KW_VARCHAR LPAREN INTEGER_LITERAL RPAREN { $$ = (int)rpg::RPGType::VARCHAR; g_ret_len = $3; g_ret_digits = g_ret_dec = 0; }
+    | KW_PACKED LPAREN INTEGER_LITERAL COLON INTEGER_LITERAL RPAREN { $$ = (int)rpg::RPGType::PACKED; g_ret_len = 0; g_ret_digits = $3; g_ret_dec = $5; }
     | KW_FLOAT_TYPE LPAREN INTEGER_LITERAL RPAREN {
         $$ = ($3 <= 4) ? (int)rpg::RPGType::FLOAT4 : (int)rpg::RPGType::FLOAT8;
+        g_ret_len = g_ret_digits = g_ret_dec = 0;
     }
     ;
 

@@ -121,6 +121,19 @@ std::string CodeGen::paramTypeToString(const ParamDecl& p) {
     }
 }
 
+// A host variable filled by FETCH or SELECT INTO holds the column value
+// as the driver returned it — a CHAR(10) host variable receiving 'Bob'
+// held three bytes, a PACKED(9:2) one receiving 1.239 held 1.239. Fit it
+// to its declaration after the fetch, as any other assignment is. `decl`
+// names the declared variable, `target` the storage filled (an array
+// element, for a multi-row FETCH).
+void CodeGen::emitSqlIntoRefit(const std::string& decl, const std::string& target) {
+    std::string stmt = refitStmt(attrsOfName(decl), target);
+    if (stmt.empty()) return;
+    emitIndent();
+    out_ << "if (__frc == SQL_SUCCESS || __frc == SQL_SUCCESS_WITH_INFO) " << stmt << "\n";
+}
+
 std::string CodeGen::escapeSqlForCpp(const std::string& sql) {
     std::string result;
     for (char c : sql) {
@@ -320,6 +333,7 @@ void CodeGen::visit(ExecSqlStmt& node) {
                     emitIndent();
                     out_ << "RpgSqlEnv::copyStrBuf(" << into_vars[i]
                          << "[__ri], __sql_strbuf_" << (i+1) << ", __frc);\n";
+                    emitSqlIntoRefit(into_vars[i], into_vars[i] + "[__ri]");
                 }
 
                 indent_--;
@@ -342,6 +356,7 @@ void CodeGen::visit(ExecSqlStmt& node) {
                     emitIndent();
                     out_ << "RpgSqlEnv::copyStrBuf(" << into_vars[i]
                          << ", __sql_strbuf_" << (i+1) << ", __frc);\n";
+                    emitSqlIntoRefit(into_vars[i], into_vars[i]);
                     if (!into_hvwi[i].ind_var.empty()) {
                         emitIndent();
                         out_ << into_hvwi[i].ind_var << " = (__sql_ind_" << (i+1) << " < 0) ? -1 : 0;\n";
@@ -405,6 +420,7 @@ void CodeGen::visit(ExecSqlStmt& node) {
                 emitIndent();
                 out_ << "RpgSqlEnv::copyStrBuf(" << into_hvwi[i].var
                      << ", __sql_strbuf_" << (i+1) << ", __frc);\n";
+                emitSqlIntoRefit(into_hvwi[i].var, into_hvwi[i].var);
                 if (!into_hvwi[i].ind_var.empty()) {
                     emitIndent();
                     out_ << into_hvwi[i].ind_var << " = (__sql_ind_" << (i+1) << " < 0) ? -1 : 0;\n";
@@ -1106,6 +1122,32 @@ void CodeGen::visit(DclProc& node) {
     auto saved_digits   = var_digits_;
     auto saved_decimals = var_decimals_;
     auto saved_arrays   = array_vars_;
+
+    // Parameters are declared fields like any other. Registering them lets
+    // EVAL fit a value assigned to one. A VALUE parameter is RPG's own
+    // copy of the argument converted to the declared type, so it is fitted
+    // on entry: CHAR(10) VALUE passed 'AB' holds 'AB' plus eight blanks. A
+    // by-reference parameter is the caller's storage, already its caller's
+    // declared shape, and is left alone. (*OMIT parameters are pointers
+    // and LIKEDS ones whole structures; neither is a scalar to fit.)
+    for (auto& p : node.interface.params) {
+        if (p.omit || !p.likeds.empty()) continue;
+        var_types_[p.name]    = p.type;
+        var_lengths_[p.name]  = p.length;
+        var_digits_[p.name]   = p.digits;
+        var_decimals_[p.name] = p.decimals;
+        if (!p.by_value) continue;
+        std::string stmt = refitStmt(attrsOfName(p.name), p.name);
+        if (!stmt.empty()) { emitIndent(); out_ << stmt << "\n"; }
+    }
+    current_return_attrs_ = FieldAttrs{};
+    if (node.interface.has_return) {
+        current_return_attrs_.known    = true;
+        current_return_attrs_.type     = node.interface.return_type;
+        current_return_attrs_.length   = node.interface.return_length;
+        current_return_attrs_.digits   = node.interface.return_digits;
+        current_return_attrs_.decimals = node.interface.return_decimals;
+    }
     current_proc_parm_count_ = static_cast<int>(node.interface.params.size());
     has_nopass_params_ = has_nopass;
     current_proc_name_ = node.name;
@@ -1185,6 +1227,7 @@ void CodeGen::visit(DclProc& node) {
         }
     }
     in_procedure_ = false;
+    current_return_attrs_ = FieldAttrs{};
     var_types_    = std::move(saved_types);
     var_lengths_  = std::move(saved_lengths);
     var_digits_   = std::move(saved_digits);
@@ -1624,6 +1667,17 @@ CodeGen::FieldAttrs CodeGen::attrsOf(const Expression& e) const {
     if (auto* aa = dynamic_cast<const ArrayAccess*>(&e)) arrName = aa->name;
     else if (auto* fc = dynamic_cast<const FuncCall*>(&e)) {
         if (fc->args.size() == 1 && array_vars_.count(fc->name)) arrName = fc->name;
+        else {
+            // A procedure call has its declared return type.
+            auto sig = proc_sigs_.find(fc->name);
+            if (sig == proc_sigs_.end() || !sig->second.has_return) return a;
+            a.known    = true;
+            a.type     = sig->second.return_type;
+            a.length   = sig->second.return_length;
+            a.digits   = sig->second.return_digits;
+            a.decimals = sig->second.return_decimals;
+            return a;
+        }
     }
     if (!arrName.empty()) {
         size_t dotPos = arrName.find('.');
@@ -1660,6 +1714,36 @@ CodeGen::FieldAttrs CodeGen::attrsOf(const Expression& e) const {
         return a;
     }
     return a;
+}
+
+// attrsOf for a name as generated code spells it — "FLD" or "DS.FLD" —
+// which is how SQL host variables reach codegen.
+CodeGen::FieldAttrs CodeGen::attrsOfName(const std::string& cppName) const {
+    size_t dot = cppName.find('.');
+    if (dot == std::string::npos) return attrsOf(Identifier(cppName));
+    DotExpr de(std::make_unique<Identifier>(cppName.substr(0, dot)), cppName.substr(dot + 1));
+    return attrsOf(de);
+}
+
+// Every assignment in RPG leaves the target holding a value of its
+// declared type: CHAR(n) padded or truncated to n, VARCHAR(n) cut at n,
+// PACKED/ZONED truncated to their scale. C++ assignment does none of
+// that, so anything that stores into a declared field goes through here.
+std::string CodeGen::fitValue(RPGType type, int length, int decimals, const std::string& rhs) const {
+    if (type == RPGType::CHAR && length > 0)
+        return "rpg_fit_char(" + rhs + ", " + std::to_string(length) + ")";
+    if (type == RPGType::VARCHAR && length > 0)
+        return "rpg_fit_varchar(" + rhs + ", " + std::to_string(length) + ")";
+    if (type == RPGType::PACKED || type == RPGType::ZONED)
+        return "rpg_trunc_dec(static_cast<double>(" + rhs + "), " + std::to_string(decimals) + ")";
+    return rhs;
+}
+
+std::string CodeGen::refitStmt(const FieldAttrs& a, const std::string& target) const {
+    if (!a.known) return "";
+    std::string fitted = fitValue(a, target);
+    if (fitted == target) return "";
+    return target + " = " + fitted + ";";
 }
 
 // An INZ value naming a figurative constant needs the type-aware expansion
@@ -1798,15 +1882,9 @@ void CodeGen::visit(EvalStmt& node) {
     // a PACKED(9:2) assigned 1.239 must hold 1.23.
     {
         FieldAttrs fa = attrsOf(*node.target);
-        if (fa.known) {
-            if (fa.type == RPGType::CHAR && fa.length > 0)
-                rhs = "rpg_fit_char(" + rhs + ", " + std::to_string(fa.length) + ")";
-            else if (fa.type == RPGType::VARCHAR && fa.length > 0)
-                rhs = "rpg_fit_varchar(" + rhs + ", " + std::to_string(fa.length) + ")";
-            else if ((fa.type == RPGType::PACKED || fa.type == RPGType::ZONED) && !half_adj)
-                rhs = "rpg_trunc_dec(static_cast<double>(" + rhs + "), " +
-                      std::to_string(fa.decimals) + ")";
-        }
+        // (H) has already rounded at the scale; truncating after it is a no-op.
+        if (fa.known && !(half_adj && (fa.type == RPGType::PACKED || fa.type == RPGType::ZONED)))
+            rhs = fitValue(fa, rhs);
     }
 
     if (error_ext) {
@@ -1829,7 +1907,11 @@ void CodeGen::visit(DsplyStmt& node) {
 void CodeGen::visit(ReturnStmt& node) {
     emitIndent();
     if (node.has_expr) {
-        out_ << "return " << emitExpr(*node.expr) << ";\n";
+        // A procedure returns a value of its declared return type: RETURN
+        // 'AB' from one declared CHAR(10) returns 'AB' plus eight blanks.
+        std::string val = emitExpr(*node.expr);
+        if (in_procedure_) val = fitValue(current_return_attrs_, val);
+        out_ << "return " << val << ";\n";
     } else if (void_return_) {
         // A bare RETURN in a function with no return value. `node.code` is
         // main()'s exit status, which a void function has nowhere to put.
@@ -3884,19 +3966,22 @@ void CodeGen::emitXmlFieldAssignments(DclDS* ds, const std::string& target, cons
         switch (f.type) {
             case RPGType::INT10:
             case RPGType::UNS:
-                out_ << target << "." << f.name << " = rpg_xml_get_int("
-                     << xml_src << ", \"" << f.name << "\", __xml_case_any);\n";
+                out_ << target << "." << f.name << " = "
+                     << fitValue(f.type, f.length, f.decimals,
+                                 "rpg_xml_get_int(" + xml_src + ", \"" + f.name + "\", __xml_case_any)") << ";\n";
                 break;
             case RPGType::PACKED:
             case RPGType::ZONED:
             case RPGType::FLOAT4:
             case RPGType::FLOAT8:
-                out_ << target << "." << f.name << " = rpg_xml_get_double("
-                     << xml_src << ", \"" << f.name << "\", __xml_case_any);\n";
+                out_ << target << "." << f.name << " = "
+                     << fitValue(f.type, f.length, f.decimals,
+                                 "rpg_xml_get_double(" + xml_src + ", \"" + f.name + "\", __xml_case_any)") << ";\n";
                 break;
             default:
-                out_ << target << "." << f.name << " = rpg_xml_get_str("
-                     << xml_src << ", \"" << f.name << "\", __xml_case_any);\n";
+                out_ << target << "." << f.name << " = "
+                     << fitValue(f.type, f.length, f.decimals,
+                                 "rpg_xml_get_str(" + xml_src + ", \"" + f.name + "\", __xml_case_any)") << ";\n";
                 break;
         }
     }
@@ -4037,19 +4122,22 @@ void CodeGen::emitJsonFieldAssignments(DclDS* ds, const std::string& target, con
         switch (f.type) {
             case RPGType::INT10:
             case RPGType::UNS:
-                out_ << target << "." << f.name << " = rpg_json_get_int("
-                     << json_src << ", \"" << f.name << "\", __json_case_any);\n";
+                out_ << target << "." << f.name << " = "
+                     << fitValue(f.type, f.length, f.decimals,
+                                 "rpg_json_get_int(" + json_src + ", \"" + f.name + "\", __json_case_any)") << ";\n";
                 break;
             case RPGType::PACKED:
             case RPGType::ZONED:
             case RPGType::FLOAT4:
             case RPGType::FLOAT8:
-                out_ << target << "." << f.name << " = rpg_json_get_double("
-                     << json_src << ", \"" << f.name << "\", __json_case_any);\n";
+                out_ << target << "." << f.name << " = "
+                     << fitValue(f.type, f.length, f.decimals,
+                                 "rpg_json_get_double(" + json_src + ", \"" + f.name + "\", __json_case_any)") << ";\n";
                 break;
             default:
-                out_ << target << "." << f.name << " = rpg_json_get_str("
-                     << json_src << ", \"" << f.name << "\", __json_case_any);\n";
+                out_ << target << "." << f.name << " = "
+                     << fitValue(f.type, f.length, f.decimals,
+                                 "rpg_json_get_str(" + json_src + ", \"" + f.name + "\", __json_case_any)") << ";\n";
                 break;
         }
     }
@@ -4188,19 +4276,22 @@ void CodeGen::emitCsvFieldAssignments(DclDS* ds, const std::string& target,
         switch (f.type) {
             case RPGType::INT10:
             case RPGType::UNS:
-                out_ << target << "." << f.name << " = rpg_csv_get_int("
-                     << csv_doc << ", " << row_idx << ", \"" << f.name << "\", __csv_case_any);\n";
+                out_ << target << "." << f.name << " = "
+                     << fitValue(f.type, f.length, f.decimals,
+                                 "rpg_csv_get_int(" + csv_doc + ", " + row_idx + ", \"" + f.name + "\", __csv_case_any)") << ";\n";
                 break;
             case RPGType::PACKED:
             case RPGType::ZONED:
             case RPGType::FLOAT4:
             case RPGType::FLOAT8:
-                out_ << target << "." << f.name << " = rpg_csv_get_double("
-                     << csv_doc << ", " << row_idx << ", \"" << f.name << "\", __csv_case_any);\n";
+                out_ << target << "." << f.name << " = "
+                     << fitValue(f.type, f.length, f.decimals,
+                                 "rpg_csv_get_double(" + csv_doc + ", " + row_idx + ", \"" + f.name + "\", __csv_case_any)") << ";\n";
                 break;
             default:
-                out_ << target << "." << f.name << " = rpg_csv_get_str("
-                     << csv_doc << ", " << row_idx << ", \"" << f.name << "\", __csv_case_any);\n";
+                out_ << target << "." << f.name << " = "
+                     << fitValue(f.type, f.length, f.decimals,
+                                 "rpg_csv_get_str(" + csv_doc + ", " + row_idx + ", \"" + f.name + "\", __csv_case_any)") << ";\n";
                 break;
         }
     }

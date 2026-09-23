@@ -2207,16 +2207,29 @@ pushed 99999999.99 past a whole unit (Test 221 caught it).
   as they do on IBM i.
 
 **Still open, all verified or read from the code:**
-- **Only `EVAL`/`EVALR` fit.** Other paths still assign raw:
-  - procedure `VALUE` parameters and return values
-  - `FETCH`/`SELECT INTO` and RLA reads into `CHAR` fields (fetched values
-    arrive unpadded)
-  - `XML-INTO`/`DATA-INTO`
-  - `DSPLY`'s response variable
+- **Only `EVAL`/`EVALR` fit.** ✅ **Mostly fixed 2026-09-22** (Tests 236,
+  237). Every declared store now goes through `CodeGen::fitValue`:
+  - **Procedures:** parameters are registered in the attribute tables
+    (inside the procedure's scope), so `EVAL` into one fits. `VALUE`
+    parameters are fitted on entry; by-reference ones are the caller's
+    storage and are left alone. `RETURN` fits to the declared return type,
+    which the parser used to discard — `pi_return_type` now carries the
+    length and scale, so every interface no longer comes out with 0 for
+    both. A call's value also has its return type as far as `attrsOf` is
+    concerned, so `%CHAR(proc())` formats at the declared scale.
+  - **SQL:** host variables filled by `SELECT INTO`/`FETCH` (including
+    multi-row `FETCH` and `DS` targets) are fitted after the fetch.
+  - **`XML-INTO`/`DATA-INTO`** (XML, JSON and CSV) fit each subfield as
+    it is filled.
+  - `DSPLY` has no response-variable form here at all, so there was
+    nothing to fit (an earlier note listing it was wrong).
 
-  Procedure parameters and externally described file fields aren't
-  registered in the attribute tables at all, so `attrsOf` doesn't know
-  them.
+  **Still unfitted:** record-level access. Reads into externally described
+  file fields (`CHAIN`/`READ`/`READE` and friends) still assign the raw
+  column value. Those fields are declared as unsized `std::string`, and
+  the `.extdesc` cache records a length but not whether the column is
+  `CHAR` (fixed-length, padded on IBM i) or `VARCHAR` (varying). Fitting
+  them needs that recorded first.
 - **Integer-digit overflow isn't detected.** RPG `EVAL` of 123456 into a
   `PACKED(5:0)` raises RNX0103 (status 103). Here it stores the value.
 - **Float literals are emitted with 10 fixed decimals**

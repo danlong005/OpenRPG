@@ -1526,7 +1526,18 @@ void CodeGen::visit(DclS& node) {
                 out_ << node.name << ".reserve(" << node.dim << ");\n";
             }
         } else {
-            out_ << "std::array<" << typeToString(node.type, node.length) << ", " << node.dim << "> " << node.name << ";\n";
+            // Every element starts as a standalone field of its type does:
+            // CHAR(n) as n blanks, everything else zero. A bare std::array
+            // left CHAR elements as empty strings, and inside a procedure
+            // (automatic storage) left numeric elements uninitialized —
+            // whatever was on the stack.
+            out_ << "std::array<" << typeToString(node.type, node.length) << ", " << node.dim << "> " << node.name;
+            if (node.type == RPGType::CHAR && node.length > 0)
+                out_ << " = rpg_filled_array<std::string, " << node.dim << ">(std::string("
+                     << node.length << ", ' '))";
+            else
+                out_ << "{}";
+            out_ << ";\n";
         }
         return;
     }
@@ -2222,6 +2233,8 @@ void CodeGen::visit(DclDS& node) {
             if (f.type == RPGType::CHAR && f.length > 0)
                 out_ << " = rpg_filled_array<std::string, " << f.dim << ">(std::string("
                      << f.length << ", ' '))";
+            else
+                out_ << "{}"; // numeric elements zero, not indeterminate
             out_ << "; // DIM(" << f.dim << ")\n";
             ds_local_types[f.name] = {f.type, f.length};
         } else if (f.pos > 0) {

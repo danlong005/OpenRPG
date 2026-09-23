@@ -2064,6 +2064,14 @@ Found alongside, all verified:
 - A nested `a.b.c` is readable but is a syntax error as an assignment
   target.
 - A standalone `CHAR(n) DIM(m)` array starts as empty strings, not blanks.
+  ✅ **Fixed 2026-09-22** (Test 243). Found alongside it, and worse: a
+  numeric array declared inside a procedure was a local `std::array` with
+  no initializer, so its elements held leftover stack contents (the test's
+  negative control read 448, 64 × a previous call's 7s). Standalone arrays
+  now start blank-filled (`CHAR`) or zeroed (everything else), and `DIM`'d
+  numeric subfields are zeroed too. Still open, same area: `INZ` on an
+  array and `CHAR(n) DIM(*VAR:m)` are both syntax errors (`INT DIM(*VAR)`
+  parses).
 
 Smaller, all verified:
 - `DCL-PROC` with no `DCL-PI` is a syntax error. IBM allows the interface

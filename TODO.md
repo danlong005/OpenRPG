@@ -2008,8 +2008,21 @@ number is 0. `%LOOKUP`/`%LOOKUPxx`/`%TLOOKUPxx` and `IN` use the same
 helpers, so a `CHAR(3)` array searched for `'AB'` now finds it.
 
 Still open, found alongside:
-- A hex literal containing `X'00'` is emitted as `std::string("...\x00...")`
-  and truncated at the NUL. It needs the `(ptr, len)` constructor.
+- A hex literal containing `X'00'` was truncated at the NUL. ✅ **Fixed
+  2026-09-22** (Test 242). It was lost at three layers:
+  - the lexer's C-string token (`X'C1004142'` became `'A'`)
+  - the parser
+  - the emitted `std::string("…")`
+
+  A hex literal holding a 00 byte now travels as its hex digits behind a
+  marker, decoded by `rpg_decode_lexed_string` (ast.h) where it becomes a
+  value, and is emitted with its length. Found alongside:
+  - Bytes were emitted as greedy `\xNN` escapes, so a control byte
+    followed by a hex-digit character merged into one wrong byte
+    (`X'0A'` + `'B'`). Both emitters now use octal.
+  - The two `*ALL` code paths pasted the pattern raw into the C++, so a
+    `"` or `\` in it broke the build.
+  - `rpg_all` looped forever on an empty pattern.
 - A figurative constant anywhere other than a comparison or an assignment
   still doesn't compile. Examples are a concatenation (`'x' + *BLANKS`) and
   a BIF argument.

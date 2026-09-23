@@ -797,6 +797,7 @@ run_test "238" "RLA fields keep column shape" "$TESTDIR/test238_rla_field_fit.rp
 run_test "239" "Overflow 103 / divide-by-zero 102" "$TESTDIR/test239_numeric_overflow.rpgle" "run"
 run_test "240" "Fixed arithmetic truncates high digits" "$TESTDIR/test240_fixed_arith_trunc.rpgle" "run"
 run_test "241" "Reject a hand-written EVAL(T)" "$TESTDIR/test241_err_eval_t.rpgle" "error"
+run_test "242" "Hex literals keep X'00'" "$TESTDIR/test242_hex_nul.rpgle" "run"
 
 # ── Customer / drop-in tests ─────────────────────────────────────────────
 # Drop any .rpgle or .sqlrpgle file into tests/customer/ and it will be

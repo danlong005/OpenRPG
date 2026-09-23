@@ -42,6 +42,14 @@ static char* process_hex_string(const char* text) {
         result[i] = (char)val;
     }
     result[bytes] = '\0';
+    // A NUL byte would end the C string here, and everything from it on
+    // was lost (X'C100' became 'A'). Pass such a literal as its hex digits
+    // behind a marker instead; rpg_decode_lexed_string (ast.h) restores it.
+    if (strlen(result) != bytes) {
+        free(result);
+        std::string enc = std::string(rpg::RPG_HEX_NUL_MARKER) + std::string(p, bytes * 2);
+        return strdup(enc.c_str());
+    }
     return result;
 }
 

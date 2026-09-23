@@ -2557,7 +2557,7 @@ primary_expr:
         $$ = new rpg::FloatLiteral($1);
     }
     | STRING_LITERAL {
-        $$ = new rpg::StringLiteral($1);
+        $$ = new rpg::StringLiteral(rpg::rpg_decode_lexed_string($1));
         free($1);
     }
     | IDENTIFIER LPAREN call_args_opt RPAREN {
@@ -2914,7 +2914,7 @@ primary_expr:
     }
     | KW_ALL STRING_LITERAL {
         auto* args = new std::vector<rpg::Expression*>();
-        args->push_back(new rpg::StringLiteral($2));
+        args->push_back(new rpg::StringLiteral(rpg::rpg_decode_lexed_string($2)));
         free($2);
         $$ = make_bif("ALL", args);
     }

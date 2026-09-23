@@ -1972,6 +1972,7 @@ inline void rpg_move_dt(RpgTimestamp& dst, const RpgTime& src) {
 }
 
 inline std::string rpg_all(const std::string& pattern, int len = 50) {
+    if (pattern.empty()) return std::string(static_cast<size_t>(len > 0 ? len : 0), ' ');
     std::string result;
     while (static_cast<int>(result.size()) < len) {
         result += pattern;

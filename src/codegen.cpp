@@ -62,9 +62,13 @@ static std::string cppEscape(const std::string& s) {
         else if (c == '\n') o << "\\n";
         else if (c == '\r') o << "\\r";
         else if (c == '\t') o << "\\t";
-        else if (c < 0x20 || c == 0x7f)
-            o << "\\x" << std::hex << std::setw(2) << std::setfill('0')
-              << static_cast<int>(c) << std::dec;
+        else if (c < 0x20 || c >= 0x7f) {
+            // Octal: \xNN is greedy and swallows a following hex digit —
+            // see visit(StringLiteral).
+            char esc[5];
+            std::snprintf(esc, sizeof esc, "\\%03o", static_cast<unsigned>(c));
+            o << esc;
+        }
         else                o << static_cast<char>(c);
     }
     return o.str();
@@ -1850,12 +1854,10 @@ void CodeGen::visit(EvalStmt& node) {
         int len = 50; // default
         FieldAttrs ta = attrsOf(*node.target);
         if (ta.known && ta.length > 0) len = ta.length;
-        auto* sl = dynamic_cast<StringLiteral*>(rhs_bif->args[0].get());
-        if (sl) {
-            out_ << target_str << " = rpg_all(\"" << sl->value << "\", " << len << ");";
-        } else {
-            out_ << target_str << " = rpg_all(" << emitExpr(*rhs_bif->args[0]) << ", " << len << ");";
-        }
+        // Through the literal emitter, not pasted raw: a pattern holding a
+        // quote, a backslash or a NUL (*ALLX'00') broke the generated C++
+        // or was cut short.
+        out_ << target_str << " = rpg_all(" << emitExpr(*rhs_bif->args[0]) << ", " << len << ");";
         if (node.line > 0) out_ << " // line " << node.line;
         out_ << "\n";
         return;
@@ -3003,6 +3005,9 @@ void CodeGen::visit(FloatLiteral& node) {
 }
 
 void CodeGen::visit(StringLiteral& node) {
+    // std::string(const char*) stops at the first NUL, so a literal that
+    // contains one is emitted with its length.
+    bool hasNul = node.value.find('\0') != std::string::npos;
     expr_ << "std::string(\"";
     for (unsigned char c : node.value) {
         if (c == '"')       expr_ << "\\\"";
@@ -3010,12 +3015,21 @@ void CodeGen::visit(StringLiteral& node) {
         else if (c == '\n') expr_ << "\\n";
         else if (c == '\r') expr_ << "\\r";
         else if (c == '\t') expr_ << "\\t";
-        else if (c < 0x20 || c == 0x7f)
-            expr_ << "\\x" << std::hex << std::setw(2) << std::setfill('0')
-                  << static_cast<int>(c) << std::dec;
+        else if (c < 0x20 || c >= 0x7f) {
+            // Octal, not \xNN: a hex escape is greedy, so \x00 followed by
+            // the byte 'A' read as \x00A (0x0A) — any control byte before a
+            // hex-digit character was corrupted. An octal escape stops at
+            // three digits. High bytes are escaped too rather than written
+            // raw into the generated source.
+            char esc[5];
+            std::snprintf(esc, sizeof esc, "\\%03o", static_cast<unsigned>(c));
+            expr_ << esc;
+        }
         else                expr_ << static_cast<char>(c);
     }
-    expr_ << "\")";
+    expr_ << "\"";
+    if (hasNul) expr_ << ", " << node.value.size();
+    expr_ << ")";
 }
 
 void CodeGen::visit(BinaryExpr& node) {
@@ -3671,14 +3685,9 @@ void CodeGen::visit(BIFCall& node) {
         }
     } else if (node.name == "ALL") {
         // Will be resolved in EvalStmt context; for now emit rpg_all helper
-        auto* sl = dynamic_cast<StringLiteral*>(node.args[0].get());
-        if (sl) {
-            expr_ << "rpg_all(\"" << sl->value << "\")";
-        } else {
-            expr_ << "rpg_all(";
-            node.args[0]->accept(*this);
-            expr_ << ")";
-        }
+        expr_ << "rpg_all(";
+        node.args[0]->accept(*this);
+        expr_ << ")";
     } else if (node.name == "PASSED") {
         // %PASSED(parmname) — check if optional param was passed
         auto* arg_id = dynamic_cast<Identifier*>(node.args[0].get());

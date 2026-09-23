@@ -49,6 +49,21 @@ public:
     void accept(ASTVisitor& visitor) override;
 };
 
+// A token's text travels from the lexer as a C string, which cannot hold a
+// NUL byte. A hex literal that contains one (X'00', X'C100') is therefore
+// passed in this spelling instead — the marker, then its hex digits — and
+// decoded where it becomes a value. Every other literal is passed as-is.
+inline const char* RPG_HEX_NUL_MARKER = "\x01HEX\x01";
+inline std::string rpg_decode_lexed_string(const char* s) {
+    std::string t(s);
+    const std::string mark(RPG_HEX_NUL_MARKER);
+    if (t.compare(0, mark.size(), mark) != 0) return t;
+    std::string out;
+    for (size_t i = mark.size(); i + 1 < t.size(); i += 2)
+        out += static_cast<char>(std::stoi(t.substr(i, 2), nullptr, 16));
+    return out;
+}
+
 class StringLiteral : public Expression {
 public:
     std::string value;

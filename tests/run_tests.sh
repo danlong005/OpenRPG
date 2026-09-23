@@ -801,6 +801,8 @@ run_test "242" "Hex literals keep X'00'" "$TESTDIR/test242_hex_nul.rpgle" "run"
 run_test "243" "Arrays start initialized" "$TESTDIR/test243_array_init.rpgle" "run"
 run_test "244" "DCL-PI *N" "$TESTDIR/test244_pi_star_n.rpgle" "run"
 run_test "245" "Bare procedure call statements" "$TESTDIR/test245_bare_call.rpgle" "run"
+run_test "246" "CONST parameters" "$TESTDIR/test246_const_params.rpgle" "run"
+run_test "247" "Reject assignment to a CONST parm" "$TESTDIR/test247_err_const_assign.rpgle" "error"
 
 # ── Customer / drop-in tests ─────────────────────────────────────────────
 # Drop any .rpgle or .sqlrpgle file into tests/customer/ and it will be

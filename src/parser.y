@@ -84,6 +84,19 @@ static char* g_dclf_extdesc = nullptr;
 static char* g_dclf_usages = nullptr;
 static char* g_dclf_prefix = nullptr;
 
+// Parameter keyword bits collected by param_kws (see param_decl).
+enum { PK_VALUE = 1, PK_CONST = 2, PK_NOPASS = 4, PK_OMIT = 8,
+       PK_VARSIZE = 16, PK_STRING = 32, PK_TRIM = 64 };
+static void apply_param_kws(rpg::ParamDecl* p, int kws) {
+    p->by_value   = (kws & PK_VALUE) != 0;
+    p->is_const   = (kws & PK_CONST) != 0;
+    p->nopass     = (kws & PK_NOPASS) != 0;
+    p->omit       = (kws & PK_OMIT) != 0;
+    p->varsize    = (kws & PK_VARSIZE) != 0;
+    p->string_opt = (kws & PK_STRING) != 0;
+    p->trim_opt   = (kws & PK_TRIM) != 0;
+}
+
 static rpg::Statement* make_move(rpg::Expression* src, char* dst, bool left, bool pad,
                                  char* fmt = nullptr) {
     if (!g_allow_fixed_only_stmts) {
@@ -237,7 +250,8 @@ static int g_ret_len = 0, g_ret_digits = 0, g_ret_dec = 0;
 %type <ds_field_list> ds_fields
 %type <ds_field> ds_field
 %type <param_list> pi_params pr_params
-%type <param_decl> pi_param pr_param
+%type <param_decl> pi_param pr_param param_decl param_type
+%type <ival> param_kws param_kw param_opts param_opt
 %type <ival> pi_return_type dcl_s_keywords proc_export
 %type <sval> ident
 %type <enum_const_list> enum_constants enum_constant
@@ -1332,144 +1346,7 @@ pi_params:
     ;
 
 pi_param:
-    IDENTIFIER KW_INT LPAREN INTEGER_LITERAL RPAREN SEMICOLON {
-        $$ = new rpg::ParamDecl{$1, rpg::RPGType::INT10, 0, 0, 0, false};
-        free($1);
-    }
-    | IDENTIFIER KW_INT LPAREN INTEGER_LITERAL RPAREN KW_VALUE SEMICOLON {
-        $$ = new rpg::ParamDecl{$1, rpg::RPGType::INT10, 0, 0, 0, true};
-        free($1);
-    }
-    | IDENTIFIER KW_CHAR LPAREN INTEGER_LITERAL RPAREN SEMICOLON {
-        $$ = new rpg::ParamDecl{$1, rpg::RPGType::CHAR, $4, 0, 0, false};
-        free($1);
-    }
-    | IDENTIFIER KW_CHAR LPAREN INTEGER_LITERAL RPAREN KW_VALUE SEMICOLON {
-        $$ = new rpg::ParamDecl{$1, rpg::RPGType::CHAR, $4, 0, 0, true};
-        free($1);
-    }
-    | IDENTIFIER KW_VARCHAR LPAREN INTEGER_LITERAL RPAREN SEMICOLON {
-        $$ = new rpg::ParamDecl{$1, rpg::RPGType::VARCHAR, $4, 0, 0, false};
-        free($1);
-    }
-    | IDENTIFIER KW_VARCHAR LPAREN INTEGER_LITERAL RPAREN KW_VALUE SEMICOLON {
-        $$ = new rpg::ParamDecl{$1, rpg::RPGType::VARCHAR, $4, 0, 0, true};
-        free($1);
-    }
-    | IDENTIFIER KW_PACKED LPAREN INTEGER_LITERAL COLON INTEGER_LITERAL RPAREN SEMICOLON {
-        $$ = new rpg::ParamDecl{$1, rpg::RPGType::PACKED, 0, $4, $6, false};
-        free($1);
-    }
-    | IDENTIFIER KW_PACKED LPAREN INTEGER_LITERAL COLON INTEGER_LITERAL RPAREN KW_VALUE SEMICOLON {
-        $$ = new rpg::ParamDecl{$1, rpg::RPGType::PACKED, 0, $4, $6, true};
-        free($1);
-    }
-    | IDENTIFIER KW_FLOAT_TYPE LPAREN INTEGER_LITERAL RPAREN SEMICOLON {
-        auto type = ($4 <= 4) ? rpg::RPGType::FLOAT4 : rpg::RPGType::FLOAT8;
-        $$ = new rpg::ParamDecl{$1, type, 0, 0, 0, false};
-        free($1);
-    }
-    | IDENTIFIER KW_FLOAT_TYPE LPAREN INTEGER_LITERAL RPAREN KW_VALUE SEMICOLON {
-        auto type = ($4 <= 4) ? rpg::RPGType::FLOAT4 : rpg::RPGType::FLOAT8;
-        $$ = new rpg::ParamDecl{$1, type, 0, 0, 0, true};
-        free($1);
-    }
-    /* DCL-PARM alternatives */
-    | KW_DCL_PARM IDENTIFIER KW_INT LPAREN INTEGER_LITERAL RPAREN SEMICOLON {
-        $$ = new rpg::ParamDecl{$2, rpg::RPGType::INT10, 0, 0, 0, false};
-        free($2);
-    }
-    | KW_DCL_PARM IDENTIFIER KW_INT LPAREN INTEGER_LITERAL RPAREN KW_VALUE SEMICOLON {
-        $$ = new rpg::ParamDecl{$2, rpg::RPGType::INT10, 0, 0, 0, true};
-        free($2);
-    }
-    | KW_DCL_PARM IDENTIFIER KW_CHAR LPAREN INTEGER_LITERAL RPAREN SEMICOLON {
-        $$ = new rpg::ParamDecl{$2, rpg::RPGType::CHAR, $5, 0, 0, false};
-        free($2);
-    }
-    | KW_DCL_PARM IDENTIFIER KW_CHAR LPAREN INTEGER_LITERAL RPAREN KW_VALUE SEMICOLON {
-        $$ = new rpg::ParamDecl{$2, rpg::RPGType::CHAR, $5, 0, 0, true};
-        free($2);
-    }
-    | KW_DCL_PARM IDENTIFIER KW_VARCHAR LPAREN INTEGER_LITERAL RPAREN SEMICOLON {
-        $$ = new rpg::ParamDecl{$2, rpg::RPGType::VARCHAR, $5, 0, 0, false};
-        free($2);
-    }
-    | KW_DCL_PARM IDENTIFIER KW_VARCHAR LPAREN INTEGER_LITERAL RPAREN KW_VALUE SEMICOLON {
-        $$ = new rpg::ParamDecl{$2, rpg::RPGType::VARCHAR, $5, 0, 0, true};
-        free($2);
-    }
-    | KW_DCL_PARM IDENTIFIER KW_PACKED LPAREN INTEGER_LITERAL COLON INTEGER_LITERAL RPAREN SEMICOLON {
-        $$ = new rpg::ParamDecl{$2, rpg::RPGType::PACKED, 0, $5, $7, false};
-        free($2);
-    }
-    | KW_DCL_PARM IDENTIFIER KW_PACKED LPAREN INTEGER_LITERAL COLON INTEGER_LITERAL RPAREN KW_VALUE SEMICOLON {
-        $$ = new rpg::ParamDecl{$2, rpg::RPGType::PACKED, 0, $5, $7, true};
-        free($2);
-    }
-    | IDENTIFIER KW_LIKEDS LPAREN IDENTIFIER RPAREN SEMICOLON {
-        $$ = new rpg::ParamDecl{$1, rpg::RPGType::CHAR, 0, 0, 0, false, std::string($4)};
-        free($1);
-        free($4);
-    }
-    /* OPTIONS(*NOPASS) variants */
-    | IDENTIFIER KW_INT LPAREN INTEGER_LITERAL RPAREN KW_VALUE KW_OPTIONS LPAREN KW_NOPASS RPAREN SEMICOLON {
-        auto* p = new rpg::ParamDecl{$1, rpg::RPGType::INT10, 0, 0, 0, true};
-        p->nopass = true;
-        $$ = p; free($1);
-    }
-    | IDENTIFIER KW_CHAR LPAREN INTEGER_LITERAL RPAREN KW_VALUE KW_OPTIONS LPAREN KW_NOPASS RPAREN SEMICOLON {
-        auto* p = new rpg::ParamDecl{$1, rpg::RPGType::CHAR, $4, 0, 0, true};
-        p->nopass = true;
-        $$ = p; free($1);
-    }
-    | IDENTIFIER KW_VARCHAR LPAREN INTEGER_LITERAL RPAREN KW_VALUE KW_OPTIONS LPAREN KW_NOPASS RPAREN SEMICOLON {
-        auto* p = new rpg::ParamDecl{$1, rpg::RPGType::VARCHAR, $4, 0, 0, true};
-        p->nopass = true;
-        $$ = p; free($1);
-    }
-    | IDENTIFIER KW_PACKED LPAREN INTEGER_LITERAL COLON INTEGER_LITERAL RPAREN KW_VALUE KW_OPTIONS LPAREN KW_NOPASS RPAREN SEMICOLON {
-        auto* p = new rpg::ParamDecl{$1, rpg::RPGType::PACKED, 0, $4, $6, true};
-        p->nopass = true;
-        $$ = p; free($1);
-    }
-    /* OPTIONS(*OMIT) variants */
-    | IDENTIFIER KW_INT LPAREN INTEGER_LITERAL RPAREN KW_OPTIONS LPAREN KW_OMIT RPAREN SEMICOLON {
-        auto* p = new rpg::ParamDecl{$1, rpg::RPGType::INT10, 0, 0, 0, false};
-        p->omit = true;
-        $$ = p; free($1);
-    }
-    | IDENTIFIER KW_CHAR LPAREN INTEGER_LITERAL RPAREN KW_OPTIONS LPAREN KW_OMIT RPAREN SEMICOLON {
-        auto* p = new rpg::ParamDecl{$1, rpg::RPGType::CHAR, $4, 0, 0, false};
-        p->omit = true;
-        $$ = p; free($1);
-    }
-    | IDENTIFIER KW_VARCHAR LPAREN INTEGER_LITERAL RPAREN KW_OPTIONS LPAREN KW_OMIT RPAREN SEMICOLON {
-        auto* p = new rpg::ParamDecl{$1, rpg::RPGType::VARCHAR, $4, 0, 0, false};
-        p->omit = true;
-        $$ = p; free($1);
-    }
-    | IDENTIFIER KW_PACKED LPAREN INTEGER_LITERAL COLON INTEGER_LITERAL RPAREN KW_OPTIONS LPAREN KW_OMIT RPAREN SEMICOLON {
-        auto* p = new rpg::ParamDecl{$1, rpg::RPGType::PACKED, 0, $4, $6, false};
-        p->omit = true;
-        $$ = p; free($1);
-    }
-    /* OPTIONS(*NOPASS:*OMIT) combined */
-    | IDENTIFIER KW_INT LPAREN INTEGER_LITERAL RPAREN KW_OPTIONS LPAREN KW_NOPASS COLON KW_OMIT RPAREN SEMICOLON {
-        auto* p = new rpg::ParamDecl{$1, rpg::RPGType::INT10, 0, 0, 0, false};
-        p->nopass = true; p->omit = true;
-        $$ = p; free($1);
-    }
-    | IDENTIFIER KW_CHAR LPAREN INTEGER_LITERAL RPAREN KW_OPTIONS LPAREN KW_NOPASS COLON KW_OMIT RPAREN SEMICOLON {
-        auto* p = new rpg::ParamDecl{$1, rpg::RPGType::CHAR, $4, 0, 0, false};
-        p->nopass = true; p->omit = true;
-        $$ = p; free($1);
-    }
-    | IDENTIFIER KW_VARCHAR LPAREN INTEGER_LITERAL RPAREN KW_OPTIONS LPAREN KW_NOPASS COLON KW_OMIT RPAREN SEMICOLON {
-        auto* p = new rpg::ParamDecl{$1, rpg::RPGType::VARCHAR, $4, 0, 0, false};
-        p->nopass = true; p->omit = true;
-        $$ = p; free($1);
-    }
+    param_decl { $$ = $1; }
     ;
 
 /* Parameters for DCL-PR (same structure) */
@@ -1485,144 +1362,76 @@ pr_params:
     ;
 
 pr_param:
-    IDENTIFIER KW_INT LPAREN INTEGER_LITERAL RPAREN SEMICOLON {
-        $$ = new rpg::ParamDecl{$1, rpg::RPGType::INT10, 0, 0, 0, false};
-        free($1);
+    param_decl { $$ = $1; }
+    ;
+
+/* One procedure parameter, in DCL-PI and DCL-PR alike: a name (optionally
+   introduced by DCL-PARM), a type or LIKEDS, then any of VALUE, CONST and
+   OPTIONS(...) in any order. This replaced 30 hand-enumerated
+   alternatives per rule — one per type x keyword combination — which is
+   why CONST, or OPTIONS(*NOPASS) on a by-reference parameter, or a ZONED
+   or DATE parameter, was a syntax error: no alternative spelled it. */
+param_decl:
+    IDENTIFIER param_type param_kws SEMICOLON {
+        $$ = $2; $$->name = $1; apply_param_kws($$, $3); free($1);
     }
-    | IDENTIFIER KW_INT LPAREN INTEGER_LITERAL RPAREN KW_VALUE SEMICOLON {
-        $$ = new rpg::ParamDecl{$1, rpg::RPGType::INT10, 0, 0, 0, true};
-        free($1);
+    | KW_DCL_PARM IDENTIFIER param_type param_kws SEMICOLON {
+        $$ = $3; $$->name = $2; apply_param_kws($$, $4); free($2);
     }
-    | IDENTIFIER KW_CHAR LPAREN INTEGER_LITERAL RPAREN SEMICOLON {
-        $$ = new rpg::ParamDecl{$1, rpg::RPGType::CHAR, $4, 0, 0, false};
-        free($1);
-    }
-    | IDENTIFIER KW_CHAR LPAREN INTEGER_LITERAL RPAREN KW_VALUE SEMICOLON {
-        $$ = new rpg::ParamDecl{$1, rpg::RPGType::CHAR, $4, 0, 0, true};
-        free($1);
-    }
-    | IDENTIFIER KW_VARCHAR LPAREN INTEGER_LITERAL RPAREN SEMICOLON {
-        $$ = new rpg::ParamDecl{$1, rpg::RPGType::VARCHAR, $4, 0, 0, false};
-        free($1);
-    }
-    | IDENTIFIER KW_VARCHAR LPAREN INTEGER_LITERAL RPAREN KW_VALUE SEMICOLON {
-        $$ = new rpg::ParamDecl{$1, rpg::RPGType::VARCHAR, $4, 0, 0, true};
-        free($1);
-    }
-    | IDENTIFIER KW_PACKED LPAREN INTEGER_LITERAL COLON INTEGER_LITERAL RPAREN SEMICOLON {
-        $$ = new rpg::ParamDecl{$1, rpg::RPGType::PACKED, 0, $4, $6, false};
-        free($1);
-    }
-    | IDENTIFIER KW_PACKED LPAREN INTEGER_LITERAL COLON INTEGER_LITERAL RPAREN KW_VALUE SEMICOLON {
-        $$ = new rpg::ParamDecl{$1, rpg::RPGType::PACKED, 0, $4, $6, true};
-        free($1);
-    }
-    /* DCL-PARM alternatives */
-    | IDENTIFIER KW_FLOAT_TYPE LPAREN INTEGER_LITERAL RPAREN SEMICOLON {
-        auto type = ($4 <= 4) ? rpg::RPGType::FLOAT4 : rpg::RPGType::FLOAT8;
-        $$ = new rpg::ParamDecl{$1, type, 0, 0, 0, false};
-        free($1);
-    }
-    | IDENTIFIER KW_FLOAT_TYPE LPAREN INTEGER_LITERAL RPAREN KW_VALUE SEMICOLON {
-        auto type = ($4 <= 4) ? rpg::RPGType::FLOAT4 : rpg::RPGType::FLOAT8;
-        $$ = new rpg::ParamDecl{$1, type, 0, 0, 0, true};
-        free($1);
-    }
-    | KW_DCL_PARM IDENTIFIER KW_INT LPAREN INTEGER_LITERAL RPAREN SEMICOLON {
-        $$ = new rpg::ParamDecl{$2, rpg::RPGType::INT10, 0, 0, 0, false};
-        free($2);
-    }
-    | KW_DCL_PARM IDENTIFIER KW_INT LPAREN INTEGER_LITERAL RPAREN KW_VALUE SEMICOLON {
-        $$ = new rpg::ParamDecl{$2, rpg::RPGType::INT10, 0, 0, 0, true};
-        free($2);
-    }
-    | KW_DCL_PARM IDENTIFIER KW_CHAR LPAREN INTEGER_LITERAL RPAREN SEMICOLON {
-        $$ = new rpg::ParamDecl{$2, rpg::RPGType::CHAR, $5, 0, 0, false};
-        free($2);
-    }
-    | KW_DCL_PARM IDENTIFIER KW_CHAR LPAREN INTEGER_LITERAL RPAREN KW_VALUE SEMICOLON {
-        $$ = new rpg::ParamDecl{$2, rpg::RPGType::CHAR, $5, 0, 0, true};
-        free($2);
-    }
-    | KW_DCL_PARM IDENTIFIER KW_VARCHAR LPAREN INTEGER_LITERAL RPAREN SEMICOLON {
-        $$ = new rpg::ParamDecl{$2, rpg::RPGType::VARCHAR, $5, 0, 0, false};
-        free($2);
-    }
-    | KW_DCL_PARM IDENTIFIER KW_VARCHAR LPAREN INTEGER_LITERAL RPAREN KW_VALUE SEMICOLON {
-        $$ = new rpg::ParamDecl{$2, rpg::RPGType::VARCHAR, $5, 0, 0, true};
-        free($2);
-    }
-    | KW_DCL_PARM IDENTIFIER KW_PACKED LPAREN INTEGER_LITERAL COLON INTEGER_LITERAL RPAREN SEMICOLON {
-        $$ = new rpg::ParamDecl{$2, rpg::RPGType::PACKED, 0, $5, $7, false};
-        free($2);
-    }
-    | KW_DCL_PARM IDENTIFIER KW_PACKED LPAREN INTEGER_LITERAL COLON INTEGER_LITERAL RPAREN KW_VALUE SEMICOLON {
-        $$ = new rpg::ParamDecl{$2, rpg::RPGType::PACKED, 0, $5, $7, true};
-        free($2);
-    }
-    | IDENTIFIER KW_LIKEDS LPAREN IDENTIFIER RPAREN SEMICOLON {
+    | IDENTIFIER KW_LIKEDS LPAREN IDENTIFIER RPAREN param_kws SEMICOLON {
         $$ = new rpg::ParamDecl{$1, rpg::RPGType::CHAR, 0, 0, 0, false, std::string($4)};
-        free($1);
-        free($4);
+        apply_param_kws($$, $6); free($1); free($4);
     }
-    /* OPTIONS(*NOPASS) variants */
-    | IDENTIFIER KW_INT LPAREN INTEGER_LITERAL RPAREN KW_VALUE KW_OPTIONS LPAREN KW_NOPASS RPAREN SEMICOLON {
-        auto* p = new rpg::ParamDecl{$1, rpg::RPGType::INT10, 0, 0, 0, true};
-        p->nopass = true;
-        $$ = p; free($1);
+    | KW_DCL_PARM IDENTIFIER KW_LIKEDS LPAREN IDENTIFIER RPAREN param_kws SEMICOLON {
+        $$ = new rpg::ParamDecl{$2, rpg::RPGType::CHAR, 0, 0, 0, false, std::string($5)};
+        apply_param_kws($$, $7); free($2); free($5);
     }
-    | IDENTIFIER KW_CHAR LPAREN INTEGER_LITERAL RPAREN KW_VALUE KW_OPTIONS LPAREN KW_NOPASS RPAREN SEMICOLON {
-        auto* p = new rpg::ParamDecl{$1, rpg::RPGType::CHAR, $4, 0, 0, true};
-        p->nopass = true;
-        $$ = p; free($1);
+    ;
+
+param_type:
+    KW_INT LPAREN INTEGER_LITERAL RPAREN      { $$ = new rpg::ParamDecl{"", rpg::RPGType::INT10, 0, 0, 0, false}; }
+    | KW_UNS LPAREN INTEGER_LITERAL RPAREN    { $$ = new rpg::ParamDecl{"", rpg::RPGType::UNS, 0, 0, 0, false}; }
+    | KW_CHAR LPAREN INTEGER_LITERAL RPAREN   { $$ = new rpg::ParamDecl{"", rpg::RPGType::CHAR, $3, 0, 0, false}; }
+    | KW_VARCHAR LPAREN INTEGER_LITERAL RPAREN { $$ = new rpg::ParamDecl{"", rpg::RPGType::VARCHAR, $3, 0, 0, false}; }
+    | KW_PACKED LPAREN INTEGER_LITERAL COLON INTEGER_LITERAL RPAREN {
+        $$ = new rpg::ParamDecl{"", rpg::RPGType::PACKED, 0, $3, $5, false};
     }
-    | IDENTIFIER KW_VARCHAR LPAREN INTEGER_LITERAL RPAREN KW_VALUE KW_OPTIONS LPAREN KW_NOPASS RPAREN SEMICOLON {
-        auto* p = new rpg::ParamDecl{$1, rpg::RPGType::VARCHAR, $4, 0, 0, true};
-        p->nopass = true;
-        $$ = p; free($1);
+    | KW_ZONED LPAREN INTEGER_LITERAL COLON INTEGER_LITERAL RPAREN {
+        $$ = new rpg::ParamDecl{"", rpg::RPGType::ZONED, 0, $3, $5, false};
     }
-    | IDENTIFIER KW_PACKED LPAREN INTEGER_LITERAL COLON INTEGER_LITERAL RPAREN KW_VALUE KW_OPTIONS LPAREN KW_NOPASS RPAREN SEMICOLON {
-        auto* p = new rpg::ParamDecl{$1, rpg::RPGType::PACKED, 0, $4, $6, true};
-        p->nopass = true;
-        $$ = p; free($1);
+    | KW_FLOAT_TYPE LPAREN INTEGER_LITERAL RPAREN {
+        $$ = new rpg::ParamDecl{"", ($3 <= 4) ? rpg::RPGType::FLOAT4 : rpg::RPGType::FLOAT8, 0, 0, 0, false};
     }
-    /* OPTIONS(*OMIT) variants */
-    | IDENTIFIER KW_INT LPAREN INTEGER_LITERAL RPAREN KW_OPTIONS LPAREN KW_OMIT RPAREN SEMICOLON {
-        auto* p = new rpg::ParamDecl{$1, rpg::RPGType::INT10, 0, 0, 0, false};
-        p->omit = true;
-        $$ = p; free($1);
-    }
-    | IDENTIFIER KW_CHAR LPAREN INTEGER_LITERAL RPAREN KW_OPTIONS LPAREN KW_OMIT RPAREN SEMICOLON {
-        auto* p = new rpg::ParamDecl{$1, rpg::RPGType::CHAR, $4, 0, 0, false};
-        p->omit = true;
-        $$ = p; free($1);
-    }
-    | IDENTIFIER KW_VARCHAR LPAREN INTEGER_LITERAL RPAREN KW_OPTIONS LPAREN KW_OMIT RPAREN SEMICOLON {
-        auto* p = new rpg::ParamDecl{$1, rpg::RPGType::VARCHAR, $4, 0, 0, false};
-        p->omit = true;
-        $$ = p; free($1);
-    }
-    | IDENTIFIER KW_PACKED LPAREN INTEGER_LITERAL COLON INTEGER_LITERAL RPAREN KW_OPTIONS LPAREN KW_OMIT RPAREN SEMICOLON {
-        auto* p = new rpg::ParamDecl{$1, rpg::RPGType::PACKED, 0, $4, $6, false};
-        p->omit = true;
-        $$ = p; free($1);
-    }
-    /* OPTIONS(*NOPASS:*OMIT) combined */
-    | IDENTIFIER KW_INT LPAREN INTEGER_LITERAL RPAREN KW_OPTIONS LPAREN KW_NOPASS COLON KW_OMIT RPAREN SEMICOLON {
-        auto* p = new rpg::ParamDecl{$1, rpg::RPGType::INT10, 0, 0, 0, false};
-        p->nopass = true; p->omit = true;
-        $$ = p; free($1);
-    }
-    | IDENTIFIER KW_CHAR LPAREN INTEGER_LITERAL RPAREN KW_OPTIONS LPAREN KW_NOPASS COLON KW_OMIT RPAREN SEMICOLON {
-        auto* p = new rpg::ParamDecl{$1, rpg::RPGType::CHAR, $4, 0, 0, false};
-        p->nopass = true; p->omit = true;
-        $$ = p; free($1);
-    }
-    | IDENTIFIER KW_VARCHAR LPAREN INTEGER_LITERAL RPAREN KW_OPTIONS LPAREN KW_NOPASS COLON KW_OMIT RPAREN SEMICOLON {
-        auto* p = new rpg::ParamDecl{$1, rpg::RPGType::VARCHAR, $4, 0, 0, false};
-        p->nopass = true; p->omit = true;
-        $$ = p; free($1);
-    }
+    | KW_IND        { $$ = new rpg::ParamDecl{"", rpg::RPGType::IND, 0, 0, 0, false}; }
+    | KW_DATE       { $$ = new rpg::ParamDecl{"", rpg::RPGType::DATE, 0, 0, 0, false}; }
+    | KW_TIME       { $$ = new rpg::ParamDecl{"", rpg::RPGType::TIME, 0, 0, 0, false}; }
+    | KW_TIMESTAMP  { $$ = new rpg::ParamDecl{"", rpg::RPGType::TIMESTAMP, 0, 0, 0, false}; }
+    | KW_POINTER    { $$ = new rpg::ParamDecl{"", rpg::RPGType::POINTER, 0, 0, 0, false}; }
+    ;
+
+/* Parameter keywords as a bit set: see apply_param_kws. */
+param_kws:
+    /* empty */          { $$ = 0; }
+    | param_kws param_kw { $$ = $1 | $2; }
+    ;
+
+param_kw:
+    KW_VALUE                               { $$ = PK_VALUE; }
+    | KW_CONST                             { $$ = PK_CONST; }
+    | KW_OPTIONS LPAREN param_opts RPAREN  { $$ = $3; }
+    ;
+
+param_opts:
+    param_opt                    { $$ = $1; }
+    | param_opts COLON param_opt { $$ = $1 | $3; }
+    ;
+
+param_opt:
+    KW_NOPASS       { $$ = PK_NOPASS; }
+    | KW_OMIT       { $$ = PK_OMIT; }
+    | KW_VARSIZE    { $$ = PK_VARSIZE; }
+    | KW_STRING_OPT { $$ = PK_STRING; }
+    | KW_TRIM_OPT   { $$ = PK_TRIM; }
     ;
 
 /* --- Monitor / Subroutines --- */

@@ -120,6 +120,11 @@ std::string CodeGen::paramTypeToString(const ParamDecl& p) {
         return base + "*";  // *OMIT params use pointers (nullptr = omitted)
     } else if (p.by_value) {
         return base;
+    } else if (p.is_const) {
+        // CONST accepts any expression of a compatible type — a literal, a
+        // calculation — so it binds as a const reference; the procedure
+        // body sees a fitted copy (see visit(DclProc)).
+        return "const " + base + "&";
     } else {
         return base + "&";
     }
@@ -136,6 +141,15 @@ void CodeGen::emitSqlIntoRefit(const std::string& decl, const std::string& targe
     if (stmt.empty()) return;
     emitIndent();
     out_ << "if (__frc == SQL_SUCCESS || __frc == SQL_SUCCESS_WITH_INFO) " << stmt << "\n";
+}
+
+// The C++ name a parameter is received under. A plain CONST parameter
+// arrives under a private name and is copied, fitted, into a const local
+// with the RPG name (see visit(DclProc)); every other parameter is received
+// directly under its own name.
+std::string CodeGen::cppParamName(const ParamDecl& p) const {
+    if (p.is_const && !p.by_value && !p.omit && p.likeds.empty()) return p.name + "__const";
+    return p.name;
 }
 
 std::string CodeGen::escapeSqlForCpp(const std::string& sql) {
@@ -1026,7 +1040,23 @@ void CodeGen::visit(Program& node) {
     void_return_ = false;
 }
 
+// OPTIONS(*NOPASS) on a parameter passed by reference needs the callee to
+// receive "no argument" for a reference, which this compiler has no
+// representation for yet (a C++ reference cannot be absent; *OMIT uses a
+// pointer, and its call sites only handle *OMIT itself). VALUE and CONST
+// parameters are copies and default cleanly. Say so rather than emit C++
+// that doesn't compile.
+static void checkParamOptions(const std::vector<ParamDecl>& params, const std::string& proc) {
+    for (auto& p : params) {
+        if (p.nopass && !p.by_value && !p.is_const && !p.omit && p.likeds.empty())
+            report_semantic_error(0, "parameter " + p.name + " of " + proc +
+                ": OPTIONS(*NOPASS) on a parameter passed by reference is not supported "
+                "yet; declare it VALUE or CONST (see TODO.md)");
+    }
+}
+
 void CodeGen::visit(DclPR& node) {
+    checkParamOptions(node.interface.params, node.name);
     // OVERLOAD: emit inline C++ wrapper functions, one per implementation
     if (!node.overload_impls.empty()) {
         for (auto& impl : node.overload_impls) {
@@ -1095,6 +1125,7 @@ void CodeGen::visit(DclPR& node) {
 }
 
 void CodeGen::visit(DclProc& node) {
+    checkParamOptions(node.interface.params, node.name);
     bool has_nopass = std::any_of(node.interface.params.begin(), node.interface.params.end(),
                                   [](const ParamDecl& p) { return p.nopass; });
 
@@ -1105,7 +1136,7 @@ void CodeGen::visit(DclProc& node) {
     for (size_t i = 0; i < node.interface.params.size(); i++) {
         if (i > 0) out_ << ", ";
         out_ << paramTypeToString(node.interface.params[i])
-             << " " << node.interface.params[i].name;
+             << " " << cppParamName(node.interface.params[i]);
         // Don't emit default values here - they go in the prototype (DclPR)
     }
     if (has_nopass) {
@@ -1140,6 +1171,19 @@ void CodeGen::visit(DclProc& node) {
         var_lengths_[p.name]  = p.length;
         var_digits_[p.name]   = p.digits;
         var_decimals_[p.name] = p.decimals;
+        if (p.is_const && !p.by_value) {
+            // CONST: the body sees a read-only value of the declared type.
+            // On IBM i a temporary of that type is made when the argument
+            // doesn't already match — CHAR(10) CONST passed 'AB' holds 'AB'
+            // plus eight blanks — so the incoming reference is fitted into
+            // a const local under the parameter's own name.
+            const_params_.insert(p.name);
+            FieldAttrs pa = attrsOfName(p.name);
+            emitIndent();
+            out_ << "const " << typeToString(p.type, p.length) << " " << p.name << " = "
+                 << fitValue(pa, cppParamName(p), FitMode::Overflow) << ";\n";
+            continue;
+        }
         if (!p.by_value) continue;
         FieldAttrs pa = attrsOfName(p.name);
         std::string fitted = fitValue(pa, p.name, FitMode::Overflow);
@@ -1232,6 +1276,7 @@ void CodeGen::visit(DclProc& node) {
         }
     }
     in_procedure_ = false;
+    const_params_.clear();
     current_return_attrs_ = FieldAttrs{};
     var_types_    = std::move(saved_types);
     var_lengths_  = std::move(saved_lengths);
@@ -1854,6 +1899,14 @@ void CodeGen::visit(EvalStmt& node) {
         if (node.line > 0) out_ << " // line " << node.line;
         out_ << "\n";
         return;
+    }
+
+    // RPG forbids changing a CONST parameter (the caller's value may be a
+    // temporary or a literal). Said here, not left to the C++ compiler,
+    // whose error would name the generated code.
+    if (auto* tid = dynamic_cast<Identifier*>(node.target.get())) {
+        if (const_params_.count(tid->name))
+            report_semantic_error(node.line, "cannot assign to CONST parameter " + tid->name);
     }
 
     emitIndent();
@@ -3143,11 +3196,16 @@ void CodeGen::visit(FuncCall& node) {
     if (nopass_procs_.count(node.name)) {
         auto it = nopass_proc_params_.find(node.name);
         if (it != nopass_proc_params_.end()) {
+            // No leading comma when no argument was written: a call with
+            // every parameter omitted, M(), came out as M(, 0, 0).
             for (size_t i = node.args.size(); i < it->second.size(); i++) {
-                expr_ << ", " << paramTypeDefault(it->second[i]);
+                if (i > 0) expr_ << ", ";
+                expr_ << paramTypeDefault(it->second[i]);
             }
         }
-        expr_ << ", " << node.args.size();
+        if (!node.args.empty() || (it != nopass_proc_params_.end() && !it->second.empty()))
+            expr_ << ", ";
+        expr_ << node.args.size();
     }
     expr_ << ")";
 }

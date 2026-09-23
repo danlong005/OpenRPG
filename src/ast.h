@@ -469,6 +469,7 @@ struct ParamDecl {
     bool varsize = false; // OPTIONS(*VARSIZE)
     bool string_opt = false; // OPTIONS(*STRING)
     bool trim_opt = false;   // OPTIONS(*TRIM)
+    bool is_const = false;   // CONST: read-only, passed as a value of the declared type
 };
 
 // Procedure interface (DCL-PI)

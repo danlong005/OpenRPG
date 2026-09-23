@@ -207,6 +207,8 @@ private:
     std::string refitStmt(const FieldAttrs& a, const std::string& target) const;
     void emitSqlIntoRefit(const std::string& decl, const std::string& target);
     FieldAttrs current_return_attrs_; // declared return of the procedure being emitted
+    std::set<std::string> const_params_; // CONST parameters of the procedure being emitted
+    std::string cppParamName(const ParamDecl& p) const;
     void registerExtField(const std::string& fvar, const ExtField& f);
     const DclDS* dsOfExpr(const Expression& e) const;
     const DclDS* resolveDsDef(const std::string& name) const;

@@ -2093,6 +2093,24 @@ Smaller, all verified:
   subfield is emitted inside the struct but referenced unqualified.
 - `IND` is not accepted as a DS subfield type.
 - `CONST` on a procedure-interface parameter is a syntax error.
+  ✅ **Fixed 2026-09-22** (Tests 246-247). The parameter grammar spelled
+  out 30 alternatives per rule, one per type × keyword combination, and
+  none had `CONST`. It is now one `param_decl` rule: a name, a type
+  (`param_type`, which also gained `UNS`, `ZONED`, `IND`, `DATE`, `TIME`,
+  `TIMESTAMP` and `POINTER`) or `LIKEDS`, then any of `VALUE`/`CONST`/
+  `OPTIONS(...)` in any order. A `CONST` parameter binds as `const T&`, so
+  a literal or an expression can be passed, and the body sees a `const`
+  local fitted to the declared type (`CHAR(10) CONST` passed `'AB'` holds
+  `'AB'` plus eight blanks). Assigning to one is an RPG diagnostic.
+  Found alongside:
+  - A call with every `*NOPASS` parameter omitted, `M()`, generated
+    `M(, 0, 0)` (fixed).
+  - `OPTIONS(*NOPASS)` on a by-reference parameter, newly expressible,
+    has no codegen yet (a C++ reference cannot be absent) and now gets a
+    clear diagnostic; `VALUE` and `CONST` ones work.
+  - Passing a real variable to an `*OMIT` parameter, rather than `*OMIT`
+    itself, is untested and likely broken (the parameter is a pointer and
+    call sites don't take the argument's address).
 - `INZ` on a `ZONED` standalone is a syntax error, though `ZONED` itself
   works.
 - `EXFMT` and `READC` are absent from the fixed-format C-spec opcode set,

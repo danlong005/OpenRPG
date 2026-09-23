@@ -388,7 +388,7 @@ See the [User's Guide](docs/GUIDE.md#multi-module-programs) for details.
 - Display files (WORKSTN) with subfiles, via the OpenDSPF compiler
 - Program-described flat files (I-specs and O-specs)
 - 90+ built-in functions
-- Data structures (QUALIFIED, DIM, LIKEDS, OVERLAY, POS, PREFIX)
+- Data structures (QUALIFIED, TEMPLATE, DIM, LIKEDS, OVERLAY, POS)
 - Procedures with prototypes, optional parameters (*NOPASS, *OMIT)
 - Enumerations (DCL-ENUM) and BOOLEAN type
 - Varying-dimension arrays (DIM(*VAR), DIM(*AUTO))
@@ -397,7 +397,7 @@ See the [User's Guide](docs/GUIDE.md#multi-module-programs) for details.
 - Multi-module support (NOMAIN, EXPORT, IMPORT, EXTPROC)
 - Conditional compilation (/IF, /DEFINE, /COPY)
 - Embedded SQL via ODBC (SQLite, PostgreSQL, MySQL, SQL Server, Db2)
-- Record-level access (READ, WRITE, CHAIN, UPDATE, DELETE, SETLL, SETGT) via ODBC
+- Record-level access (READ, WRITE, CHAIN, UPDATE, DELETE, SETLL, SETGT) via ODBC, with PREFIX on DCL-F to rename a file's fields
 - DATA-INTO / DATA-GEN for JSON parsing and generation
 - Source-level debugging in VS Code (`rpgc -g`)
 

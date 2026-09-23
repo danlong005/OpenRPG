@@ -1417,7 +1417,7 @@ Three pieces turn the manual expedition into something CI runs.
 | `scripts/conformance-wiki.py` | Renders the wiki page **IBM-i-Conformance-Results**: every program, whether it should compile on IBM i, whether it did, whether rpgc compiles it, and IBM's reason when not. The workflow builds rpgc and records its verdicts first. |
 | `tests/ibmi-expected.txt` | Exceptions to the should-compile rule (an `error`-mode test should be rejected, everything else should compile), each with its reason. |
 | `scripts/conformance-diff.py` | Writes `ibmi-conformance-differences.md`: every file where rpgc and IBM disagree. |
-| `.github/workflows/ibmi-conformance.yml` | `offline` job on every push/PR; `verify` job on demand only (the weekly schedule was removed 2026-09-23). `changed`, `full` or `smoke`; after `changed`/`full` it publishes the results page to the wiki. |
+| `.github/workflows/ibmi-conformance.yml` | `offline` job on every push/PR; `verify` job on demand only (the weekly schedule was removed 2026-09-23). `changed`, `full` or `smoke`; after `changed`/`full` it commits the refreshed baseline back to main (not on a regression; the report and differences files only after `full`) and publishes the results page to the wiki. |
 
 **The offline gate needs no network and no secrets**, so it runs on fork pull
 requests too. It fails when a source has changed since it was last verified —

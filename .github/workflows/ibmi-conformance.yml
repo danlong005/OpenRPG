@@ -17,7 +17,8 @@ name: IBM i conformance
 #              or `gh workflow run ibmi-conformance.yml -f mode=full`).
 #              `changed` sends only the sources whose hash moved; `full`
 #              sends the whole corpus; `smoke` compiles one file. A run then
-#              refreshes the baseline. Fails on a REGRESSION: a source IBM
+#              refreshes the baseline and commits it back to the branch it
+#              ran on. Fails on a REGRESSION: a source IBM
 #              accepted before and rejects now. The absolute accepted count is
 #              deliberately not a gate; it conflates unrelated causes (missing
 #              IBM i objects, deliberate negative tests, real findings) — see
@@ -139,6 +140,38 @@ jobs:
           sudo apt-get install -y -qq flex bison g++ unixodbc-dev libncurses-dev
           make
           python3 scripts/conformance-baseline.py rpgc
+
+      # The run's results land in the repository, not only in an artifact: a
+      # changed run then sends each edited source once, and the offline check
+      # stays green. Not on a regression — committing that baseline would make
+      # the regression the new normal, and the next run would stop reporting
+      # it; the page below still shows it. The report and the differences
+      # listing are built from the run's transcript, which covers every source
+      # only in a full run, so they are committed from full runs alone.
+      # A push with the workflow's own token starts no further workflow runs.
+      - name: Commit the refreshed baseline
+        if: >-
+          github.event.inputs.mode != 'smoke' && steps.compile.outcome == 'success'
+        run: |
+          files="ibmi-conformance-baseline.json"
+          if [ "${{ github.event.inputs.mode }}" = "full" ]; then
+            python3 scripts/conformance-diff.py
+            files="$files ibmi-conformance-report.txt ibmi-conformance-differences.md"
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add $files
+          if git diff --cached --quiet; then
+            echo "baseline unchanged"
+            exit 0
+          fi
+          git commit -q -m "IBM i conformance baseline, ${{ github.event.inputs.mode || 'changed' }} run ${{ github.run_id }}"
+          # main may have moved while PUB400 was compiling
+          for attempt in 1 2 3; do
+            git pull -q --rebase --autostash origin "${GITHUB_REF_NAME}" && git push -q origin "HEAD:${GITHUB_REF_NAME}" && exit 0
+            sleep 5
+          done
+          echo "::warning::could not push the refreshed baseline; it is in the run's artifact"
 
       - name: Publish the results page to the wiki
         if: >-

@@ -110,27 +110,27 @@ RNF5454  x3   3 The third operand of DATA-GEN must be %GEN.
       test113_data_gen_csv.rpgle
       test114_data_into_json_parser.rpgle
 
-RNF3438  x3   1 LIKE keyword is expected but not found; definition is
-      test118_fixed_rla_chain.rpgle
-      test11b_bad_type.rpgle
-      test71_enum_boolean.rpgle
-
 RNF0289  x3   1 Entry contains data that is not valid; only valid data is
       test118_fixed_rla_chain.rpgle
       test142_fixed_copy_in_free.rpgle
       test16_copy.rpgle
+
+RNF3438  x3   1 LIKE keyword is expected but not found; definition is
+      test118_fixed_rla_chain.rpgle
+      test11b_bad_type.rpgle
+      test71_enum_boolean.rpgle
 
 RNF5005  x3   8 Operation entry following ENDSR operation is not valid;
       test13_subroutines.rpgle
       test66_pssr.rpgle
       test67_pssr_error.rpgle
 
-RNF6005  x3   1 The Type entry is not H, D, T, or E; defaults to D.
+RNF5508  x3   20 End of free-format statement is not blank.
       test215_prog_ar_aging.rpgle
       test216_prog_gl_post.rpgle
       test221_ospec_decimals.rpgle
 
-RNF5508  x3   20 End of free-format statement is not blank.
+RNF6005  x3   1 The Type entry is not H, D, T, or E; defaults to D.
       test215_prog_ar_aging.rpgle
       test216_prog_gl_post.rpgle
       test221_ospec_decimals.rpgle
@@ -156,7 +156,7 @@ RNF5053  x2   1 Resulting-Indicators entry is blank for specified operation;
       test138_fixed_cspec_err_legacy.rpgle
       test187_fixed_cspec_err_comp_noind.rpgle
 
-RNF4278  x2   1 Option entry must be blank with alphabetic sequence; defaults
+RNF4029  x2   2 Position entry is not valid; defaults to 1.
       test142_fixed_copy_in_free.rpgle
       test16_copy.rpgle
 
@@ -168,7 +168,7 @@ RNF4027  x2   2 Not entry is neither N nor blank; defaults to blank.
       test142_fixed_copy_in_free.rpgle
       test16_copy.rpgle
 
-RNF4020  x2   1 Record-Identifying-Indicator entry is not valid; defaults to
+RNF4278  x2   1 Option entry must be blank with alphabetic sequence; defaults
       test142_fixed_copy_in_free.rpgle
       test16_copy.rpgle
 
@@ -176,11 +176,11 @@ RNF4026  x2   1 Code-Part entry is not C, Z, or D; defaults to C.
       test142_fixed_copy_in_free.rpgle
       test16_copy.rpgle
 
-RNF4005  x2   1 File-Name or Record-Name entry is not valid; input record is
+RNF4020  x2   1 Record-Identifying-Indicator entry is not valid; defaults to
       test142_fixed_copy_in_free.rpgle
       test16_copy.rpgle
 
-RNF4029  x2   2 Position entry is not valid; defaults to 1.
+RNF4005  x2   1 File-Name or Record-Name entry is not valid; input record is
       test142_fixed_copy_in_free.rpgle
       test16_copy.rpgle
 
@@ -192,7 +192,7 @@ RNF7054  x2   1 The Result-Field entry of the CALL or CALLB operation is not
       test200_fixed_cspec_err_plist_undef.rpgle
       test207_fixed_cspec_err_call_entry.rpgle
 
-RNF2093  x2   1 Blank File-Designation entry is not valid with File-Type
+RNF7031  x2   44D
       test215_prog_ar_aging.rpgle
       test216_prog_gl_post.rpgle
 
@@ -200,7 +200,7 @@ RNF2004  x2   1 The End-of-File entry is not blank or E; defaults to blank.
       test215_prog_ar_aging.rpgle
       test216_prog_gl_post.rpgle
 
-RNF7031  x2   44D
+RNF2093  x2   1 Blank File-Designation entry is not valid with File-Type
       test215_prog_ar_aging.rpgle
       test216_prog_gl_post.rpgle
 
@@ -208,28 +208,28 @@ RNF0706  x2   1 Directive found outside of /IF group.
       test233_err_stray_endif.rpgle
       test234_err_copy_open_if.rpgle
 
-RNF3763  x1   3 A return value is expected for the procedure-interface
+RNF3767  x1   3 The name in positions 7 - 21 does not match the name of the
       test08_procedures.rpgle
 
 RNF0633  x1   3 An unexpected right parenthesis was encountered; right
       test08_procedures.rpgle
 
-RNF3767  x1   3 The name in positions 7 - 21 does not match the name of the
+RNF3763  x1   3 A return value is expected for the procedure-interface
       test08_procedures.rpgle
 
 RNF0203  x1   1 Refer to the compiler listing where this message was first
       test102_snd_msg.rpgle
 
-RNF3551  x1   2 END-XX is not expected.
+RNF3244  x1   4 Return type of parameter of OVERLOAD keyword does not match
       test110_overload.rpgle
 
-RNF5403  x1   4 The prototyped call cannot be used in an expression because
+RNF3551  x1   2 END-XX is not expected.
       test110_overload.rpgle
 
 RNF3245  x1   4 No prototype in the OVERLOAD keyword matches the parameters
       test110_overload.rpgle
 
-RNF3244  x1   4 Return type of parameter of OVERLOAD keyword does not match
+RNF5403  x1   4 The prototyped call cannot be used in an expression because
       test110_overload.rpgle
 
 RNF7563  x1   1 The expression is not valid for assignment to built-in
@@ -253,28 +253,28 @@ RNF3555  x1   2 The keyword is not allowed in fixed-form definitions. The
 RNF5002  x1   1 Blank Control-Level entry follows Control-Level entry that is
       test135_fixed_cspec_err_ctllevel.rpgle
 
-RNF5007  x1   1 Conditioning-Indicator entry is not valid; defaults to
+RNF5006  x1   1 Not entry is neither N nor blank; defaults to blank.
       test136_fixed_cspec_err_indicator.rpgle
 
-RNF5006  x1   1 Not entry is neither N nor blank; defaults to blank.
+RNF5007  x1   1 Conditioning-Indicator entry is not valid; defaults to
       test136_fixed_cspec_err_indicator.rpgle
 
 RNF0273  x1   1 Compiler not able to open the /COPY or /INCLUDE file;
       test143_fixed_copy_err_missing.rpgle
 
-RNF5198  x1   1 File in Factor 2 is not allowed for UPDATE or DELETE
+RNF5063  x1   2 Factor 2 operand must not be an externally described file for
       test146_fixed_cspec_write_upd_del.rpgle
 
-RNF5063  x1   2 Factor 2 operand must not be an externally described file for
+RNF5198  x1   1 File in Factor 2 is not allowed for UPDATE or DELETE
       test146_fixed_cspec_write_upd_del.rpgle
 
 RNF5010  x1   1 Factor 1 entry is not blank for the specified operation;
       test153_fixed_cspec_err_call_deferred.rpgle
 
-RNF8003  x1   1 The field length is greater than the End-Position entry;
+RNF3466  x1   1 The Decimal-Positions entry does not agree with the Data-Type
       test158_fixed_ospec_editcode.rpgle
 
-RNF3466  x1   1 The Decimal-Positions entry does not agree with the Data-Type
+RNF8003  x1   1 The field length is greater than the End-Position entry;
       test158_fixed_ospec_editcode.rpgle
 
 RNF4059  x1   1 Control-Levels and Matching-Fields entries are not allowed
@@ -319,10 +319,10 @@ RNF0274  x1   1 Compiler directive not recognized; directive ignored.
 RNF7547  x1   1 A float variable or literal is not allowed for the operation.
       test194_fixed_cspec_err_move_float.rpgle
 
-RNF5418  x1   1 The operation entry is not allowed in the main source section
+RNF5419  x1   1 *ENTRY PLIST is allowed only in a cycle module.
       test199_fixed_cspec_err_entry_nomain.rpgle
 
-RNF5419  x1   1 *ENTRY PLIST is allowed only in a cycle module.
+RNF5418  x1   1 The operation entry is not allowed in the main source section
       test199_fixed_cspec_err_entry_nomain.rpgle
 
 RNF5119  x1   1 Factor 1 entry of PLIST operation is already defined;
@@ -355,10 +355,10 @@ RNF0552  x1   1 The second parameter for %DIV is not valid; %DIV is ignored.
 RNF3431  x1   1 Length of initial value exceeds size of field.
       test256_err_inz_too_long.rpgle
 
-RNF2109  x1   1 All Record Formats for externally-described file ignored or
+RNF2121  x1   1 Record-format name in externally-described file already
       test25_dclf.rpgle
 
-RNF2121  x1   1 Record-format name in externally-described file already
+RNF2109  x1   1 All Record Formats for externally-described file ignored or
       test25_dclf.rpgle
 
 RNF7523  x1   1 Operation-Code extender D, T and Z are not allowed with a

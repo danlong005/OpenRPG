@@ -2115,6 +2115,14 @@ Smaller, all verified:
   token after `)` decide. `proc();` and `proc(a : b);` already parsed.
 - An unqualified DS subfield cannot be referenced by its bare name — the
   subfield is emitted inside the struct but referenced unqualified.
+  ✅ **Fixed 2026-09-22** (Tests 253-254). `visit(DclDS)` records each
+  subfield of a DS without `QUALIFIED` (not an array or a `TEMPLATE`),
+  under its `PREFIX`ed name where there is one. A bare name that isn't a
+  standalone field resolves to `DS.field`, in emitted code and in
+  `attrsOf`, so it is fitted like any subfield. The table is scoped per
+  procedure. Fixed-format data structures, unqualified by default, are the
+  main beneficiary. Still open: an unqualified subfield used as an SQL host
+  variable (`:name`) is emitted by its bare name.
 - `IND` is not accepted as a DS subfield type.
   ✅ **Fixed 2026-09-22** (Test 249) — see the subfield-grammar entry below.
 - `CONST` on a procedure-interface parameter is a syntax error.

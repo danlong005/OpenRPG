@@ -808,6 +808,8 @@ run_test "249" "Every scalar type as a DS subfield" "$TESTDIR/test249_ds_subfiel
 run_test "250" "DCL-S keywords in any combination" "$TESTDIR/test250_dcl_s_keywords.rpgle" "run"
 run_test "251" "DCL-DS header keywords, TEMPLATE" "$TESTDIR/test251_ds_template.rpgle" "run"
 run_test "252" "Nested subfields as assignment targets" "$TESTDIR/test252_nested_target.rpgle" "run"
+run_test "253" "Unqualified subfields by bare name" "$TESTDIR/test253_unqualified_subfields.rpgle" "run"
+run_test "254" "Fixed-format unqualified DS subfields" "$TESTDIR/test254_fixed_unqualified_ds.rpgle" "run"
 
 # ── Customer / drop-in tests ─────────────────────────────────────────────
 # Drop any .rpgle or .sqlrpgle file into tests/customer/ and it will be

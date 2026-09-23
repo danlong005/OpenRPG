@@ -211,6 +211,9 @@ private:
     std::string cppParamName(const ParamDecl& p) const;
     std::string arrayElementInit(const rpg::DclS& node);
     std::map<std::string, std::string> vector_fill_; // varying array -> new-element value
+    // Subfield name -> its DS, for a DS without QUALIFIED, whose subfields
+    // are referenced by bare name in RPG.
+    std::map<std::string, std::string> unqualified_subfields_;
     void registerExtField(const std::string& fvar, const ExtField& f);
     const DclDS* dsOfExpr(const Expression& e) const;
     const DclDS* resolveDsDef(const std::string& name) const;

@@ -1162,6 +1162,7 @@ void CodeGen::visit(DclProc& node) {
     auto saved_digits   = var_digits_;
     auto saved_decimals = var_decimals_;
     auto saved_arrays   = array_vars_;
+    auto saved_unqual   = unqualified_subfields_;
 
     // Parameters are declared fields like any other. Registering them lets
     // EVAL fit a value assigned to one. A VALUE parameter is RPG's own
@@ -1288,6 +1289,7 @@ void CodeGen::visit(DclProc& node) {
     var_digits_   = std::move(saved_digits);
     var_decimals_ = std::move(saved_decimals);
     array_vars_   = std::move(saved_arrays);
+    unqualified_subfields_ = std::move(saved_unqual);
     current_proc_parm_count_ = 0;
     has_nopass_params_ = false;
     current_proc_name_.clear();
@@ -1732,7 +1734,12 @@ CodeGen::FieldAttrs CodeGen::attrsOf(const Expression& e) const {
     FieldAttrs a;
     if (auto* id = dynamic_cast<const Identifier*>(&e)) {
         auto t = var_types_.find(id->name);
-        if (t == var_types_.end()) return a;
+        if (t == var_types_.end()) {
+            auto uq = unqualified_subfields_.find(id->name);
+            if (uq == unqualified_subfields_.end()) return a;
+            DotExpr dot(std::make_unique<Identifier>(uq->second), id->name);
+            return attrsOf(dot);
+        }
         a.known = true;
         a.type = t->second;
         auto l = var_lengths_.find(id->name);  if (l != var_lengths_.end()) a.length = l->second;
@@ -2174,6 +2181,20 @@ std::string CodeGen::fieldTypeDefault(RPGType type, int length) {
 void CodeGen::visit(DclDS& node) {
     // Store for LIKEDS lookup
     ds_defs_[node.name] = &node;
+    // Without QUALIFIED, RPG names a subfield by its bare name. It lives
+    // inside the DS's struct, so a bare reference resolves to DS.field (see
+    // visit(Identifier) and attrsOf). An array DS or a TEMPLATE has no
+    // single instance for a bare name to mean.
+    if (!node.qualified && node.dim == 0 && !node.is_template && node.like_ds.empty()) {
+        for (auto& f : node.fields) {
+            std::string fname = f.name;
+            if (!node.prefix.empty()) {
+                fname = (node.prefix_nbr > 0 && static_cast<int>(fname.size()) > node.prefix_nbr)
+                    ? node.prefix + fname.substr(node.prefix_nbr) : node.prefix + fname;
+            }
+            unqualified_subfields_[fname] = node.name;
+        }
+    }
     if (node.dim > 0) array_vars_.insert(node.name);
 
     if (!node.like_ds.empty()) {
@@ -3083,6 +3104,16 @@ void CodeGen::visit(Identifier& node) {
                     return;
                 }
             }
+        }
+    }
+    // A bare subfield name of an unqualified DS, not shadowed by a field of
+    // its own: it is DS.field.
+    if (!var_types_.count(node.name)) {
+        auto uq = unqualified_subfields_.find(node.name);
+        if (uq != unqualified_subfields_.end()) {
+            DotExpr dot(std::make_unique<Identifier>(uq->second), node.name);
+            dot.accept(*this);
+            return;
         }
     }
     expr_ << node.name;

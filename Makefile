@@ -1,5 +1,12 @@
 CXX      := clang++
 CXXFLAGS := -std=c++17 -Wall -Wextra -Wno-deprecated-register -Wno-unused-function
+# Let the compiler record each object's header dependencies (build/*.d,
+# included at the end of this file). The per-object prerequisite lists
+# below were written by hand and were incomplete — lexer.o didn't depend on
+# ast.h, codegen.o not on extdesc.h — so a header change could leave
+# objects built against the old declarations. When a class's layout
+# changed, that linked into an rpgc that crashed.
+CXXFLAGS += -MMD -MP
 
 # Platform-specific tool and library paths
 UNAME_S := $(shell uname -s)
@@ -203,3 +210,6 @@ update-expected: $(TARGET)
 	@bash tests/run_tests.sh --update
 
 .PHONY: FORCE all clean install install-dspf install-all uninstall uninstall-dspf test update-expected
+
+# Compiler-generated header dependencies (see -MMD above).
+-include $(OBJS:.o=.d)

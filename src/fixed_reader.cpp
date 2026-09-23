@@ -5,6 +5,7 @@
 #include "keyword_list.h"
 #include <cctype>
 #include <cstdlib>
+#include <cstring>
 #include <fstream>
 #include <set>
 #include <sstream>
@@ -45,9 +46,38 @@ static std::string trim(const std::string& s) {
     return s.substr(a, b - a + 1);
 }
 
+// Compiler directives in fixed-format source: /COPY and /INCLUDE, and the
+// conditional-compilation set — /DEFINE, /UNDEFINE, /IF [NOT] DEFINED,
+// /ELSEIF [NOT] DEFINED, /ELSE, /ENDIF — plus /EOF. All of them are
+// resolved here, in one pass that flattens the source before any spec is
+// read, because they have to be evaluated interleaved: an /IF can guard a
+// /COPY, a copy member can contain /IF and /DEFINE, and a /DEFINE is
+// global to the compile, as it is on IBM i.
+//
+// Before this, the pass knew only /COPY and /INCLUDE. Every conditional
+// directive fell through to the spec reader, which ignored it, so BOTH
+// branches of every /IF compiled — no error, no warning.
+//
+// Directives inside an explicit /FREE ... /END-FREE block are resolved
+// here too, including /COPY: the free-format lexer that later parses the
+// block has conditional machinery of its own, but it would keep a second,
+// separate set of defines, so a /DEFINE in a copy member could not reach
+// fixed-format lines after it. A copy member inlined into a /FREE block
+// loses a leading **FREE line, which there is a stray token rather than
+// the file-level format declaration it is in the member itself.
+//
+// A directive or a line in an inactive branch becomes an empty line rather
+// than disappearing, so the including member's own line numbers stay put.
+// Line numbers after a /COPY splice are relative to the flattened stream —
+// the same best-effort precision the free-format lexer has.
+//
+// The filename after /COPY is opened relative to the working directory, as
+// the free-format lexer does (no library/member catalog, no search path).
+// `ok` is set false (not thrown) on any error so the rest of the file can
+// still be scanned for further diagnostics.
+
 // Matches the free-format lexer's own /COPY and /INCLUDE nesting limit
-// (src/lexer.l's MAX_INCLUDE_DEPTH) — kept as the same constant for
-// consistency, not because either number is load-bearing.
+// (src/lexer.l's MAX_INCLUDE_DEPTH).
 static const int MAX_COPY_DEPTH = 10;
 
 static bool readFileLines(const std::string& path, std::vector<std::string>& outLines) {
@@ -59,77 +89,210 @@ static bool readFileLines(const std::string& path, std::vector<std::string>& out
     return true;
 }
 
-// Expands /COPY and /INCLUDE directive lines by splicing the target
-// file's own lines in place, recursively — matching the free-format
-// lexer's own /COPY/INCLUDE convention exactly (src/lexer.l): the text
-// after the directive keyword is a literal filename, opened via fopen()
-// relative to the process's current working directory (no library/member
-// catalog, no search path). Lines inside an explicit /FREE...·/END-FREE
-// region are left untouched: parse_free_block() re-invokes the real
-// free-format lexer on that text, which already has its own working
-// /COPY/INCLUDE mechanism — expanding here too would double-process it.
-//
-// Line numbers after an expansion point are relative to this flattened
-// line stream, not the original file — the same "best effort, not exact"
-// precision the free-format lexer already has today (yylineno isn't
-// saved/restored across its own buffer switch either), not a new
-// regression introduced here.
-//
-// `depth` guards against runaway/self-referential copies (matches
-// MAX_COPY_DEPTH above); `ok` is set false (not thrown) on any error so
-// the rest of the file can still be scanned for further diagnostics,
-// matching this reader's error-recovery style elsewhere.
-static std::vector<std::string> expandCopyDirectives(const std::vector<std::string>& lines, int depth, bool& ok) {
-    std::vector<std::string> out;
-    bool inFree = false;
-    for (size_t i = 0; i < lines.size(); i++) {
+namespace {
+
+struct CondLevel {
+    bool active;   // this branch is being compiled
+    bool taken;    // some branch of this /IF group has already been taken
+};
+
+struct DirectiveState {
+    std::set<std::string> defines;
+    std::vector<CondLevel> levels;
+    bool compiling() const {
+        for (auto& l : levels) if (!l.active) return false;
+        return true;
+    }
+    // Whether the /IF group at the top is nested inside compiled code —
+    // an /ELSE can't switch on a branch whose enclosing branch is off.
+    bool parentCompiling() const {
+        for (size_t i = 0; i + 1 < levels.size(); i++) if (!levels[i].active) return false;
+        return true;
+    }
+};
+
+// The directive a line holds, upper-cased and trimmed, or "" if none.
+// Normally that is the whole line with a '/' first; in columns-1-5-
+// sequence-numbered source the '/' sits in position 7 after other text.
+std::string directiveOf(const std::string& line) {
+    std::string t = trim(line);
+    if (!t.empty() && t[0] == '/') return upper(t);
+    if (line.size() > 6 && line[6] == '/') return upper(trim(line.substr(6)));
+    return "";
+}
+
+bool startsWord(const std::string& d, const char* kw) {
+    size_t n = std::strlen(kw);
+    return d.compare(0, n, kw) == 0 && (d.size() == n || d[n] == ' ' || d[n] == '\t' || d[n] == '(');
+}
+
+// "DEFINED(SYM)" / "NOT DEFINED(SYM)" after the keyword -> (negated, SYM).
+bool parseDefinedTest(const std::string& rest, bool& negated, std::string& sym) {
+    std::string r = trim(rest);
+    negated = false;
+    if (startsWord(r, "NOT")) { negated = true; r = trim(r.substr(3)); }
+    if (!startsWord(r, "DEFINED")) return false;
+    size_t lp = r.find('('), rp = r.find(')');
+    if (lp == std::string::npos || rp == std::string::npos || rp < lp) return false;
+    sym = trim(r.substr(lp + 1, rp - lp - 1));
+    return !sym.empty();
+}
+
+std::string firstWord(const std::string& rest) {
+    std::string r = trim(rest);
+    size_t e = r.find_first_of(" \t");
+    return e == std::string::npos ? r : r.substr(0, e);
+}
+
+void expandMember(const std::vector<std::string>& lines, int depth, bool inFreeAtStart,
+                  const std::string& member, DirectiveState& st,
+                  std::vector<std::string>& out, bool& ok) {
+    // Line numbers inside a copy member are the member's own, so say which
+    // member they belong to.
+    auto err = [&](int lineNo, const std::string& msg) {
+        report_fixed_format_error(lineNo, depth == 0 ? msg : msg + " (in /COPY member '" + member + "')");
+    };
+    bool inFree = inFreeAtStart;
+    const size_t levelsAtEntry = st.levels.size();
+    size_t i = 0;
+    for (; i < lines.size(); i++) {
         const std::string& line = lines[i];
-        std::string trimmed = trim(line);
-        std::string upperTrimmed = upper(trimmed);
+        const std::string d = directiveOf(line);
+        const int lineNo = (int)i + 1;
 
-        if (inFree) {
-            out.push_back(line);
-            if (upperTrimmed == "/END-FREE") inFree = false;
+        // --- Conditional directives: evaluated even in inactive branches,
+        // so nesting is tracked correctly.
+        if (startsWord(d, "/IF")) {
+            bool neg; std::string sym;
+            if (!parseDefinedTest(d.substr(3), neg, sym)) {
+                err(lineNo, "/IF: expected DEFINED(name) or NOT DEFINED(name)");
+                ok = false;
+                sym.clear(); neg = false;
+            }
+            bool cond = !sym.empty() && (st.defines.count(sym) > 0) != neg;
+            bool on = st.compiling() && cond;
+            st.levels.push_back({on, cond});
+            out.emplace_back();
             continue;
         }
-        if (upperTrimmed == "/FREE") {
-            inFree = true;
-            out.push_back(line);
+        if (startsWord(d, "/ELSEIF")) {
+            if (st.levels.size() <= levelsAtEntry) {
+                err(lineNo, "/ELSEIF without a matching /IF in this member");
+                ok = false; out.emplace_back(); continue;
+            }
+            bool neg; std::string sym;
+            if (!parseDefinedTest(d.substr(7), neg, sym)) {
+                err(lineNo, "/ELSEIF: expected DEFINED(name) or NOT DEFINED(name)");
+                ok = false;
+            }
+            CondLevel& top = st.levels.back();
+            bool cond = !sym.empty() && (st.defines.count(sym) > 0) != neg;
+            top.active = !top.taken && cond && st.parentCompiling();
+            if (cond) top.taken = true;
+            out.emplace_back();
+            continue;
+        }
+        if (startsWord(d, "/ELSE")) {
+            if (st.levels.size() <= levelsAtEntry) {
+                err(lineNo, "/ELSE without a matching /IF in this member");
+                ok = false; out.emplace_back(); continue;
+            }
+            CondLevel& top = st.levels.back();
+            top.active = !top.taken && st.parentCompiling();
+            top.taken = true;
+            out.emplace_back();
+            continue;
+        }
+        if (startsWord(d, "/ENDIF")) {
+            if (st.levels.size() <= levelsAtEntry) {
+                err(lineNo, "/ENDIF without a matching /IF in this member");
+                ok = false;
+            } else {
+                st.levels.pop_back();
+            }
+            out.emplace_back();
             continue;
         }
 
-        bool isCopy = upperTrimmed.rfind("/COPY", 0) == 0 &&
-            (upperTrimmed.size() == 5 || upperTrimmed[5] == ' ' || upperTrimmed[5] == '\t');
-        bool isInclude = !isCopy && upperTrimmed.rfind("/INCLUDE", 0) == 0 &&
-            (upperTrimmed.size() == 8 || upperTrimmed[8] == ' ' || upperTrimmed[8] == '\t');
+        if (!st.compiling()) { out.emplace_back(); continue; }
+
+        // --- Everything below applies only to compiled lines.
+        if (startsWord(d, "/DEFINE")) {
+            std::string sym = firstWord(d.substr(7));
+            if (sym.empty()) { err(lineNo, "/DEFINE: missing name"); ok = false; }
+            else st.defines.insert(sym);
+            out.emplace_back();
+            continue;
+        }
+        if (startsWord(d, "/UNDEFINE")) {
+            std::string sym = firstWord(d.substr(9));
+            if (sym.empty()) { err(lineNo, "/UNDEFINE: missing name"); ok = false; }
+            else st.defines.erase(sym);
+            out.emplace_back();
+            continue;
+        }
+        // /EOF ends this member only — the including member carries on.
+        if (startsWord(d, "/EOF")) break;
+
+        if (d == "/FREE") { inFree = true; out.push_back(line); continue; }
+        if (d == "/END-FREE") { inFree = false; out.push_back(line); continue; }
+
+        bool isCopy = startsWord(d, "/COPY");
+        bool isInclude = !isCopy && startsWord(d, "/INCLUDE");
         if (!isCopy && !isInclude) {
+            // A copy member spliced into the including member's /FREE block
+            // is a free-format member in its own right: its "**FREE" line
+            // means nothing there, and its code may start in position 1,
+            // which the block's position-8 rule (RNF0257) would reject — a
+            // rule for the including member's layout, not the member's.
+            // Shift it to position 8; free-form text is column-insensitive.
+            if (inFree && depth > 0 && inFreeAtStart) {
+                if (i == 0 && upper(trim(line)) == "**FREE") { out.emplace_back(); continue; }
+                out.push_back(line.empty() ? line : "       " + line);
+                continue;
+            }
             out.push_back(line);
             continue;
         }
 
         const char* directiveName = isCopy ? "/COPY" : "/INCLUDE";
-        size_t kwLen = isCopy ? 5 : 8;
-        std::string filename = trim(trimmed.substr(kwLen));
+        std::string body = trim(line);
+        if (body.empty() || body[0] != '/') body = trim(line.substr(6));
+        std::string filename = trim(body.substr(isCopy ? 5 : 8));
         if (filename.empty()) {
-            report_fixed_format_error((int)i + 1, std::string(directiveName) + ": missing filename");
+            err(lineNo, std::string(directiveName) + ": missing filename");
             ok = false;
             continue;
         }
         if (depth >= MAX_COPY_DEPTH) {
-            report_fixed_format_error((int)i + 1, std::string(directiveName) + " nesting too deep");
+            err(lineNo, std::string(directiveName) + " nesting too deep");
             ok = false;
             continue;
         }
         std::vector<std::string> copied;
         if (!readFileLines(filename, copied)) {
-            report_fixed_format_error((int)i + 1,
+            err(lineNo,
                 std::string("cannot open ") + directiveName + " file '" + filename + "'");
             ok = false;
             continue;
         }
-        auto expanded = expandCopyDirectives(copied, depth + 1, ok);
-        for (auto& l : expanded) out.push_back(std::move(l));
+        expandMember(copied, depth + 1, inFree, filename, st, out, ok);
     }
+
+    // IBM requires an /IF group to close in the member that opened it.
+    if (st.levels.size() > levelsAtEntry) {
+        err((int)lines.size(), "/IF without a matching /ENDIF");
+        ok = false;
+        st.levels.resize(levelsAtEntry);
+    }
+}
+
+} // namespace
+
+static std::vector<std::string> expandCopyDirectives(const std::vector<std::string>& lines, int depth, bool& ok) {
+    DirectiveState st;
+    std::vector<std::string> out;
+    expandMember(lines, depth, false, "", st, out, ok);
     return out;
 }
 

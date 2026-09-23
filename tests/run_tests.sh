@@ -787,6 +787,10 @@ run_test "228" "EXSR resolves in either direction" "$TESTDIR/test228_exsr_order.
 run_test "229" "Char comparison pads with blanks" "$TESTDIR/test229_char_compare.rpgle" "run"
 run_test "230" "DS subfields keep declared attrs" "$TESTDIR/test230_ds_subfield_attrs.rpgle" "run"
 run_test "231" "Assignment fits the declaration" "$TESTDIR/test231_assign_fit.rpgle" "run"
+run_test "232" "Fixed-format conditional directives" "$TESTDIR/test232_fixed_conditionals.rpgle" "run"
+run_test "233" "Reject a stray /ENDIF" "$TESTDIR/test233_err_stray_endif.rpgle" "error"
+run_test "234" "Reject /IF left open in a /COPY" "$TESTDIR/test234_err_copy_open_if.rpgle" "error"
+run_test "235" "/EOF in a /COPY ends only it" "$TESTDIR/test235_copy_eof.rpgle" "run"
 
 # ── Customer / drop-in tests ─────────────────────────────────────────────
 # Drop any .rpgle or .sqlrpgle file into tests/customer/ and it will be

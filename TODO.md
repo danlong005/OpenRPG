@@ -1907,49 +1907,53 @@ member's C-spec to host modern free-format statements.
 | 213 | Fixed C-spec: reject MOVE *JOBRUN |
 | 214 | Fixed C-spec: reject MOVE time *USA to numeric |
 
-### Compiler Directives — conditionals don't work in fixed format
+### Compiler Directives — conditionals in fixed format ✅ (fixed 2026-09-22)
 
-The Implemented Features list above claims `/DEFINE`, `/UNDEFINE`,
-`/IF DEFINED`, `/IF NOT DEFINED`, `/ELSEIF`, `/ELSE`, `/ENDIF`. They work in
-free-format source only. In fixed-format source they are silently dropped
-and **both branches compile** — no error, no warning:
+The Implemented Features list claims `/DEFINE`, `/UNDEFINE`,
+`/IF DEFINED`, `/IF NOT DEFINED`, `/ELSEIF`, `/ELSE` and `/ENDIF`. They used
+to work in free-format source only. In fixed-format source they were
+silently dropped and **both branches compiled** — no error, no warning.
+Cause: `fixed_reader.cpp`'s `expandCopyDirectives()` flattened `/COPY` and
+`/INCLUDE` itself and never routed anything else through the lexer's
+conditional machinery.
 
-```
-      /IF DEFINED(DEBUG)
-     C                   EVAL      msg = 'debug on'
-      /ELSE
-     C                   EVAL      msg = 'debug off'
-      /ENDIF
-```
+**The fix.** That pass (`expandMember`) now resolves every directive,
+evaluating conditionals *interleaved* with copy expansion:
+- An `/IF` can guard a `/COPY`; an inactive `/COPY` is never opened.
+- A copy member can contain `/IF` and `/DEFINE`.
+- `/DEFINE` is global to the compile, as on IBM i.
+- A nested group inside an inactive branch stays inactive.
+- `/ELSEIF` takes only the first true branch.
+- `/EOF` ends the current member only.
+- An `/IF` group must close in the member that opened it. Stray or
+  unclosed directives are errors, and errors inside a copy member name the
+  member.
+- Directive lines and inactive lines become empty lines, so the including
+  member's own line numbers stay put.
 
-emits both EVALs; the second assignment wins. Cause:
-`fixed_reader.cpp`'s `expandCopyDirectives()` handles `/COPY` and
-`/INCLUDE` itself and never routes anything else through the lexer's
-conditional machinery (`src/lexer.l:540-640`).
+**Inside `/FREE` blocks.** Directives there are resolved by the same pass.
+That fixes the "conditionals inside a `/FREE` block are a hard syntax
+error" item below and keeps one define set for the whole compile. This
+includes `/COPY`: a member spliced into a `/FREE` block drops its own
+`**FREE` line and is shifted to position 8, since its code may start in
+position 1, which the block's RNF0257 rule would reject.
 
-Fixing it means evaluating conditionals *interleaved* with copy expansion
-rather than before or after it — `/IF` has to be able to guard a `/COPY`,
-a copybook has to be able to contain `/IF`, and `/DEFINE` is global to the
-compile as it is on IBM.
+**`/EOF` in free format.** A `/COPY` member ending in `/EOF` used to
+terminate the **whole compile** (`yyterminate()` instead of popping the
+include buffer). It silently discarded every line of the including
+program, with exit status 0. `/EOF` now pops the buffer inside a member.
 
-Found alongside, same area, all verified:
-- `/EOF` is ignored in fixed-format source (same root cause).
-- `/EOF` inside a `/COPY` member terminates the **whole compile**: it is
-  `yyterminate()`, which ends the scan instead of popping the include
-  buffer. A copybook ending in `/EOF` silently discards every line of the
-  including program — exit status 0, a program that declares nothing and
-  does nothing. IBM's `/EOF` ends only the current member.
-- Conditionals inside a `/FREE` block are a hard syntax error. Loud, at
-  least.
+Tests 232 (fixed-format directives, with `tests/fixed_copybook_cond.rpgle`),
+233-234 (stray `/ENDIF`, `/IF` left open in a copy member) and 235 (`/EOF`
+in a free-format copy member).
+
+Still open:
 - No `-D` flag on rpgc, and nothing predefined (`*CRTBNDRPG`, `*ILERPG`,
   `*VxRxMx`). A symbol can only be defined by the source that uses it,
-  which removes most of the reason to have `/IF` at all. IBM has `DEFINE()`
-  on CRTBNDRPG.
+  which removes most of the reason to have `/IF` at all. IBM has
+  `DEFINE()` on CRTBNDRPG.
 - `/SET` is accepted and dropped, so `/SET DATFMT(*DMY)` changes nothing
   with no diagnostic.
-
-`README.md:397` advertises conditional compilation in the feature list
-without the fixed-format caveat.
 
 ### Found by writing an interactive program (2026-09-01)
 

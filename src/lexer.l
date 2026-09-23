@@ -638,8 +638,19 @@ static void parse_ctlopt(const char* text) {
 <SKIPPING>[^\n]*\n   { /* skip lines in inactive conditional blocks */ }
 <SKIPPING>[^\n]*     { /* skip last line without newline */ }
 
- /* /EOF - force end of source */
-^[ \t]*"/"[Ee][Oo][Ff][ \t]*    { yyterminate(); }
+ /* /EOF ends the current source member only. Inside a /COPY member that
+    means returning to the including member, exactly as reaching the member's
+    real end does (<<EOF>> below) — yyterminate() there ended the whole
+    compile, silently discarding every line of the includer after the
+    /COPY, with exit status 0. */
+^[ \t]*"/"[Ee][Oo][Ff][ \t]*    {
+    if (include_stack_ptr > 0) {
+        yy_delete_buffer(YY_CURRENT_BUFFER);
+        yy_switch_to_buffer(include_stack[--include_stack_ptr]);
+    } else {
+        yyterminate();
+    }
+}
 
  /* Listing directives - ignored */
 ^[ \t]*"/"[Ee][Jj][Ee][Cc][Tt][ \t]*     { /* /EJECT: listing, ignore */ }

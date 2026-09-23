@@ -1522,6 +1522,32 @@ cause, with IBM's message, source line and text.
   - type mismatches (3)
   - `LIKE` of an unqualified sibling subfield (2)
 
+### DSPLY conforms to IBM i (2026-09-24)
+
+Two `DSPLY` rules, both found by test 87 (whose `XML-INTO` IBM accepted all
+along — every error was in the `DSPLY` lines printing the results):
+- **An expression must be in parentheses** (RNF0637). `DSPLY`'s operands are
+  blank-separated (message, message queue, response), so
+  `DSPLY 'Total: ' + x;` does not parse on IBM i; `DSPLY ('Total: ' + x);`
+  does. Expressions carry a `parenthesized` flag for this.
+- **The message is at most 52 characters, judged from declarations**
+  (RNF7016). `CodeGen::displayLength` computes the maximum as IBM does:
+  literals, declared `CHAR`/`VARCHAR` lengths, `%CHAR` of a number (digits +
+  sign + point; 11 for an INT, 21 for integer arithmetic), of a date (10),
+  time (8), timestamp (26), float (14/23), indicator (1), `%TRIM`/`%SUBST`,
+  and concatenation. It matched IBM's reported length on every flagged line
+  in the corpus.
+
+36 tests broke one rule or both. The free-form ones were fixed by script
+(operand parenthesized; an over-long message assigned to a `VARCHAR(52)`
+work field first); the fixed-format report fields were shrunk from 60/70 to
+52, changing only trailing blanks. Test 217's detail line was 59 characters
+of real content, so it now prints over two lines with every value kept.
+On PUB400, 15 of the edited tests now compile — among them `XML-INTO` tests
+87-89 — and IBM rejects negative tests 262-263 as rpgc does. Known wrinkle:
+in a fixed-format C-spec run, rpgc can report a statement's line a few
+lines late (test 217: 113 for 104).
+
 ### Load discipline
 
 PUB400 is a free community box run on donated hardware. This is a **manual**

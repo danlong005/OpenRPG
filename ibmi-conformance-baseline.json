@@ -68,45 +68,44 @@
     "RNF0633",
     "RNF3308",
     "RNF3763",
-    "RNF3767",
-    "RNF7016"
+    "RNF3767"
    ],
    "messages": [
     {
-     "code": "RNF7016",
-     "line": 27,
-     "severity": 20,
-     "text": "Display length 100 greater than maximum allowed of 52; specification is ignored."
-    },
-    {
      "code": "RNF3308",
-     "line": 33,
+     "line": 37,
      "severity": 20,
      "text": "Keyword name is not valid; the keyword is ignored."
     },
     {
      "code": "RNF0633",
-     "line": 33,
+     "line": 37,
      "severity": 20,
      "text": "An unexpected right parenthesis was encountered; right parenthesis is ignored."
     },
     {
      "code": "RNF3767",
-     "line": 33,
+     "line": 37,
      "severity": 20,
-     "text": "The name in positions 7 - 21 does not match the name of the procedure being defined."
+     "text": "The name in positions 7 - 21 does not match the name of the procedure being defined. -=* http://pub400.com *=-"
     },
     {
      "code": "RNF3763",
-     "line": 33,
+     "line": 37,
      "severity": 20,
      "text": "A return value is expected for the procedure-interface specification."
+    },
+    {
+     "code": "RNF3308",
+     "line": 45,
+     "severity": 20,
+     "text": "Keyword name is not valid; the keyword is ignored."
     }
    ],
-   "reason": "RNF7016: Display length n greater than maximum allowed of n; specification is ignored.",
-   "reason_detail": "line 27: Display length 100 greater than maximum allowed of 52; specification is ignored. \u2014 `DSPLY msg;`",
+   "reason": "RNF3308: Keyword name is not valid; the keyword is ignored.",
+   "reason_detail": "line 37: Keyword name is not valid; the keyword is ignored. \u2014 `DCL-PI INT(10);`",
    "rpgc": "accept",
-   "sha256": "ffee75c51afa3ecb2019a4f8d4b83597c5b7f9e4c6fd43977461b873906d5e87",
+   "sha256": "9a6f60400b4a07d8311cd988229a58770b627855642b4ff3b06d78739dfdbec2",
    "verdict": "reject",
    "verified": "2026-09-23"
   },
@@ -119,45 +118,32 @@
   },
   "test100_data_gen.rpgle": {
    "codes": [
-    "RNF5454",
-    "RNF7016"
+    "RNF5454"
    ],
    "messages": [
     {
      "code": "RNF5454",
-     "line": 31,
+     "line": 34,
      "severity": 30,
      "text": "The third operand of DATA-GEN must be %GEN."
     },
     {
-     "code": "RNF7016",
-     "line": 33,
-     "severity": 20,
-     "text": "Display length 500 greater than maximum allowed of 52; specification is ignored."
-    },
-    {
      "code": "RNF5454",
-     "line": 39,
+     "line": 43,
      "severity": 30,
      "text": "The third operand of DATA-GEN must be %GEN."
     },
     {
-     "code": "RNF7016",
-     "line": 41,
-     "severity": 20,
-     "text": "Display length 300 greater than maximum allowed of 52; specification is ignored."
-    },
-    {
      "code": "RNF5454",
-     "line": 46,
+     "line": 51,
      "severity": 30,
      "text": "The third operand of DATA-GEN must be %GEN."
     }
    ],
    "reason": "RNF5454: The third operand of DATA-GEN must be %GEN.",
-   "reason_detail": "line 31: The third operand of DATA-GEN must be %GEN. \u2014 `DATA-GEN person %DATA(jsonOut : 'doc=string');`",
+   "reason_detail": "line 34: The third operand of DATA-GEN must be %GEN. \u2014 `DATA-GEN person %DATA(jsonOut : 'doc=string');`",
    "rpgc": "accept",
-   "sha256": "34718b63144278347bd24f2b94e0e34f2537fb150ce1628b30f241fe10aa09a0",
+   "sha256": "a3ee3237260ea9c62479f26c997539736e994b06d72957c1ca082478f1dd4de2",
    "verdict": "reject",
    "verified": "2026-09-23"
   },
@@ -331,58 +317,33 @@
    "messages": [
     {
      "code": "SQL0199",
-     "line": 16,
+     "line": 19,
      "severity": 30,
      "text": "Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>."
     },
     {
      "code": "SQL0104",
-     "line": 69,
+     "line": 77,
      "severity": 30,
      "text": "Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>."
     }
    ],
    "reason": "SQL0199: Position n Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>.",
-   "reason_detail": "line 16: Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>. \u2014 `EXEC SQL CONNECT USING :connStr;`",
+   "reason_detail": "line 19: Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>. \u2014 `EXEC SQL CONNECT USING :connStr;`",
    "rpgc": "accept",
-   "sha256": "24e53cffac514304cdae9616711a742d0880a05bf5200169b41099401a182ff2",
+   "sha256": "55d83a30ca573fee0de02924293ea6eae6a955d24b291ed9084ef19f3168da9c",
    "verdict": "reject",
    "verified": "2026-09-23"
   },
   "test10_bifs_expanded.rpgle": {
-   "codes": [
-    "RNF7016"
-   ],
-   "messages": [
-    {
-     "code": "RNF7016",
-     "line": 19,
-     "severity": 20,
-     "text": "Display length 100 greater than maximum allowed of 52; specification is ignored."
-    },
-    {
-     "code": "RNF7016",
-     "line": 23,
-     "severity": 20,
-     "text": "Display length 100 greater than maximum allowed of 52; specification is ignored."
-    },
-    {
-     "code": "RNF7016",
-     "line": 35,
-     "severity": 20,
-     "text": "Display length 100 greater than maximum allowed of 52; specification is ignored."
-    }
-   ],
-   "reason": "RNF7016: Display length n greater than maximum allowed of n; specification is ignored.",
-   "reason_detail": "line 19: Display length 100 greater than maximum allowed of 52; specification is ignored. \u2014 `DSPLY result;`",
+   "codes": [],
    "rpgc": "accept",
-   "sha256": "44f0d3b49cbdcfe8df4e418348ed978485c5d53ff2a515adbeee580ae57fcc26",
-   "verdict": "reject",
+   "sha256": "aa22cf06f5cdf111b140ef3dfbf028f0e3bf07b2e9a08dc3fb2e37628493296d",
+   "verdict": "accept",
    "verified": "2026-09-23"
   },
   "test110_overload.rpgle": {
    "codes": [
-    "RNF0637",
     "RNF3244",
     "RNF3245",
     "RNF3551",
@@ -423,13 +384,12 @@
    "reason": "RNF3244: Return type I(n,n) does not match type *NONE of overloaded prototype.",
    "reason_detail": "line 27: Return type I(10,0) does not match type *NONE of overloaded prototype. \u2014 `DCL-PR abs OVERLOAD(absInt : absFloat);`",
    "rpgc": "accept",
-   "sha256": "48475550368ec89d98e50e7fae62ea136a2ecbc34e7205667ddd58ee71d542bd",
+   "sha256": "ef66ba1182a5f837b09f1ac210ac37323a7f8e2f401acb601540445f3c961037",
    "verdict": "reject",
    "verified": "2026-09-23"
   },
   "test111_elem_alloc.rpgle": {
    "codes": [
-    "RNF0637",
     "RNF7563"
    ],
    "messages": [
@@ -438,170 +398,89 @@
      "line": 9,
      "severity": 30,
      "text": "The expression is not valid for assignment to built-in function %LEN or %ELEM."
-    },
-    {
-     "code": "RNF0637",
-     "line": 10,
-     "severity": 30,
-     "text": "An operand was expected but was not found; specification is ignored."
-    },
-    {
-     "code": "RNF0637",
-     "line": 11,
-     "severity": 30,
-     "text": "An operand was expected but was not found; specification is ignored."
-    },
-    {
-     "code": "RNF0637",
-     "line": 18,
-     "severity": 30,
-     "text": "An operand was expected but was not found; specification is ignored."
-    },
-    {
-     "code": "RNF0637",
-     "line": 19,
-     "severity": 30,
-     "text": "An operand was expected but was not found; specification is ignored."
     }
    ],
    "reason": "RNF7563: The expression is not valid for assignment to built-in function %LEN or %ELEM.",
    "reason_detail": "line 9: The expression is not valid for assignment to built-in function %LEN or %ELEM. \u2014 `%ELEM(nums : *ALLOC) = 50;`",
    "rpgc": "accept",
-   "sha256": "912b22be390b46cc34fa44b2f4e3e16219d5fdb600c5d028385f116369b07d48",
+   "sha256": "0249d077170b3e6d3de5ccdc25d9e843a581d4af90ceab05d9dd4f5a45a69815",
    "verdict": "reject",
    "verified": "2026-09-23"
   },
   "test112_data_into_csv.rpgle": {
-   "codes": [
-    "RNF0637"
-   ],
-   "messages": [
-    {
-     "code": "RNF0637",
-     "line": 32,
-     "severity": 30,
-     "text": "An operand was expected but was not found; specification is ignored."
-    },
-    {
-     "code": "RNF0637",
-     "line": 33,
-     "severity": 30,
-     "text": "An operand was expected but was not found; specification is ignored."
-    },
-    {
-     "code": "RNF0637",
-     "line": 34,
-     "severity": 30,
-     "text": "An operand was expected but was not found; specification is ignored."
-    },
-    {
-     "code": "RNF0637",
-     "line": 40,
-     "severity": 30,
-     "text": "An operand was expected but was not found; specification is ignored."
-    },
-    {
-     "code": "RNF0637",
-     "line": 41,
-     "severity": 30,
-     "text": "An operand was expected but was not found; specification is ignored."
-    }
-   ],
-   "reason": "RNF0637: An operand was expected but was not found; specification is ignored.",
-   "reason_detail": "line 32: An operand was expected but was not found; specification is ignored. \u2014 `DSPLY 'Name: ' + person.name;`",
+   "codes": [],
    "rpgc": "accept",
-   "sha256": "d92e243f0429d9e4b30a2a691dd8647cee3f8f21d41070f03183a3bc9e814bd5",
-   "verdict": "reject",
+   "sha256": "d2c210af59ae16b9e6fab7c6e8d213c9a77a27e41b10b745b4c20fbbcb9c80cd",
+   "verdict": "accept",
    "verified": "2026-09-23"
   },
   "test113_data_gen_csv.rpgle": {
    "codes": [
     "RNF5377",
-    "RNF5454",
-    "RNF7016"
+    "RNF5454"
    ],
    "messages": [
     {
      "code": "RNF5454",
-     "line": 27,
+     "line": 30,
      "severity": 30,
      "text": "The third operand of DATA-GEN must be %GEN."
     },
     {
      "code": "RNF5377",
-     "line": 27,
+     "line": 30,
      "severity": 20,
      "text": "The end of the expression is expected."
-    },
-    {
-     "code": "RNF7016",
-     "line": 28,
-     "severity": 20,
-     "text": "Display length 500 greater than maximum allowed of 52; specification is ignored."
     },
     {
      "code": "RNF5454",
-     "line": 33,
+     "line": 37,
      "severity": 30,
      "text": "The third operand of DATA-GEN must be %GEN."
     },
     {
      "code": "RNF5377",
-     "line": 33,
+     "line": 37,
      "severity": 20,
      "text": "The end of the expression is expected."
+    },
+    {
+     "code": "RNF5454",
+     "line": 41,
+     "severity": 30,
+     "text": "The third operand of DATA-GEN must be %GEN. -=* http://pub400.com *=-"
     }
    ],
    "reason": "RNF5454: The third operand of DATA-GEN must be %GEN.",
-   "reason_detail": "line 27: The third operand of DATA-GEN must be %GEN. \u2014 `DATA-GEN person %DATA(csvOut) %PARSER('CSV');`",
+   "reason_detail": "line 30: The third operand of DATA-GEN must be %GEN. \u2014 `DATA-GEN person %DATA(csvOut) %PARSER('CSV');`",
    "rpgc": "accept",
-   "sha256": "f31291515f01c6c182e8a8bf9b96b772626d37115fc8cf48529051d19c7dfbeb",
+   "sha256": "26eba670bfabefadc7451bd4ffed8476722218a37e3e9e43e7a9261fc1ef06be",
    "verdict": "reject",
    "verified": "2026-09-23"
   },
   "test114_data_into_json_parser.rpgle": {
    "codes": [
-    "RNF0637",
     "RNF5377",
-    "RNF5454",
-    "RNF7016"
+    "RNF5454"
    ],
    "messages": [
     {
-     "code": "RNF0637",
-     "line": 19,
-     "severity": 30,
-     "text": "An operand was expected but was not found; specification is ignored."
-    },
-    {
-     "code": "RNF0637",
-     "line": 20,
-     "severity": 30,
-     "text": "An operand was expected but was not found; specification is ignored."
-    },
-    {
-     "code": "RNF0637",
-     "line": 21,
-     "severity": 30,
-     "text": "An operand was expected but was not found; specification is ignored."
-    },
-    {
      "code": "RNF5454",
-     "line": 27,
+     "line": 30,
      "severity": 30,
      "text": "The third operand of DATA-GEN must be %GEN."
     },
     {
      "code": "RNF5377",
-     "line": 27,
+     "line": 30,
      "severity": 20,
      "text": "The end of the expression is expected."
     }
    ],
-   "reason": "RNF0637: An operand was expected but was not found; specification is ignored.",
-   "reason_detail": "line 19: An operand was expected but was not found; specification is ignored. \u2014 `DSPLY 'Name: ' + person.name;`",
+   "reason": "RNF5454: The third operand of DATA-GEN must be %GEN.",
+   "reason_detail": "line 30: The third operand of DATA-GEN must be %GEN. \u2014 `DATA-GEN person %DATA(jsonOut) %PARSER('JSON');`",
    "rpgc": "accept",
-   "sha256": "9186ef1e68a48ae2a037f68a60ec3dde0e13997d4d5201c540f54b67cb755192",
+   "sha256": "6c3d745a851b2deabaf285029bb0352ffcd5ec8016ca1c8dc6026ba5c0e4322a",
    "verdict": "reject",
    "verified": "2026-09-23"
   },
@@ -1952,8 +1831,7 @@
   },
   "test180_fixed_cspec_modern_opcodes.rpgle": {
    "codes": [
-    "RNF0637",
-    "RNF7016"
+    "RNF0637"
    ],
    "messages": [
     {
@@ -1961,24 +1839,12 @@
      "line": 9,
      "severity": 30,
      "text": "An operand was expected but was not found; specification is ignored."
-    },
-    {
-     "code": "RNF7016",
-     "line": 11,
-     "severity": 20,
-     "text": "Display length 60 greater than maximum allowed of 52; specification is ignored."
-    },
-    {
-     "code": "RNF7016",
-     "line": 13,
-     "severity": 20,
-     "text": "Display length 60 greater than maximum allowed of 52; specification is ignored."
     }
    ],
    "reason": "RNF0637: An operand was expected but was not found; specification is ignored.",
    "reason_detail": "line 9: An operand was expected but was not found; specification is ignored. \u2014 `C                             'case=any')`",
    "rpgc": "accept",
-   "sha256": "3237457c3082ac51127702e68efc60ed93a9346eb89365aeb3a5e9deba098b4e",
+   "sha256": "2bd42956bebd8e2e0ddd75a5369d2969bcd80a7968fbcbbf1b478a9e89af0136",
    "verdict": "reject",
    "verified": "2026-09-23"
   },
@@ -2587,94 +2453,22 @@
    "reason": "RNF2093: Blank File-Designation entry is not valid with File-Type entry; defaults to F.",
    "reason_detail": "line 13: Blank File-Designation entry is not valid with File-Type entry; defaults to F. \u2014 `FTESTFL216 U FA F   48        DISK`",
    "rpgc": "accept",
-   "sha256": "cef468e87709d0e8df94581bf0c36d6785bc8979c08cd1d2cbf96cb62d21d507",
+   "sha256": "f573578cf2c33f2f44be404635f2091625e6bad1f1b35dc21126cad00efce422",
    "verdict": "reject",
    "verified": "2026-09-23"
   },
   "test217_prog_inv_reorder.rpgle": {
-   "codes": [
-    "RNF7016"
-   ],
-   "messages": [
-    {
-     "code": "RNF7016",
-     "line": 104,
-     "severity": 20,
-     "text": "Display length 70 greater than maximum allowed of 52; specification is ignored."
-    },
-    {
-     "code": "RNF7016",
-     "line": 181,
-     "severity": 20,
-     "text": "Display length 70 greater than maximum allowed of 52; specification is ignored."
-    },
-    {
-     "code": "RNF7016",
-     "line": 188,
-     "severity": 20,
-     "text": "Display length 70 greater than maximum allowed of 52; specification is ignored."
-    },
-    {
-     "code": "RNF7016",
-     "line": 192,
-     "severity": 20,
-     "text": "Display length 70 greater than maximum allowed of 52; specification is ignored."
-    },
-    {
-     "code": "RNF7016",
-     "line": 196,
-     "severity": 20,
-     "text": "Display length 70 greater than maximum allowed of 52; specification is ignored."
-    }
-   ],
-   "reason": "RNF7016: Display length n greater than maximum allowed of n; specification is ignored.",
-   "reason_detail": "line 104: Display length 70 greater than maximum allowed of 52; specification is ignored. \u2014 `C     RPTLIN        DSPLY`",
+   "codes": [],
    "rpgc": "accept",
-   "sha256": "faa34c174e9484e4b79b3e96e6e86c6c3d50c9b616dc24ee8ccc2a409c5907d3",
-   "verdict": "reject",
+   "sha256": "f127a4bbf6e7699f9ab0bda0599fa510a8e14fd7154d892885615395b9a4b778",
+   "verdict": "accept",
    "verified": "2026-09-23"
   },
   "test218_prog_payroll.rpgle": {
-   "codes": [
-    "RNF7016"
-   ],
-   "messages": [
-    {
-     "code": "RNF7016",
-     "line": 94,
-     "severity": 20,
-     "text": "Display length 70 greater than maximum allowed of 52; specification is ignored."
-    },
-    {
-     "code": "RNF7016",
-     "line": 129,
-     "severity": 20,
-     "text": "Display length 70 greater than maximum allowed of 52; specification is ignored."
-    },
-    {
-     "code": "RNF7016",
-     "line": 136,
-     "severity": 20,
-     "text": "Display length 70 greater than maximum allowed of 52; specification is ignored."
-    },
-    {
-     "code": "RNF7016",
-     "line": 139,
-     "severity": 20,
-     "text": "Display length 70 greater than maximum allowed of 52; specification is ignored."
-    },
-    {
-     "code": "RNF7016",
-     "line": 141,
-     "severity": 20,
-     "text": "Display length 70 greater than maximum allowed of 52; specification is ignored."
-    }
-   ],
-   "reason": "RNF7016: Display length n greater than maximum allowed of n; specification is ignored.",
-   "reason_detail": "line 94: Display length 70 greater than maximum allowed of 52; specification is ignored. \u2014 `C     RPTLIN        DSPLY`",
+   "codes": [],
    "rpgc": "accept",
-   "sha256": "effb626f8a6cc19d4f276cfee1e29ab835521f47fb786143faa549cf70496c02",
-   "verdict": "reject",
+   "sha256": "f1866e1efb7b246a413c6d3089e3534251e15f7f8e1f2c17d7e737ca7d4abf98",
+   "verdict": "accept",
    "verified": "2026-09-23"
   },
   "test219_prog_order_release.sqlrpgle": {
@@ -2690,7 +2484,7 @@
    "reason": "SQL0199: Position n Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>.",
    "reason_detail": "line 49: Position 17 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>. \u2014 `C+ CONNECT USING :CONN`",
    "rpgc": "accept",
-   "sha256": "07b630ab89974d6faf82a5b421e01621009523b58da7076b109c9cd2ff502dfd",
+   "sha256": "619d11246a7e455965320983386c69e59c51c2d159fd05e402d0b790257591a8",
    "verdict": "reject",
    "verified": "2026-09-23"
   },
@@ -2712,8 +2506,7 @@
    "codes": [
     "RNF5191",
     "RNF5508",
-    "RNF6005",
-    "RNF7016"
+    "RNF6005"
    ],
    "messages": [
     {
@@ -2750,168 +2543,36 @@
    "reason": "RNF5508: End of free-format statement is not blank.",
    "reason_detail": "line 18: End of free-format statement is not blank. \u2014 `itemno = 'WIDGET';  amount = 1250.00;  rate = 1.375;  uom = 'EACH  ';`",
    "rpgc": "accept",
-   "sha256": "6140217703829c4daccdfb1f1c825700efd69ab0e82da42f72d233471b38f204",
+   "sha256": "1a92754e28d3f4f484c08237e0905c859cb10c626d96d3d32b971a1f38c46641",
    "verdict": "reject",
    "verified": "2026-09-23"
   },
   "test222_half_adjust.rpgle": {
-   "codes": [
-    "RNF7016"
-   ],
-   "messages": [
-    {
-     "code": "RNF7016",
-     "line": 12,
-     "severity": 20,
-     "text": "Display length 60 greater than maximum allowed of 52; specification is ignored."
-    },
-    {
-     "code": "RNF7016",
-     "line": 17,
-     "severity": 20,
-     "text": "Display length 60 greater than maximum allowed of 52; specification is ignored."
-    },
-    {
-     "code": "RNF7016",
-     "line": 23,
-     "severity": 20,
-     "text": "Display length 60 greater than maximum allowed of 52; specification is ignored."
-    },
-    {
-     "code": "RNF7016",
-     "line": 27,
-     "severity": 20,
-     "text": "Display length 60 greater than maximum allowed of 52; specification is ignored."
-    },
-    {
-     "code": "RNF7016",
-     "line": 31,
-     "severity": 20,
-     "text": "Display length 60 greater than maximum allowed of 52; specification is ignored."
-    }
-   ],
-   "reason": "RNF7016: Display length n greater than maximum allowed of n; specification is ignored.",
-   "reason_detail": "line 12: Display length 60 greater than maximum allowed of 52; specification is ignored. \u2014 `C     RPTLIN        DSPLY`",
+   "codes": [],
    "rpgc": "accept",
-   "sha256": "8dce3938c9500112b89e9c011ad0a7d67425d4fe9255393f78e87f53c869d47c",
-   "verdict": "reject",
+   "sha256": "5820a237cb6459987012201ae88de4d94251afa62c4055af817010a98bee4526",
+   "verdict": "accept",
    "verified": "2026-09-23"
   },
   "test223_editc_decimals.rpgle": {
-   "codes": [
-    "RNF7016"
-   ],
-   "messages": [
-    {
-     "code": "RNF7016",
-     "line": 15,
-     "severity": 20,
-     "text": "Display length 60 greater than maximum allowed of 52; specification is ignored."
-    },
-    {
-     "code": "RNF7016",
-     "line": 17,
-     "severity": 20,
-     "text": "Display length 60 greater than maximum allowed of 52; specification is ignored."
-    },
-    {
-     "code": "RNF7016",
-     "line": 19,
-     "severity": 20,
-     "text": "Display length 60 greater than maximum allowed of 52; specification is ignored."
-    },
-    {
-     "code": "RNF7016",
-     "line": 21,
-     "severity": 20,
-     "text": "Display length 60 greater than maximum allowed of 52; specification is ignored."
-    }
-   ],
-   "reason": "RNF7016: Display length n greater than maximum allowed of n; specification is ignored.",
-   "reason_detail": "line 15: Display length 60 greater than maximum allowed of 52; specification is ignored. \u2014 `C     RPTLIN        DSPLY`",
+   "codes": [],
    "rpgc": "accept",
-   "sha256": "3f6584182a187ec6d6c92f5c21a449acf4b2279c8849bdb7950992bab0822f85",
-   "verdict": "reject",
+   "sha256": "493b657b249a7298915294e1bae73a8292da679cbbaf7700bcf1bbfb46572eb2",
+   "verdict": "accept",
    "verified": "2026-09-23"
   },
   "test224_fixed_dspec_inz.rpgle": {
-   "codes": [
-    "RNF7016"
-   ],
-   "messages": [
-    {
-     "code": "RNF7016",
-     "line": 15,
-     "severity": 20,
-     "text": "Display length 70 greater than maximum allowed of 52; specification is ignored."
-    },
-    {
-     "code": "RNF7016",
-     "line": 17,
-     "severity": 20,
-     "text": "Display length 70 greater than maximum allowed of 52; specification is ignored."
-    },
-    {
-     "code": "RNF7016",
-     "line": 19,
-     "severity": 20,
-     "text": "Display length 70 greater than maximum allowed of 52; specification is ignored."
-    },
-    {
-     "code": "RNF7016",
-     "line": 21,
-     "severity": 20,
-     "text": "Display length 70 greater than maximum allowed of 52; specification is ignored."
-    },
-    {
-     "code": "RNF7016",
-     "line": 23,
-     "severity": 20,
-     "text": "Display length 70 greater than maximum allowed of 52; specification is ignored."
-    }
-   ],
-   "reason": "RNF7016: Display length n greater than maximum allowed of n; specification is ignored.",
-   "reason_detail": "line 15: Display length 70 greater than maximum allowed of 52; specification is ignored. \u2014 `C     RPTLIN        DSPLY`",
+   "codes": [],
    "rpgc": "accept",
-   "sha256": "21b574fa08c9bba32205bafb6a1c210309ff2d061286c181ef34a7da2aa4481c",
-   "verdict": "reject",
+   "sha256": "0d306d73030cea17cd95554115530a14b2dcd6efd3ba9b81dd529a5032c399c4",
+   "verdict": "accept",
    "verified": "2026-09-23"
   },
   "test225_decimal_division.rpgle": {
-   "codes": [
-    "RNF7016"
-   ],
-   "messages": [
-    {
-     "code": "RNF7016",
-     "line": 12,
-     "severity": 20,
-     "text": "Display length 70 greater than maximum allowed of 52; specification is ignored."
-    },
-    {
-     "code": "RNF7016",
-     "line": 17,
-     "severity": 20,
-     "text": "Display length 70 greater than maximum allowed of 52; specification is ignored."
-    },
-    {
-     "code": "RNF7016",
-     "line": 21,
-     "severity": 20,
-     "text": "Display length 70 greater than maximum allowed of 52; specification is ignored."
-    },
-    {
-     "code": "RNF7016",
-     "line": 25,
-     "severity": 20,
-     "text": "Display length 70 greater than maximum allowed of 52; specification is ignored."
-    }
-   ],
-   "reason": "RNF7016: Display length n greater than maximum allowed of n; specification is ignored.",
-   "reason_detail": "line 12: Display length 70 greater than maximum allowed of 52; specification is ignored. \u2014 `C     RPTLIN        DSPLY`",
+   "codes": [],
    "rpgc": "accept",
-   "sha256": "39477b0f9b4322aea048d8989565d4db6ee79e4cc34489ba31177b3cf7d94761",
-   "verdict": "reject",
+   "sha256": "671f7cd68a77185b42771bb7eb8f8a46937fd2fd8d9793e8dd5ad4430a64917e",
+   "verdict": "accept",
    "verified": "2026-09-23"
   },
   "test226_err_subfield_inz.rpgle": {
@@ -3057,21 +2718,21 @@
    "messages": [
     {
      "code": "SQL0199",
-     "line": 17,
+     "line": 20,
      "severity": 30,
      "text": "Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>."
     },
     {
      "code": "SQL0104",
-     "line": 54,
+     "line": 58,
      "severity": 30,
      "text": "Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>."
     }
    ],
    "reason": "SQL0199: Position n Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>.",
-   "reason_detail": "line 17: Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>. \u2014 `EXEC SQL CONNECT USING :connStr;`",
+   "reason_detail": "line 20: Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>. \u2014 `EXEC SQL CONNECT USING :connStr;`",
    "rpgc": "accept",
-   "sha256": "f0768cc63d1e9f6ad0cc0d7c3179f37a13effe73eca45c34ee5bbdf09a7b4089",
+   "sha256": "7cfdcf655d3262b6d2980d5a532ef569fece5cc45410661c9520e65fffede8c0",
    "verdict": "reject",
    "verified": "2026-09-23"
   },
@@ -3130,22 +2791,10 @@
    "verified": "2026-09-23"
   },
   "test244_pi_star_n.rpgle": {
-   "codes": [
-    "RNF7016"
-   ],
-   "messages": [
-    {
-     "code": "RNF7016",
-     "line": 26,
-     "severity": 20,
-     "text": "Display length 54 greater than maximum allowed of 52; specification is ignored."
-    }
-   ],
-   "reason": "RNF7016: Display length n greater than maximum allowed of n; specification is ignored.",
-   "reason_detail": "line 26: Display length 54 greater than maximum allowed of 52; specification is ignored. \u2014 `DSPLY ('RESULT:MUL=' + %CHAR(total*N) + ' ' + %CHAR(total * n));`",
+   "codes": [],
    "rpgc": "accept",
-   "sha256": "a54559d064b5f9d9e85ecc533220e1beda0a7c722578c707ff61b03e0fcdf461",
-   "verdict": "reject",
+   "sha256": "e7bc9b2705883b71a63ed85929e73b8318dde4d1de5b89f25df4461c07635408",
+   "verdict": "accept",
    "verified": "2026-09-23"
   },
   "test245_bare_call.rpgle": {
@@ -3189,22 +2838,10 @@
    "verified": "2026-09-23"
   },
   "test249_ds_subfield_types.rpgle": {
-   "codes": [
-    "RNF7016"
-   ],
-   "messages": [
-    {
-     "code": "RNF7016",
-     "line": 40,
-     "severity": 20,
-     "text": "Display length 53 greater than maximum allowed of 52; specification is ignored."
-    }
-   ],
-   "reason": "RNF7016: Display length n greater than maximum allowed of n; specification is ignored.",
-   "reason_detail": "line 40: Display length 53 greater than maximum allowed of 52; specification is ignored. \u2014 `%CHAR(rec.active) + ' ' + %CHAR(rec.units) + ' ' + %CHAR(rec.due));`",
+   "codes": [],
    "rpgc": "accept",
-   "sha256": "e14414b80bfcf469c3631ae87082c73d137cadbbc3e44552c71f7da9357b9724",
-   "verdict": "reject",
+   "sha256": "5041dbe6a85933b8a0d881ee64373916417e39eae4f92eac17e46cdc363b6426",
+   "verdict": "accept",
    "verified": "2026-09-23"
   },
   "test24_max_min.rpgle": {
@@ -3431,6 +3068,44 @@
    "verdict": "reject",
    "verified": "2026-09-23"
   },
+  "test262_err_dsply_unparen.rpgle": {
+   "codes": [
+    "RNF0637"
+   ],
+   "messages": [
+    {
+     "code": "RNF0637",
+     "line": 6,
+     "severity": 30,
+     "text": "An operand was expected but was not found; specification is ignored."
+    }
+   ],
+   "reason": "RNF0637: An operand was expected but was not found; specification is ignored.",
+   "reason_detail": "line 6: An operand was expected but was not found; specification is ignored. \u2014 `DSPLY 'Count: ' + %CHAR(n);`",
+   "rpgc": "reject",
+   "sha256": "706a70c9927ffdbd2cedc11114b59269bb24e401f04a3840185793e4e9370ab0",
+   "verdict": "reject",
+   "verified": "2026-09-23"
+  },
+  "test263_err_dsply_too_long.rpgle": {
+   "codes": [
+    "RNF7016"
+   ],
+   "messages": [
+    {
+     "code": "RNF7016",
+     "line": 6,
+     "severity": 20,
+     "text": "Display length 56 greater than maximum allowed of 52; specification is ignored."
+    }
+   ],
+   "reason": "RNF7016: Display length n greater than maximum allowed of n; specification is ignored.",
+   "reason_detail": "line 6: Display length 56 greater than maximum allowed of 52; specification is ignored. \u2014 `DSPLY ('Name: ' + name);`",
+   "rpgc": "reject",
+   "sha256": "d4b202001227d4e17e291dec5604e1db0af9125d8037aab02ed539cb04e306e3",
+   "verdict": "reject",
+   "verified": "2026-09-23"
+  },
   "test26_pointers.rpgle": {
    "codes": [],
    "rpgc": "accept",
@@ -3628,22 +3303,10 @@
    "verified": "2026-09-23"
   },
   "test51_string_bifs.rpgle": {
-   "codes": [
-    "RNF7016"
-   ],
-   "messages": [
-    {
-     "code": "RNF7016",
-     "line": 23,
-     "severity": 20,
-     "text": "Display length 100 greater than maximum allowed of 52; specification is ignored."
-    }
-   ],
-   "reason": "RNF7016: Display length n greater than maximum allowed of n; specification is ignored.",
-   "reason_detail": "line 23: Display length 100 greater than maximum allowed of 52; specification is ignored. \u2014 `DSPLY result;`",
+   "codes": [],
    "rpgc": "accept",
-   "sha256": "5051f709b7c28fe7e3226123fc9afa5525cc2799db5f761c71e7a0b362880984",
-   "verdict": "reject",
+   "sha256": "527b20557d7ed206f77dcc56c120710fa99acb202bb6834dcaa556609f31dc21",
+   "verdict": "accept",
    "verified": "2026-09-23"
   },
   "test52_array_bifs.rpgle": {
@@ -4000,40 +3663,10 @@
    "verified": "2026-09-23"
   },
   "test74_concat.rpgle": {
-   "codes": [
-    "RNF7016"
-   ],
-   "messages": [
-    {
-     "code": "RNF7016",
-     "line": 13,
-     "severity": 20,
-     "text": "Display length 100 greater than maximum allowed of 52; specification is ignored."
-    },
-    {
-     "code": "RNF7016",
-     "line": 17,
-     "severity": 20,
-     "text": "Display length 100 greater than maximum allowed of 52; specification is ignored."
-    },
-    {
-     "code": "RNF7016",
-     "line": 21,
-     "severity": 20,
-     "text": "Display length 100 greater than maximum allowed of 52; specification is ignored."
-    },
-    {
-     "code": "RNF7016",
-     "line": 25,
-     "severity": 20,
-     "text": "Display length 100 greater than maximum allowed of 52; specification is ignored."
-    }
-   ],
-   "reason": "RNF7016: Display length n greater than maximum allowed of n; specification is ignored.",
-   "reason_detail": "line 13: Display length 100 greater than maximum allowed of 52; specification is ignored. \u2014 `DSPLY result;  // Alice, Dallas, TX`",
+   "codes": [],
    "rpgc": "accept",
-   "sha256": "ee8013c67870e08c98d00c48335b9398dc9f3b21149aab543a7c32daffb5e57f",
-   "verdict": "reject",
+   "sha256": "8dfbfe1eb27df5e7a034ea574661a52763da2b1a7be309348326548ce3496406",
+   "verdict": "accept",
    "verified": "2026-09-23"
   },
   "test75_tlookup_elem.rpgle": {
@@ -4115,27 +3748,27 @@
    "messages": [
     {
      "code": "SQL0199",
-     "line": 9,
+     "line": 12,
      "severity": 30,
      "text": "Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>."
     },
     {
      "code": "SQL0104",
-     "line": 29,
+     "line": 34,
      "severity": 30,
      "text": "Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>."
     },
     {
      "code": "SQL0312",
-     "line": 51,
+     "line": 56,
      "severity": 30,
      "text": "Position 67 Variable EMPID not defined or not usable for reason code 1."
     }
    ],
    "reason": "SQL0199: Position n Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>.",
-   "reason_detail": "line 9: Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>. \u2014 `EXEC SQL CONNECT USING :connStr;`",
+   "reason_detail": "line 12: Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>. \u2014 `EXEC SQL CONNECT USING :connStr;`",
    "rpgc": "accept",
-   "sha256": "e32ab6ee2643cd162842f5c8155a1f779179f47391949fd5ddfaff287b27645d",
+   "sha256": "9f44f8a3f8704fcc824e8c667528cb98bb8dadadabf1d86ae799f33348fc78bb",
    "verdict": "reject",
    "verified": "2026-09-23"
   },
@@ -4158,7 +3791,7 @@
    "reason": "SQL0199: Position n Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>.",
    "reason_detail": "line 15: Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>. \u2014 `EXEC SQL CONNECT USING :connStr;`",
    "rpgc": "accept",
-   "sha256": "e80507794be6255747940bb3113ecd1d03fce715b17ff2ffc43bc76718488661",
+   "sha256": "e92759545e90930e193a49c1a738be7214eab7cf28615aeab6b3de3057e0c3f9",
    "verdict": "reject",
    "verified": "2026-09-23"
   },
@@ -4167,21 +3800,21 @@
    "messages": [
     {
      "code": "SQL0199",
-     "line": 12,
+     "line": 15,
      "severity": 30,
      "text": "Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>."
     },
     {
      "code": "SQL0104",
-     "line": 72,
+     "line": 77,
      "severity": 30,
      "text": "Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>."
     }
    ],
    "reason": "SQL0199: Position n Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>.",
-   "reason_detail": "line 12: Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>. \u2014 `EXEC SQL CONNECT USING :connStr;`",
+   "reason_detail": "line 15: Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>. \u2014 `EXEC SQL CONNECT USING :connStr;`",
    "rpgc": "accept",
-   "sha256": "64fec4eebe90bf55c73457917afded131420062cacc3c4616537731fdc38b216",
+   "sha256": "58c34f27f215a1173bb8e5570212a7cc8a734ae1d796582aaf35834fe3586f1c",
    "verdict": "reject",
    "verified": "2026-09-23"
   },
@@ -4233,7 +3866,7 @@
    "reason": "SQL0199: Position n Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>.",
    "reason_detail": "line 13: Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>. \u2014 `EXEC SQL CONNECT USING :connStr;`",
    "rpgc": "accept",
-   "sha256": "bf58d36b1eeecbb38d04745e25da273f5c1d3fbf349ec5f0c15c81a7ad9bc230",
+   "sha256": "e271de1c012304441eae839579f1c59369bca018f63d46ecc3d9bd4b81f11f96",
    "verdict": "reject",
    "verified": "2026-09-23"
   },
@@ -4242,39 +3875,39 @@
    "messages": [
     {
      "code": "SQL0199",
-     "line": 13,
+     "line": 16,
      "severity": 30,
      "text": "Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>."
     },
     {
      "code": "SQL0312",
-     "line": 35,
+     "line": 38,
      "severity": 30,
      "text": "Position 11 Variable IDS not defined or not usable for reason code 2."
     },
     {
      "code": "SQL0312",
-     "line": 35,
+     "line": 38,
      "severity": 30,
      "text": "Position 17 Variable NAMES not defined or not usable for reason code 2."
     },
     {
      "code": "SQL0312",
-     "line": 35,
+     "line": 38,
      "severity": 30,
      "text": "Position 25 Variable SALARIES not defined or not usable for reason code 2."
     },
     {
      "code": "SQL0104",
-     "line": 36,
+     "line": 39,
      "severity": 30,
      "text": "Position 7 Token : was not valid. Valid tokens: READ FETCH UPDATE."
     }
    ],
    "reason": "SQL0199: Position n Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>.",
-   "reason_detail": "line 13: Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>. \u2014 `EXEC SQL CONNECT USING :connStr;`",
+   "reason_detail": "line 16: Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>. \u2014 `EXEC SQL CONNECT USING :connStr;`",
    "rpgc": "accept",
-   "sha256": "4041119277711c3b83968cc34629bddd8635b82ebcd61796c05fe184a8ec4e89",
+   "sha256": "50fce72dd7a20cc0885f79ecbfc50ae0d6dc31f8ab57fa0d7c8eabc0cef18733",
    "verdict": "reject",
    "verified": "2026-09-23"
   },
@@ -4303,28 +3936,15 @@
    "reason": "SQL0199: Position n Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>.",
    "reason_detail": "line 12: Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>. \u2014 `EXEC SQL CONNECT USING :connStr;`",
    "rpgc": "accept",
-   "sha256": "907476187c84db664ee13c341ca95071d0634919ad83ec622dbc649c7f45dde6",
+   "sha256": "e1fd86ab7f753317671b1deb14d3c2654dc843e47f058b5c405d71665f728f4c",
    "verdict": "reject",
    "verified": "2026-09-23"
   },
   "test85_getenv.rpgle": {
    "codes": [
-    "RNF0604",
-    "RNF7016"
+    "RNF0604"
    ],
    "messages": [
-    {
-     "code": "RNF0604",
-     "line": 12,
-     "severity": 20,
-     "text": "The token is not valid; token is ignored."
-    },
-    {
-     "code": "RNF7016",
-     "line": 13,
-     "severity": 20,
-     "text": "Display length 256 greater than maximum allowed of 52; specification is ignored."
-    },
     {
      "code": "RNF0604",
      "line": 15,
@@ -4339,15 +3959,27 @@
     },
     {
      "code": "RNF0604",
-     "line": 25,
+     "line": 23,
+     "severity": 20,
+     "text": "The token is not valid; token is ignored."
+    },
+    {
+     "code": "RNF0604",
+     "line": 29,
+     "severity": 20,
+     "text": "The token is not valid; token is ignored."
+    },
+    {
+     "code": "RNF0604",
+     "line": 34,
      "severity": 20,
      "text": "The token is not valid; token is ignored."
     }
    ],
    "reason": "RNF0604: The token is not valid; token is ignored.",
-   "reason_detail": "line 12: The token is not valid; token is ignored. \u2014 `homePath = %GETENV('HOME');`",
+   "reason_detail": "line 15: The token is not valid; token is ignored. \u2014 `homePath = %GETENV('HOME');`",
    "rpgc": "accept",
-   "sha256": "01a53013b7fb840ae569ea51241bbd93ad698370e1112c49a3f48be3b30cd9dd",
+   "sha256": "38344cd9f2335b7a6dce4dc174036ae5a2cf862ed01e3346b570359f9743cd48",
    "verdict": "reject",
    "verified": "2026-09-23"
   },
@@ -4356,154 +3988,43 @@
    "messages": [
     {
      "code": "SQL0199",
-     "line": 14,
+     "line": 17,
      "severity": 30,
      "text": "Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>."
     },
     {
      "code": "SQL0104",
-     "line": 40,
+     "line": 44,
      "severity": 30,
      "text": "Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>."
     }
    ],
    "reason": "SQL0199: Position n Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>.",
-   "reason_detail": "line 14: Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>. \u2014 `exec sql connect using :connStr;`",
+   "reason_detail": "line 17: Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>. \u2014 `exec sql connect using :connStr;`",
    "rpgc": "accept",
-   "sha256": "6b208bf529cc4805ef53a7d790f0a3060439589eb8575d696ce3160152dee474",
+   "sha256": "9c5ffdd5d336a7241e26a21cbcc467bc62f42aba73683610d559133de13dcc09",
    "verdict": "reject",
    "verified": "2026-09-23"
   },
   "test87.rpgle": {
-   "codes": [
-    "RNF0637"
-   ],
-   "messages": [
-    {
-     "code": "RNF0637",
-     "line": 48,
-     "severity": 30,
-     "text": "An operand was expected but was not found; specification is ignored."
-    },
-    {
-     "code": "RNF0637",
-     "line": 49,
-     "severity": 30,
-     "text": "An operand was expected but was not found; specification is ignored."
-    },
-    {
-     "code": "RNF0637",
-     "line": 50,
-     "severity": 30,
-     "text": "An operand was expected but was not found; specification is ignored."
-    },
-    {
-     "code": "RNF0637",
-     "line": 51,
-     "severity": 30,
-     "text": "An operand was expected but was not found; specification is ignored."
-    },
-    {
-     "code": "RNF0637",
-     "line": 52,
-     "severity": 30,
-     "text": "An operand was expected but was not found; specification is ignored."
-    }
-   ],
-   "reason": "RNF0637: An operand was expected but was not found; specification is ignored.",
-   "reason_detail": "line 48: An operand was expected but was not found; specification is ignored. \u2014 `DSPLY 'Order: ' + %CHAR(order.id);`",
+   "codes": [],
    "rpgc": "accept",
-   "sha256": "bf7aa605c1db8b1e744d5d55a8d1cae7a4b2774d801e4ae4302173ff1c23cef0",
-   "verdict": "reject",
+   "sha256": "bf964fc0fcaecd13eda649e4ec21a4fcb003cdc52b9022e7ebc00dda5920d06c",
+   "verdict": "accept",
    "verified": "2026-09-23"
   },
   "test88.rpgle": {
-   "codes": [
-    "RNF0637",
-    "RNF5377"
-   ],
-   "messages": [
-    {
-     "code": "RNF0637",
-     "line": 24,
-     "severity": 30,
-     "text": "An operand was expected but was not found; specification is ignored."
-    },
-    {
-     "code": "RNF5377",
-     "line": 24,
-     "severity": 20,
-     "text": "The end of the expression is expected."
-    },
-    {
-     "code": "RNF0637",
-     "line": 26,
-     "severity": 30,
-     "text": "An operand was expected but was not found; specification is ignored."
-    },
-    {
-     "code": "RNF5377",
-     "line": 26,
-     "severity": 20,
-     "text": "The end of the expression is expected."
-    },
-    {
-     "code": "RNF0637",
-     "line": 28,
-     "severity": 30,
-     "text": "An operand was expected but was not found; specification is ignored."
-    }
-   ],
-   "reason": "RNF0637: An operand was expected but was not found; specification is ignored.",
-   "reason_detail": "line 24: An operand was expected but was not found; specification is ignored. \u2014 `DSPLY 'Item 1: ' + item(1).name + ' qty=' + %CHAR(item(1).qty) +`",
+   "codes": [],
    "rpgc": "accept",
-   "sha256": "6f1c3559fbf75f141e9e86336361b49c4e1149a7275bff7375a435d1ba5896f2",
-   "verdict": "reject",
+   "sha256": "d07789d864a291c4a8cdd6e5329b0dd6492a0136472bf2b6c04bf8307c4fe54d",
+   "verdict": "accept",
    "verified": "2026-09-23"
   },
   "test89.rpgle": {
-   "codes": [
-    "RNF0622",
-    "RNF0637",
-    "RNF5377"
-   ],
-   "messages": [
-    {
-     "code": "RNF0637",
-     "line": 42,
-     "severity": 30,
-     "text": "An operand was expected but was not found; specification is ignored."
-    },
-    {
-     "code": "RNF5377",
-     "line": 42,
-     "severity": 20,
-     "text": "The end of the expression is expected. -=* http://pub400.com *=-"
-    },
-    {
-     "code": "RNF0622",
-     "line": 42,
-     "severity": 20,
-     "text": "A qualified name is not allowed in this context."
-    },
-    {
-     "code": "RNF0622",
-     "line": 43,
-     "severity": 20,
-     "text": "A qualified name is not allowed in this context."
-    },
-    {
-     "code": "RNF0637",
-     "line": 49,
-     "severity": 30,
-     "text": "An operand was expected but was not found; specification is ignored."
-    }
-   ],
-   "reason": "RNF0637: An operand was expected but was not found; specification is ignored.",
-   "reason_detail": "line 42: An operand was expected but was not found; specification is ignored. \u2014 `DSPLY 'Order: ' + %CHAR(order.id) + ' ' + order.product +`",
+   "codes": [],
    "rpgc": "accept",
-   "sha256": "12cd8210b3a0f49dfab4d1959f8bf9b0879d16f9affc73efef8c674bbbd5013a",
-   "verdict": "reject",
+   "sha256": "a69fc66f056c4433621572b59320010e2f7ea7a9df063becd2a790bf9fd8adfc",
+   "verdict": "accept",
    "verified": "2026-09-23"
   },
   "test90_psds_basic.rpgle": {
@@ -4680,7 +4201,6 @@
   },
   "test99_data_into.rpgle": {
    "codes": [
-    "RNF0637",
     "RNF5449"
    ],
    "messages": [
@@ -4691,26 +4211,14 @@
      "text": "The third operand of DATA-INTO must be %PARSER."
     },
     {
-     "code": "RNF0637",
-     "line": 34,
+     "code": "RNF5449",
+     "line": 40,
      "severity": 30,
-     "text": "An operand was expected but was not found; specification is ignored."
-    },
-    {
-     "code": "RNF0637",
-     "line": 35,
-     "severity": 30,
-     "text": "An operand was expected but was not found; specification is ignored."
-    },
-    {
-     "code": "RNF0637",
-     "line": 36,
-     "severity": 30,
-     "text": "An operand was expected but was not found; specification is ignored."
+     "text": "The third operand of DATA-INTO must be %PARSER."
     },
     {
      "code": "RNF5449",
-     "line": 40,
+     "line": 49,
      "severity": 30,
      "text": "The third operand of DATA-INTO must be %PARSER."
     }
@@ -4718,7 +4226,7 @@
    "reason": "RNF5449: The third operand of DATA-INTO must be %PARSER.",
    "reason_detail": "line 32: The third operand of DATA-INTO must be %PARSER. \u2014 `DATA-INTO person %DATA(jsonData : 'doc=string case=any');`",
    "rpgc": "accept",
-   "sha256": "babe5b94d3af44bc235eefee93c1ab3daccf0ff5272669c6e0fff6753bea3fa6",
+   "sha256": "11df35b88da2456ab88302f0fe9dd1f824fac95f6411e97dc13c6b0c98ee30cc",
    "verdict": "reject",
    "verified": "2026-09-23"
   },
@@ -4768,5 +4276,5 @@
    "verified": "2026-09-23"
   }
  },
- "generated": "2026-09-23T21:15:19+00:00"
+ "generated": "2026-09-23T21:48:05+00:00"
 }

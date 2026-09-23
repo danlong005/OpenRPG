@@ -986,9 +986,19 @@ leavesr_stmt:
     }
     ;
 
+/* DSPLY's operands are separated by blanks (message, message queue,
+   response), so on IBM i a message that is an expression must be in
+   parentheses: `DSPLY 'Total: ' + x;` is RNF0637, `DSPLY ('Total: ' + x);`
+   is fine. A single field, literal or built-in needs none. */
 dsply_stmt:
     KW_DSPLY expression SEMICOLON {
-        $$ = new rpg::DsplyStmt(std::unique_ptr<rpg::Expression>($2));
+        rpg::Expression* e = $2;
+        bool compound = dynamic_cast<rpg::BinaryExpr*>(e) || dynamic_cast<rpg::NotExpr*>(e) ||
+                        dynamic_cast<rpg::InExpr*>(e);
+        if (compound && !e->parenthesized) {
+            yyerror("DSPLY: an expression must be in parentheses, e.g. DSPLY ('Total: ' + x) (IBM: RNF0637)");
+        }
+        $$ = new rpg::DsplyStmt(std::unique_ptr<rpg::Expression>(e));
     }
     ;
 
@@ -2505,6 +2515,7 @@ primary_expr:
     }
     | LPAREN expression RPAREN {
         $$ = $2;
+        $$->parenthesized = true;
     }
     ;
 

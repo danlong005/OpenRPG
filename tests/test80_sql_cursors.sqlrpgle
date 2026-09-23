@@ -8,6 +8,9 @@ DCL-S empAge    INT(10);
 DCL-S empSal    PACKED(9:2);
 DCL-S empId     INT(10);
 
+// DSPLY shows at most 52 characters (IBM i RNF7016)
+DCL-S dspLine VARCHAR(52);
+
 connStr = 'Driver={SQLite3};Database=/tmp/rpgc_test80.sqlite;';
 EXEC SQL CONNECT USING :connStr;
 
@@ -47,7 +50,8 @@ EXEC SQL OPEN empCur;
 
 EXEC SQL FETCH empCur INTO :empName, :empAge, :empSal;
 DOW SQLCOD = 0;
-  DSPLY empName + ' age=' + %CHAR(empAge);
+  dspLine = (empName + ' age=' + %CHAR(empAge));
+  DSPLY dspLine;
   EXEC SQL FETCH empCur INTO :empName, :empAge, :empSal;
 ENDDO;
 
@@ -62,7 +66,8 @@ EXEC SQL OPEN salCur;
 
 EXEC SQL FETCH salCur INTO :empName, :empSal;
 DOW SQLCOD = 0;
-  DSPLY empName + ' sal=' + %CHAR(empSal);
+  dspLine = (empName + ' sal=' + %CHAR(empSal));
+  DSPLY dspLine;
   EXEC SQL FETCH salCur INTO :empName, :empSal;
 ENDDO;
 

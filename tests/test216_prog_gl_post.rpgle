@@ -30,7 +30,7 @@
      DERRCNT           S              5P 0
      DWRKNUM           S             13P 0
      DWRKDLR           S             13P 2
-     DRPTLIN           S             60A
+     DRPTLIN           S             52A
      D* THE ONLY IMAGE FIELD THE I-SPECS DO NOT ALREADY DEFINE
      DRECTYP           S              1A
      I* BATCH HEADER - POSITION 1 HOLDS 'H'.  INDICATOR 01.

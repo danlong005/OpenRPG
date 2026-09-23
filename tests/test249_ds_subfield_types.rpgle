@@ -24,6 +24,9 @@ DCL-DS lay QUALIFIED;
   nums   ZONED(3:0) DIM(2) POS(20);
 END-DS;
 
+// DSPLY shows at most 52 characters (IBM i RNF7016)
+DCL-S dspLine VARCHAR(52);
+
 // Each starts at its type's initial value.
 DSPLY ('RESULT:INIT=' + %CHAR(rec.qty) + ' ' + %CHAR(rec.active) + ' ' +
        %CHAR(rec.units) + ' [' + rec.code + ']');
@@ -36,8 +39,9 @@ rec.active = *ON;
 rec.units = 42;
 rec.rate = 0.5;
 rec.due = %DATE('2026-09-22');
-DSPLY ('RESULT:SET=' + %CHAR(rec.qty) + ' ' + %CHAR(rec.amt) + ' ' +
+dspLine = ('RESULT:SET=' + %CHAR(rec.qty) + ' ' + %CHAR(rec.amt) + ' ' +
        %CHAR(rec.active) + ' ' + %CHAR(rec.units) + ' ' + %CHAR(rec.due));
+DSPLY dspLine;
 
 // Keyword combinations no alternative used to spell.
 lay.whole = 'ABCDEFGHIJ';

@@ -40,46 +40,53 @@ DCL-DS msg QUALIFIED;
 END-DS;
 DCL-S xmlMsg VARCHAR(300);
 
+// DSPLY shows at most 52 characters (IBM i RNF7016)
+DCL-S dspLine VARCHAR(52);
+
 // Test 1: Basic XML-INTO with case=any
 xmlData = '<order><ID>1001</ID><Customer>Acme Corp</Customer><Item>Widget</Item><QTY>25</QTY><Price>19.99</Price></order>';
 
 XML-INTO order %XML(xmlData : 'case=any');
 
-DSPLY 'Order: ' + %CHAR(order.id);
-DSPLY 'Customer: ' + order.customer;
-DSPLY 'Item: ' + order.item;
-DSPLY 'Qty: ' + %CHAR(order.qty);
-DSPLY 'Price: ' + %CHAR(order.price);
+DSPLY ('Order: ' + %CHAR(order.id));
+dspLine = ('Customer: ' + order.customer);
+DSPLY dspLine;
+DSPLY ('Item: ' + order.item);
+DSPLY ('Qty: ' + %CHAR(order.qty));
+DSPLY ('Price: ' + %CHAR(order.price));
 
 xmlPerson = '<person><Name>Alice</Name><Age>30</Age><City>Boston</City></person>';
 
 XML-INTO person %XML(xmlPerson : 'case=any');
 
-DSPLY 'Name: ' + person.name;
-DSPLY 'Age: ' + %CHAR(person.age);
-DSPLY 'City: ' + person.city;
+DSPLY ('Name: ' + person.name);
+DSPLY ('Age: ' + %CHAR(person.age));
+DSPLY ('City: ' + person.city);
 
 xmlConfig = '<config><HOST>localhost</HOST><PORT>8080</PORT><DEBUG>true</DEBUG></config>';
 
 XML-INTO config %XML(xmlConfig);
 
-DSPLY 'Host: ' + config.host;
-DSPLY 'Port: ' + %CHAR(config.port);
-DSPLY 'Debug: ' + config.debug;
+dspLine = ('Host: ' + config.host);
+DSPLY dspLine;
+DSPLY ('Port: ' + %CHAR(config.port));
+DSPLY ('Debug: ' + config.debug);
 
 xmlPartial = '<point><X>42</X></point>';
 
 XML-INTO partial %XML(xmlPartial);
 
-DSPLY 'X: ' + %CHAR(partial.x);
-DSPLY 'Y: ' + %CHAR(partial.y);
-DSPLY 'Label: [' + partial.label + ']';
+DSPLY ('X: ' + %CHAR(partial.x));
+DSPLY ('Y: ' + %CHAR(partial.y));
+DSPLY ('Label: [' + partial.label + ']');
 
 xmlMsg = '<message><text>Price &lt; $10 &amp; tax</text><sender>Smith</sender></message>';
 
 XML-INTO msg %XML(xmlMsg : 'case=any');
 
-DSPLY 'Text: ' + msg.text;
-DSPLY 'Sender: ' + msg.sender;
+dspLine = ('Text: ' + msg.text);
+DSPLY dspLine;
+dspLine = ('Sender: ' + msg.sender);
+DSPLY dspLine;
 
 RETURN;

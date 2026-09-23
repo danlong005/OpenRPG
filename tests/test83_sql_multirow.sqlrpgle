@@ -9,6 +9,9 @@ DCL-S salaries  PACKED(9:2) DIM(10);
 DCL-S nRows     INT(10);
 DCL-S i         INT(10);
 
+// DSPLY shows at most 52 characters (IBM i RNF7016)
+DCL-S dspLine VARCHAR(52);
+
 connStr = 'Driver={SQLite3};Database=/tmp/rpgc_test83.sqlite;';
 EXEC SQL CONNECT USING :connStr;
 
@@ -56,7 +59,8 @@ EXEC SQL CLOSE mrCur;
 
 // Display fetched results
 FOR i = 1 TO 3;
-  DSPLY %CHAR(ids(i)) + ' ' + names(i) + ' ' + %CHAR(salaries(i));
+  dspLine = (%CHAR(ids(i)) + ' ' + names(i) + ' ' + %CHAR(salaries(i)));
+  DSPLY dspLine;
 ENDFOR;
 
 EXEC SQL DROP TABLE mr83;

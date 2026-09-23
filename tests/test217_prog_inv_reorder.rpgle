@@ -31,7 +31,7 @@
      DWRKITM           S              4A
      DWRKDSC           S             16A
      DWRKVND           S              3A
-     DRPTLIN           S             70A
+     DRPTLIN           S             52A
      C*-----------------------------------------------------------------
      C* MAIN LINE
      C*-----------------------------------------------------------------
@@ -170,8 +170,12 @@
      C                   ENDIF
      C* DETAIL LINE
      C                   Z-ADD     ONHND(IX)     WRKNUM
+     C*DSPLY SHOWS AT MOST 52 CHARACTERS: THE ITEM ON ONE LINE, ITS
+     C*QUANTITIES AND STATUS ON THE NEXT.
      C                   EVAL      RPTLIN = PARTKY + ' ' + PRTCLS + ' ' +
-     C                             WRKDSC + ' OH ' + %CHAR(WRKNUM)
+     C                             WRKDSC
+     C     RPTLIN        DSPLY
+     C                   EVAL      RPTLIN = 'OH ' + %CHAR(WRKNUM)
      C                   Z-ADD     AVAIL         WRKNUM
      C                   EVAL      RPTLIN = %TRIM(RPTLIN) + ' AV ' +
      C                             %CHAR(WRKNUM)

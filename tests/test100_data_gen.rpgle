@@ -24,13 +24,17 @@ DCL-DS msg QUALIFIED;
 END-DS;
 DCL-S jsonMsg VARCHAR(500);
 
+// DSPLY shows at most 52 characters (IBM i RNF7016)
+DCL-S dspLine VARCHAR(52);
+
 person.name = 'Bob';
 person.age = 25;
 person.city = 'Seattle';
 
 DATA-GEN person %DATA(jsonOut : 'doc=string');
 
-DSPLY jsonOut;
+dspLine = jsonOut;
+DSPLY dspLine;
 
 item.id = 99;
 item.price = 4.50;
@@ -38,13 +42,15 @@ item.active = 1;
 
 DATA-GEN item %DATA(jsonItem);
 
-DSPLY jsonItem;
+dspLine = jsonItem;
+DSPLY dspLine;
 
 msg.text = 'Hello "world"';
 msg.code = 42;
 
 DATA-GEN msg %DATA(jsonMsg);
 
-DSPLY jsonMsg;
+dspLine = jsonMsg;
+DSPLY dspLine;
 
 RETURN;

@@ -13,6 +13,9 @@ DCL-F CUSTFL238 DISK KEYED EXTDESC('CUSTFL238');
 DCL-S connStr VARCHAR(200);
 DCL-S key     CHAR(6);
 
+// DSPLY shows at most 52 characters (IBM i RNF7016)
+DCL-S dspLine VARCHAR(52);
+
 connStr = 'Driver={SQLite3};Database=/tmp/rpgc_test238.sqlite;';
 EXEC SQL CONNECT USING :connStr;
 EXEC SQL DROP TABLE IF EXISTS custfl238;
@@ -47,7 +50,8 @@ WRITE CUSTFL238;
 key = 'K2';
 CHAIN key CUSTFL238;
 IF %FOUND(CUSTFL238);
-  DSPLY ('RESULT:WROTE=[' + CUSTNO + '][' + CUSTNAME + '] ' + %CHAR(CUSTBAL));
+  dspLine = ('RESULT:WROTE=[' + CUSTNO + '][' + CUSTNAME + '] ' + %CHAR(CUSTBAL));
+  DSPLY dspLine;
 ENDIF;
 
 EXEC SQL DROP TABLE custfl238;

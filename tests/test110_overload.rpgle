@@ -39,17 +39,17 @@ DCL-PROC main;
 
   // abs dispatches by argument type
   i = abs(-7);
-  DSPLY 'abs(-7)=' + %CHAR(i);
+  DSPLY ('abs(-7)=' + %CHAR(i));
 
   f = abs(-3.0);
-  DSPLY 'abs(-3.0)=' + %CHAR(%INT(f));
+  DSPLY ('abs(-3.0)=' + %CHAR(%INT(f)));
 
   // add dispatches by argument type
   i = add(10 : 32);
-  DSPLY 'add(10:32)=' + %CHAR(i);
+  DSPLY ('add(10:32)=' + %CHAR(i));
 
   f = add(1.5 : 2.5);
-  DSPLY 'add(1.5:2.5)=' + %CHAR(%INT(f));
+  DSPLY ('add(1.5:2.5)=' + %CHAR(%INT(f)));
 
 END-PROC;
 

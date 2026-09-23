@@ -8,6 +8,9 @@ DCL-S right VARCHAR(50);
 DCL-S result VARCHAR(100);
 DCL-S names VARCHAR(50);
 
+// DSPLY shows at most 52 characters (IBM i RNF7016)
+DCL-S dspLine VARCHAR(52);
+
 str = 'Hello World';
 
 // %LEFT - left substring
@@ -20,6 +23,7 @@ DSPLY right;
 
 names = 'Alice,Bob,Charlie';
 result = names;
-DSPLY result;
+dspLine = result;
+DSPLY dspLine;
 
 *INLR = *ON;

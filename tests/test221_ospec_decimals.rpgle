@@ -6,7 +6,7 @@
      FTESTFL221 UF A F   30        DISK
      DSHOW             S              9S 2
      DSHOW3            S              9S 3
-     DRPTLIN           S             60A
+     DRPTLIN           S             52A
      I*ONE FORMAT: A KEY, A 2-DECIMAL AMOUNT, A 3-DECIMAL RATE.
      ITESTFL221 AA
      I                             A    1    6  ITEMNO

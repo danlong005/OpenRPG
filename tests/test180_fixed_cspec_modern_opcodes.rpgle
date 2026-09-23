@@ -1,6 +1,6 @@
      HDFTACTGRP(*NO)
      Djs               S            200A   VARYING
-     Dr                S             60A   VARYING
+     Dr                S             52A   VARYING
      Dperson           DS                  QUALIFIED
      Dname                           40A   VARYING
      Dage                            10I 0

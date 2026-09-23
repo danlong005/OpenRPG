@@ -6,6 +6,9 @@ DCL-S upper VARCHAR(100);
 DCL-S num PACKED(9:2);
 DCL-S whole INT(10);
 
+// DSPLY shows at most 52 characters (IBM i RNF7016)
+DCL-S dspLine VARCHAR(52);
+
 // %SCAN
 text = 'Hello World';
 pos = %SCAN('World' : text);
@@ -16,11 +19,13 @@ DSPLY %CHAR(pos);
 
 // %SCANRPL
 result = %SCANRPL('World' : 'RPG' : text);
-DSPLY result;
+dspLine = result;
+DSPLY dspLine;
 
 // %XLATE - lowercase to uppercase
 upper = %XLATE('abcdefghijklmnopqrstuvwxyz' : 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' : text);
-DSPLY upper;
+dspLine = upper;
+DSPLY dspLine;
 
 // %INT and %DEC
 num = 42.75;
@@ -32,6 +37,7 @@ DSPLY %CHAR(num);
 
 // %SUBST as expression
 result = %SUBST(text : 1 : 5);
-DSPLY result;
+dspLine = result;
+DSPLY dspLine;
 
 *INLR = *ON;

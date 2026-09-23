@@ -35,30 +35,37 @@ DCL-DS site QUALIFIED;
 END-DS;
 DCL-S xmlSite VARCHAR(500);
 
+// DSPLY shows at most 52 characters (IBM i RNF7016)
+DCL-S dspLine VARCHAR(52);
+
 xmlData = '<response><status>ok</status><data><orders><order><id>5001</id><product>Laptop</product><qty>2</qty></order></orders></data></response>';
 
 XML-INTO order %XML(xmlData : 'case=any path=response/data/orders/order');
 
-DSPLY 'Order: ' + %CHAR(order.id) + ' ' + order.product +
-      ' qty=' + %CHAR(order.qty);
+dspLine = ('Order: ' + %CHAR(order.id) + ' ' + order.product +
+      ' qty=' + %CHAR(order.qty));
+DSPLY dspLine;
 
 xmlCust = '<customer><name>Alice</name><age>30</age><addr><street>123 Main St</street><city>Boston</city><state>MA</state></addr></customer>';
 
 XML-INTO customer %XML(xmlCust : 'case=any');
 
-DSPLY 'Name: ' + customer.name;
-DSPLY 'Age: ' + %CHAR(customer.age);
-DSPLY 'Street: ' + customer.addr.street;
-DSPLY 'City: ' + customer.addr.city;
-DSPLY 'State: ' + customer.addr.state;
+dspLine = ('Name: ' + customer.name);
+DSPLY dspLine;
+DSPLY ('Age: ' + %CHAR(customer.age));
+dspLine = ('Street: ' + customer.addr.street);
+DSPLY dspLine;
+DSPLY ('City: ' + customer.addr.city);
+DSPLY ('State: ' + customer.addr.state);
 
 xmlSite = '<root><sites><site><id>42</id><label>HQ</label><loc><name>Headquarters</name><lat>42.3601</lat><lon>-71.0589</lon></loc></site></sites></root>';
 
 XML-INTO site %XML(xmlSite : 'case=any path=root/sites/site');
 
-DSPLY 'Site: ' + %CHAR(site.id) + ' ' + site.label;
-DSPLY 'Loc: ' + site.loc.name;
-DSPLY 'Lat: ' + %CHAR(site.loc.lat);
-DSPLY 'Lon: ' + %CHAR(site.loc.lon);
+dspLine = ('Site: ' + %CHAR(site.id) + ' ' + site.label);
+DSPLY dspLine;
+DSPLY ('Loc: ' + site.loc.name);
+DSPLY ('Lat: ' + %CHAR(site.loc.lat));
+DSPLY ('Lon: ' + %CHAR(site.loc.lon));
 
 RETURN;

@@ -8,9 +8,13 @@ DCL-S userName  VARCHAR(50);
 DCL-S missing   VARCHAR(50);
 DCL-S dbUrl     VARCHAR(256);
 
+// DSPLY shows at most 52 characters (IBM i RNF7016)
+DCL-S dspLine VARCHAR(52);
+
 // Read standard environment variables
 homePath = %GETENV('HOME');
-DSPLY homePath;
+dspLine = homePath;
+DSPLY dspLine;
 
 userName = %GETENV('USER');
 DSPLY userName;
@@ -29,7 +33,8 @@ ENDIF;
 // Typical use case: database connection string from environment
 dbUrl = %GETENV('DATABASE_URL');
 IF dbUrl <> '';
-  DSPLY dbUrl;
+  dspLine = dbUrl;
+  DSPLY dspLine;
 ELSE;
   DSPLY 'No DATABASE_URL configured';
 ENDIF;

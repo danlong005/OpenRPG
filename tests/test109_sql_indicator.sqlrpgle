@@ -12,6 +12,9 @@ DCL-S noteInd  INT(5);
 // Cursor FETCH with indicator variables
 DCL-S done IND;
 
+// DSPLY shows at most 52 characters (IBM i RNF7016)
+DCL-S dspLine VARCHAR(52);
+
 connStr = 'Driver={SQLite3};Database=/tmp/rpgc_test109.sqlite;';
 EXEC SQL CONNECT USING :connStr;
 
@@ -40,14 +43,17 @@ EXEC SQL INSERT INTO ind109 (id, name, note)
 // SELECT INTO with indicator — row 1 (note is NULL)
 EXEC SQL SELECT name, note INTO :empName :nameInd, :empNote :noteInd
   FROM ind109 WHERE id = 1;
-DSPLY 'name=' + empName + ' nameInd=' + %CHAR(nameInd);
-DSPLY 'noteInd=' + %CHAR(noteInd);
+dspLine = ('name=' + empName + ' nameInd=' + %CHAR(nameInd));
+DSPLY dspLine;
+DSPLY ('noteInd=' + %CHAR(noteInd));
 
 // SELECT INTO with indicator — row 2 (note is not NULL)
 EXEC SQL SELECT name, note INTO :empName :nameInd, :empNote :noteInd
   FROM ind109 WHERE id = 2;
-DSPLY 'name=' + empName + ' noteInd=' + %CHAR(noteInd);
-DSPLY 'note=' + empNote;
+dspLine = ('name=' + empName + ' noteInd=' + %CHAR(noteInd));
+DSPLY dspLine;
+dspLine = ('note=' + empNote);
+DSPLY dspLine;
 
 done = *OFF;
 EXEC SQL DECLARE C1 CURSOR FOR
@@ -56,9 +62,11 @@ EXEC SQL OPEN C1;
 EXEC SQL FETCH C1 INTO :empName :nameInd, :empNote :noteInd;
 DOW SQLCOD = 0;
   IF noteInd < 0;
-    DSPLY 'Fetch: ' + empName + ' note=NULL';
+    dspLine = ('Fetch: ' + empName + ' note=NULL');
+    DSPLY dspLine;
   ELSE;
-    DSPLY 'Fetch: ' + empName + ' note=' + empNote;
+    dspLine = ('Fetch: ' + empName + ' note=' + empNote);
+    DSPLY dspLine;
   ENDIF;
   EXEC SQL FETCH C1 INTO :empName :nameInd, :empNote :noteInd;
 ENDDO;

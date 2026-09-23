@@ -24,29 +24,34 @@ DCL-DS partial QUALIFIED;
 END-DS;
 DCL-S csvPartial VARCHAR(200);
 
+// DSPLY shows at most 52 characters (IBM i RNF7016)
+DCL-S dspLine VARCHAR(52);
+
 // Test 1: Basic scalar DS
 csvStr = 'NAME,AGE,CITY' + X'0A' + 'Alice,30,Boston';
 
 DATA-INTO person %DATA(csvStr : 'case=any') %PARSER('CSV');
 
-DSPLY 'Name: ' + person.name;
-DSPLY 'Age: '  + %CHAR(person.age);
-DSPLY 'City: ' + person.city;
+DSPLY ('Name: ' + person.name);
+DSPLY ('Age: '  + %CHAR(person.age));
+DSPLY ('City: ' + person.city);
 
 csvEmp = 'NAME,DEPT' + X'0A' + 'Bob,Engineering' + X'0A' + 'Carol,Marketing';
 
 DATA-INTO emp %DATA(csvEmp : 'case=any') %PARSER('CSV');
 
-DSPLY 'Count: ' + %CHAR(%ELEM(emp));
-DSPLY emp(1).name + ' / ' + emp(1).dept;
-DSPLY emp(2).name + ' / ' + emp(2).dept;
+DSPLY ('Count: ' + %CHAR(%ELEM(emp)));
+dspLine = (emp(1).name + ' / ' + emp(1).dept);
+DSPLY dspLine;
+dspLine = (emp(2).name + ' / ' + emp(2).dept);
+DSPLY dspLine;
 
 csvPartial = 'X' + X'0A' + '7';
 
 DATA-INTO partial %DATA(csvPartial : 'case=any') %PARSER('CSV');
 
-DSPLY 'X: ' + %CHAR(partial.x);
-DSPLY 'Y: ' + %CHAR(partial.y);
-DSPLY 'Note: [' + partial.note + ']';
+DSPLY ('X: ' + %CHAR(partial.x));
+DSPLY ('Y: ' + %CHAR(partial.y));
+DSPLY ('Note: [' + partial.note + ']');
 
 RETURN;

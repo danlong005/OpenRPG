@@ -817,6 +817,8 @@ run_test "258" "Reject NOT on a number" "$TESTDIR/test258_err_not_numeric.rpgle"
 run_test "259" "NOT binds tighter than = and AND" "$TESTDIR/test259_not_precedence.rpgle" "run"
 run_test "260" "Reject a declaration after code" "$TESTDIR/test260_err_decl_after_calc.rpgle" "error"
 run_test "261" "Reject a declaration after code in a procedure" "$TESTDIR/test261_err_decl_after_calc_proc.rpgle" "error"
+run_test "262" "Reject an unparenthesized DSPLY expression" "$TESTDIR/test262_err_dsply_unparen.rpgle" "error"
+run_test "263" "Reject a DSPLY longer than 52" "$TESTDIR/test263_err_dsply_too_long.rpgle" "error"
 
 # ── Customer / drop-in tests ─────────────────────────────────────────────
 # Drop any .rpgle or .sqlrpgle file into tests/customer/ and it will be

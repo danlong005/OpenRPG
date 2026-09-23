@@ -4,7 +4,7 @@
      D*RESULT MUST KEEP ITS CENTS.
      DMONEY            S              9S 2
      DWHOLE            S              5S 0
-     DRPTLIN           S             60A
+     DRPTLIN           S             52A
      C*705.00 X 0.22 = 155.10 -- NOT 155.00
      C     705.00        MULT(H)   0.22          MONEY
      C                   EVAL      RPTLIN = 'MULT(H) 705.00 X 0.22 = ' +

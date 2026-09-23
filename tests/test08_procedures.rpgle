@@ -17,6 +17,9 @@ END-PR;
 DCL-S result INT(10);
 DCL-S msg VARCHAR(100);
 
+// DSPLY shows at most 52 characters (IBM i RNF7016)
+DCL-S dspLine VARCHAR(52);
+
 result = add(10 : 20);
 DSPLY %CHAR(result);
 
@@ -24,7 +27,8 @@ result = factorial(5);
 DSPLY %CHAR(result);
 
 msg = greet('RPG');
-DSPLY msg;
+dspLine = msg;
+DSPLY dspLine;
 
 *INLR = *ON;
 

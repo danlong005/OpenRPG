@@ -10,7 +10,7 @@
      DCQUOTE           S              7A   INZ('IT''S OK')
      DCBLANK           S              6A   INZ(*BLANKS)
      DNZED             S              5P 2 INZ(*ZEROS)
-     DRPTLIN           S             70A
+     DRPTLIN           S             52A
      C                   EVAL      RPTLIN = 'NWHOLE = ' + %EDITC(NWHOLE:'1')
      C     RPTLIN        DSPLY
      C                   EVAL      RPTLIN = 'NCENTS = ' + %EDITC(NCENTS:'1')

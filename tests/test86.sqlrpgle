@@ -10,6 +10,9 @@ end-ds;
 
 dcl-s connStr varchar(200);
 
+// DSPLY shows at most 52 characters (IBM i RNF7016)
+DCL-S dspLine VARCHAR(52);
+
 connStr = 'Driver={SQLite3};Database=/tmp/rpgc_test86.sqlite;';
 exec sql connect using :connStr;
 
@@ -30,7 +33,8 @@ exec sql open c1;
 
 exec sql fetch next from c1 into :row;
 dow sqlstate < '02000';
-  dsply %trim(%char(row.id)) + ' ' + %trim(row.name) + ' ' + %trim(row.salary);
+  dspLine = (%trim(%char(row.id)) + ' ' + %trim(row.name) + ' ' + %trim(row.salary));
+  DSPLY dspLine;
   exec sql fetch next from c1 into :row;
 enddo;
 

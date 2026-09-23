@@ -29,7 +29,7 @@ empSal = 75000.00;
 EXEC SQL INSERT INTO emp79 (id, name, age, salary)
   VALUES(:empId, :empName, :empAge, :empSal);
 sqlStatus = SQLCOD;
-DSPLY 'Insert SQLCODE=' + %CHAR(sqlStatus);
+DSPLY ('Insert SQLCODE=' + %CHAR(sqlStatus));
 
 empId = 2;
 empName = 'Bob';
@@ -53,7 +53,7 @@ EXEC SQL SELECT name, age, salary
   INTO :empName, :empAge, :empSal
   FROM emp79 WHERE id = :empId;
 sqlSt = SQLSTT;
-DSPLY 'Select SQLSTATE=' + sqlSt;
+DSPLY ('Select SQLSTATE=' + sqlSt);
 
 DSPLY empName;
 DSPLY %CHAR(empAge);
@@ -67,7 +67,7 @@ DSPLY %CHAR(empCount);
 empId = 999;
 EXEC SQL SELECT name INTO :empName FROM emp79 WHERE id = :empId;
 sqlStatus = SQLCOD;
-DSPLY 'NotFound SQLCODE=' + %CHAR(sqlStatus);
+DSPLY ('NotFound SQLCODE=' + %CHAR(sqlStatus));
 
 EXEC SQL COMMIT;
 EXEC SQL ROLLBACK;

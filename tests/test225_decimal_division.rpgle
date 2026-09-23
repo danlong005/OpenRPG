@@ -5,7 +5,7 @@
      DNUMER            S             10I 0 INZ(10)
      DDENOM            S             10I 0 INZ(3)
      DQUOT             S             11P 4
-     DRPTLIN           S             70A
+     DRPTLIN           S             52A
      C*TWO INTEGER LITERALS
      C                   EVAL      QUOT = 10 / 3
      C                   EVAL      RPTLIN = '10 / 3 = ' + %EDITC(QUOT:'1')

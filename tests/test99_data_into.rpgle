@@ -31,25 +31,25 @@ jsonData = '{"name":"Alice","age":30,"city":"Boston"}';
 
 DATA-INTO person %DATA(jsonData : 'doc=string case=any');
 
-DSPLY 'Name: ' + person.name;
-DSPLY 'Age: ' + %CHAR(person.age);
-DSPLY 'City: ' + person.city;
+DSPLY ('Name: ' + person.name);
+DSPLY ('Age: ' + %CHAR(person.age));
+DSPLY ('City: ' + person.city);
 
 jsonProduct = '{"id":42,"price":19.99,"qty":100,"label":"Widget"}';
 
 DATA-INTO product %DATA(jsonProduct : 'case=any');
 
-DSPLY 'ID: ' + %CHAR(product.id);
-DSPLY 'Price: ' + %CHAR(product.price);
-DSPLY 'Qty: ' + %CHAR(product.qty);
-DSPLY 'Label: ' + product.label;
+DSPLY ('ID: ' + %CHAR(product.id));
+DSPLY ('Price: ' + %CHAR(product.price));
+DSPLY ('Qty: ' + %CHAR(product.qty));
+DSPLY ('Label: ' + product.label);
 
 jsonPartial = '{"x":7}';
 
 DATA-INTO partial %DATA(jsonPartial : 'case=any');
 
-DSPLY 'X: ' + %CHAR(partial.x);
-DSPLY 'Y: ' + %CHAR(partial.y);
-DSPLY 'Note: [' + partial.note + ']';
+DSPLY ('X: ' + %CHAR(partial.x));
+DSPLY ('Y: ' + %CHAR(partial.y));
+DSPLY ('Note: [' + partial.note + ']');
 
 RETURN;

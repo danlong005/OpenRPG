@@ -18,6 +18,7 @@ public:
 
 class Expression : public ASTNode {
 public:
+    bool parenthesized = false; // written inside ( ) — DSPLY needs this for an expression
     virtual ~Expression() = default;
 };
 

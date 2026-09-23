@@ -39,21 +39,21 @@ EXEC SQL INSERT INTO adv82 (id, name, salary)
 // GET DIAGNOSTICS ROW_COUNT after UPDATE
 EXEC SQL UPDATE adv82 SET salary = salary + 1000 WHERE salary < 80000;
 EXEC SQL GET DIAGNOSTICS :rowCount = ROW_COUNT;
-DSPLY 'Updated rows=' + %CHAR(rowCount);
+DSPLY ('Updated rows=' + %CHAR(rowCount));
 
 // SAVEPOINT
 EXEC SQL SAVEPOINT sp1;
 
 EXEC SQL DELETE FROM adv82 WHERE id = 3;
 EXEC SQL GET DIAGNOSTICS :rowCount = ROW_COUNT;
-DSPLY 'Deleted rows=' + %CHAR(rowCount);
+DSPLY ('Deleted rows=' + %CHAR(rowCount));
 
 // ROLLBACK TO SAVEPOINT — should restore id=3
 EXEC SQL ROLLBACK TO SAVEPOINT sp1;
 
 // Verify id=3 is back
 EXEC SQL SELECT COUNT(*) INTO :empCount FROM adv82;
-DSPLY 'After rollback count=' + %CHAR(empCount);
+DSPLY ('After rollback count=' + %CHAR(empCount));
 
 EXEC SQL COMMIT;
 EXEC SQL DROP TABLE adv82;

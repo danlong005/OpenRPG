@@ -17,13 +17,17 @@ END-PR;
 DCL-PR Named INT(10);
 END-PR;
 
+// DSPLY shows at most 52 characters (IBM i RNF7016)
+DCL-S dspLine VARCHAR(52);
+
 DSPLY ('RESULT:TWICE=' + %CHAR(Twice(21)));
 DSPLY ('RESULT:GREET=' + Greet('RPG'));
 CALLP Note();
 DSPLY ('RESULT:NAMED=' + %CHAR(Named()));
 
 // Multiplication by N, with and without spaces, is unaffected.
-DSPLY ('RESULT:MUL=' + %CHAR(total*N) + ' ' + %CHAR(total * n));
+dspLine = ('RESULT:MUL=' + %CHAR(total*N) + ' ' + %CHAR(total * n));
+DSPLY dspLine;
 
 *INLR = *ON;
 RETURN;

@@ -2085,7 +2085,75 @@ void CodeGen::visit(EvalStmt& node) {
     out_ << "\n";
 }
 
+// The longest a DSPLY message can be, computed from declarations the way IBM
+// i does at compile time, or -1 when it cannot be sized here (and is then
+// not checked). IBM rejects a message whose declared length exceeds 52
+// (RNF7016) even when the value at run time would be short.
+int CodeGen::displayLength(Expression& e) {
+    if (auto* sl = dynamic_cast<StringLiteral*>(&e)) return static_cast<int>(sl->value.size());
+    if (auto* be = dynamic_cast<BinaryExpr*>(&e)) {
+        if (be->op != BinOp::ADD) return -1;
+        int l = displayLength(*be->left), r = displayLength(*be->right);
+        return (l < 0 || r < 0) ? -1 : l + r;
+    }
+    if (auto* bif = dynamic_cast<BIFCall*>(&e)) {
+        if (bif->args.empty()) return -1;
+        const std::string& n = bif->name;
+        if (n == "TRIM" || n == "TRIML" || n == "TRIMR" || n == "UPPER" || n == "LOWER" ||
+            n == "XLATE")
+            return displayLength(*bif->args[n == "XLATE" ? 2 : 0]);
+        if (n == "SUBST") {
+            if (bif->args.size() >= 3)
+                if (auto* il = dynamic_cast<IntLiteral*>(bif->args[2].get())) return il->value;
+            return displayLength(*bif->args[0]);
+        }
+        if (n == "CHAR") {
+            // Integer arithmetic yields a 20-digit integer on IBM i, so
+            // %CHAR(a * b) of two INT(10)s is 21 characters, not 11.
+            std::function<bool(Expression&)> isInt = [&](Expression& x) -> bool {
+                if (dynamic_cast<IntLiteral*>(&x)) return true;
+                if (auto* b = dynamic_cast<BinaryExpr*>(&x))
+                    return (b->op == BinOp::ADD || b->op == BinOp::SUB || b->op == BinOp::MUL) &&
+                           isInt(*b->left) && isInt(*b->right);
+                FieldAttrs xa = attrsOf(x);
+                return xa.known && (xa.type == RPGType::INT10 || xa.type == RPGType::UNS);
+            };
+            if (dynamic_cast<BinaryExpr*>(bif->args[0].get()))
+                return isInt(*bif->args[0]) ? 21 : -1;
+            FieldAttrs fa = attrsOf(*bif->args[0]);
+            if (!fa.known) return displayLength(*bif->args[0]);
+            switch (fa.type) {
+                case RPGType::DATE: return 10;
+                case RPGType::TIME: return 8;
+                case RPGType::TIMESTAMP: return 26;
+                case RPGType::CHAR: case RPGType::VARCHAR: return fa.length;
+                case RPGType::INT10: case RPGType::UNS: return 11;
+                case RPGType::IND: return 1;
+                case RPGType::FLOAT4: return 14;
+                case RPGType::FLOAT8: return 23;
+                case RPGType::PACKED: case RPGType::ZONED: {
+                    int digits = fa.digits > 0 ? fa.digits : fa.length;
+                    return digits > 0 ? digits + 1 + (fa.decimals > 0 ? 1 : 0) : -1;
+                }
+                default: return -1;
+            }
+        }
+        return -1;
+    }
+    FieldAttrs fa = attrsOf(e);
+    if (!fa.known) return -1;
+    if (fa.type == RPGType::CHAR || fa.type == RPGType::VARCHAR) return fa.length;
+    if (fa.type == RPGType::IND) return 1;
+    return -1;
+}
+
 void CodeGen::visit(DsplyStmt& node) {
+    int len = displayLength(*node.expr);
+    if (len > 52)
+        report_semantic_error(node.line > 0 ? node.line : cur_stmt_line_,
+            "Display length " + std::to_string(len) + " greater than maximum allowed of 52: "
+            "DSPLY shows at most 52 characters, judged from the declared lengths of what is "
+            "displayed; shorten a declaration or display a %SUBST of it (IBM: RNF7016)");
     emitIndent();
     out_ << "std::cout << " << emitExpr(*node.expr) << " << std::endl;\n";
 }

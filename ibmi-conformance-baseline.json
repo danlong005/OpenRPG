@@ -4,57 +4,76 @@
    "codes": [],
    "rpgc": "reject",
    "sha256": "3bc3409889a69747f23075f7be45069c595f6566fee395215726d8f2ceff606e",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "NETPAY.rpgle": {
    "codes": [],
    "rpgc": "reject",
    "sha256": "4055a6e736b924d355f47397847c9ede7090d7085a68a968e78801e22c9c0ec5",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test01_hello.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "e69f4962b809737e82c97fc7589d93e577e3cd2d2fbe65d067a5bd7e552cd56a",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test02_arithmetic.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "dea2d9696497d3f2fa6335d30f6b128928abd4dafaaede7e1631d941fe770a84",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test03_types.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "ce99cf73d6a6cd4122cbe33312eed617b06713715c95f7374d649ef2f908e208",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test04_bifs.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "3b352119f3f24331af9eb6e72349a86162fc674e0e7fc656773a08fa417d5f96",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test05_if.rpgle": {
    "codes": [
     "RNF7421"
    ],
+   "messages": [
+    {
+     "code": "RNF7421",
+     "line": 25,
+     "severity": 30,
+     "text": "Operands are not compatible with the type of operator."
+    }
+   ],
+   "reason": "RNF7421: Operands are not compatible with the type of operator.",
+   "reason_detail": "line 25: Operands are not compatible with the type of operator. \u2014 `IF NOT x = 0;`",
    "rpgc": "accept",
    "sha256": "7ca9b939a405fdb967c300851be4d07bd70658f46f77d698499638452682e3ef",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test06_loops.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "bc0c9b494a3e2261549da8be3214e5485892cad03c38efd91f3a9241d3337bc9",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test07_select.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "839d605c26c2714f47aa25c1a35d95f911115b4d0c2b6794ad1c1557c32bb78a",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test08_procedures.rpgle": {
    "codes": [
@@ -64,9 +83,44 @@
     "RNF3767",
     "RNF7016"
    ],
+   "messages": [
+    {
+     "code": "RNF7016",
+     "line": 27,
+     "severity": 20,
+     "text": "Display length 100 greater than maximum allowed of 52; specification is ignored."
+    },
+    {
+     "code": "RNF3308",
+     "line": 33,
+     "severity": 20,
+     "text": "Keyword name is not valid; the keyword is ignored."
+    },
+    {
+     "code": "RNF0633",
+     "line": 33,
+     "severity": 20,
+     "text": "An unexpected right parenthesis was encountered; right parenthesis is ignored."
+    },
+    {
+     "code": "RNF3767",
+     "line": 33,
+     "severity": 20,
+     "text": "The name in positions 7 - 21 does not match the name of the procedure being defined."
+    },
+    {
+     "code": "RNF3763",
+     "line": 33,
+     "severity": 20,
+     "text": "A return value is expected for the procedure-interface specification."
+    }
+   ],
+   "reason": "RNF7016: Display length n greater than maximum allowed of n; specification is ignored.",
+   "reason_detail": "line 27: Display length 100 greater than maximum allowed of 52; specification is ignored. \u2014 `DSPLY msg;`",
    "rpgc": "accept",
    "sha256": "ffee75c51afa3ecb2019a4f8d4b83597c5b7f9e4c6fd43977461b873906d5e87",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test09_datastructs.rpgle": {
    "codes": [
@@ -75,9 +129,44 @@
     "RNF7030",
     "RNF7503"
    ],
+   "messages": [
+    {
+     "code": "RNF0724",
+     "line": 18,
+     "severity": 30,
+     "text": "The statement type is out of sequence for the main procedure."
+    },
+    {
+     "code": "RNF5347",
+     "line": 19,
+     "severity": 30,
+     "text": "An assignment operator is expected with the EVAL operation."
+    },
+    {
+     "code": "RNF7030",
+     "line": 19,
+     "severity": 30,
+     "text": "The name or indicator DESC is not defined."
+    },
+    {
+     "code": "RNF7030",
+     "line": 19,
+     "severity": 30,
+     "text": "The name or indicator VARCHAR is not defined."
+    },
+    {
+     "code": "RNF5347",
+     "line": 20,
+     "severity": 30,
+     "text": "An assignment operator is expected with the EVAL operation."
+    }
+   ],
+   "reason": "Declaration after calculations",
+   "reason_detail": "line 18: `DCL-DS items QUALIFIED DIM(3);`",
    "rpgc": "accept",
    "sha256": "9327256027c172e63f22b458f2283da6110720c0d0671722906659b80cf85610",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test100_data_gen.rpgle": {
    "codes": [
@@ -88,18 +177,70 @@
     "RNF7030",
     "RNF7503"
    ],
+   "messages": [
+    {
+     "code": "RNF5454",
+     "line": 17,
+     "severity": 30,
+     "text": "The third operand of DATA-GEN must be %GEN."
+    },
+    {
+     "code": "RNF7016",
+     "line": 19,
+     "severity": 20,
+     "text": "Display length 500 greater than maximum allowed of 52; specification is ignored."
+    },
+    {
+     "code": "RNF0724",
+     "line": 22,
+     "severity": 30,
+     "text": "The statement type is out of sequence for the main procedure."
+    },
+    {
+     "code": "RNF5347",
+     "line": 23,
+     "severity": 30,
+     "text": "An assignment operator is expected with the EVAL operation."
+    },
+    {
+     "code": "RNF7030",
+     "line": 23,
+     "severity": 30,
+     "text": "The name or indicator ID is not defined."
+    }
+   ],
+   "reason": "Declaration after calculations",
+   "reason_detail": "line 22: `DCL-DS item QUALIFIED;`",
    "rpgc": "accept",
    "sha256": "170b158c56fb351240afd862a43026d056d76f2ba09fb871c6c4459b25accac1",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test101_user.rpgle": {
    "codes": [
     "RNF7416",
     "RNF7421"
    ],
+   "messages": [
+    {
+     "code": "RNF7416",
+     "line": 8,
+     "severity": 30,
+     "text": "The types of the right and left hand side do not match in the EVAL operation."
+    },
+    {
+     "code": "RNF7421",
+     "line": 18,
+     "severity": 30,
+     "text": "Operands are not compatible with the type of operator."
+    }
+   ],
+   "reason": "RNF7416: The types of the right and left hand side do not match in the EVAL operation.",
+   "reason_detail": "line 8: The types of the right and left hand side do not match in the EVAL operation. \u2014 `currentUser = *USER;`",
    "rpgc": "accept",
    "sha256": "61c29dd37937685cbcf3d5313a50a53c861c268fdff9def0cb0f1d9e678afc58",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test102_snd_msg.rpgle": {
    "codes": [
@@ -107,59 +248,192 @@
     "RNF5377",
     "RNF7030"
    ],
+   "messages": [
+    {
+     "code": "RNF0203",
+     "line": 15,
+     "severity": 30,
+     "text": "THE MESSAGE-TARGET OPERAND IS NOT VALID FOR THE SND-MSG OPERATION."
+    },
+    {
+     "code": "RNF5377",
+     "line": 15,
+     "severity": 20,
+     "text": "The end of the expression is expected."
+    },
+    {
+     "code": "RNF7030",
+     "line": 15,
+     "severity": 30,
+     "text": "The name or indicator TYPE is not defined."
+    }
+   ],
+   "reason": "RNF0203: THE MESSAGE-TARGET OPERAND IS NOT VALID FOR THE SND-MSG OPERATION.",
+   "reason_detail": "line 15: THE MESSAGE-TARGET OPERAND IS NOT VALID FOR THE SND-MSG OPERATION. \u2014 `SND-MSG TYPE(*INFO) 'Processing complete';`",
    "rpgc": "accept",
    "sha256": "500dd30e0965b578497a378dc6d01c1a8d37c958c3462db397930f73cee72ec8",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test103_rla_chain.rpgle": {
    "codes": [],
+   "messages": [
+    {
+     "code": "SQL0199",
+     "line": 10,
+     "severity": 30,
+     "text": "Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>."
+    },
+    {
+     "code": "SQL0104",
+     "line": 38,
+     "severity": 30,
+     "text": "Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>. Message Summary"
+    }
+   ],
+   "reason": "SQL0199: Position n Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>.",
+   "reason_detail": "line 10: Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>. \u2014 `EXEC SQL CONNECT USING :connStr;`",
    "rpgc": "accept",
    "sha256": "3b400a169d351ad7f7d4a75eaf730bec544ebe4c9288c3861ca63bcef818647f",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test104_rla_read.rpgle": {
    "codes": [],
+   "messages": [
+    {
+     "code": "SQL0199",
+     "line": 9,
+     "severity": 30,
+     "text": "Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>."
+    },
+    {
+     "code": "SQL0104",
+     "line": 29,
+     "severity": 30,
+     "text": "Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>. Message Summary"
+    }
+   ],
+   "reason": "SQL0199: Position n Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>.",
+   "reason_detail": "line 9: Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>. \u2014 `EXEC SQL CONNECT USING :connStr;`",
    "rpgc": "accept",
    "sha256": "95bd073a85b497e58d0c527e465dbd16c4cf3b9213375eb4c679e8a9c3ea2b08",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test105_rla_write_upd_del.rpgle": {
    "codes": [],
+   "messages": [
+    {
+     "code": "SQL0199",
+     "line": 10,
+     "severity": 30,
+     "text": "Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>."
+    },
+    {
+     "code": "SQL0104",
+     "line": 52,
+     "severity": 30,
+     "text": "Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>. Message Summary"
+    }
+   ],
+   "reason": "SQL0199: Position n Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>.",
+   "reason_detail": "line 10: Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>. \u2014 `EXEC SQL CONNECT USING :connStr;`",
    "rpgc": "accept",
    "sha256": "2cc21fd92d06de436f1cadcbf95f607dd41da02daff5b731eb4ed5589c7695b4",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test106_rla_setll_reade.rpgle": {
    "codes": [],
+   "messages": [
+    {
+     "code": "SQL0199",
+     "line": 10,
+     "severity": 30,
+     "text": "Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>."
+    },
+    {
+     "code": "SQL0104",
+     "line": 45,
+     "severity": 30,
+     "text": "Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>. Message Summary"
+    }
+   ],
+   "reason": "SQL0199: Position n Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>.",
+   "reason_detail": "line 10: Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>. \u2014 `EXEC SQL CONNECT USING :connStr;`",
    "rpgc": "accept",
    "sha256": "386880f6ead8b6179180de64abf931089108ee54b94d1c58160b252662231592",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test107_sql_conf.sqlrpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "fa2cc66b3a2f43f4eae8034cc05e62644c8c2b2aa3e189d243db0d3db6f776d2",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test108_rla_conf.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "ccf95e9c64b02ef869930971867c96c1bfda66c617845b78c8a6bb6bd88cf41e",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test109_sql_indicator.sqlrpgle": {
    "codes": [],
+   "messages": [
+    {
+     "code": "SQL0199",
+     "line": 13,
+     "severity": 30,
+     "text": "Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>."
+    },
+    {
+     "code": "SQL0104",
+     "line": 68,
+     "severity": 30,
+     "text": "Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>. Message Summary"
+    }
+   ],
+   "reason": "Declaration after calculations",
+   "reason_detail": "line 50: `DCL-S done IND;`",
    "rpgc": "accept",
    "sha256": "c317347e994e9d8c7949062bd40bc886bdcc312b3de3991ffc38d16d5aca5f40",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test10_bifs_expanded.rpgle": {
    "codes": [
     "RNF7016"
    ],
+   "messages": [
+    {
+     "code": "RNF7016",
+     "line": 19,
+     "severity": 20,
+     "text": "Display length 100 greater than maximum allowed of 52; specification is ignored."
+    },
+    {
+     "code": "RNF7016",
+     "line": 23,
+     "severity": 20,
+     "text": "Display length 100 greater than maximum allowed of 52; specification is ignored."
+    },
+    {
+     "code": "RNF7016",
+     "line": 35,
+     "severity": 20,
+     "text": "Display length 100 greater than maximum allowed of 52; specification is ignored."
+    }
+   ],
+   "reason": "RNF7016: Display length n greater than maximum allowed of n; specification is ignored.",
+   "reason_detail": "line 19: Display length 100 greater than maximum allowed of 52; specification is ignored. \u2014 `DSPLY result;`",
    "rpgc": "accept",
    "sha256": "44f0d3b49cbdcfe8df4e418348ed978485c5d53ff2a515adbeee580ae57fcc26",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test110_overload.rpgle": {
    "codes": [
@@ -169,18 +443,88 @@
     "RNF3551",
     "RNF5403"
    ],
+   "messages": [
+    {
+     "code": "RNF3244",
+     "line": 27,
+     "severity": 30,
+     "text": "Return type I(10,0) does not match type *NONE of overloaded prototype."
+    },
+    {
+     "code": "RNF3244",
+     "line": 27,
+     "severity": 30,
+     "text": "Return type F(8) does not match type *NONE of overloaded prototype."
+    },
+    {
+     "code": "RNF3551",
+     "line": 28,
+     "severity": 20,
+     "text": "END-XX is not expected."
+    },
+    {
+     "code": "RNF3244",
+     "line": 30,
+     "severity": 30,
+     "text": "Return type I(10,0) does not match type *NONE of overloaded prototype."
+    },
+    {
+     "code": "RNF3244",
+     "line": 30,
+     "severity": 30,
+     "text": "Return type F(8) does not match type *NONE of overloaded prototype."
+    }
+   ],
+   "reason": "RNF3244: Return type I(n,n) does not match type *NONE of overloaded prototype.",
+   "reason_detail": "line 27: Return type I(10,0) does not match type *NONE of overloaded prototype. \u2014 `DCL-PR abs OVERLOAD(absInt : absFloat);`",
    "rpgc": "accept",
    "sha256": "48475550368ec89d98e50e7fae62ea136a2ecbc34e7205667ddd58ee71d542bd",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test111_elem_alloc.rpgle": {
    "codes": [
     "RNF0637",
     "RNF7563"
    ],
+   "messages": [
+    {
+     "code": "RNF7563",
+     "line": 9,
+     "severity": 30,
+     "text": "The expression is not valid for assignment to built-in function %LEN or %ELEM."
+    },
+    {
+     "code": "RNF0637",
+     "line": 10,
+     "severity": 30,
+     "text": "An operand was expected but was not found; specification is ignored."
+    },
+    {
+     "code": "RNF0637",
+     "line": 11,
+     "severity": 30,
+     "text": "An operand was expected but was not found; specification is ignored."
+    },
+    {
+     "code": "RNF0637",
+     "line": 18,
+     "severity": 30,
+     "text": "An operand was expected but was not found; specification is ignored."
+    },
+    {
+     "code": "RNF0637",
+     "line": 19,
+     "severity": 30,
+     "text": "An operand was expected but was not found; specification is ignored."
+    }
+   ],
+   "reason": "RNF7563: The expression is not valid for assignment to built-in function %LEN or %ELEM.",
+   "reason_detail": "line 9: The expression is not valid for assignment to built-in function %LEN or %ELEM. \u2014 `%ELEM(nums : *ALLOC) = 50;`",
    "rpgc": "accept",
    "sha256": "912b22be390b46cc34fa44b2f4e3e16219d5fdb600c5d028385f116369b07d48",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test112_data_into_csv.rpgle": {
    "codes": [
@@ -190,9 +534,44 @@
     "RNF7030",
     "RNF7503"
    ],
+   "messages": [
+    {
+     "code": "RNF0637",
+     "line": 18,
+     "severity": 30,
+     "text": "An operand was expected but was not found; specification is ignored."
+    },
+    {
+     "code": "RNF0637",
+     "line": 19,
+     "severity": 30,
+     "text": "An operand was expected but was not found; specification is ignored."
+    },
+    {
+     "code": "RNF0637",
+     "line": 20,
+     "severity": 30,
+     "text": "An operand was expected but was not found; specification is ignored."
+    },
+    {
+     "code": "RNF0724",
+     "line": 23,
+     "severity": 30,
+     "text": "The statement type is out of sequence for the main procedure."
+    },
+    {
+     "code": "RNF5347",
+     "line": 24,
+     "severity": 30,
+     "text": "An assignment operator is expected with the EVAL operation."
+    }
+   ],
+   "reason": "Declaration after calculations",
+   "reason_detail": "line 23: `DCL-DS emp DIM(*VAR:10) QUALIFIED;`",
    "rpgc": "accept",
    "sha256": "5798d26841edc3802abecdba58b1823282570c5406047b644483212eb43694d1",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test113_data_gen_csv.rpgle": {
    "codes": [
@@ -204,9 +583,44 @@
     "RNF7030",
     "RNF7503"
    ],
+   "messages": [
+    {
+     "code": "RNF5454",
+     "line": 18,
+     "severity": 30,
+     "text": "The third operand of DATA-GEN must be %GEN."
+    },
+    {
+     "code": "RNF5377",
+     "line": 18,
+     "severity": 20,
+     "text": "The end of the expression is expected."
+    },
+    {
+     "code": "RNF7016",
+     "line": 19,
+     "severity": 20,
+     "text": "Display length 500 greater than maximum allowed of 52; specification is ignored."
+    },
+    {
+     "code": "RNF0724",
+     "line": 22,
+     "severity": 30,
+     "text": "The statement type is out of sequence for the main procedure."
+    },
+    {
+     "code": "RNF5347",
+     "line": 23,
+     "severity": 30,
+     "text": "An assignment operator is expected with the EVAL operation."
+    }
+   ],
+   "reason": "Declaration after calculations",
+   "reason_detail": "line 22: `DCL-DS item QUALIFIED;`",
    "rpgc": "accept",
    "sha256": "fa2ff9afca1bad247bede21ac9decf6bd840d338ac4464f3ac813d9c51c57391",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test114_data_into_json_parser.rpgle": {
    "codes": [
@@ -215,27 +629,65 @@
     "RNF5454",
     "RNF7016"
    ],
+   "messages": [
+    {
+     "code": "RNF0637",
+     "line": 19,
+     "severity": 30,
+     "text": "An operand was expected but was not found; specification is ignored."
+    },
+    {
+     "code": "RNF0637",
+     "line": 20,
+     "severity": 30,
+     "text": "An operand was expected but was not found; specification is ignored."
+    },
+    {
+     "code": "RNF0637",
+     "line": 21,
+     "severity": 30,
+     "text": "An operand was expected but was not found; specification is ignored."
+    },
+    {
+     "code": "RNF5454",
+     "line": 27,
+     "severity": 30,
+     "text": "The third operand of DATA-GEN must be %GEN."
+    },
+    {
+     "code": "RNF5377",
+     "line": 27,
+     "severity": 20,
+     "text": "The end of the expression is expected."
+    }
+   ],
+   "reason": "RNF0637: An operand was expected but was not found; specification is ignored.",
+   "reason_detail": "line 19: An operand was expected but was not found; specification is ignored. \u2014 `DSPLY 'Name: ' + person.name;`",
    "rpgc": "accept",
    "sha256": "9186ef1e68a48ae2a037f68a60ec3dde0e13997d4d5201c540f54b67cb755192",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test115_dump.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "b479efb6137e93ea6f91fa7a524423a16eb4e6c400a0f27f2cba4c11b62b6dfa",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test116_fixed_hd.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "2d908398eeaa538d2f7c781bfae2937bb7cd6b579a1f1cf9e821d464a2e5d6b7",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test117_fixed_free_hello.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "35b853e51274958bed474d8a0c0e728d324ddae1d28bc12b29987b84e836f5a1",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test118_fixed_rla_chain.rpgle": {
    "codes": [
@@ -246,35 +698,121 @@
     "RNF7030",
     "RNF7503"
    ],
+   "messages": [
+    {
+     "code": "RNF0622",
+     "line": 4,
+     "severity": 20,
+     "text": "A qualified name is not allowed in this context."
+    },
+    {
+     "code": "RNF0623",
+     "line": 4,
+     "severity": 20,
+     "text": "The simple qualified name is not specified correctly."
+    },
+    {
+     "code": "RNF0289",
+     "line": 4,
+     "severity": 20,
+     "text": "Entry contains data that is not valid; only valid data is used."
+    },
+    {
+     "code": "RNF7030",
+     "line": 95,
+     "severity": 30,
+     "text": "The name or indicator CUSTOMERNUMBER is not defined."
+    },
+    {
+     "code": "RNF7503",
+     "line": 95,
+     "severity": 30,
+     "text": "Expression contains an operand that is not defined."
+    }
+   ],
+   "reason": "RNF0622: A qualified name is not allowed in this context.",
+   "reason_detail": "line 4: A qualified name is not allowed in this context. \u2014 `DcustomerNumb...  S`",
    "rpgc": "accept",
    "sha256": "174715155806ad9be38b425ff78715f67e0cc48c9023608d90e8e3cd3a83d498",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test119_fixed_free_error.rpgle": {
    "codes": [
     "RNF5358"
    ],
+   "messages": [
+    {
+     "code": "RNF5358",
+     "line": 4,
+     "severity": 30,
+     "text": "The EVAL operation is missing an expression."
+    }
+   ],
+   "reason": "RNF5358: The EVAL operation is missing an expression.",
+   "reason_detail": "line 4: The EVAL operation is missing an expression. \u2014 `x = ;`",
    "rpgc": "reject",
    "sha256": "46abf9772d40eeb107065fe8df59f0de89be0ba77eb7f3d589a3f5fec5428851",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test11_errors.rpgle": {
    "codes": [
     "RNF5347",
     "RNF7030"
    ],
+   "messages": [
+    {
+     "code": "RNF5347",
+     "line": 5,
+     "severity": 30,
+     "text": "An assignment operator is expected with the EVAL operation."
+    },
+    {
+     "code": "RNF7030",
+     "line": 5,
+     "severity": 30,
+     "text": "The name or indicator GARBAGE is not defined."
+    },
+    {
+     "code": "RNF7030",
+     "line": 5,
+     "severity": 30,
+     "text": "The name or indicator INVALID is not defined."
+    }
+   ],
+   "reason": "RNF5347: An assignment operator is expected with the EVAL operation.",
+   "reason_detail": "line 5: An assignment operator is expected with the EVAL operation. \u2014 `INVALID GARBAGE HERE;`",
    "rpgc": "reject",
    "sha256": "7721bdebfdd52044066ba9e77efdf2aeb7445139538a8928a2376404a9f1fbe3",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test11a_missing_semi.rpgle": {
    "codes": [
     "RNF5377",
     "RNF7030"
    ],
+   "messages": [
+    {
+     "code": "RNF5377",
+     "line": 5,
+     "severity": 20,
+     "text": "The end of the expression is expected."
+    },
+    {
+     "code": "RNF7030",
+     "line": 5,
+     "severity": 30,
+     "text": "The name or indicator DSPLY is not defined."
+    }
+   ],
+   "reason": "RNF5377: The end of the expression is expected.",
+   "reason_detail": "line 5: The end of the expression is expected. \u2014 `DSPLY %CHAR(x);`",
    "rpgc": "reject",
    "sha256": "315fd9bbe849d83f4dc38ed81766f1afce9819fa5cb9196e82d12abf49c1784a",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test11b_bad_type.rpgle": {
    "codes": [
@@ -282,101 +820,184 @@
     "RNF3438",
     "RNF7030"
    ],
+   "messages": [
+    {
+     "code": "RNF3308",
+     "line": 3,
+     "severity": 20,
+     "text": "Keyword name is not valid; the keyword is ignored."
+    },
+    {
+     "code": "RNF3438",
+     "line": 3,
+     "severity": 30,
+     "text": "LIKE keyword is expected for field X but not found; definition is ignored."
+    },
+    {
+     "code": "RNF7030",
+     "line": 3,
+     "severity": 30,
+     "text": "The name or indicator X is not defined."
+    }
+   ],
+   "reason": "RNF3308: Keyword name is not valid; the keyword is ignored.",
+   "reason_detail": "line 3: Keyword name is not valid; the keyword is ignored. \u2014 `DCL-S x BIGINT(10);`",
    "rpgc": "reject",
    "sha256": "a7a4945668f14e5bf2f9bec7d4f151438098962a938bc20f90940e5fa6408a69",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test11c_unmatched_if.rpgle": {
    "codes": [
     "RNF5177"
    ],
+   "messages": [
+    {
+     "code": "RNF5177",
+     "line": 5,
+     "severity": 30,
+     "text": "ENDyy operation missing for IF operation group at statement"
+    }
+   ],
+   "reason": "RNF5177: ENDyy operation missing for IF operation group at statement",
+   "reason_detail": "line 5: ENDyy operation missing for IF operation group at statement \u2014 `IF x > 5;`",
    "rpgc": "reject",
    "sha256": "a243aeddb42a64dfd19e6aca1c4936d3718e001fb6e609a8b9de92943c66a4af",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test11d_bad_expr.rpgle": {
    "codes": [
     "RNF5377"
    ],
+   "messages": [
+    {
+     "code": "RNF5377",
+     "line": 4,
+     "severity": 20,
+     "text": "The end of the expression is expected."
+    }
+   ],
+   "reason": "RNF5377: The end of the expression is expected.",
+   "reason_detail": "line 4: The end of the expression is expected. \u2014 `x = * 5;`",
    "rpgc": "reject",
    "sha256": "8dbe463c9db90411c389719d1024309bf5c1a4e74ae64f516e8dd7e881bdda84",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test11e_unmatched_paren.rpgle": {
    "codes": [
     "RNF0312"
    ],
+   "messages": [
+    {
+     "code": "RNF0312",
+     "line": 4,
+     "severity": 20,
+     "text": "A right parenthesis is expected but is not found."
+    }
+   ],
+   "reason": "RNF0312: A right parenthesis is expected but is not found.",
+   "reason_detail": "line 4: A right parenthesis is expected but is not found. \u2014 `x = (5 + 3;`",
    "rpgc": "reject",
    "sha256": "797df5768ad5bbcb75ee26c683b2248e16afe84272ffeb5f7e7849d1f49f14f5",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test120_fixed_varchar.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "3b0dbd8d4466705ba85ccd1ff838228301ab08051f04a309b8453a68413956e5",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test121_fixed_varchar_subfield.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "33def5c1c7fe7c63448e29c93e2d1fb17333d00db6de326541a7fd4dc85370cd",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test122_fixed_rla_chain_varchar.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "2829fa57ed58f51c3817434b0754c9dc45575fb7e6338bc8beec51bac31436bf",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test123_fixed_ds_dim.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "ec18b308b77ca6dfd049d2557254bceb8e824f8b1f3679d7071fd651e4dab564",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test124_fixed_overlay.rpgle": {
    "codes": [
     "RNF3555"
    ],
+   "messages": [
+    {
+     "code": "RNF3555",
+     "line": 8,
+     "severity": 20,
+     "text": "The keyword is not allowed in fixed-form definitions. The keyword is ignored."
+    },
+    {
+     "code": "RNF3555",
+     "line": 9,
+     "severity": 20,
+     "text": "The keyword is not allowed in fixed-form definitions. The keyword is ignored."
+    }
+   ],
+   "reason": "RNF3555: The keyword is not allowed in fixed-form definitions. The keyword is ignored.",
+   "reason_detail": "line 8: The keyword is not allowed in fixed-form definitions. The keyword is ignored. \u2014 `Did                             10I 0 POS(1)`",
    "rpgc": "accept",
    "sha256": "9e13b2e68197e7e6ece9a0b121652e91c5f152797b876f06e8ddaee450d39bcd",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test125_fixed_cspec_if.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "9abea2db289705bdb16399cfd089785b13fec97de4b10ae749d42311e4bfc13a",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test126_fixed_cspec_dow_dou.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "a67061c6f8d18020270a5a46638ae17b8d9fe9b9f51c3f9e1236edf208cd091f",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test127_fixed_cspec_for.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "4429b10c1355a2d15b7fdf08cf8e17d6e0c1b991c56dc7d5bebd0190d357975b",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test128_fixed_cspec_select.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "f9e888dfc9eeaad1477a3357751234bebb451923e4832377ac85bed5aa004538",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test129_fixed_cspec_subr.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "f864263af59efbc51b5ab64489d2264756a760b35e95ca4b1938d0cbf4d1a954",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test12_monitor.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "8d44e83f4c1f1dc67bd2712c11050f9163713824833dc1e72ffb5b6d03817602",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test130_fixed_cspec_eval_callp.rpgle": {
    "codes": [
@@ -384,94 +1005,233 @@
     "RNF5347",
     "RNF7030"
    ],
+   "messages": [
+    {
+     "code": "RNF0724",
+     "line": 22,
+     "severity": 30,
+     "text": "The statement type is out of sequence for the main procedure."
+    },
+    {
+     "code": "RNF5347",
+     "line": 23,
+     "severity": 30,
+     "text": "An assignment operator is expected with the EVAL operation."
+    },
+    {
+     "code": "RNF7030",
+     "line": 23,
+     "severity": 30,
+     "text": "The name or indicator INT is not defined."
+    },
+    {
+     "code": "RNF7030",
+     "line": 23,
+     "severity": 30,
+     "text": "The name or indicator N is not defined."
+    },
+    {
+     "code": "RNF0724",
+     "line": 24,
+     "severity": 30,
+     "text": "The statement type is out of sequence for the main procedure."
+    }
+   ],
+   "reason": "RNF0724: The statement type is out of sequence for the main procedure.",
+   "reason_detail": "line 22: The statement type is out of sequence for the main procedure. \u2014 `DCL-PR doubleIt;`",
    "rpgc": "accept",
    "sha256": "9c4479f4b8b0ad874727e97ade12f01b1268b222155adf393e109aa3a0722ee7",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test131_fixed_cspec_clear_sorta.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "7abeee696d63e461c16a15aafb2a0ecb3516266f43907b00f87e07aa5b462327",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test132_fixed_cspec_monitor.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "c4c508b2501ae4a222eeab0f473444f346209c6778daa3b7525a7145117ee22d",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test133_fixed_cspec_continuation.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "83ab1cbf31a2da7af598d8a2db9e2b2bdcad71eabb45b79b4773dd634852908a",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test134_fixed_cspec_mixed_free.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "e8161c77a816606668da50422ffd66ba200ffbf62f9feaf46434ed2fe5426bf6",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test135_fixed_cspec_err_ctllevel.rpgle": {
    "codes": [
     "RNF5002",
     "RNF7030"
    ],
+   "messages": [
+    {
+     "code": "RNF7030",
+     "line": 3,
+     "severity": 30,
+     "text": "The name or indicator *INL1 is not defined."
+    },
+    {
+     "code": "RNF5002",
+     "line": 4,
+     "severity": 20,
+     "text": "Blank Control-Level entry follows Control-Level entry that is not blank; defaults to previous entry."
+    }
+   ],
+   "reason": "RNF5002: Blank Control-Level entry follows Control-Level entry that is not blank; defaults to previous entry.",
+   "reason_detail": "line 4: Blank Control-Level entry follows Control-Level entry that is not blank; defaults to previous entry. \u2014 `C                   RETURN`",
    "rpgc": "reject",
    "sha256": "db9c24a7c4ca57664bce758284eb3461521e73163fd41e56c72b53fffa1d05d9",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test136_fixed_cspec_err_indicator.rpgle": {
    "codes": [
     "RNF5006",
     "RNF5007"
    ],
+   "messages": [
+    {
+     "code": "RNF5006",
+     "line": 3,
+     "severity": 20,
+     "text": "Not entry is neither N nor blank; defaults to blank."
+    },
+    {
+     "code": "RNF5007",
+     "line": 3,
+     "severity": 20,
+     "text": "Conditioning-Indicator entry is not valid; defaults to blanks."
+    }
+   ],
+   "reason": "RNF5006: Not entry is neither N nor blank; defaults to blank.",
+   "reason_detail": "line 3: Not entry is neither N nor blank; defaults to blank. \u2014 `C  01               EVAL      n = 1`",
    "rpgc": "reject",
    "sha256": "147e675730302f37c7707edf0f1b8813a0590ed3a450f301b95ffe36c809c443",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test137_fixed_cspec_err_deferred.rpgle": {
    "codes": [
     "RNF0637",
     "RNF7030"
    ],
+   "messages": [
+    {
+     "code": "RNF0637",
+     "line": 3,
+     "severity": 30,
+     "text": "An operand was expected but was not found; specification is ignored."
+    },
+    {
+     "code": "RNF7030",
+     "line": 3,
+     "severity": 30,
+     "text": "The name or indicator H is not defined."
+    }
+   ],
+   "reason": "RNF0637: An operand was expected but was not found; specification is ignored.",
+   "reason_detail": "line 3: An operand was expected but was not found; specification is ignored. \u2014 `C                   XML-SAX   %HANDLER(h : doc)`",
    "rpgc": "reject",
    "sha256": "97bba98ef7cc94dc57f4e1ded12546a0b0efa3a282c941abafcda82b42d8f303",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test138_fixed_cspec_err_legacy.rpgle": {
    "codes": [
     "RNF5053"
    ],
+   "messages": [
+    {
+     "code": "RNF5053",
+     "line": 3,
+     "severity": 30,
+     "text": "Resulting-Indicators entry is blank for specified operation; specification is ignored."
+    }
+   ],
+   "reason": "RNF5053: Resulting-Indicators entry is blank for specified operation; specification is ignored.",
+   "reason_detail": "line 3: Resulting-Indicators entry is blank for specified operation; specification is ignored. \u2014 `C     n             COMP      n`",
    "rpgc": "reject",
    "sha256": "97eff20ba211ba41cca87af43a78344ee4e23b27bde0fa3d4004cb3b2c1b20e7",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test139_fixed_copy_dspec.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "0405bee3ed21585fcb52d07fa51f6640a36d5c25d8153e77659655a847e28ef2",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test13_subroutines.rpgle": {
    "codes": [
     "RNF5005"
    ],
+   "messages": [
+    {
+     "code": "RNF5005",
+     "line": 17,
+     "severity": 30,
+     "text": "Operation entry following ENDSR operation is not valid; specification is ignored."
+    },
+    {
+     "code": "RNF5005",
+     "line": 18,
+     "severity": 30,
+     "text": "Operation entry following ENDSR operation is not valid; specification is ignored."
+    },
+    {
+     "code": "RNF5005",
+     "line": 19,
+     "severity": 30,
+     "text": "Operation entry following ENDSR operation is not valid; specification is ignored."
+    },
+    {
+     "code": "RNF5005",
+     "line": 20,
+     "severity": 30,
+     "text": "Operation entry following ENDSR operation is not valid; specification is ignored."
+    },
+    {
+     "code": "RNF5005",
+     "line": 23,
+     "severity": 30,
+     "text": "Operation entry following ENDSR operation is not valid; specification is ignored."
+    }
+   ],
+   "reason": "RNF5005: Operation entry following ENDSR operation is not valid; specification is ignored.",
+   "reason_detail": "line 17: Operation entry following ENDSR operation is not valid; specification is ignored. \u2014 `EXSR addTen;`",
    "rpgc": "accept",
    "sha256": "35a269c512a5701dfb81084b9934019b89ae179c98afe8ce76b7138b37734ca0",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test140_fixed_copy_cspec.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "a059378740b7ee8fe5fd8106642d2c370dbc8649853c778fa82ec38e5fa605de",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test141_fixed_copy_nested.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "1152b26455ccb0fa5cf5a007f2ab25bcf8d50b781f211c37190b78f73bf38427",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test142_fixed_copy_in_free.rpgle": {
    "codes": [
@@ -487,74 +1247,145 @@
     "RNF7030",
     "RNF7503"
    ],
+   "messages": [
+    {
+     "code": "RNF7030",
+     "line": 5,
+     "severity": 30,
+     "text": "The name or indicator SHARED_VAL is not defined."
+    },
+    {
+     "code": "RNF7503",
+     "line": 5,
+     "severity": 30,
+     "text": "Expression contains an operand that is not defined."
+    },
+    {
+     "code": "RNF7030",
+     "line": 6,
+     "severity": 30,
+     "text": "The name or indicator SHARED_MSG is not defined."
+    },
+    {
+     "code": "RNF7503",
+     "line": 6,
+     "severity": 30,
+     "text": "Expression contains an operand that is not defined."
+    }
+   ],
+   "reason": "Undefined name, cause not reported by IBM (RNF7030)",
+   "reason_detail": "line 5: The name or indicator SHARED_VAL is not defined.",
    "rpgc": "accept",
    "sha256": "81af51af8cfa1604fb9a9217b45acee6cf93f5a3f7cae80e64b06105d5691c88",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test143_fixed_copy_err_missing.rpgle": {
    "codes": [
     "RNF0273"
    ],
+   "messages": [
+    {
+     "code": "RNF0273",
+     "line": 2,
+     "severity": 40,
+     "text": "Compiler not able to open the /COPY or /INCLUDE file; directive ignored."
+    }
+   ],
+   "reason": "RNF0273: Compiler not able to open the /COPY or /INCLUDE file; directive ignored.",
+   "reason_detail": "line 2: Compiler not able to open the /COPY or /INCLUDE file; directive ignored. \u2014 `/COPY tests/does_not_exist_12345.rpgle`",
    "rpgc": "reject",
    "sha256": "2812bb9654834cfd0f0a5093a3fcdf7db35c8989c9680ba310bb8f208d30cf28",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test144_fixed_cspec_chain.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "94dfa622c07e8bab8b5da6ac6452147a7e4a6245424e43e048304e1c22378f8e",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test145_fixed_cspec_read.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "6b2b7a822013d1117b32d1c0357a4ec5781ba58c100276c4928830ca9a6f7a58",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test146_fixed_cspec_write_upd_del.rpgle": {
    "codes": [
     "RNF5063",
     "RNF5198"
    ],
+   "messages": [
+    {
+     "code": "RNF5063",
+     "line": 82,
+     "severity": 30,
+     "text": "Factor 2 operand must not be an externally described file for this operation."
+    },
+    {
+     "code": "RNF5063",
+     "line": 89,
+     "severity": 30,
+     "text": "Factor 2 operand must not be an externally described file for this operation."
+    },
+    {
+     "code": "RNF5198",
+     "line": 94,
+     "severity": 30,
+     "text": "File in Factor 2 is not allowed for UPDATE or DELETE operation."
+    }
+   ],
+   "reason": "RNF5063: Factor n operand must not be an externally described file for this operation.",
+   "reason_detail": "line 82: Factor 2 operand must not be an externally described file for this operation. \u2014 ``",
    "rpgc": "accept",
    "sha256": "862e08e19961fda38aaaf1137623736decc8add8201524b17a86faaf731d2340",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test147_fixed_cspec_setll_reade.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "d35384f96419ffc12be71bb63e5963eaea1dc88c5da19a4301860fca767bbe04",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test148_fixed_cspec_goto_tag.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "10dd6290c218babd31ec422da6ad4612049591dedd09e7d7b571f569456ba128",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test149_fixed_cspec_goto_in_begsr.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "6430806a8d6623a1e26509fbf5bc0e261e70a941b0ee930a261dd394c0b0cd26",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test14_indicators.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "c5db3881b1dd2dcea8c99fef4bf3d355281a19d7d4404f30dfb68c2434f732c4",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test150_fixed_cspec_arith.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "8b4c330ff8d3de2def89e31b9df32a55ee69a8d455379ad6a5fa61259a6f5b92",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test151_fixed_cspec_zadd_zsub.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "9316c2df41c299133649a17425e1aeca403a1950c0fdace0ab1fdb3bd5679196",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test152_fixed_cspec_err_goto_in_free.rpgle": {
    "codes": [
@@ -562,26 +1393,89 @@
     "RNF7023",
     "RNF7030"
    ],
+   "messages": [
+    {
+     "code": "RNF5347",
+     "line": 4,
+     "severity": 30,
+     "text": "An assignment operator is expected with the EVAL operation."
+    },
+    {
+     "code": "RNF7030",
+     "line": 4,
+     "severity": 30,
+     "text": "The name or indicator GOTO is not defined."
+    },
+    {
+     "code": "RNF7030",
+     "line": 4,
+     "severity": 30,
+     "text": "The name or indicator SOMEWHERE is not defined."
+    }
+   ],
+   "reason": "RNF5347: An assignment operator is expected with the EVAL operation.",
+   "reason_detail": "line 4: An assignment operator is expected with the EVAL operation. \u2014 `GOTO SOMEWHERE;`",
    "rpgc": "reject",
    "sha256": "642734e28c2f983443f0d5043430c2c36fdd23cf556f94a8461dc647734f987b",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test153_fixed_cspec_err_call_deferred.rpgle": {
    "codes": [
     "RNF5010",
     "RNF7030"
    ],
+   "messages": [
+    {
+     "code": "RNF5010",
+     "line": 3,
+     "severity": 20,
+     "text": "Factor 1 entry is not blank for the specified operation; defaults to blanks."
+    },
+    {
+     "code": "RNF7030",
+     "line": 3,
+     "severity": 30,
+     "text": "The name or indicator OTHERPGM is not defined."
+    }
+   ],
+   "reason": "RNF5010: Factor n entry is not blank for the specified operation; defaults to blanks.",
+   "reason_detail": "line 3: Factor 1 entry is not blank for the specified operation; defaults to blanks. \u2014 `C     'PGM'         CALL      OTHERPGM`",
    "rpgc": "reject",
    "sha256": "39f3f66ef12dac1288d5f95505cf571966ceb5240d427f8685b3486ee6d93ec6",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test154_fixed_ispec_single.rpgle": {
    "codes": [
     "RNF5191"
    ],
+   "messages": [
+    {
+     "code": "RNF5191",
+     "line": 10,
+     "severity": 30,
+     "text": "The Result-Field is not a data structure when Factor 2 is a file name."
+    },
+    {
+     "code": "RNF5191",
+     "line": 13,
+     "severity": 30,
+     "text": "The Result-Field is not a data structure when Factor 2 is a file name."
+    },
+    {
+     "code": "RNF5191",
+     "line": 16,
+     "severity": 30,
+     "text": "The Result-Field is not a data structure when Factor 2 is a file name."
+    }
+   ],
+   "reason": "RNF5191: The Result-Field is not a data structure when Factor n is a file name.",
+   "reason_detail": "line 10: The Result-Field is not a data structure when Factor 2 is a file name. \u2014 `WRITE TESTFL154;`",
    "rpgc": "accept",
    "sha256": "527ed37ec6e858920c6e7f37456233bf0855dbe9fe02e4cc3362022c765a6de9",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test155_fixed_ispec_multi.rpgle": {
    "codes": [
@@ -590,25 +1484,100 @@
     "RNF7030",
     "RNF7503"
    ],
+   "messages": [
+    {
+     "code": "RNF0257",
+     "line": 7,
+     "severity": 30,
+     "text": "Form-Type entry for main procedure not valid or out of sequence."
+    },
+    {
+     "code": "RNF0257",
+     "line": 8,
+     "severity": 30,
+     "text": "Form-Type entry for main procedure not valid or out of sequence."
+    },
+    {
+     "code": "RNF7030",
+     "line": 10,
+     "severity": 30,
+     "text": "The name or indicator TYPECODE is not defined."
+    },
+    {
+     "code": "RNF7503",
+     "line": 10,
+     "severity": 30,
+     "text": "Expression contains an operand that is not defined."
+    },
+    {
+     "code": "RNF5191",
+     "line": 12,
+     "severity": 30,
+     "text": "The Result-Field is not a data structure when Factor 2 is a file name."
+    }
+   ],
+   "reason": "RNF0257: Form-Type entry for main procedure not valid or out of sequence.",
+   "reason_detail": "line 7: Form-Type entry for main procedure not valid or out of sequence. \u2014 `DTYPECODE         S              1A`",
    "rpgc": "accept",
    "sha256": "3cba77b0f2ced919e7c05d9c763d6959a682788c40ecb4818a89fca19c6ea565",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test156_fixed_ispec_field_ind.rpgle": {
    "codes": [
     "RNF5191"
    ],
+   "messages": [
+    {
+     "code": "RNF5191",
+     "line": 7,
+     "severity": 30,
+     "text": "The Result-Field is not a data structure when Factor 2 is a file name."
+    },
+    {
+     "code": "RNF5191",
+     "line": 9,
+     "severity": 30,
+     "text": "The Result-Field is not a data structure when Factor 2 is a file name."
+    },
+    {
+     "code": "RNF5191",
+     "line": 11,
+     "severity": 30,
+     "text": "The Result-Field is not a data structure when Factor 2 is a file name."
+    }
+   ],
+   "reason": "RNF5191: The Result-Field is not a data structure when Factor n is a file name.",
+   "reason_detail": "line 7: The Result-Field is not a data structure when Factor 2 is a file name. \u2014 `WRITE TESTFL156;`",
    "rpgc": "accept",
    "sha256": "cb7a27726e46282e5eb3e4a485bf39118853ceceb400b8d2d254b3bb95190494",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test157_fixed_ispec_update.rpgle": {
    "codes": [
     "RNF5191"
    ],
+   "messages": [
+    {
+     "code": "RNF5191",
+     "line": 7,
+     "severity": 30,
+     "text": "The Result-Field is not a data structure when Factor 2 is a file name."
+    },
+    {
+     "code": "RNF5191",
+     "line": 13,
+     "severity": 30,
+     "text": "The Result-Field is not a data structure when Factor 2 is a file name."
+    }
+   ],
+   "reason": "RNF5191: The Result-Field is not a data structure when Factor n is a file name.",
+   "reason_detail": "line 7: The Result-Field is not a data structure when Factor 2 is a file name. \u2014 `WRITE TESTFL157;`",
    "rpgc": "accept",
    "sha256": "5564a8e30fc21f18be6d5f826f7edf5146723c741d10ed8bb6b3b93f3a5eabde",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test158_fixed_ospec_editcode.rpgle": {
    "codes": [
@@ -616,99 +1585,252 @@
     "RNF5191",
     "RNF8003"
    ],
+   "messages": [
+    {
+     "code": "RNF3466",
+     "line": 3,
+     "severity": 20,
+     "text": "The Decimal-Positions entry does not agree with the Data-Type entry; defaults to 0."
+    },
+    {
+     "code": "RNF5191",
+     "line": 6,
+     "severity": 30,
+     "text": "The Result-Field is not a data structure when Factor 2 is a file name."
+    },
+    {
+     "code": "RNF8003",
+     "line": 10,
+     "severity": 30,
+     "text": "Field length 13 is greater than end position 10."
+    }
+   ],
+   "reason": "RNF3466: The Decimal-Positions entry does not agree with the Data-Type entry; defaults to n.",
+   "reason_detail": "line 3: The Decimal-Positions entry does not agree with the Data-Type entry; defaults to 0. \u2014 `DAMT              S             10S`",
    "rpgc": "accept",
    "sha256": "99f5b002c6d9b98f7f4e27af55fdadc21921ba277f3491a5cd7d6b01aa2f5256",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test159_fixed_ispec_err_zone.rpgle": {
    "codes": [],
    "rpgc": "reject",
    "sha256": "5ca2591ccb80dd941dca6936d90796f822214eb4ce8509515c598725fa10328a",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test15_dou.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "6753abba7a2acf88ebc3a3ed9771ca931a9e185b5caf36501945e016a05856a0",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test160_fixed_ispec_err_matching.rpgle": {
    "codes": [
     "RNF4059"
    ],
+   "messages": [
+    {
+     "code": "RNF4059",
+     "line": 4,
+     "severity": 20,
+     "text": "Control-Levels and Matching-Fields entries are not allowed for full procedural files."
+    }
+   ],
+   "reason": "RNF4059: Control-Levels and Matching-Fields entries are not allowed for full procedural files.",
+   "reason_detail": "line 4: Control-Levels and Matching-Fields entries are not allowed for full procedural files. \u2014 `I                             A    1   10  F1              M1`",
    "rpgc": "reject",
    "sha256": "adeebb4dae0f0df950fd1f0274355096d01191830467f1648c0176cc82137164",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test161_fixed_subf_dim.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "bcc0c136f71311b59774a9a24d4ed05cede70ae67c84525f4d75d6ee062a17fc",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test162_fixed_subf_like.rpgle": {
    "codes": [
     "RNF7030",
     "RNF7503"
    ],
+   "messages": [
+    {
+     "code": "RNF7030",
+     "line": 5,
+     "severity": 30,
+     "text": "The name or indicator PRICE is not defined."
+    },
+    {
+     "code": "RNF7030",
+     "line": 5,
+     "severity": 30,
+     "text": "The name or indicator UNITPRICE is not defined."
+    },
+    {
+     "code": "RNF7503",
+     "line": 9,
+     "severity": 30,
+     "text": "Expression contains an operand that is not defined."
+    },
+    {
+     "code": "RNF7503",
+     "line": 10,
+     "severity": 30,
+     "text": "Expression contains an operand that is not defined."
+    }
+   ],
+   "reason": "LIKE naming a sibling subfield without its DS qualifier",
+   "reason_detail": "line 5: `Dprice                                LIKE(unitPrice)`",
    "rpgc": "accept",
    "sha256": "26811e9c3bd76fc8ef0c9d25a80dc91c9e59b602e59f83ebbb33aec1eafad8c0",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test163_subfield_like_dim.rpgle": {
    "codes": [
     "RNF7030",
     "RNF7503"
    ],
+   "messages": [
+    {
+     "code": "RNF7030",
+     "line": 6,
+     "severity": 30,
+     "text": "The name or indicator PRICE is not defined."
+    },
+    {
+     "code": "RNF7030",
+     "line": 6,
+     "severity": 30,
+     "text": "The name or indicator UNITPRICE is not defined."
+    },
+    {
+     "code": "RNF7503",
+     "line": 12,
+     "severity": 30,
+     "text": "Expression contains an operand that is not defined."
+    },
+    {
+     "code": "RNF7503",
+     "line": 15,
+     "severity": 30,
+     "text": "Expression contains an operand that is not defined."
+    },
+    {
+     "code": "RNF7503",
+     "line": 17,
+     "severity": 30,
+     "text": "Expression contains an operand that is not defined."
+    }
+   ],
+   "reason": "LIKE naming a sibling subfield without its DS qualifier",
+   "reason_detail": "line 6: `price LIKE(unitPrice);`",
    "rpgc": "accept",
    "sha256": "c60d20b2dfaa8b9583e8604b0b7131a2a89107b047bbde5e80708f31627e8612",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test164_fixed_cspec_cond_ind.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "3c9bf1fd2919bfea62dbfd75528f595be1a71cf6e669f50fbb386fbf50bcce5e",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test165_fixed_cspec_err_cond_block.rpgle": {
    "codes": [
     "RNF7030"
    ],
+   "messages": [
+    {
+     "code": "RNF7030",
+     "line": 4,
+     "severity": 30,
+     "text": "The name or indicator *IN10 is not defined."
+    }
+   ],
+   "reason": "Undefined name, cause not reported by IBM (RNF7030)",
+   "reason_detail": "line 4: The name or indicator *IN10 is not defined.",
    "rpgc": "reject",
    "sha256": "37e33281e40a1e46f30f37693e3f03c6d81a886637b2abd0917545d0c4ac9a76",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test166_fixed_cspec_err_cond_ind_name.rpgle": {
    "codes": [
     "RNF7030"
    ],
+   "messages": [
+    {
+     "code": "RNF7030",
+     "line": 3,
+     "severity": 30,
+     "text": "The name or indicator *INLR is not defined."
+    }
+   ],
+   "reason": "Undefined name, cause not reported by IBM (RNF7030)",
+   "reason_detail": "line 3: The name or indicator *INLR is not defined.",
    "rpgc": "reject",
    "sha256": "6248f8273c18190ee16d7143f33ce3a00f3482bb947fd07ec7923864d7f7ee7d",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test167_fixed_cspec_cond_anor.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "49aa1111c4dec3d87b7b17acba1a417600d40e1d2779687604f6eac29fe05e29",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test168_fixed_cspec_err_anor_orphan.rpgle": {
    "codes": [
     "RNF5003",
     "RNF7030"
    ],
+   "messages": [
+    {
+     "code": "RNF5003",
+     "line": 3,
+     "severity": 20,
+     "text": "Control-Level entry of AN/OR is not valid; defaults to blanks."
+    },
+    {
+     "code": "RNF7030",
+     "line": 3,
+     "severity": 30,
+     "text": "The name or indicator *IN20 is not defined."
+    }
+   ],
+   "reason": "RNF5003: Control-Level entry of AN/OR is not valid; defaults to blanks.",
+   "reason_detail": "line 3: Control-Level entry of AN/OR is not valid; defaults to blanks. \u2014 `CAN 20              EVAL      n = 1`",
    "rpgc": "reject",
    "sha256": "b8ffde7ea0864d4d51055e3711578c3588867f440f7b9ac26c7e12aba2b5c328",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test169_fixed_cspec_err_anor_dangling.rpgle": {
    "codes": [
     "RNF5004",
     "RNF7030"
    ],
+   "messages": [
+    {
+     "code": "RNF7030",
+     "line": 3,
+     "severity": 30,
+     "text": "The name or indicator *IN10 is not defined."
+    }
+   ],
+   "reason": "Undefined name, cause not reported by IBM (RNF7030)",
+   "reason_detail": "line 3: The name or indicator *IN10 is not defined.",
    "rpgc": "reject",
    "sha256": "c621a864fc11032ce039e117ffb58547a70bbb3b60d5c72579b2856ac63244df",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test16_copy.rpgle": {
    "codes": [
@@ -725,31 +1847,89 @@
     "RNF7030",
     "RNF7503"
    ],
+   "messages": [
+    {
+     "code": "RNF0724",
+     "line": 3,
+     "severity": 30,
+     "text": "The statement type is out of sequence for the main procedure."
+    },
+    {
+     "code": "RNF7030",
+     "line": 4,
+     "severity": 30,
+     "text": "The name or indicator LOCAL_VAL is not defined."
+    },
+    {
+     "code": "RNF7030",
+     "line": 4,
+     "severity": 30,
+     "text": "The name or indicator SHARED_VAL is not defined."
+    },
+    {
+     "code": "RNF7503",
+     "line": 4,
+     "severity": 30,
+     "text": "Expression contains an operand that is not defined."
+    },
+    {
+     "code": "RNF7030",
+     "line": 5,
+     "severity": 30,
+     "text": "The name or indicator SHARED_MSG is not defined."
+    }
+   ],
+   "reason": "RNF0724: The statement type is out of sequence for the main procedure.",
+   "reason_detail": "line 3: The statement type is out of sequence for the main procedure. \u2014 `DCL-S local_val INT(10);`",
    "rpgc": "accept",
    "sha256": "3dd7c3bed7f22da604406adee0ec8f16e65a8b825ba697808408a98754321298",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test170_fixed_cspec_move.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "8767993ae135d4ad65cb6ee0e8b5637488063e3a1dacd15a8f15eeac542f1754",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test171_fixed_cspec_err_move_date_time.rpgle": {
    "codes": [
     "RNF7515"
    ],
+   "messages": [
+    {
+     "code": "RNF7515",
+     "line": 7,
+     "severity": 30,
+     "text": "Move operands DFLD and TFLD have types that are not compatible."
+    }
+   ],
+   "reason": "RNF7515: Move operands DFLD and TFLD have types that are not compatible.",
+   "reason_detail": "line 7: Move operands DFLD and TFLD have types that are not compatible. \u2014 `C                   MOVE      DFLD          TFLD`",
    "rpgc": "reject",
    "sha256": "3a4a6eebc28aac1704e050d9a62b079487be2a089bb8bfa33b95050d6bebd560",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test172_fixed_cspec_err_move_datefmt.rpgle": {
    "codes": [
     "RNF7509"
    ],
+   "messages": [
+    {
+     "code": "RNF7509",
+     "line": 7,
+     "severity": 20,
+     "text": "Factor 1 entry *ISO is not valid for the MOVE or MOVEL operation."
+    }
+   ],
+   "reason": "RNF7509: Factor n entry *ISO is not valid for the MOVE or MOVEL operation.",
+   "reason_detail": "line 7: Factor 1 entry *ISO is not valid for the MOVE or MOVEL operation. \u2014 `C     *ISO          MOVE      a             b`",
    "rpgc": "reject",
    "sha256": "94b3a1466416324b92e7c1d7600c9d5891ad56ce9733a48914c0e8174c6b7096",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test173_move_err_free_format.rpgle": {
    "codes": [
@@ -757,43 +1937,85 @@
     "RNF7023",
     "RNF7030"
    ],
+   "messages": [
+    {
+     "code": "RNF5347",
+     "line": 4,
+     "severity": 30,
+     "text": "An assignment operator is expected with the EVAL operation."
+    },
+    {
+     "code": "RNF7030",
+     "line": 4,
+     "severity": 30,
+     "text": "The name or indicator MOVE is not defined."
+    }
+   ],
+   "reason": "RNF5347: An assignment operator is expected with the EVAL operation.",
+   "reason_detail": "line 4: An assignment operator is expected with the EVAL operation. \u2014 `MOVE a b;`",
    "rpgc": "reject",
    "sha256": "24c83539ab5410f66c6a376954b60a7ef12d8498e19481a3db803bf7731ff6d0",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test174_call_callee_module.rpgle": {
    "codes": [],
    "rpgc": "reject",
    "sha256": "6d7d65a572a02d0ac93a46756d92d6ceef738941d080ebf1611296b33af097b2",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test175_fixed_cspec_call_parm.rpgle": {
    "codes": [],
    "rpgc": "reject",
    "sha256": "a94b47088a9b9d73c273cdfeba989d606f61d213f6e0304d65fb2515fb237aff",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test176_fixed_cspec_err_plist.rpgle": {
    "codes": [
     "RNF5164"
    ],
+   "messages": [
+    {
+     "code": "RNF5164",
+     "line": 3,
+     "severity": 30,
+     "text": "PLIST operation is not followed by a PARM operation; specification is ignored."
+    }
+   ],
+   "reason": "RNF5164: PLIST operation is not followed by a PARM operation; specification is ignored.",
+   "reason_detail": "line 3: PLIST operation is not followed by a PARM operation; specification is ignored. \u2014 `C     MYLIST        PLIST`",
    "rpgc": "reject",
    "sha256": "d6991892865c865ce2b6734b61860f3d146ed838f5cc94389f456eed91f5c7df",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test177_fixed_cspec_err_call_dynamic.rpgle": {
    "codes": [],
    "rpgc": "reject",
    "sha256": "088d02fc47f0d59c513743f65fc81b76291c574d61bd098e02f38f380f3edeef",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test178_fixed_cspec_err_parm_orphan.rpgle": {
    "codes": [
     "RNF5121"
    ],
+   "messages": [
+    {
+     "code": "RNF5121",
+     "line": 3,
+     "severity": 30,
+     "text": "PARM operation does not immediately follow PLIST, PARM, CALL, or CALLB; specification is ignored."
+    }
+   ],
+   "reason": "RNF5121: PARM operation does not immediately follow PLIST, PARM, CALL, or CALLB; specification is ignored.",
+   "reason_detail": "line 3: PARM operation does not immediately follow PLIST, PARM, CALL, or CALLB; specification is ignored. \u2014 `C                   PARM                    n`",
    "rpgc": "reject",
    "sha256": "d2fc5f80c38cd8c66d038cd193abb1f1a9b109b108e8a4c29b968924cda59cba",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test179_call_err_free_format.rpgle": {
    "codes": [
@@ -801,278 +2023,575 @@
     "RNF7023",
     "RNF7030"
    ],
+   "messages": [
+    {
+     "code": "RNF5347",
+     "line": 3,
+     "severity": 30,
+     "text": "An assignment operator is expected with the EVAL operation."
+    },
+    {
+     "code": "RNF7030",
+     "line": 3,
+     "severity": 30,
+     "text": "The name or indicator CALL is not defined."
+    }
+   ],
+   "reason": "RNF5347: An assignment operator is expected with the EVAL operation.",
+   "reason_detail": "line 3: An assignment operator is expected with the EVAL operation. \u2014 `CALL 'ADDONE';`",
    "rpgc": "reject",
    "sha256": "05a9f25f7b8b3c4c344a8a6cb6514c2920ae57edf9f661f28f466d4a64956d82",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test17_constants.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "65a012b7988260f7e31d91d341c64616c218f8c543de3de169b555e279dbfb4f",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test180_fixed_cspec_modern_opcodes.rpgle": {
    "codes": [
     "RNF0637",
     "RNF7016"
    ],
+   "messages": [
+    {
+     "code": "RNF0637",
+     "line": 9,
+     "severity": 30,
+     "text": "An operand was expected but was not found; specification is ignored."
+    },
+    {
+     "code": "RNF7016",
+     "line": 11,
+     "severity": 20,
+     "text": "Display length 60 greater than maximum allowed of 52; specification is ignored."
+    },
+    {
+     "code": "RNF7016",
+     "line": 13,
+     "severity": 20,
+     "text": "Display length 60 greater than maximum allowed of 52; specification is ignored."
+    }
+   ],
+   "reason": "RNF0637: An operand was expected but was not found; specification is ignored.",
+   "reason_detail": "line 9: An operand was expected but was not found; specification is ignored. \u2014 `C                             'case=any')`",
    "rpgc": "accept",
    "sha256": "3237457c3082ac51127702e68efc60ed93a9346eb89365aeb3a5e9deba098b4e",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test181_fixed_cspec_err_on_exit.rpgle": {
    "codes": [
     "RNF5442"
    ],
+   "messages": [
+    {
+     "code": "RNF5442",
+     "line": 2,
+     "severity": 30,
+     "text": "The ON-EXIT operation is not allowed in a cycle-main procedure."
+    }
+   ],
+   "reason": "RNF5442: The ON-EXIT operation is not allowed in a cycle-main procedure.",
+   "reason_detail": "line 2: The ON-EXIT operation is not allowed in a cycle-main procedure. \u2014 `C                   ON-EXIT`",
    "rpgc": "reject",
    "sha256": "ec872959b63ec82f31f1c85a49d06a5782add5597ac905ef0e01aba26b8e1b07",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test182_fixed_cspec_cas_cab.rpgle": {
    "codes": [
     "RNF5009",
     "RNF5023"
    ],
+   "messages": [
+    {
+     "code": "RNF5009",
+     "line": 16,
+     "severity": 30,
+     "text": "Factor 1 operand is required for specified operation."
+    },
+    {
+     "code": "RNF5023",
+     "line": 16,
+     "severity": 30,
+     "text": "Factor 2 operand is not specified for this operation."
+    }
+   ],
+   "reason": "RNF5009: Factor n operand is required for specified operation.",
+   "reason_detail": "line 16: Factor 1 operand is required for specified operation. \u2014 `C                   CAB                     done`",
    "rpgc": "accept",
    "sha256": "c66bfcf6bb0ae64e1158c32d26ba2bb915d0a2c76bfcb25af0bdb2074c2b8e6e",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test183_fixed_cspec_err_endcs_orphan.rpgle": {
    "codes": [
     "RNF5141"
    ],
+   "messages": [
+    {
+     "code": "RNF5141",
+     "line": 3,
+     "severity": 30,
+     "text": "ENDyy is specified without associated structured operation."
+    }
+   ],
+   "reason": "RNF5141: ENDyy is specified without associated structured operation.",
+   "reason_detail": "line 3: ENDyy is specified without associated structured operation. \u2014 `C                   ENDCS`",
    "rpgc": "reject",
    "sha256": "43b1a9c8a98dbe7b03f920a0f35b645e9f462856093f25bed90196e3c7fa15fe",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test184_fixed_cspec_err_cas_unclosed.rpgle": {
    "codes": [
     "RNF5094"
    ],
+   "messages": [
+    {
+     "code": "RNF5094",
+     "line": 3,
+     "severity": 20,
+     "text": "ENDyy entry is missing for a CASxx entry. An END entry is inserted after the CASxx statement."
+    }
+   ],
+   "reason": "RNF5094: ENDyy entry is missing for a CASxx entry. An END entry is inserted after the CASxx statement.",
+   "reason_detail": "line 3: ENDyy entry is missing for a CASxx entry. An END entry is inserted after the CASxx statement. \u2014 `C     n             CASEQ     1             sub1`",
    "rpgc": "reject",
    "sha256": "9b3c1abc9254548e6e9f2c8c429992a9894f77d9b3be6b6882b47302228b3273",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test185_fixed_cspec_err_cas_mnemonic.rpgle": {
    "codes": [
     "RNF5014",
     "RNF5141"
    ],
+   "messages": [
+    {
+     "code": "RNF5014",
+     "line": 3,
+     "severity": 30,
+     "text": "Operation code is not valid; specification is ignored."
+    },
+    {
+     "code": "RNF5141",
+     "line": 4,
+     "severity": 30,
+     "text": "ENDyy is specified without associated structured operation."
+    }
+   ],
+   "reason": "RNF5014: Operation code is not valid; specification is ignored.",
+   "reason_detail": "line 3: Operation code is not valid; specification is ignored. \u2014 `C     n             CASXY     1             sub1`",
    "rpgc": "reject",
    "sha256": "75b5c78267ef068e039c207a5735cfa18e035dcf942d68430a96720cf3598878",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test186_fixed_cspec_comp.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "c6f7cdab4fba8549d2423deb8942750b5ee36e3d74d1345d56d0b1933f662d37",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test187_fixed_cspec_err_comp_noind.rpgle": {
    "codes": [
     "RNF5053"
    ],
+   "messages": [
+    {
+     "code": "RNF5053",
+     "line": 3,
+     "severity": 30,
+     "text": "Resulting-Indicators entry is blank for specified operation; specification is ignored."
+    }
+   ],
+   "reason": "RNF5053: Resulting-Indicators entry is blank for specified operation; specification is ignored.",
+   "reason_detail": "line 3: Resulting-Indicators entry is blank for specified operation; specification is ignored. \u2014 `C     n             COMP      3`",
    "rpgc": "reject",
    "sha256": "ae716889b7b5923887cefca504c5d0a17c9b2b1b31921c1f65e90521c2cdd4c5",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test188_fixed_cspec_exec_sql.sqlrpgle": {
    "codes": [],
+   "messages": [
+    {
+     "code": "SQL0199",
+     "line": 9,
+     "severity": 30,
+     "text": "Position 17 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>."
+    }
+   ],
+   "reason": "SQL0199: Position n Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>.",
+   "reason_detail": "line 9: Position 17 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>. \u2014 `C+ CONNECT USING :conn`",
    "rpgc": "accept",
    "sha256": "c892b582266917c7dc420ec83500df27792eba6471459ef9c7e10aa87656f4af",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test189_fixed_cspec_err_endexec_orphan.sqlrpgle": {
    "codes": [
     "RNF0274"
    ],
+   "messages": [
+    {
+     "code": "RNF0274",
+     "line": 3,
+     "severity": 30,
+     "text": "Compiler directive not recognized; directive ignored."
+    }
+   ],
+   "reason": "RNF0274: Compiler directive not recognized; directive ignored.",
+   "reason_detail": "line 3: Compiler directive not recognized; directive ignored. \u2014 `C/END-EXEC`",
    "rpgc": "reject",
    "sha256": "ff79b75cebd0788998cc12694de4199ddda11a920fe1a59b224900eaa87868c8",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test18_datetime.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "0a7788e6a2256d1b2b1c45c371cce0e048cdd891e3aa973249e53aed9f6937e7",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test190_fixed_cspec_err_sql_unterminated.sqlrpgle": {
    "codes": [],
+   "messages": [
+    {
+     "code": "SQL1004",
+     "line": 3,
+     "severity": 30,
+     "text": "END-EXEC or continuation expected but not found."
+    }
+   ],
+   "reason": "SQL1004: END-EXEC or continuation expected but not found.",
+   "reason_detail": "line 3: END-EXEC or continuation expected but not found. \u2014 `C/EXEC SQL`",
    "rpgc": "reject",
    "sha256": "2c31e2e9e5f72973eea1e6510e2a1c7a8de599f260e092940f56426f7570e1db",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test191_fixed_cspec_move_num.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "63eb363f81ce89d1f92e2d65749405991aafdf25077614bdc7aebcd5f29c3b69",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test192_fixed_cspec_move_char_to_num.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "b41e03d0872e5bafd7466dbe3db057b897a7cfa7b5d4016d24d055ee55c28071",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test193_fixed_cspec_move_num_to_char.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "b43fae4223739360ee5ba0516f24bca488f78f76affa54dcbe1739f97d6ea753",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test194_fixed_cspec_err_move_float.rpgle": {
    "codes": [
     "RNF7547"
    ],
+   "messages": [
+    {
+     "code": "RNF7547",
+     "line": 6,
+     "severity": 30,
+     "text": "Float variable or literal F8 is not allowed for the operation."
+    }
+   ],
+   "reason": "RNF7547: Float variable or literal F8 is not allowed for the operation.",
+   "reason_detail": "line 6: Float variable or literal F8 is not allowed for the operation. \u2014 `C                   MOVE      P5            F8`",
    "rpgc": "reject",
    "sha256": "36ad26f3c1cf4470af79a3e3640fd2221f1da7a804e2bf6e430b259b765b9881",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test195_fixed_cspec_err_move_declit.rpgle": {
    "codes": [],
    "rpgc": "reject",
    "sha256": "66830b57074811f28f4a2735aa3e8db7a0cd05a4c9d9d77dafef5086cb4aee78",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test196_fixed_cspec_move_data_exc.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "e1a6707759d25a2b827976aa49a83ef2c7343c778673b1e8995209eeb8253120",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test197_fixed_cspec_plist.rpgle": {
    "codes": [],
    "rpgc": "reject",
    "sha256": "c4ae0cb004e9246b1e593ec11c8dcd9ee2852e5706c6646248f6fd0d4b1ac63a",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test198_fixed_cspec_parm_f1f2.rpgle": {
    "codes": [],
    "rpgc": "reject",
    "sha256": "3d6b0218cae5898a14d21c14ab5e0611f03e33226bacf251b55517b3d6a5c017",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test199_fixed_cspec_err_entry_nomain.rpgle": {
    "codes": [
     "RNF5418",
     "RNF5419"
    ],
+   "messages": [
+    {
+     "code": "RNF5419",
+     "line": 6,
+     "severity": 30,
+     "text": "*ENTRY PLIST is allowed only in a cycle module."
+    },
+    {
+     "code": "RNF5418",
+     "line": 8,
+     "severity": 30,
+     "text": "The operation entry is not allowed in the main source section in a non-cycle module."
+    }
+   ],
+   "reason": "RNF5419: *ENTRY PLIST is allowed only in a cycle module.",
+   "reason_detail": "line 6: *ENTRY PLIST is allowed only in a cycle module. \u2014 `C     *ENTRY        PLIST`",
    "rpgc": "reject",
    "sha256": "d02cb0ea24f191941a57ed5c9eee9fc219a04281f27eb7e7eba6119ebfc0cdf6",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test19_math_bifs.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "d9df54d6e38e543da85caa31022b2132d1e6eaf4dda57fd5e7257181004e2361",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test200_fixed_cspec_err_plist_undef.rpgle": {
    "codes": [
     "RNF7030",
     "RNF7054"
    ],
+   "messages": [
+    {
+     "code": "RNF7030",
+     "line": 6,
+     "severity": 30,
+     "text": "The name or indicator NOSUCH is not defined."
+    },
+    {
+     "code": "RNF7054",
+     "line": 6,
+     "severity": 30,
+     "text": "The Result Field NOSUCH of the CALL or CALLB operation is not a PLIST name; the specification is ignored."
+    }
+   ],
+   "reason": "RNF7054: The Result Field NOSUCH of the CALL or CALLB operation is not a PLIST name; the specification is ignored.",
+   "reason_detail": "line 6: The Result Field NOSUCH of the CALL or CALLB operation is not a PLIST name; the specification is ignored. \u2014 `C                   CALL      'ADDONE'      NOSUCH`",
    "rpgc": "reject",
    "sha256": "4a8ee859dff4ede5fe6695dfebf7cdf2bfbaf4a54b0bc1699b4a1687d026bd58",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test201_fixed_cspec_err_plist_dup.rpgle": {
    "codes": [
     "RNF5119"
    ],
+   "messages": [
+    {
+     "code": "RNF5119",
+     "line": 6,
+     "severity": 40,
+     "text": "Factor 1 entry of PLIST operation is already defined; parameter list is ignored."
+    }
+   ],
+   "reason": "RNF5119: Factor n entry of PLIST operation is already defined; parameter list is ignored.",
+   "reason_detail": "line 6: Factor 1 entry of PLIST operation is already defined; parameter list is ignored. \u2014 `C     MYLIST        PLIST`",
    "rpgc": "reject",
    "sha256": "d9e8fd0568a7c693d08b35b4ddc536b5307cde65a135c52b92f6ccdc859dfc6c",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test202_fixed_cspec_err_parm_literal.rpgle": {
    "codes": [
     "RNF7261"
    ],
+   "messages": [
+    {
+     "code": "RNF7261",
+     "line": 6,
+     "severity": 30,
+     "text": "The Result-Field operand 'abc' is not valid for the specified operation."
+    }
+   ],
+   "reason": "RNF7261: The Result-Field operand 'abc' is not valid for the specified operation.",
+   "reason_detail": "line 6: The Result-Field operand 'abc' is not valid for the specified operation. \u2014 `C                   PARM                    'abc'`",
    "rpgc": "reject",
    "sha256": "04d21ba19bd64bd3c97f6e412e8e8a9e3d4a456063738af0c622506ee2852a68",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test204_fixed_cspec_entry_caller.rpgle": {
    "codes": [],
    "rpgc": "reject",
    "sha256": "5b11f9ffe91f9b37a414b644d8653a02cec5982330bcc81275cac2c5bf586f1b",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test205_fixed_cspec_err_entry_f2.rpgle": {
    "codes": [],
    "rpgc": "reject",
    "sha256": "76b9a3d383657ffb81fa287f791c6e1d19c40ba8efbf2af45a459eb1277027dd",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test206_fixed_cspec_err_entry_undecl.rpgle": {
    "codes": [
     "RNF7030"
    ],
+   "messages": [
+    {
+     "code": "RNF7030",
+     "line": 6,
+     "severity": 30,
+     "text": "The name or indicator NOTDECLARED is not defined."
+    }
+   ],
+   "reason": "Undefined name, cause not reported by IBM (RNF7030)",
+   "reason_detail": "line 6: The name or indicator NOTDECLARED is not defined.",
    "rpgc": "reject",
    "sha256": "586372cd24dea87785cc3bebc1976f054965e2d0d8414d0442a023c1d23b2fee",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test207_fixed_cspec_err_call_entry.rpgle": {
    "codes": [
     "RNF7054"
    ],
+   "messages": [
+    {
+     "code": "RNF7054",
+     "line": 5,
+     "severity": 30,
+     "text": "The Result Field *ENTRY of the CALL or CALLB operation is not a PLIST name; the specification is ignored."
+    }
+   ],
+   "reason": "RNF7054: The Result Field *ENTRY of the CALL or CALLB operation is not a PLIST name; the specification is ignored.",
+   "reason_detail": "line 5: The Result Field *ENTRY of the CALL or CALLB operation is not a PLIST name; the specification is ignored. \u2014 `C                   CALL      'ADDTWO'      *ENTRY`",
    "rpgc": "reject",
    "sha256": "a3e586b6d884d76da3a71548e03981608a82dd02f1a6cbe11e6a30a0a478275d",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test208_fixed_cspec_move_date.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "5cbc11758f380b30daeda764ab9bf4dc88529c5ee8efff1f1052a2e4f71c0271",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test209_fixed_cspec_move_dt_nosep.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "6625f74b51991183e2956e91e842a668f866f8a7edc36247122d20148dcc4c41",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test20_memory_bifs.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "ce873e966ff68ad6abfab2172245bb3df3a8e8a42de9d30ea1b7d89e23701279",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test210_fixed_cspec_move_timestamp.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "f870041c376ef99e9336ffba6e6cb5f422ba0f80ce58a774ae0658aaf16e630d",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test211_fixed_cspec_move_dt_align.rpgle": {
    "codes": [
     "RNF7512"
    ],
+   "messages": [
+    {
+     "code": "RNF7512",
+     "line": 34,
+     "severity": 30,
+     "text": "The Result Field entry C6 is too small to contain a complete *ISO- Date."
+    },
+    {
+     "code": "RNF7512",
+     "line": 38,
+     "severity": 30,
+     "text": "The Result Field entry C6 is too small to contain a complete *ISO- Date."
+    }
+   ],
+   "reason": "RNF7512: The Result Field entry C6 is too small to contain a complete *ISO- Date.",
+   "reason_detail": "line 34: The Result Field entry C6 is too small to contain a complete *ISO- Date. \u2014 `C     *ISO          MOVEL     DFLD          C6`",
    "rpgc": "accept",
    "sha256": "7fd7d00b32723474beb372f86a4611c8caa06e052b4b6a537899ff0c6583bb47",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test212_fixed_cspec_move_dt_err.rpgle": {
    "codes": [
     "RNF7510"
    ],
+   "messages": [
+    {
+     "code": "RNF7510",
+     "line": 27,
+     "severity": 30,
+     "text": "The operand C6 is too small to contain a complete *ISO- date."
+    }
+   ],
+   "reason": "RNF7510: The operand C6 is too small to contain a complete *ISO- date.",
+   "reason_detail": "line 27: The operand C6 is too small to contain a complete *ISO- date. \u2014 `C     *ISO          MOVE      C6            DFLD`",
    "rpgc": "accept",
    "sha256": "4ed4f6e4e1fd1409939a3a2219c0c04d4eba2cbb7de0de220b63c326be058ab4",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test213_fixed_cspec_err_move_jobrun.rpgle": {
    "codes": [],
    "rpgc": "reject",
    "sha256": "19fde2022bc67f52f98bcb9a547bedd01f4175a3fd898e54d903ba873d364368",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test214_fixed_cspec_err_move_usa_num.rpgle": {
    "codes": [
     "RNF7505"
    ],
+   "messages": [
+    {
+     "code": "RNF7505",
+     "line": 6,
+     "severity": 30,
+     "text": "Time format *USA can not be used with the numeric entry N6."
+    }
+   ],
+   "reason": "RNF7505: Time format *USA can not be used with the numeric entry N6.",
+   "reason_detail": "line 6: Time format *USA can not be used with the numeric entry N6. \u2014 `C     *USA          MOVE      TFLD          N6`",
    "rpgc": "reject",
    "sha256": "67491bf13b7788f380abdb758e1feea70451f02378cdc3b5dbad07efa0eb118b",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test215_prog_ar_aging.rpgle": {
    "codes": [
@@ -1083,9 +2602,44 @@
     "RNF6005",
     "RNF7031"
    ],
+   "messages": [
+    {
+     "code": "RNF2093",
+     "line": 13,
+     "severity": 20,
+     "text": "Blank File-Designation entry is not valid with File-Type entry; defaults to F."
+    },
+    {
+     "code": "RNF2004",
+     "line": 13,
+     "severity": 20,
+     "text": "The End-of-File entry is not blank or E; defaults to blank."
+    },
+    {
+     "code": "RNF5508",
+     "line": 47,
+     "severity": 30,
+     "text": "End of free-format statement is not blank."
+    },
+    {
+     "code": "RNF5508",
+     "line": 48,
+     "severity": 30,
+     "text": "End of free-format statement is not blank."
+    },
+    {
+     "code": "RNF5191",
+     "line": 49,
+     "severity": 30,
+     "text": "The Result-Field is not a data structure when Factor 2 is a file name."
+    }
+   ],
+   "reason": "RNF2093: Blank File-Designation entry is not valid with File-Type entry; defaults to F.",
+   "reason_detail": "line 13: Blank File-Designation entry is not valid with File-Type entry; defaults to F. \u2014 `FTESTFL215 U FA F   32        DISK`",
    "rpgc": "accept",
    "sha256": "ecc5e8063d64ddf8fc7e300d037e5a0befd0156c020563d9054d94c7864e2e34",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test216_prog_gl_post.rpgle": {
    "codes": [
@@ -1099,43 +2653,161 @@
     "RNF7030",
     "RNF7031"
    ],
+   "messages": [
+    {
+     "code": "RNF2093",
+     "line": 13,
+     "severity": 20,
+     "text": "Blank File-Designation entry is not valid with File-Type entry; defaults to F."
+    },
+    {
+     "code": "RNF2004",
+     "line": 13,
+     "severity": 20,
+     "text": "The End-of-File entry is not blank or E; defaults to blank."
+    },
+    {
+     "code": "RNF5508",
+     "line": 51,
+     "severity": 30,
+     "text": "End of free-format statement is not blank."
+    },
+    {
+     "code": "RNF5508",
+     "line": 52,
+     "severity": 30,
+     "text": "End of free-format statement is not blank."
+    },
+    {
+     "code": "RNF5508",
+     "line": 53,
+     "severity": 30,
+     "text": "End of free-format statement is not blank."
+    }
+   ],
+   "reason": "RNF2093: Blank File-Designation entry is not valid with File-Type entry; defaults to F.",
+   "reason_detail": "line 13: Blank File-Designation entry is not valid with File-Type entry; defaults to F. \u2014 `FTESTFL216 U FA F   48        DISK`",
    "rpgc": "accept",
    "sha256": "cef468e87709d0e8df94581bf0c36d6785bc8979c08cd1d2cbf96cb62d21d507",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test217_prog_inv_reorder.rpgle": {
    "codes": [
     "RNF7016"
    ],
+   "messages": [
+    {
+     "code": "RNF7016",
+     "line": 104,
+     "severity": 20,
+     "text": "Display length 70 greater than maximum allowed of 52; specification is ignored."
+    },
+    {
+     "code": "RNF7016",
+     "line": 181,
+     "severity": 20,
+     "text": "Display length 70 greater than maximum allowed of 52; specification is ignored."
+    },
+    {
+     "code": "RNF7016",
+     "line": 188,
+     "severity": 20,
+     "text": "Display length 70 greater than maximum allowed of 52; specification is ignored."
+    },
+    {
+     "code": "RNF7016",
+     "line": 192,
+     "severity": 20,
+     "text": "Display length 70 greater than maximum allowed of 52; specification is ignored."
+    },
+    {
+     "code": "RNF7016",
+     "line": 196,
+     "severity": 20,
+     "text": "Display length 70 greater than maximum allowed of 52; specification is ignored."
+    }
+   ],
+   "reason": "RNF7016: Display length n greater than maximum allowed of n; specification is ignored.",
+   "reason_detail": "line 104: Display length 70 greater than maximum allowed of 52; specification is ignored. \u2014 `C     RPTLIN        DSPLY`",
    "rpgc": "accept",
    "sha256": "faa34c174e9484e4b79b3e96e6e86c6c3d50c9b616dc24ee8ccc2a409c5907d3",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test218_prog_payroll.rpgle": {
    "codes": [
     "RNF7016"
    ],
+   "messages": [
+    {
+     "code": "RNF7016",
+     "line": 94,
+     "severity": 20,
+     "text": "Display length 70 greater than maximum allowed of 52; specification is ignored."
+    },
+    {
+     "code": "RNF7016",
+     "line": 129,
+     "severity": 20,
+     "text": "Display length 70 greater than maximum allowed of 52; specification is ignored."
+    },
+    {
+     "code": "RNF7016",
+     "line": 136,
+     "severity": 20,
+     "text": "Display length 70 greater than maximum allowed of 52; specification is ignored."
+    },
+    {
+     "code": "RNF7016",
+     "line": 139,
+     "severity": 20,
+     "text": "Display length 70 greater than maximum allowed of 52; specification is ignored."
+    },
+    {
+     "code": "RNF7016",
+     "line": 141,
+     "severity": 20,
+     "text": "Display length 70 greater than maximum allowed of 52; specification is ignored."
+    }
+   ],
+   "reason": "RNF7016: Display length n greater than maximum allowed of n; specification is ignored.",
+   "reason_detail": "line 94: Display length 70 greater than maximum allowed of 52; specification is ignored. \u2014 `C     RPTLIN        DSPLY`",
    "rpgc": "reject",
    "sha256": "effb626f8a6cc19d4f276cfee1e29ab835521f47fb786143faa549cf70496c02",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test219_prog_order_release.sqlrpgle": {
    "codes": [],
+   "messages": [
+    {
+     "code": "SQL0199",
+     "line": 49,
+     "severity": 30,
+     "text": "Position 17 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>."
+    }
+   ],
+   "reason": "SQL0199: Position n Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>.",
+   "reason_detail": "line 49: Position 17 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>. \u2014 `C+ CONNECT USING :CONN`",
    "rpgc": "accept",
    "sha256": "07b630ab89974d6faf82a5b421e01621009523b58da7076b109c9cd2ff502dfd",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test21_parms.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "fa8a0f4f9091aa62c027afa54ff8695ddadcbb5e7bc660420690ee4194a95673",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test220_overlay_alias.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "6ca9e6950f0057c4a83c83c4cdf731296d04d04f0fb23eff5f2ce29da0f1a108",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test221_ospec_decimals.rpgle": {
    "codes": [
@@ -1144,282 +2816,629 @@
     "RNF6005",
     "RNF7016"
    ],
+   "messages": [
+    {
+     "code": "RNF5508",
+     "line": 18,
+     "severity": 30,
+     "text": "End of free-format statement is not blank."
+    },
+    {
+     "code": "RNF5191",
+     "line": 19,
+     "severity": 30,
+     "text": "The Result-Field is not a data structure when Factor 2 is a file name."
+    },
+    {
+     "code": "RNF5508",
+     "line": 20,
+     "severity": 30,
+     "text": "End of free-format statement is not blank."
+    },
+    {
+     "code": "RNF5191",
+     "line": 21,
+     "severity": 30,
+     "text": "The Result-Field is not a data structure when Factor 2 is a file name."
+    },
+    {
+     "code": "RNF5508",
+     "line": 22,
+     "severity": 30,
+     "text": "End of free-format statement is not blank."
+    }
+   ],
+   "reason": "RNF5508: End of free-format statement is not blank.",
+   "reason_detail": "line 18: End of free-format statement is not blank. \u2014 `itemno = 'WIDGET';  amount = 1250.00;  rate = 1.375;  uom = 'EACH  ';`",
    "rpgc": "accept",
    "sha256": "6140217703829c4daccdfb1f1c825700efd69ab0e82da42f72d233471b38f204",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test222_half_adjust.rpgle": {
    "codes": [
     "RNF7016"
    ],
+   "messages": [
+    {
+     "code": "RNF7016",
+     "line": 12,
+     "severity": 20,
+     "text": "Display length 60 greater than maximum allowed of 52; specification is ignored."
+    },
+    {
+     "code": "RNF7016",
+     "line": 17,
+     "severity": 20,
+     "text": "Display length 60 greater than maximum allowed of 52; specification is ignored."
+    },
+    {
+     "code": "RNF7016",
+     "line": 23,
+     "severity": 20,
+     "text": "Display length 60 greater than maximum allowed of 52; specification is ignored."
+    },
+    {
+     "code": "RNF7016",
+     "line": 27,
+     "severity": 20,
+     "text": "Display length 60 greater than maximum allowed of 52; specification is ignored."
+    },
+    {
+     "code": "RNF7016",
+     "line": 31,
+     "severity": 20,
+     "text": "Display length 60 greater than maximum allowed of 52; specification is ignored."
+    }
+   ],
+   "reason": "RNF7016: Display length n greater than maximum allowed of n; specification is ignored.",
+   "reason_detail": "line 12: Display length 60 greater than maximum allowed of 52; specification is ignored. \u2014 `C     RPTLIN        DSPLY`",
    "rpgc": "accept",
    "sha256": "8dce3938c9500112b89e9c011ad0a7d67425d4fe9255393f78e87f53c869d47c",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test223_editc_decimals.rpgle": {
    "codes": [
     "RNF7016"
    ],
+   "messages": [
+    {
+     "code": "RNF7016",
+     "line": 15,
+     "severity": 20,
+     "text": "Display length 60 greater than maximum allowed of 52; specification is ignored."
+    },
+    {
+     "code": "RNF7016",
+     "line": 17,
+     "severity": 20,
+     "text": "Display length 60 greater than maximum allowed of 52; specification is ignored."
+    },
+    {
+     "code": "RNF7016",
+     "line": 19,
+     "severity": 20,
+     "text": "Display length 60 greater than maximum allowed of 52; specification is ignored."
+    },
+    {
+     "code": "RNF7016",
+     "line": 21,
+     "severity": 20,
+     "text": "Display length 60 greater than maximum allowed of 52; specification is ignored."
+    }
+   ],
+   "reason": "RNF7016: Display length n greater than maximum allowed of n; specification is ignored.",
+   "reason_detail": "line 15: Display length 60 greater than maximum allowed of 52; specification is ignored. \u2014 `C     RPTLIN        DSPLY`",
    "rpgc": "accept",
    "sha256": "3f6584182a187ec6d6c92f5c21a449acf4b2279c8849bdb7950992bab0822f85",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test224_fixed_dspec_inz.rpgle": {
    "codes": [
     "RNF7016"
    ],
+   "messages": [
+    {
+     "code": "RNF7016",
+     "line": 15,
+     "severity": 20,
+     "text": "Display length 70 greater than maximum allowed of 52; specification is ignored."
+    },
+    {
+     "code": "RNF7016",
+     "line": 17,
+     "severity": 20,
+     "text": "Display length 70 greater than maximum allowed of 52; specification is ignored."
+    },
+    {
+     "code": "RNF7016",
+     "line": 19,
+     "severity": 20,
+     "text": "Display length 70 greater than maximum allowed of 52; specification is ignored."
+    },
+    {
+     "code": "RNF7016",
+     "line": 21,
+     "severity": 20,
+     "text": "Display length 70 greater than maximum allowed of 52; specification is ignored."
+    },
+    {
+     "code": "RNF7016",
+     "line": 23,
+     "severity": 20,
+     "text": "Display length 70 greater than maximum allowed of 52; specification is ignored."
+    }
+   ],
+   "reason": "RNF7016: Display length n greater than maximum allowed of n; specification is ignored.",
+   "reason_detail": "line 15: Display length 70 greater than maximum allowed of 52; specification is ignored. \u2014 `C     RPTLIN        DSPLY`",
    "rpgc": "accept",
    "sha256": "21b574fa08c9bba32205bafb6a1c210309ff2d061286c181ef34a7da2aa4481c",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test225_decimal_division.rpgle": {
    "codes": [
     "RNF7016"
    ],
+   "messages": [
+    {
+     "code": "RNF7016",
+     "line": 12,
+     "severity": 20,
+     "text": "Display length 70 greater than maximum allowed of 52; specification is ignored."
+    },
+    {
+     "code": "RNF7016",
+     "line": 17,
+     "severity": 20,
+     "text": "Display length 70 greater than maximum allowed of 52; specification is ignored."
+    },
+    {
+     "code": "RNF7016",
+     "line": 21,
+     "severity": 20,
+     "text": "Display length 70 greater than maximum allowed of 52; specification is ignored."
+    },
+    {
+     "code": "RNF7016",
+     "line": 25,
+     "severity": 20,
+     "text": "Display length 70 greater than maximum allowed of 52; specification is ignored."
+    }
+   ],
+   "reason": "RNF7016: Display length n greater than maximum allowed of n; specification is ignored.",
+   "reason_detail": "line 12: Display length 70 greater than maximum allowed of 52; specification is ignored. \u2014 `C     RPTLIN        DSPLY`",
    "rpgc": "accept",
    "sha256": "39477b0f9b4322aea048d8989565d4db6ee79e4cc34489ba31177b3cf7d94761",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test226_err_subfield_inz.rpgle": {
    "codes": [],
    "rpgc": "reject",
    "sha256": "e1c1e374387f7041babfcb568ca429880c6515dfdaa7a3331d0db6db1db012ef",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test227_proc_globals.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "70d2b9e22731ea15a3347b815840a8a951bdb8d1ef02ab75b8229a2bb9de2791",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test228_exsr_order.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "de6d78bdf7f84ba40bc4c19da234fff3ac400cfc8623d2b103efe7d0c97ef351",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test229_char_compare.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "e800db609f23a244697db4e5cb1787b03ab26a2c2d2a0c121a8c50138b53cc8a",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test22_status_error.rpgle": {
    "codes": [
     "RNF7416"
    ],
+   "messages": [
+    {
+     "code": "RNF7416",
+     "line": 10,
+     "severity": 30,
+     "text": "The types of the right and left hand side do not match in the EVAL operation."
+    }
+   ],
+   "reason": "RNF7416: The types of the right and left hand side do not match in the EVAL operation.",
+   "reason_detail": "line 10: The types of the right and left hand side do not match in the EVAL operation. \u2014 `errFlag = %ERROR();`",
    "rpgc": "accept",
    "sha256": "fae59508724b0959a56251bf7554ce625e74bf556d1a27be21acaacd86e2ae58",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test230_ds_subfield_attrs.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "c53ef2f57a7a7558345f9893f3f81d110827218d5809cf688f82c929d013a69f",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test231_assign_fit.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "1a51204ac5e40ff56a985a1de23492299c228ce6cabce1e1271c6a5d0db6fd0a",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test232_fixed_conditionals.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "7e9a58f1610541ecb80342f0fa6b83fc6005bff27d0d55086352806e9e4a07af",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test233_err_stray_endif.rpgle": {
    "codes": [
     "RNF0706"
    ],
+   "messages": [
+    {
+     "code": "RNF0706",
+     "line": 3,
+     "severity": 30,
+     "text": "Directive found outside of /IF group."
+    }
+   ],
+   "reason": "RNF0706: Directive found outside of /IF group.",
+   "reason_detail": "line 3: Directive found outside of /IF group. \u2014 `/ENDIF`",
    "rpgc": "reject",
    "sha256": "35a4d30f787100cb42bc76146078fd284b219767941ab2db1623c78d75fa7215",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test234_err_copy_open_if.rpgle": {
    "codes": [
     "RNF0705",
     "RNF0706"
    ],
+   "messages": [
+    {
+     "code": "RNF0706",
+     "line": 3,
+     "severity": 30,
+     "text": "Directive found outside of /IF group."
+    }
+   ],
+   "reason": "RNF0706: Directive found outside of /IF group.",
+   "reason_detail": "line 3: Directive found outside of /IF group. \u2014 `/ENDIF`",
    "rpgc": "reject",
    "sha256": "b8652c5c335d6d12de1445c544a8974e630ceb2fefdffaa8d27f745bf43b9b59",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test235_copy_eof.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "d91638d834c7b246fcfd15f7924215f87febf0e0e3f45f112cbdd56cbc6025a4",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test236_assign_fit_paths.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "c9eaaeaf00500881e490d8be1e665ac9a8a943d240a38a61d5d0e5d203a4c9c6",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test237_sql_into_fit.sqlrpgle": {
    "codes": [],
+   "messages": [
+    {
+     "code": "SQL0199",
+     "line": 18,
+     "severity": 30,
+     "text": "Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>."
+    }
+   ],
+   "reason": "SQL0199: Position n Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>.",
+   "reason_detail": "line 18: Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>. \u2014 `EXEC SQL CONNECT USING :connStr;`",
    "rpgc": "accept",
    "sha256": "745f15954892ee1b4e6c3bca6e8f5664d67813d92979040d283a52bb7c086da9",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test238_rla_field_fit.rpgle": {
    "codes": [],
+   "messages": [
+    {
+     "code": "SQL0199",
+     "line": 17,
+     "severity": 30,
+     "text": "Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>."
+    },
+    {
+     "code": "SQL0104",
+     "line": 54,
+     "severity": 30,
+     "text": "Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>. Message Summary"
+    }
+   ],
+   "reason": "SQL0199: Position n Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>.",
+   "reason_detail": "line 17: Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>. \u2014 `EXEC SQL CONNECT USING :connStr;`",
    "rpgc": "accept",
    "sha256": "f0768cc63d1e9f6ad0cc0d7c3179f37a13effe73eca45c34ee5bbdf09a7b4089",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test239_numeric_overflow.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "85fea203811af7c372a69bdc75eed79fbd3cf0cc3fa11488f07809ad24e86415",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test23_reset_clear.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "d20ffa14125aa0c31703671981d6debc7febb82101eba80c093b93f48b781e41",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test240_fixed_arith_trunc.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "279c9aa99433fcbf49450236dd4f28d78d424fac215f0836f217a326fab6ff77",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test241_err_eval_t.rpgle": {
    "codes": [
     "RNF5049"
    ],
+   "messages": [
+    {
+     "code": "RNF5049",
+     "line": 5,
+     "severity": 20,
+     "text": "The Operation Extender is not valid for the specified Operation Code."
+    }
+   ],
+   "reason": "RNF5049: The Operation Extender is not valid for the specified Operation Code.",
+   "reason_detail": "line 5: The Operation Extender is not valid for the specified Operation Code. \u2014 `EVAL(T) n = 1000;`",
    "rpgc": "reject",
    "sha256": "bdd0b25465777ab248ab3783745716ebe1694bc1cacf3117bfb608f955dc547d",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test242_hex_nul.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "4b8ded7659f2e4c8c1f5f55ac7493ce2961bcefda27463877d74d7a752cb3ae9",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test243_array_init.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "2b15058d78c907a1020ba77ef2129f349c8c6c26cf6f3322fad2d9e52ccd6b3f",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test244_pi_star_n.rpgle": {
    "codes": [
     "RNF7016"
    ],
+   "messages": [
+    {
+     "code": "RNF7016",
+     "line": 26,
+     "severity": 20,
+     "text": "Display length 54 greater than maximum allowed of 52; specification is ignored."
+    }
+   ],
+   "reason": "RNF7016: Display length n greater than maximum allowed of n; specification is ignored.",
+   "reason_detail": "line 26: Display length 54 greater than maximum allowed of 52; specification is ignored. \u2014 `DSPLY ('RESULT:MUL=' + %CHAR(total*N) + ' ' + %CHAR(total * n));`",
    "rpgc": "accept",
    "sha256": "a54559d064b5f9d9e85ecc533220e1beda0a7c722578c707ff61b03e0fcdf461",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test245_bare_call.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "291c51c23c0e984856da21e7e3c17a273b2c8c0a532f8e3054aba6967898dd44",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test246_const_params.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "1923c6012b3a5c0bcb62396082d5e1a45437e6a29e13cc0fc568ec65426bf003",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test247_err_const_assign.rpgle": {
    "codes": [
     "RNF5346"
    ],
+   "messages": [
+    {
+     "code": "RNF5346",
+     "line": 13,
+     "severity": 30,
+     "text": "The operation modifies the field, but the field cannot be modified."
+    }
+   ],
+   "reason": "RNF5346: The operation modifies the field, but the field cannot be modified.",
+   "reason_detail": "line 13: The operation modifies the field, but the field cannot be modified. \u2014 `v = 2;`",
    "rpgc": "reject",
    "sha256": "adef7ff44111f0d75d11e3044873ce73fc25530e14d0f922b7b1e0ad5faed2bb",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test248_proc_no_pi.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "1cf7537d122a8b0cdfbe8cca516bb9df0543c135054a567560f01f4dbed9ddee",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test249_ds_subfield_types.rpgle": {
    "codes": [
     "RNF7016"
    ],
+   "messages": [
+    {
+     "code": "RNF7016",
+     "line": 40,
+     "severity": 20,
+     "text": "Display length 53 greater than maximum allowed of 52; specification is ignored."
+    }
+   ],
+   "reason": "RNF7016: Display length n greater than maximum allowed of n; specification is ignored.",
+   "reason_detail": "line 40: Display length 53 greater than maximum allowed of 52; specification is ignored. \u2014 `%CHAR(rec.active) + ' ' + %CHAR(rec.units) + ' ' + %CHAR(rec.due));`",
    "rpgc": "accept",
    "sha256": "e14414b80bfcf469c3631ae87082c73d137cadbbc3e44552c71f7da9357b9724",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test24_max_min.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "375db5d58ebb471adbf702aeabd3ae2fd74d9c99b6a9915449cee5a1cecdae6c",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test250_dcl_s_keywords.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "ddf86b69188859f65971d950d81ad6d4a04dccbe9cbcde0dc004a66afe229e37",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test251_ds_template.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "7b90144264613994066afc6c2ad6d40a04f7daa2022867e63ea6205b6c20b235",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test252_nested_target.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "23c643605fd12d5a2a7fbe48f8add07b6cebf69b998ad5397882fb04bf7de87c",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test253_unqualified_subfields.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "078dab2c8fd6388395b2321d06abbb713635c10348718e681df0b9efd8742e27",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test254_fixed_unqualified_ds.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "e0408f7f4194ce02534db3d37f22059885cd7e295216685a1b1438faf51a4bfd",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test255_err_div_zero_literal.rpgle": {
    "codes": [
     "RNF0552"
    ],
+   "messages": [
+    {
+     "code": "RNF0552",
+     "line": 5,
+     "severity": 20,
+     "text": "The second parameter 0 for %DIV is not valid; %DIV is ignored."
+    }
+   ],
+   "reason": "RNF0552: The second parameter n for %DIV is not valid; %DIV is ignored.",
+   "reason_detail": "line 5: The second parameter 0 for %DIV is not valid; %DIV is ignored. \u2014 `n = %DIV(10 : 0);`",
    "rpgc": "reject",
    "sha256": "61c0a93867c7e915f3609f5fbb89318134aaf7a3b5d73523295a95f55494b255",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test256_err_inz_too_long.rpgle": {
    "codes": [
     "RNF3431"
    ],
+   "messages": [
+    {
+     "code": "RNF3431",
+     "line": 4,
+     "severity": 20,
+     "text": "Length of initial value 'ABCDEFG' exceeds length of field C; initial value is ignored."
+    }
+   ],
+   "reason": "RNF3431: Length of initial value 'ABCDEFG' exceeds length of field C; initial value is ignored.",
+   "reason_detail": "line 4: Length of initial value 'ABCDEFG' exceeds length of field C; initial value is ignored. \u2014 `DCL-S c CHAR(5) INZ('ABCDEFG');`",
    "rpgc": "reject",
    "sha256": "1dac3a4ab0f3a5fbf07ba10726f480ba74045911f01f8b940f90f101552308ce",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test257_err_unqualified_dot.rpgle": {
    "codes": [
     "RNF7030",
     "RNF7503"
    ],
+   "messages": [
+    {
+     "code": "RNF7030",
+     "line": 8,
+     "severity": 30,
+     "text": "The name or indicator NAME is not defined."
+    },
+    {
+     "code": "RNF7503",
+     "line": 8,
+     "severity": 30,
+     "text": "Expression contains an operand that is not defined."
+    }
+   ],
+   "reason": "Qualified reference (ds.field) to a DS that is not QUALIFIED",
+   "reason_detail": "line 8: `cust.name = 'ACME';`",
    "rpgc": "reject",
    "sha256": "e2ca63333014daac703d157ebdf9815cb3de6d3e0740e71be79dd3e70a5c06cb",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test25_dclf.rpgle": {
    "codes": [
     "RNF2109",
     "RNF2121"
    ],
+   "messages": [
+    {
+     "code": "RNF2121",
+     "line": 4,
+     "severity": 30,
+     "text": "Record format RPTFILE in file RPTFILE already defined; record format is ignored."
+    },
+    {
+     "code": "RNF2109",
+     "line": 4,
+     "severity": 40,
+     "text": "All Record Formats for externally-described file RPTFILE ignored or dropped due to error; file ignored."
+    }
+   ],
+   "reason": "RNF2121: Record format RPTFILE in file RPTFILE already defined; record format is ignored.",
+   "reason_detail": "line 4: Record format RPTFILE in file RPTFILE already defined; record format is ignored. \u2014 `DCL-F RPTFILE PRINTER;`",
    "rpgc": "accept",
    "sha256": "865d39b8d7cd97ede590c6b4d156c1100d5d57cbdeae0d21596ae55921db8189",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test26_pointers.rpgle": {
    "codes": [
@@ -1427,21 +3446,52 @@
     "RNF7030",
     "RNF7503"
    ],
+   "messages": [
+    {
+     "code": "RNF0724",
+     "line": 35,
+     "severity": 30,
+     "text": "The statement type is out of sequence for the main procedure."
+    },
+    {
+     "code": "RNF7030",
+     "line": 36,
+     "severity": 30,
+     "text": "The name or indicator PTRSIZE is not defined."
+    },
+    {
+     "code": "RNF7503",
+     "line": 36,
+     "severity": 30,
+     "text": "Expression contains an operand that is not defined."
+    },
+    {
+     "code": "RNF7503",
+     "line": 37,
+     "severity": 30,
+     "text": "Expression contains an operand that is not defined."
+    }
+   ],
+   "reason": "Declaration after calculations",
+   "reason_detail": "line 35: `DCL-S ptrSize INT(10);`",
    "rpgc": "accept",
    "sha256": "d1d6cf04d4a26a4d2bf0dd06ea043dd3e70d18e0e45658a94651029f2862883c",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test27_arrays.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "9bf92eae44ecc782097f600df8bf6daf24f49793292fc433ca5fcbbad9aeb30e",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test28_conditional.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "b04766e1d48767826d2c6f17c4469bd0a5ebbee5c2de9562e0dcee6aeb09f840",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test29_dclsubf_parm.rpgle": {
    "codes": [
@@ -1449,75 +3499,121 @@
     "RNF7030",
     "RNF7503"
    ],
+   "messages": [
+    {
+     "code": "RNF0724",
+     "line": 19,
+     "severity": 30,
+     "text": "The statement type is out of sequence for the main procedure."
+    },
+    {
+     "code": "RNF0724",
+     "line": 20,
+     "severity": 30,
+     "text": "The statement type is out of sequence for the main procedure."
+    },
+    {
+     "code": "RNF0724",
+     "line": 21,
+     "severity": 30,
+     "text": "The statement type is out of sequence for the main procedure."
+    },
+    {
+     "code": "RNF0724",
+     "line": 22,
+     "severity": 30,
+     "text": "The statement type is out of sequence for the main procedure."
+    },
+    {
+     "code": "RNF0724",
+     "line": 24,
+     "severity": 30,
+     "text": "The statement type is out of sequence for the main procedure."
+    }
+   ],
+   "reason": "Declaration after calculations",
+   "reason_detail": "line 19: `DCL-PR addNums INT(10);`",
    "rpgc": "accept",
    "sha256": "d3b293b97844c474da40c4e398652f0b73cd169baf7094f409f334e487a46d1b",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test30_like.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "612d5f93d921210592e53659e1ae9e5cbf5db1caad8538c35d1549be6c2ddec1",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test31_lookup_sorta.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "31f06f993dbc233f2761378f3d6694c65b34086f517bf9bcbb3879b0222cfa29",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test32_editc_editw.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "e17539897306e1f9d011c2aa0bbf094fa1abae6d3f1a8b40a090a54aa897f763",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test33_replace.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "f613dd01a2544d8d24a39d2866359af2b6fc419d4178dcd857fc0e5b15c11017",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test34_check.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "413835c0968f4fa00934ec5ec906cb6d162fcc2fadd72a5492e948dfab6f7707",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test35_evalcorr.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "7d0f54e468aaad79ec11d44e455c44c1533d181da1c48a287c46e2efdfc36e43",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test36_ds_params.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "69bb27ee43ad6fe00f229eb385a63512f048b83dff5ec3ed21d7fad9d0bd324f",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test37_inzsr.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "3f1ff9a60d08f1bf66616052f8a02d761f4aad3f28217e7521d66570ed559c49",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test38_ctlopt.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "370d0e2cd118e11b714e87201178720a95e2dd114e782effd00ae8ebee933b7a",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test39_figconst.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "596f4c6905a7267bfbf88d229a6bb61c5c89097d91ca4c0416bb2e93cf3a9a52",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test40_evalr_leavesr.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "a8e22ead3de7e93244c7f96da6d3b4d1c1178254cc6d0a3c724d221fe846224c",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test41_string_bifs.rpgle": {
    "codes": [
@@ -1525,66 +3621,128 @@
     "RNF7030",
     "RNF7503"
    ],
+   "messages": [
+    {
+     "code": "RNF0724",
+     "line": 14,
+     "severity": 30,
+     "text": "The statement type is out of sequence for the main procedure."
+    },
+    {
+     "code": "RNF7030",
+     "line": 15,
+     "severity": 30,
+     "text": "The name or indicator MYDATE is not defined."
+    },
+    {
+     "code": "RNF7503",
+     "line": 15,
+     "severity": 30,
+     "text": "Expression contains an operand that is not defined."
+    },
+    {
+     "code": "RNF7503",
+     "line": 16,
+     "severity": 30,
+     "text": "Expression contains an operand that is not defined."
+    },
+    {
+     "code": "RNF7503",
+     "line": 18,
+     "severity": 30,
+     "text": "Expression contains an operand that is not defined."
+    }
+   ],
+   "reason": "Declaration after calculations",
+   "reason_detail": "line 14: `DCL-S myDate DATE;`",
    "rpgc": "accept",
    "sha256": "1e663ac953e7bb9dd3def036583c939f4166318ecfeba3ffb9d914923f0ef942",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test42_onexit.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "7126373e9444295f059d855968d2797e8cab584ba6501bef4c1260c78eedaf63",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test43_static.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "ac8cfa8cdbebd7c511f4904528f82f7a049597cc975dd99b1abbfb3ca659009e",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test44_alloc.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "b72d62d505c531cd113c0581cc338dcad9c14f6465f90d8f9e8704286ebcd29e",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test45_array_bifs.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "7287e294abddd32ea09ae64299a1e29b454c12bea069ed6d568b9149dc408da2",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test46_options.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "833c7693b7cb014d179cff8a2035dfd06a8087df1ca73d49a12b0702229dd650",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test47_test.rpgle": {
    "codes": [
     "RNF5056",
     "RNF7523"
    ],
+   "messages": [
+    {
+     "code": "RNF5056",
+     "line": 7,
+     "severity": 30,
+     "text": "Either the error indicator or the E operation extender must be specified for the TEST operation."
+    },
+    {
+     "code": "RNF7523",
+     "line": 7,
+     "severity": 20,
+     "text": "Operation-Code extender D, T, or Z cannot be used with Result-Field entry MYDATE."
+    }
+   ],
+   "reason": "RNF5056: Either the error indicator or the E operation extender must be specified for the TEST operation.",
+   "reason_detail": "line 7: Either the error indicator or the E operation extender must be specified for the TEST operation. \u2014 `TEST(D) myDate;`",
    "rpgc": "accept",
    "sha256": "7f5ba449e9ba1f0e9ba34acea6279734b88c3e49e2b9ffaaf62e91bd4ab0356b",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test48_nomain.rpgle": {
    "codes": [],
    "rpgc": "reject",
    "sha256": "06ca83fb0da851a7b1363e04d7fa12ba7ab74e4e3927c9b347811b4bafe3de0c",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test49_extproc.rpgle": {
    "codes": [],
+   "messages": [],
+   "reason": "Rejected with no diagnostic (return code only)",
    "rpgc": "reject",
    "sha256": "33f359a25f50675a989d53d1344af4fb04276ae17e958a7d588f7bc6482d7be0",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test50_numeric_bifs.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "70c343b87859333125d8dec4b23a06ead4e8f2018fc43c3af7ee7462c9603fb5",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test51_string_bifs.rpgle": {
    "codes": [
@@ -1592,23 +3750,76 @@
     "RNF7030",
     "RNF7503"
    ],
+   "messages": [
+    {
+     "code": "RNF0724",
+     "line": 18,
+     "severity": 30,
+     "text": "The statement type is out of sequence for the main procedure."
+    },
+    {
+     "code": "RNF0724",
+     "line": 19,
+     "severity": 30,
+     "text": "The statement type is out of sequence for the main procedure."
+    },
+    {
+     "code": "RNF7030",
+     "line": 20,
+     "severity": 30,
+     "text": "The name or indicator NAMES is not defined."
+    },
+    {
+     "code": "RNF7503",
+     "line": 20,
+     "severity": 30,
+     "text": "Expression contains an operand that is not defined."
+    },
+    {
+     "code": "RNF7030",
+     "line": 21,
+     "severity": 30,
+     "text": "The name or indicator RESULT is not defined."
+    }
+   ],
+   "reason": "Declaration after calculations",
+   "reason_detail": "line 18: `DCL-S result VARCHAR(100);`",
    "rpgc": "accept",
    "sha256": "0fea503ab003f3370727d40a9a0e5a1324a885aef9edae5a51c34aa8fa4fb7ce",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test52_array_bifs.rpgle": {
    "codes": [
     "RNF0592"
    ],
+   "messages": [
+    {
+     "code": "RNF0592",
+     "line": 21,
+     "severity": 20,
+     "text": "The second parameter NUMS for %LOOKUPxx must be a sequenced array."
+    },
+    {
+     "code": "RNF0592",
+     "line": 25,
+     "severity": 20,
+     "text": "The second parameter NUMS for %LOOKUPxx must be a sequenced array."
+    }
+   ],
+   "reason": "RNF0592: The second parameter NUMS for %LOOKUPxx must be a sequenced array.",
+   "reason_detail": "line 21: The second parameter NUMS for %LOOKUPxx must be a sequenced array. \u2014 `idx = %LOOKUPGE(25 : nums);`",
    "rpgc": "accept",
    "sha256": "cd395ca8ec66df15cb6a7cf9d409472851034af4916e5feca1ea1d11f349923d",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test53_datetime_bifs.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "75e94dde666616a32d67798b42f0a7322671f6885aca5a154944e481261e5627",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test54_memory_bifs.rpgle": {
    "codes": [
@@ -1616,60 +3827,131 @@
     "RNF7030",
     "RNF7503"
    ],
+   "messages": [
+    {
+     "code": "RNF0724",
+     "line": 15,
+     "severity": 30,
+     "text": "The statement type is out of sequence for the main procedure."
+    },
+    {
+     "code": "RNF7030",
+     "line": 16,
+     "severity": 30,
+     "text": "The name or indicator RESULT is not defined."
+    },
+    {
+     "code": "RNF7503",
+     "line": 16,
+     "severity": 30,
+     "text": "Expression contains an operand that is not defined."
+    },
+    {
+     "code": "RNF7503",
+     "line": 17,
+     "severity": 30,
+     "text": "Expression contains an operand that is not defined."
+    }
+   ],
+   "reason": "Declaration after calculations",
+   "reason_detail": "line 15: `DCL-S result VARCHAR(50);`",
    "rpgc": "accept",
    "sha256": "e35e350b261db4544f85b18e546f136ca45dadfd4f6cbe0ec40199a15b1efac7",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test55_figconst.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "987c9ebf8a331725e0aaa475c7082b0da069b58e2787d30e5eb39403bf36888e",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test56_ctlopt_main.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "1515003fdaa76871103448180ea379d577777efabda1eb3652a117c516c42397",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test57_datfmt.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "5017c1301409250b0b6c06ea5f896ff81d00fb352af6b9e001d8fd69efceebd3",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test58_foreach_in.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "9b3f34fc3176ef3e5574cc05a1aab3f21df1e6642633a51c9a37e82886e4dae6",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test59_passed_omitted.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "dabbe2e33be75b93e6ff0a41f1f0b6deb03f808029cb0f8cc2b23b9102df43f9",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test60_datatypes.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "179a80c6fa2d4883fbb8899fb42ffcd7220306d332bf3ab0cb4a1f7fc6ac960f",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test61_no_free.rpgle": {
    "codes": [
     "RNF0257",
     "RNF7023"
    ],
+   "messages": [
+    {
+     "code": "RNF0257",
+     "line": 1,
+     "severity": 30,
+     "text": "Form-Type entry for main procedure not valid or out of sequence."
+    },
+    {
+     "code": "RNF0257",
+     "line": 2,
+     "severity": 30,
+     "text": "Form-Type entry for main procedure not valid or out of sequence."
+    },
+    {
+     "code": "RNF0257",
+     "line": 3,
+     "severity": 30,
+     "text": "Form-Type entry for main procedure not valid or out of sequence."
+    },
+    {
+     "code": "RNF0257",
+     "line": 4,
+     "severity": 30,
+     "text": "Form-Type entry for main procedure not valid or out of sequence."
+    },
+    {
+     "code": "RNF0257",
+     "line": 5,
+     "severity": 30,
+     "text": "Form-Type entry for main procedure not valid or out of sequence."
+    }
+   ],
+   "reason": "RNF0257: Form-Type entry for main procedure not valid or out of sequence.",
+   "reason_detail": "line 1: Form-Type entry for main procedure not valid or out of sequence. \u2014 `// Test 61: No **FREE directive`",
    "rpgc": "accept",
    "sha256": "bd62e8c7bffabf3c235221618bb6c8c6762e73a342ce726ff9611c1203997567",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test62_overlay_pos.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "65d619400064711da997c50a8cd58bd3bdb8011a49b2ca902813cb08bcfab519",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test63_prefix.rpgle": {
    "codes": [
@@ -1677,61 +3959,160 @@
     "RNF7030",
     "RNF7503"
    ],
+   "messages": [
+    {
+     "code": "RNF3529",
+     "line": 8,
+     "severity": 20,
+     "text": "Keyword is not allowed for a program-described data structure; keyword is ignored."
+    },
+    {
+     "code": "RNF7030",
+     "line": 14,
+     "severity": 30,
+     "text": "The name or indicator CUST_ID is not defined."
+    },
+    {
+     "code": "RNF7503",
+     "line": 14,
+     "severity": 30,
+     "text": "Expression contains an operand that is not defined."
+    },
+    {
+     "code": "RNF7030",
+     "line": 15,
+     "severity": 30,
+     "text": "The name or indicator CUST_NAME is not defined."
+    },
+    {
+     "code": "RNF7503",
+     "line": 15,
+     "severity": 30,
+     "text": "Expression contains an operand that is not defined."
+    }
+   ],
+   "reason": "PREFIX on a program-described DS (only valid with EXTNAME/LIKEREC)",
+   "reason_detail": "line 8: `DCL-DS custRec QUALIFIED PREFIX(CUST_);`",
    "rpgc": "reject",
    "sha256": "211d66c42202181bc91b9a79190ac1da6151c3aea77e3533acce21019718ee59",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test64_omit.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "463698f29ca50dffe983a55fbc04fb0699a3e2c51ce12b3aabd6ccdca1633344",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test65_actgrp.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "3c49958da23f1e1fb8d26f9533089ffdb8dc1ed7a7b4ce80aadb85451591c890",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test66_pssr.rpgle": {
    "codes": [
     "RNF5005"
    ],
+   "messages": [
+    {
+     "code": "RNF5005",
+     "line": 10,
+     "severity": 30,
+     "text": "Operation entry following ENDSR operation is not valid; specification is ignored."
+    },
+    {
+     "code": "RNF5005",
+     "line": 11,
+     "severity": 30,
+     "text": "Operation entry following ENDSR operation is not valid; specification is ignored."
+    },
+    {
+     "code": "RNF5005",
+     "line": 12,
+     "severity": 30,
+     "text": "Operation entry following ENDSR operation is not valid; specification is ignored."
+    }
+   ],
+   "reason": "RNF5005: Operation entry following ENDSR operation is not valid; specification is ignored.",
+   "reason_detail": "line 10: Operation entry following ENDSR operation is not valid; specification is ignored. \u2014 `result = 10;`",
    "rpgc": "accept",
    "sha256": "7d6eced11cb0c07b13dea29c1ae657dbfa33a199107f6fb1104c4a58ba7660e6",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test67_pssr_error.rpgle": {
    "codes": [
     "RNF5005"
    ],
+   "messages": [
+    {
+     "code": "RNF5005",
+     "line": 12,
+     "severity": 30,
+     "text": "Operation entry following ENDSR operation is not valid; specification is ignored."
+    },
+    {
+     "code": "RNF5005",
+     "line": 13,
+     "severity": 30,
+     "text": "Operation entry following ENDSR operation is not valid; specification is ignored."
+    },
+    {
+     "code": "RNF5005",
+     "line": 14,
+     "severity": 30,
+     "text": "Operation entry following ENDSR operation is not valid; specification is ignored."
+    },
+    {
+     "code": "RNF5005",
+     "line": 15,
+     "severity": 30,
+     "text": "Operation entry following ENDSR operation is not valid; specification is ignored."
+    },
+    {
+     "code": "RNF5005",
+     "line": 16,
+     "severity": 30,
+     "text": "Operation entry following ENDSR operation is not valid; specification is ignored."
+    }
+   ],
+   "reason": "RNF5005: Operation entry following ENDSR operation is not valid; specification is ignored.",
+   "reason_detail": "line 12: Operation entry following ENDSR operation is not valid; specification is ignored. \u2014 `DSPLY 'Before error';`",
    "rpgc": "accept",
    "sha256": "dec33b5f569b1f2922f32fbd34b158a113c90f232b16011a81ddbce6d15d1ef2",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test68_bitwise_power.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "800e9cbb33812c7209b35a1c3b978c627d9ef99d173731df02fe397ef2db1f73",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test68_no_pssr.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "59a45d9682dd6ae4ff61659f5bdb9908b0d844464c69abede4586685fbd6838b",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test69_scanr.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "79ba4a130a1af140551bf3a2aeb6794d7d7ffca932c97dc50268576b6d00990f",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test70_editflt_unsh.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "942cd5a0307abbbb6d1a2b6ec32395b1ce4aee85faf31943880a2ac81f84bb0d",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test71_enum_boolean.rpgle": {
    "codes": [
@@ -1740,29 +4121,95 @@
     "RNF7030",
     "RNF7503"
    ],
+   "messages": [
+    {
+     "code": "RNF3308",
+     "line": 2,
+     "severity": 20,
+     "text": "Keyword name is not valid; the keyword is ignored."
+    },
+    {
+     "code": "RNF3438",
+     "line": 2,
+     "severity": 30,
+     "text": "LIKE keyword is expected for field ISACTIVE but not found; definition is ignored."
+    },
+    {
+     "code": "RNF7030",
+     "line": 2,
+     "severity": 30,
+     "text": "The name or indicator ISACTIVE is not defined."
+    },
+    {
+     "code": "RNF3308",
+     "line": 6,
+     "severity": 20,
+     "text": "Keyword name is not valid; the keyword is ignored."
+    },
+    {
+     "code": "RNF3308",
+     "line": 7,
+     "severity": 20,
+     "text": "Keyword name is not valid; the keyword is ignored."
+    }
+   ],
+   "reason": "RNF3308: Keyword name is not valid; the keyword is ignored.",
+   "reason_detail": "line 2: Keyword name is not valid; the keyword is ignored. \u2014 `DCL-S isActive BOOLEAN;`",
    "rpgc": "accept",
    "sha256": "9bd4704dc6daf71f063e81a5d08417535b1863f4c1c1a0ee3bc99f7a526c75f1",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test72_dim_var.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "5c045a8dd9dc5b005292635bb516c259130aae7c4badc53a43e0d473202fe01b",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test73_date_formats.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "3e4eef7f355abe9ee440fcb5580c4ea4986e1794a4e72e951ea75a52c74800e7",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test74_concat.rpgle": {
    "codes": [
     "RNF7016"
    ],
+   "messages": [
+    {
+     "code": "RNF7016",
+     "line": 13,
+     "severity": 20,
+     "text": "Display length 100 greater than maximum allowed of 52; specification is ignored."
+    },
+    {
+     "code": "RNF7016",
+     "line": 17,
+     "severity": 20,
+     "text": "Display length 100 greater than maximum allowed of 52; specification is ignored."
+    },
+    {
+     "code": "RNF7016",
+     "line": 21,
+     "severity": 20,
+     "text": "Display length 100 greater than maximum allowed of 52; specification is ignored."
+    },
+    {
+     "code": "RNF7016",
+     "line": 25,
+     "severity": 20,
+     "text": "Display length 100 greater than maximum allowed of 52; specification is ignored."
+    }
+   ],
+   "reason": "RNF7016: Display length n greater than maximum allowed of n; specification is ignored.",
+   "reason_detail": "line 13: Display length 100 greater than maximum allowed of 52; specification is ignored. \u2014 `DSPLY result;  // Alice, Dallas, TX`",
    "rpgc": "accept",
    "sha256": "ee8013c67870e08c98d00c48335b9398dc9f3b21149aab543a7c32daffb5e57f",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test75_tlookup_elem.rpgle": {
    "codes": [
@@ -1772,78 +4219,338 @@
     "RNF7030",
     "RNF7503"
    ],
+   "messages": [
+    {
+     "code": "RNF5343",
+     "line": 19,
+     "severity": 30,
+     "text": "Array CODES has too many omitted indexes."
+    },
+    {
+     "code": "RNF0597",
+     "line": 19,
+     "severity": 20,
+     "text": "The second parameter CODES for %TLOOKUPxx is not valid."
+    },
+    {
+     "code": "RNF5343",
+     "line": 25,
+     "severity": 30,
+     "text": "Array CODES has too many omitted indexes."
+    },
+    {
+     "code": "RNF0597",
+     "line": 25,
+     "severity": 20,
+     "text": "The second parameter CODES for %TLOOKUPxx is not valid."
+    },
+    {
+     "code": "RNF5343",
+     "line": 31,
+     "severity": 30,
+     "text": "Array CODES has too many omitted indexes."
+    }
+   ],
+   "reason": "Declaration after calculations",
+   "reason_detail": "line 37: `DCL-S dynArr INT(10) DIM(*VAR:50);`",
    "rpgc": "accept",
    "sha256": "7eded4f8881f593823236fba6ff990e5538f5e901e823489934252068187a96e",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test76_ds_dim_var.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "4dbcbd43a6fe8dfc0628070409d7e8d67983f4feb25eb303829175a26ee9f52d",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test77_exec_sql.sqlrpgle": {
    "codes": [],
+   "messages": [
+    {
+     "code": "SQL0199",
+     "line": 13,
+     "severity": 30,
+     "text": "Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>."
+    },
+    {
+     "code": "SQL0104",
+     "line": 62,
+     "severity": 30,
+     "text": "Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>. Message Summary"
+    }
+   ],
+   "reason": "SQL0199: Position n Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>.",
+   "reason_detail": "line 13: Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>. \u2014 `EXEC SQL CONNECT USING :connStr;`",
    "rpgc": "accept",
    "sha256": "c519920f3774f9ff9564cd5f29d2d7746b03b9ee24ba99a494c9925292c38520",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test78_exec_sql_proc.sqlrpgle": {
    "codes": [],
+   "messages": [
+    {
+     "code": "SQL0199",
+     "line": 9,
+     "severity": 30,
+     "text": "Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>."
+    },
+    {
+     "code": "SQL0104",
+     "line": 29,
+     "severity": 30,
+     "text": "Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>."
+    },
+    {
+     "code": "SQL0312",
+     "line": 51,
+     "severity": 30,
+     "text": "Position 67 Variable EMPID not defined or not usable for reason code 1. Message Summary"
+    }
+   ],
+   "reason": "SQL0199: Position n Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>.",
+   "reason_detail": "line 9: Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>. \u2014 `EXEC SQL CONNECT USING :connStr;`",
    "rpgc": "accept",
    "sha256": "e32ab6ee2643cd162842f5c8155a1f779179f47391949fd5ddfaff287b27645d",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test79_sql_core.sqlrpgle": {
    "codes": [],
+   "messages": [
+    {
+     "code": "SQL0199",
+     "line": 15,
+     "severity": 30,
+     "text": "Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>."
+    },
+    {
+     "code": "SQL0104",
+     "line": 75,
+     "severity": 30,
+     "text": "Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>. Message Summary"
+    }
+   ],
+   "reason": "SQL0199: Position n Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>.",
+   "reason_detail": "line 15: Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>. \u2014 `EXEC SQL CONNECT USING :connStr;`",
    "rpgc": "accept",
    "sha256": "e80507794be6255747940bb3113ecd1d03fce715b17ff2ffc43bc76718488661",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test80_sql_cursors.sqlrpgle": {
    "codes": [],
+   "messages": [
+    {
+     "code": "SQL0199",
+     "line": 12,
+     "severity": 30,
+     "text": "Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>."
+    },
+    {
+     "code": "SQL0104",
+     "line": 72,
+     "severity": 30,
+     "text": "Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>. Message Summary"
+    }
+   ],
+   "reason": "SQL0199: Position n Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>.",
+   "reason_detail": "line 12: Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>. \u2014 `EXEC SQL CONNECT USING :connStr;`",
    "rpgc": "accept",
    "sha256": "64fec4eebe90bf55c73457917afded131420062cacc3c4616537731fdc38b216",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test81_sql_dynamic.sqlrpgle": {
    "codes": [],
+   "messages": [
+    {
+     "code": "SQL0199",
+     "line": 12,
+     "severity": 30,
+     "text": "Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>."
+    },
+    {
+     "code": "SQL0104",
+     "line": 48,
+     "severity": 30,
+     "text": "Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>. Message Summary"
+    }
+   ],
+   "reason": "SQL0199: Position n Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>.",
+   "reason_detail": "line 12: Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>. \u2014 `EXEC SQL CONNECT USING :connStr;`",
    "rpgc": "accept",
    "sha256": "5a259c3d84a1c4a64b140316748bd8352373ba6f25275d68c309dae497f40dca",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test82_sql_advanced.sqlrpgle": {
    "codes": [],
+   "messages": [
+    {
+     "code": "SQL0199",
+     "line": 13,
+     "severity": 30,
+     "text": "Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>."
+    },
+    {
+     "code": "SQL0104",
+     "line": 45,
+     "severity": 30,
+     "text": "Position 23 Token <END-OF-STATEMENT> was not valid. Valid tokens: ON UNIQUE."
+    },
+    {
+     "code": "SQL0104",
+     "line": 60,
+     "severity": 30,
+     "text": "Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>. Message Summary"
+    }
+   ],
+   "reason": "SQL0199: Position n Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>.",
+   "reason_detail": "line 13: Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>. \u2014 `EXEC SQL CONNECT USING :connStr;`",
    "rpgc": "accept",
    "sha256": "bf58d36b1eeecbb38d04745e25da273f5c1d3fbf349ec5f0c15c81a7ad9bc230",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test83_sql_multirow.sqlrpgle": {
    "codes": [],
+   "messages": [
+    {
+     "code": "SQL0199",
+     "line": 13,
+     "severity": 30,
+     "text": "Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>."
+    },
+    {
+     "code": "SQL0312",
+     "line": 35,
+     "severity": 30,
+     "text": "Position 11 Variable IDS not defined or not usable for reason code 2."
+    },
+    {
+     "code": "SQL0312",
+     "line": 35,
+     "severity": 30,
+     "text": "Position 17 Variable NAMES not defined or not usable for reason code 2."
+    },
+    {
+     "code": "SQL0312",
+     "line": 35,
+     "severity": 30,
+     "text": "Position 25 Variable SALARIES not defined or not usable for reason code 2."
+    },
+    {
+     "code": "SQL0104",
+     "line": 36,
+     "severity": 30,
+     "text": "Position 7 Token : was not valid. Valid tokens: READ FETCH UPDATE."
+    }
+   ],
+   "reason": "SQL0199: Position n Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>.",
+   "reason_detail": "line 13: Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>. \u2014 `EXEC SQL CONNECT USING :connStr;`",
    "rpgc": "accept",
    "sha256": "4041119277711c3b83968cc34629bddd8635b82ebcd61796c05fe184a8ec4e89",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test84_sql_connect.sqlrpgle": {
    "codes": [],
+   "messages": [
+    {
+     "code": "SQL0199",
+     "line": 12,
+     "severity": 30,
+     "text": "Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>."
+    },
+    {
+     "code": "SQL0104",
+     "line": 23,
+     "severity": 30,
+     "text": "Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>."
+    },
+    {
+     "code": "SQL0199",
+     "line": 26,
+     "severity": 30,
+     "text": "Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>."
+    }
+   ],
+   "reason": "SQL0199: Position n Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>.",
+   "reason_detail": "line 12: Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>. \u2014 `EXEC SQL CONNECT USING :connStr;`",
    "rpgc": "accept",
    "sha256": "907476187c84db664ee13c341ca95071d0634919ad83ec622dbc649c7f45dde6",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test85_getenv.rpgle": {
    "codes": [
     "RNF0604",
     "RNF7016"
    ],
+   "messages": [
+    {
+     "code": "RNF0604",
+     "line": 12,
+     "severity": 20,
+     "text": "The token is not valid; token is ignored."
+    },
+    {
+     "code": "RNF7016",
+     "line": 13,
+     "severity": 20,
+     "text": "Display length 256 greater than maximum allowed of 52; specification is ignored."
+    },
+    {
+     "code": "RNF0604",
+     "line": 15,
+     "severity": 20,
+     "text": "The token is not valid; token is ignored."
+    },
+    {
+     "code": "RNF0604",
+     "line": 19,
+     "severity": 20,
+     "text": "The token is not valid; token is ignored."
+    },
+    {
+     "code": "RNF0604",
+     "line": 25,
+     "severity": 20,
+     "text": "The token is not valid; token is ignored."
+    }
+   ],
+   "reason": "RNF0604: The token is not valid; token is ignored.",
+   "reason_detail": "line 12: The token is not valid; token is ignored. \u2014 `homePath = %GETENV('HOME');`",
    "rpgc": "accept",
    "sha256": "01a53013b7fb840ae569ea51241bbd93ad698370e1112c49a3f48be3b30cd9dd",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test86.sqlrpgle": {
    "codes": [],
+   "messages": [
+    {
+     "code": "SQL0199",
+     "line": 14,
+     "severity": 30,
+     "text": "Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>."
+    },
+    {
+     "code": "SQL0104",
+     "line": 40,
+     "severity": 30,
+     "text": "Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>. Message Summary"
+    }
+   ],
+   "reason": "SQL0199: Position n Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>.",
+   "reason_detail": "line 14: Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>. \u2014 `exec sql connect using :connStr;`",
    "rpgc": "accept",
    "sha256": "6b208bf529cc4805ef53a7d790f0a3060439589eb8575d696ce3160152dee474",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test87.rpgle": {
    "codes": [
@@ -1853,9 +4560,44 @@
     "RNF7030",
     "RNF7503"
    ],
+   "messages": [
+    {
+     "code": "RNF0637",
+     "line": 20,
+     "severity": 30,
+     "text": "An operand was expected but was not found; specification is ignored."
+    },
+    {
+     "code": "RNF0637",
+     "line": 21,
+     "severity": 30,
+     "text": "An operand was expected but was not found; specification is ignored."
+    },
+    {
+     "code": "RNF0637",
+     "line": 22,
+     "severity": 30,
+     "text": "An operand was expected but was not found; specification is ignored."
+    },
+    {
+     "code": "RNF0637",
+     "line": 23,
+     "severity": 30,
+     "text": "An operand was expected but was not found; specification is ignored."
+    },
+    {
+     "code": "RNF0637",
+     "line": 24,
+     "severity": 30,
+     "text": "An operand was expected but was not found; specification is ignored."
+    }
+   ],
+   "reason": "Declaration after calculations",
+   "reason_detail": "line 27: `DCL-DS person QUALIFIED;`",
    "rpgc": "accept",
    "sha256": "657275d1f29e161811ef238509589207975d2cbf6b06e3cc80cea920870871a6",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test88.rpgle": {
    "codes": [
@@ -1866,9 +4608,44 @@
     "RNF7030",
     "RNF7503"
    ],
+   "messages": [
+    {
+     "code": "RNF0637",
+     "line": 17,
+     "severity": 30,
+     "text": "An operand was expected but was not found; specification is ignored."
+    },
+    {
+     "code": "RNF5377",
+     "line": 17,
+     "severity": 20,
+     "text": "The end of the expression is expected."
+    },
+    {
+     "code": "RNF0637",
+     "line": 19,
+     "severity": 30,
+     "text": "An operand was expected but was not found; specification is ignored."
+    },
+    {
+     "code": "RNF5377",
+     "line": 19,
+     "severity": 20,
+     "text": "The end of the expression is expected."
+    },
+    {
+     "code": "RNF0637",
+     "line": 21,
+     "severity": 30,
+     "text": "An operand was expected but was not found; specification is ignored."
+    }
+   ],
+   "reason": "Declaration after calculations",
+   "reason_detail": "line 25: `DCL-DS emp QUALIFIED DIM(*VAR:10);`",
    "rpgc": "accept",
    "sha256": "8b29abd3749ca1db3db5381092a2907990bf67a1f6b84b123c4c5cf72f69b64f",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test89.rpgle": {
    "codes": [
@@ -1880,37 +4657,96 @@
     "RNF7030",
     "RNF7503"
    ],
+   "messages": [
+    {
+     "code": "RNF0637",
+     "line": 17,
+     "severity": 30,
+     "text": "An operand was expected but was not found; specification is ignored."
+    },
+    {
+     "code": "RNF5377",
+     "line": 17,
+     "severity": 20,
+     "text": "The end of the expression is expected."
+    },
+    {
+     "code": "RNF0622",
+     "line": 17,
+     "severity": 20,
+     "text": "A qualified name is not allowed in this context."
+    },
+    {
+     "code": "RNF0622",
+     "line": 18,
+     "severity": 20,
+     "text": "A qualified name is not allowed in this context."
+    },
+    {
+     "code": "RNF0724",
+     "line": 21,
+     "severity": 30,
+     "text": "The statement type is out of sequence for the main procedure."
+    }
+   ],
+   "reason": "Declaration after calculations",
+   "reason_detail": "line 21: `DCL-DS address QUALIFIED;`",
    "rpgc": "accept",
    "sha256": "680c3c4c39d90fc2b759084cdc9a245c542c57e22237979122d02ce4776cdaff",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test90_psds_basic.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "160ec2c8deaec73b4a7f75d36579080726bc704904ea96ab7697056358a9e10c",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test91_psds_monitor.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "e0feb90d876d264577f9a0400efb532d79b304575c84c6d19ab4c36bdb21f86d",
-   "verdict": "accept"
+   "verdict": "accept",
+   "verified": "2026-09-23"
   },
   "test92_data_area_lda.rpgle": {
    "codes": [
     "RNF7091"
    ],
+   "messages": [
+    {
+     "code": "RNF7091",
+     "line": 21,
+     "severity": 30,
+     "text": "The Factor 2 operand is a Local-Data Area for UNLOCK operation."
+    }
+   ],
+   "reason": "RNF7091: The Factor n operand is a Local-Data Area for UNLOCK operation.",
+   "reason_detail": "line 21: The Factor 2 operand is a Local-Data Area for UNLOCK operation. \u2014 `UNLOCK LdaData;`",
    "rpgc": "accept",
    "sha256": "50bbe23493c7ac367b4284cb9261a7819f2e68c911bacbcfd117bddfe6eea04d",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test93_data_area_named.rpgle": {
    "codes": [
     "RNF7030"
    ],
+   "messages": [
+    {
+     "code": "RNF7030",
+     "line": 3,
+     "severity": 30,
+     "text": "The name or indicator RPGCTEST93 is not defined."
+    }
+   ],
+   "reason": "Unquoted data-area name in DTAARA (IBM reads it as a variable holding the name)",
+   "reason_detail": "line 3: `DCL-S MyConfig CHAR(50) DTAARA(RPGCTEST93);`",
    "rpgc": "accept",
    "sha256": "a515397f1931dbc50589185416da8f9b1352e151aef95222390e959f0b0eea43",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test94_extender_h.rpgle": {
    "codes": [
@@ -1919,9 +4755,44 @@
     "RNF7030",
     "RNF7503"
    ],
+   "messages": [
+    {
+     "code": "RNF0724",
+     "line": 16,
+     "severity": 30,
+     "text": "The statement type is out of sequence for the main procedure."
+    },
+    {
+     "code": "RNF7030",
+     "line": 17,
+     "severity": 30,
+     "text": "The name or indicator RESULT2 is not defined."
+    },
+    {
+     "code": "RNF7503",
+     "line": 17,
+     "severity": 30,
+     "text": "Expression contains an operand that is not defined."
+    },
+    {
+     "code": "RNF7503",
+     "line": 18,
+     "severity": 30,
+     "text": "Expression contains an operand that is not defined."
+    },
+    {
+     "code": "RNF0724",
+     "line": 25,
+     "severity": 30,
+     "text": "The statement type is out of sequence for the main procedure."
+    }
+   ],
+   "reason": "Declaration after calculations",
+   "reason_detail": "line 16: `DCL-S result2 INT(10);`",
    "rpgc": "accept",
    "sha256": "75571c0f8db5a7fcaa92c8ef406cf24772c47e6322be9cf02b775e8096755b0a",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test95_extender_e.rpgle": {
    "codes": [
@@ -1930,33 +4801,101 @@
     "RNF7030",
     "RNF7503"
    ],
+   "messages": [
+    {
+     "code": "RNF0724",
+     "line": 17,
+     "severity": 30,
+     "text": "The statement type is out of sequence for the main procedure."
+    },
+    {
+     "code": "RNF5049",
+     "line": 18,
+     "severity": 20,
+     "text": "The Operation Extender is not valid for the specified Operation Code."
+    },
+    {
+     "code": "RNF7030",
+     "line": 18,
+     "severity": 30,
+     "text": "The name or indicator X is not defined."
+    },
+    {
+     "code": "RNF7503",
+     "line": 18,
+     "severity": 30,
+     "text": "Expression contains an operand that is not defined."
+    },
+    {
+     "code": "RNF7503",
+     "line": 19,
+     "severity": 30,
+     "text": "Expression contains an operand that is not defined."
+    }
+   ],
+   "reason": "Declaration after calculations",
+   "reason_detail": "line 17: `DCL-S x INT(10) INZ(10);`",
    "rpgc": "accept",
    "sha256": "0343d2854d3a7ddd06576359543c222e67ccbbec372151f4f5917d0915e040b3",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test96_da_status401.rpgle": {
    "codes": [
     "RNF7030"
    ],
+   "messages": [
+    {
+     "code": "RNF7030",
+     "line": 3,
+     "severity": 30,
+     "text": "The name or indicator NOSUCHDA96 is not defined."
+    }
+   ],
+   "reason": "Unquoted data-area name in DTAARA (IBM reads it as a variable holding the name)",
+   "reason_detail": "line 3: `DCL-S missing CHAR(10) DTAARA(NOSUCHDA96);`",
    "rpgc": "accept",
    "sha256": "d12f8e51bb7c2d07caecba822e3b18cfc20493b28904651240351f20ea54069e",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test97_da_status415.rpgle": {
    "codes": [
     "RNF7030"
    ],
+   "messages": [
+    {
+     "code": "RNF7030",
+     "line": 4,
+     "severity": 30,
+     "text": "The name or indicator RPGCTEST97DA is not defined."
+    }
+   ],
+   "reason": "Unquoted data-area name in DTAARA (IBM reads it as a variable holding the name)",
+   "reason_detail": "line 4: `DCL-S da CHAR(10) DTAARA(RPGCTEST97DA);`",
    "rpgc": "accept",
    "sha256": "ed698e2b17a1e764cfc8c3e015922ebb4804026166b487b122dbe01cbee88e74",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test98_da_status413.rpgle": {
    "codes": [
     "RNF7030"
    ],
+   "messages": [
+    {
+     "code": "RNF7030",
+     "line": 4,
+     "severity": 30,
+     "text": "The name or indicator RPGCTEST98DA is not defined."
+    }
+   ],
+   "reason": "Unquoted data-area name in DTAARA (IBM reads it as a variable holding the name)",
+   "reason_detail": "line 4: `DCL-S da CHAR(10) DTAARA(RPGCTEST98DA);`",
    "rpgc": "accept",
    "sha256": "dde775ea6423b4ab985b0e8437f379b4ce835d59522e0bc5ea6c63cbcabdd324",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test99_data_into.rpgle": {
    "codes": [
@@ -1967,9 +4906,44 @@
     "RNF7030",
     "RNF7503"
    ],
+   "messages": [
+    {
+     "code": "RNF5449",
+     "line": 16,
+     "severity": 30,
+     "text": "The third operand of DATA-INTO must be %PARSER."
+    },
+    {
+     "code": "RNF0637",
+     "line": 18,
+     "severity": 30,
+     "text": "An operand was expected but was not found; specification is ignored."
+    },
+    {
+     "code": "RNF0637",
+     "line": 19,
+     "severity": 30,
+     "text": "An operand was expected but was not found; specification is ignored."
+    },
+    {
+     "code": "RNF0637",
+     "line": 20,
+     "severity": 30,
+     "text": "An operand was expected but was not found; specification is ignored."
+    },
+    {
+     "code": "RNF0724",
+     "line": 23,
+     "severity": 30,
+     "text": "The statement type is out of sequence for the main procedure."
+    }
+   ],
+   "reason": "Declaration after calculations",
+   "reason_detail": "line 23: `DCL-DS product QUALIFIED;`",
    "rpgc": "accept",
    "sha256": "e80a7e3ca8c46696567f2783133a7571dbbf0d9b0a3dfaf08f9d3a994390578a",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   },
   "test_exfmt.rpgle": {
    "codes": [
@@ -1977,10 +4951,45 @@
     "RNF7030",
     "RNF7503"
    ],
+   "messages": [
+    {
+     "code": "RNF2120",
+     "line": 8,
+     "severity": 40,
+     "text": "External descriptions for file CUSTMENU not found; file is ignored."
+    },
+    {
+     "code": "RNF7030",
+     "line": 13,
+     "severity": 30,
+     "text": "The name or indicator MAINMENU is not defined."
+    },
+    {
+     "code": "RNF7503",
+     "line": 13,
+     "severity": 30,
+     "text": "Expression contains an operand that is not defined."
+    },
+    {
+     "code": "RNF7503",
+     "line": 15,
+     "severity": 30,
+     "text": "Expression contains an operand that is not defined."
+    },
+    {
+     "code": "RNF7030",
+     "line": 15,
+     "severity": 30,
+     "text": "The name or indicator *IN03 is not defined."
+    }
+   ],
+   "reason": "RNF2120: External descriptions for file CUSTMENU not found; file is ignored.",
+   "reason_detail": "line 8: External descriptions for file CUSTMENU not found; file is ignored. \u2014 `DCL-F CUSTMENU WORKSTN;`",
    "rpgc": "accept",
    "sha256": "bf315e65a7cf38809265a94af86a30a1ede38890e32e8a45940891ab3f4f5be0",
-   "verdict": "reject"
+   "verdict": "reject",
+   "verified": "2026-09-23"
   }
  },
- "generated": "2026-09-23T16:25:59+00:00"
+ "generated": "2026-09-23T16:34:09+00:00"
 }

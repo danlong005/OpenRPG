@@ -1411,9 +1411,12 @@ Three pieces turn the manual expedition into something CI runs.
 
 | Piece | Role |
 |-------|------|
-| `ibmi-conformance-baseline.json` | The record: SHA-256 of every source plus the verdict IBM gave it. Committed — this, not the transcript, is the durable artefact. |
-| `scripts/conformance-baseline.py` | `check` (offline gate), `changed` (what to send), `update` (merge a run, report regressions). |
-| `.github/workflows/ibmi-conformance.yml` | `offline` job on every push/PR; `verify` job on demand only (the weekly schedule was removed 2026-09-23). |
+| `ibmi-conformance-baseline.json` | The record: SHA-256 of every source plus the verdict IBM gave it — and, for a rejection, the root-cause reason, IBM's messages (code, line, text) and the date it was last compiled. Committed — this, not the transcript, is the durable artefact. |
+| `scripts/conformance-baseline.py` | `check` (offline gate), `changed` (what to send), `update` (merge a run, report regressions, record reasons), `rpgc` (record rpgc's own verdicts). |
+| `scripts/conformance_lib.py` | Shared: reading a transcript, extracting IBM's messages (wrapped text joined), tracing a rejection to its root cause. |
+| `scripts/conformance-wiki.py` | Renders the wiki page **IBM-i-Conformance-Results**: which programs compiled on IBM i, which did not, and why. |
+| `scripts/conformance-diff.py` | Writes `ibmi-conformance-differences.md`: every file where rpgc and IBM disagree. |
+| `.github/workflows/ibmi-conformance.yml` | `offline` job on every push/PR; `verify` job on demand only (the weekly schedule was removed 2026-09-23). `changed`, `full` or `smoke`; after `changed`/`full` it publishes the results page to the wiki. |
 
 **The offline gate needs no network and no secrets**, so it runs on fork pull
 requests too. It fails when a source has changed since it was last verified —

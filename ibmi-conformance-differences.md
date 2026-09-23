@@ -28,36 +28,36 @@ The first cause IBM's listing points at, with follow-on "not defined" messages (
 | Root cause | Files |
 |---|---|
 | Declaration after calculations | 17 |
-| SQL0199: Position n Keyword USING not expected. Valid tokens: | 17 |
-| RNF7016: Display length n greater than maximum allowed of n; | 10 |
+| SQL0199: Position n Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>. | 17 |
+| RNF7016: Display length n greater than maximum allowed of n; specification is ignored. | 10 |
 | Unquoted data-area name in DTAARA (IBM reads it as a variable holding the name) | 4 |
-| RNF5005: Operation entry following ENDSR operation is not valid; | 3 |
-| RNF5191: The Result-Field is not a data structure when Factor n is a | 3 |
+| RNF5005: Operation entry following ENDSR operation is not valid; specification is ignored. | 3 |
+| RNF5191: The Result-Field is not a data structure when Factor n is a file name. | 3 |
 | LIKE naming a sibling subfield without its DS qualifier | 2 |
-| RNF0257: Form-Type entry for main procedure not valid or out of | 2 |
-| RNF0637: An operand was expected but was not found; specification is | 2 |
-| RNF0724: The statement type is out of sequence for the main | 2 |
-| RNF2093: Blank File-Designation entry is not valid with File-Type | 2 |
-| RNF7416: The types of the right and left hand side do not match in | 2 |
-| RNF0203: THE MESSAGE-TARGET OPERAND IS NOT VALID FOR THE SND-MSG | 1 |
-| RNF0592: The second parameter NUMS for %LOOKUPxx must be a sequenced | 1 |
+| RNF0257: Form-Type entry for main procedure not valid or out of sequence. | 2 |
+| RNF0637: An operand was expected but was not found; specification is ignored. | 2 |
+| RNF0724: The statement type is out of sequence for the main procedure. | 2 |
+| RNF2093: Blank File-Designation entry is not valid with File-Type entry; defaults to F. | 2 |
+| RNF7416: The types of the right and left hand side do not match in the EVAL operation. | 2 |
+| RNF0203: THE MESSAGE-TARGET OPERAND IS NOT VALID FOR THE SND-MSG OPERATION. | 1 |
+| RNF0592: The second parameter NUMS for %LOOKUPxx must be a sequenced array. | 1 |
 | RNF0604: The token is not valid; token is ignored. | 1 |
 | RNF0622: A qualified name is not allowed in this context. | 1 |
-| RNF2120: External descriptions for file CUSTMENU not found; file is | 1 |
-| RNF2121: Record format RPTFILE in file RPTFILE already defined; | 1 |
-| RNF3244: Return type I(n,n) does not match type *NONE of overloaded | 1 |
+| RNF2120: External descriptions for file CUSTMENU not found; file is ignored. | 1 |
+| RNF2121: Record format RPTFILE in file RPTFILE already defined; record format is ignored. | 1 |
+| RNF3244: Return type I(n,n) does not match type *NONE of overloaded prototype. | 1 |
 | RNF3308: Keyword name is not valid; the keyword is ignored. | 1 |
-| RNF3466: The Decimal-Positions entry does not agree with the | 1 |
-| RNF3555: The keyword is not allowed in fixed-form definitions. The | 1 |
+| RNF3466: The Decimal-Positions entry does not agree with the Data-Type entry; defaults to n. | 1 |
+| RNF3555: The keyword is not allowed in fixed-form definitions. The keyword is ignored. | 1 |
 | RNF5009: Factor n operand is required for specified operation. | 1 |
-| RNF5056: Either the error indicator or the E operation extender must | 1 |
-| RNF5063: Factor n operand must not be an externally described file | 1 |
+| RNF5056: Either the error indicator or the E operation extender must be specified for the TEST operation. | 1 |
+| RNF5063: Factor n operand must not be an externally described file for this operation. | 1 |
 | RNF5508: End of free-format statement is not blank. | 1 |
-| RNF7091: The Factor n operand is a Local-Data Area for UNLOCK | 1 |
+| RNF7091: The Factor n operand is a Local-Data Area for UNLOCK operation. | 1 |
 | RNF7421: Operands are not compatible with the type of operator. | 1 |
-| RNF7510: The operand C6 is too small to contain a complete *ISO- | 1 |
-| RNF7512: The Result Field entry C6 is too small to contain a | 1 |
-| RNF7563: The expression is not valid for assignment to built-in | 1 |
+| RNF7510: The operand C6 is too small to contain a complete *ISO- date. | 1 |
+| RNF7512: The Result Field entry C6 is too small to contain a complete *ISO- Date. | 1 |
+| RNF7563: The expression is not valid for assignment to built-in function %LEN or %ELEM. | 1 |
 | Undefined name, cause not reported by IBM (RNF7030) | 1 |
 
 **Declaration after calculations** (17)
@@ -80,38 +80,38 @@ The first cause IBM's listing points at, with follow-on "not defined" messages (
 - `test95_extender_e.rpgle` — line 17: `DCL-S x INT(10) INZ(10);`
 - `test99_data_into.rpgle` — line 23: `DCL-DS product QUALIFIED;`
 
-**SQL0199: Position n Keyword USING not expected. Valid tokens:** (17)
+**SQL0199: Position n Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>.** (17)
 
-- `test103_rla_chain.rpgle` — line 10: Position 18 Keyword USING not expected. Valid tokens: — `EXEC SQL CONNECT USING :connStr;`
-- `test104_rla_read.rpgle` — line 9: Position 18 Keyword USING not expected. Valid tokens: — `EXEC SQL CONNECT USING :connStr;`
-- `test105_rla_write_upd_del.rpgle` — line 10: Position 18 Keyword USING not expected. Valid tokens: — `EXEC SQL CONNECT USING :connStr;`
-- `test106_rla_setll_reade.rpgle` — line 10: Position 18 Keyword USING not expected. Valid tokens: — `EXEC SQL CONNECT USING :connStr;`
-- `test188_fixed_cspec_exec_sql.sqlrpgle` — line 9: Position 17 Keyword USING not expected. Valid tokens: — `C+ CONNECT USING :conn`
-- `test219_prog_order_release.sqlrpgle` — line 49: Position 17 Keyword USING not expected. Valid tokens: — `C+ CONNECT USING :CONN`
-- `test237_sql_into_fit.sqlrpgle` — line 18: Position 18 Keyword USING not expected. Valid tokens: — `EXEC SQL CONNECT USING :connStr;`
-- `test238_rla_field_fit.rpgle` — line 17: Position 18 Keyword USING not expected. Valid tokens: — `EXEC SQL CONNECT USING :connStr;`
-- `test77_exec_sql.sqlrpgle` — line 13: Position 18 Keyword USING not expected. Valid tokens: — `EXEC SQL CONNECT USING :connStr;`
-- `test78_exec_sql_proc.sqlrpgle` — line 9: Position 18 Keyword USING not expected. Valid tokens: — `EXEC SQL CONNECT USING :connStr;`
-- `test79_sql_core.sqlrpgle` — line 15: Position 18 Keyword USING not expected. Valid tokens: — `EXEC SQL CONNECT USING :connStr;`
-- `test80_sql_cursors.sqlrpgle` — line 12: Position 18 Keyword USING not expected. Valid tokens: — `EXEC SQL CONNECT USING :connStr;`
-- `test81_sql_dynamic.sqlrpgle` — line 12: Position 18 Keyword USING not expected. Valid tokens: — `EXEC SQL CONNECT USING :connStr;`
-- `test82_sql_advanced.sqlrpgle` — line 13: Position 18 Keyword USING not expected. Valid tokens: — `EXEC SQL CONNECT USING :connStr;`
-- `test83_sql_multirow.sqlrpgle` — line 13: Position 18 Keyword USING not expected. Valid tokens: — `EXEC SQL CONNECT USING :connStr;`
-- `test84_sql_connect.sqlrpgle` — line 12: Position 18 Keyword USING not expected. Valid tokens: — `EXEC SQL CONNECT USING :connStr;`
-- `test86.sqlrpgle` — line 14: Position 18 Keyword USING not expected. Valid tokens: — `exec sql connect using :connStr;`
+- `test103_rla_chain.rpgle` — line 10: Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>. — `EXEC SQL CONNECT USING :connStr;`
+- `test104_rla_read.rpgle` — line 9: Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>. — `EXEC SQL CONNECT USING :connStr;`
+- `test105_rla_write_upd_del.rpgle` — line 10: Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>. — `EXEC SQL CONNECT USING :connStr;`
+- `test106_rla_setll_reade.rpgle` — line 10: Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>. — `EXEC SQL CONNECT USING :connStr;`
+- `test188_fixed_cspec_exec_sql.sqlrpgle` — line 9: Position 17 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>. — `C+ CONNECT USING :conn`
+- `test219_prog_order_release.sqlrpgle` — line 49: Position 17 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>. — `C+ CONNECT USING :CONN`
+- `test237_sql_into_fit.sqlrpgle` — line 18: Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>. — `EXEC SQL CONNECT USING :connStr;`
+- `test238_rla_field_fit.rpgle` — line 17: Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>. — `EXEC SQL CONNECT USING :connStr;`
+- `test77_exec_sql.sqlrpgle` — line 13: Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>. — `EXEC SQL CONNECT USING :connStr;`
+- `test78_exec_sql_proc.sqlrpgle` — line 9: Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>. — `EXEC SQL CONNECT USING :connStr;`
+- `test79_sql_core.sqlrpgle` — line 15: Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>. — `EXEC SQL CONNECT USING :connStr;`
+- `test80_sql_cursors.sqlrpgle` — line 12: Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>. — `EXEC SQL CONNECT USING :connStr;`
+- `test81_sql_dynamic.sqlrpgle` — line 12: Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>. — `EXEC SQL CONNECT USING :connStr;`
+- `test82_sql_advanced.sqlrpgle` — line 13: Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>. — `EXEC SQL CONNECT USING :connStr;`
+- `test83_sql_multirow.sqlrpgle` — line 13: Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>. — `EXEC SQL CONNECT USING :connStr;`
+- `test84_sql_connect.sqlrpgle` — line 12: Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>. — `EXEC SQL CONNECT USING :connStr;`
+- `test86.sqlrpgle` — line 14: Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>. — `exec sql connect using :connStr;`
 
-**RNF7016: Display length n greater than maximum allowed of n;** (10)
+**RNF7016: Display length n greater than maximum allowed of n; specification is ignored.** (10)
 
-- `test08_procedures.rpgle` — line 27: Display length 100 greater than maximum allowed of 52; — `DSPLY msg;`
-- `test10_bifs_expanded.rpgle` — line 19: Display length 100 greater than maximum allowed of 52; — `DSPLY result;`
-- `test217_prog_inv_reorder.rpgle` — line 104: Display length 70 greater than maximum allowed of 52; — `C     RPTLIN        DSPLY`
-- `test222_half_adjust.rpgle` — line 12: Display length 60 greater than maximum allowed of 52; — `C     RPTLIN        DSPLY`
-- `test223_editc_decimals.rpgle` — line 15: Display length 60 greater than maximum allowed of 52; — `C     RPTLIN        DSPLY`
-- `test224_fixed_dspec_inz.rpgle` — line 15: Display length 70 greater than maximum allowed of 52; — `C     RPTLIN        DSPLY`
-- `test225_decimal_division.rpgle` — line 12: Display length 70 greater than maximum allowed of 52; — `C     RPTLIN        DSPLY`
-- `test244_pi_star_n.rpgle` — line 26: Display length 54 greater than maximum allowed of 52; — `DSPLY ('RESULT:MUL=' + %CHAR(total*N) + ' ' + %CHAR(total * n));`
-- `test249_ds_subfield_types.rpgle` — line 40: Display length 53 greater than maximum allowed of 52; — `%CHAR(rec.active) + ' ' + %CHAR(rec.units) + ' ' + %CHAR(rec.due));`
-- `test74_concat.rpgle` — line 13: Display length 100 greater than maximum allowed of 52; — `DSPLY result;  // Alice, Dallas, TX`
+- `test08_procedures.rpgle` — line 27: Display length 100 greater than maximum allowed of 52; specification is ignored. — `DSPLY msg;`
+- `test10_bifs_expanded.rpgle` — line 19: Display length 100 greater than maximum allowed of 52; specification is ignored. — `DSPLY result;`
+- `test217_prog_inv_reorder.rpgle` — line 104: Display length 70 greater than maximum allowed of 52; specification is ignored. — `C     RPTLIN        DSPLY`
+- `test222_half_adjust.rpgle` — line 12: Display length 60 greater than maximum allowed of 52; specification is ignored. — `C     RPTLIN        DSPLY`
+- `test223_editc_decimals.rpgle` — line 15: Display length 60 greater than maximum allowed of 52; specification is ignored. — `C     RPTLIN        DSPLY`
+- `test224_fixed_dspec_inz.rpgle` — line 15: Display length 70 greater than maximum allowed of 52; specification is ignored. — `C     RPTLIN        DSPLY`
+- `test225_decimal_division.rpgle` — line 12: Display length 70 greater than maximum allowed of 52; specification is ignored. — `C     RPTLIN        DSPLY`
+- `test244_pi_star_n.rpgle` — line 26: Display length 54 greater than maximum allowed of 52; specification is ignored. — `DSPLY ('RESULT:MUL=' + %CHAR(total*N) + ' ' + %CHAR(total * n));`
+- `test249_ds_subfield_types.rpgle` — line 40: Display length 53 greater than maximum allowed of 52; specification is ignored. — `%CHAR(rec.active) + ' ' + %CHAR(rec.units) + ' ' + %CHAR(rec.due));`
+- `test74_concat.rpgle` — line 13: Display length 100 greater than maximum allowed of 52; specification is ignored. — `DSPLY result;  // Alice, Dallas, TX`
 
 **Unquoted data-area name in DTAARA (IBM reads it as a variable holding the name)** (4)
 
@@ -120,55 +120,55 @@ The first cause IBM's listing points at, with follow-on "not defined" messages (
 - `test97_da_status415.rpgle` — line 4: `DCL-S da CHAR(10) DTAARA(RPGCTEST97DA);`
 - `test98_da_status413.rpgle` — line 4: `DCL-S da CHAR(10) DTAARA(RPGCTEST98DA);`
 
-**RNF5005: Operation entry following ENDSR operation is not valid;** (3)
+**RNF5005: Operation entry following ENDSR operation is not valid; specification is ignored.** (3)
 
-- `test13_subroutines.rpgle` — line 17: Operation entry following ENDSR operation is not valid; — `EXSR addTen;`
-- `test66_pssr.rpgle` — line 10: Operation entry following ENDSR operation is not valid; — `result = 10;`
-- `test67_pssr_error.rpgle` — line 12: Operation entry following ENDSR operation is not valid; — `DSPLY 'Before error';`
+- `test13_subroutines.rpgle` — line 17: Operation entry following ENDSR operation is not valid; specification is ignored. — `EXSR addTen;`
+- `test66_pssr.rpgle` — line 10: Operation entry following ENDSR operation is not valid; specification is ignored. — `result = 10;`
+- `test67_pssr_error.rpgle` — line 12: Operation entry following ENDSR operation is not valid; specification is ignored. — `DSPLY 'Before error';`
 
-**RNF5191: The Result-Field is not a data structure when Factor n is a** (3)
+**RNF5191: The Result-Field is not a data structure when Factor n is a file name.** (3)
 
-- `test154_fixed_ispec_single.rpgle` — line 10: The Result-Field is not a data structure when Factor 2 is a — `WRITE TESTFL154;`
-- `test156_fixed_ispec_field_ind.rpgle` — line 7: The Result-Field is not a data structure when Factor 2 is a — `WRITE TESTFL156;`
-- `test157_fixed_ispec_update.rpgle` — line 7: The Result-Field is not a data structure when Factor 2 is a — `WRITE TESTFL157;`
+- `test154_fixed_ispec_single.rpgle` — line 10: The Result-Field is not a data structure when Factor 2 is a file name. — `WRITE TESTFL154;`
+- `test156_fixed_ispec_field_ind.rpgle` — line 7: The Result-Field is not a data structure when Factor 2 is a file name. — `WRITE TESTFL156;`
+- `test157_fixed_ispec_update.rpgle` — line 7: The Result-Field is not a data structure when Factor 2 is a file name. — `WRITE TESTFL157;`
 
 **LIKE naming a sibling subfield without its DS qualifier** (2)
 
 - `test162_fixed_subf_like.rpgle` — line 5: `Dprice                                LIKE(unitPrice)`
 - `test163_subfield_like_dim.rpgle` — line 6: `price LIKE(unitPrice);`
 
-**RNF0257: Form-Type entry for main procedure not valid or out of** (2)
+**RNF0257: Form-Type entry for main procedure not valid or out of sequence.** (2)
 
-- `test155_fixed_ispec_multi.rpgle` — line 7: Form-Type entry for main procedure not valid or out of — `DTYPECODE         S              1A`
-- `test61_no_free.rpgle` — line 1: Form-Type entry for main procedure not valid or out of — `// Test 61: No **FREE directive`
+- `test155_fixed_ispec_multi.rpgle` — line 7: Form-Type entry for main procedure not valid or out of sequence. — `DTYPECODE         S              1A`
+- `test61_no_free.rpgle` — line 1: Form-Type entry for main procedure not valid or out of sequence. — `// Test 61: No **FREE directive`
 
-**RNF0637: An operand was expected but was not found; specification is** (2)
+**RNF0637: An operand was expected but was not found; specification is ignored.** (2)
 
-- `test114_data_into_json_parser.rpgle` — line 19: An operand was expected but was not found; specification is — `DSPLY 'Name: ' + person.name;`
-- `test180_fixed_cspec_modern_opcodes.rpgle` — line 9: An operand was expected but was not found; specification is — `C                             'case=any')`
+- `test114_data_into_json_parser.rpgle` — line 19: An operand was expected but was not found; specification is ignored. — `DSPLY 'Name: ' + person.name;`
+- `test180_fixed_cspec_modern_opcodes.rpgle` — line 9: An operand was expected but was not found; specification is ignored. — `C                             'case=any')`
 
-**RNF0724: The statement type is out of sequence for the main** (2)
+**RNF0724: The statement type is out of sequence for the main procedure.** (2)
 
-- `test130_fixed_cspec_eval_callp.rpgle` — line 22: The statement type is out of sequence for the main — `DCL-PR doubleIt;`
-- `test16_copy.rpgle` — line 3: The statement type is out of sequence for the main — `DCL-S local_val INT(10);`
+- `test130_fixed_cspec_eval_callp.rpgle` — line 22: The statement type is out of sequence for the main procedure. — `DCL-PR doubleIt;`
+- `test16_copy.rpgle` — line 3: The statement type is out of sequence for the main procedure. — `DCL-S local_val INT(10);`
 
-**RNF2093: Blank File-Designation entry is not valid with File-Type** (2)
+**RNF2093: Blank File-Designation entry is not valid with File-Type entry; defaults to F.** (2)
 
-- `test215_prog_ar_aging.rpgle` — line 13: Blank File-Designation entry is not valid with File-Type — `FTESTFL215 U FA F   32        DISK`
-- `test216_prog_gl_post.rpgle` — line 13: Blank File-Designation entry is not valid with File-Type — `FTESTFL216 U FA F   48        DISK`
+- `test215_prog_ar_aging.rpgle` — line 13: Blank File-Designation entry is not valid with File-Type entry; defaults to F. — `FTESTFL215 U FA F   32        DISK`
+- `test216_prog_gl_post.rpgle` — line 13: Blank File-Designation entry is not valid with File-Type entry; defaults to F. — `FTESTFL216 U FA F   48        DISK`
 
-**RNF7416: The types of the right and left hand side do not match in** (2)
+**RNF7416: The types of the right and left hand side do not match in the EVAL operation.** (2)
 
-- `test101_user.rpgle` — line 8: The types of the right and left hand side do not match in — `currentUser = *USER;`
-- `test22_status_error.rpgle` — line 10: The types of the right and left hand side do not match in — `errFlag = %ERROR();`
+- `test101_user.rpgle` — line 8: The types of the right and left hand side do not match in the EVAL operation. — `currentUser = *USER;`
+- `test22_status_error.rpgle` — line 10: The types of the right and left hand side do not match in the EVAL operation. — `errFlag = %ERROR();`
 
-**RNF0203: THE MESSAGE-TARGET OPERAND IS NOT VALID FOR THE SND-MSG** (1)
+**RNF0203: THE MESSAGE-TARGET OPERAND IS NOT VALID FOR THE SND-MSG OPERATION.** (1)
 
-- `test102_snd_msg.rpgle` — line 15: THE MESSAGE-TARGET OPERAND IS NOT VALID FOR THE SND-MSG — `SND-MSG TYPE(*INFO) 'Processing complete';`
+- `test102_snd_msg.rpgle` — line 15: THE MESSAGE-TARGET OPERAND IS NOT VALID FOR THE SND-MSG OPERATION. — `SND-MSG TYPE(*INFO) 'Processing complete';`
 
-**RNF0592: The second parameter NUMS for %LOOKUPxx must be a sequenced** (1)
+**RNF0592: The second parameter NUMS for %LOOKUPxx must be a sequenced array.** (1)
 
-- `test52_array_bifs.rpgle` — line 21: The second parameter NUMS for %LOOKUPxx must be a sequenced — `idx = %LOOKUPGE(25 : nums);`
+- `test52_array_bifs.rpgle` — line 21: The second parameter NUMS for %LOOKUPxx must be a sequenced array. — `idx = %LOOKUPGE(25 : nums);`
 
 **RNF0604: The token is not valid; token is ignored.** (1)
 
@@ -178,65 +178,65 @@ The first cause IBM's listing points at, with follow-on "not defined" messages (
 
 - `test118_fixed_rla_chain.rpgle` — line 4: A qualified name is not allowed in this context. — `DcustomerNumb...  S`
 
-**RNF2120: External descriptions for file CUSTMENU not found; file is** (1)
+**RNF2120: External descriptions for file CUSTMENU not found; file is ignored.** (1)
 
-- `test_exfmt.rpgle` — line 8: External descriptions for file CUSTMENU not found; file is — `DCL-F CUSTMENU WORKSTN;`
+- `test_exfmt.rpgle` — line 8: External descriptions for file CUSTMENU not found; file is ignored. — `DCL-F CUSTMENU WORKSTN;`
 
-**RNF2121: Record format RPTFILE in file RPTFILE already defined;** (1)
+**RNF2121: Record format RPTFILE in file RPTFILE already defined; record format is ignored.** (1)
 
-- `test25_dclf.rpgle` — line 4: Record format RPTFILE in file RPTFILE already defined; — `DCL-F RPTFILE PRINTER;`
+- `test25_dclf.rpgle` — line 4: Record format RPTFILE in file RPTFILE already defined; record format is ignored. — `DCL-F RPTFILE PRINTER;`
 
-**RNF3244: Return type I(n,n) does not match type *NONE of overloaded** (1)
+**RNF3244: Return type I(n,n) does not match type *NONE of overloaded prototype.** (1)
 
-- `test110_overload.rpgle` — line 27: Return type I(10,0) does not match type *NONE of overloaded — `DCL-PR abs OVERLOAD(absInt : absFloat);`
+- `test110_overload.rpgle` — line 27: Return type I(10,0) does not match type *NONE of overloaded prototype. — `DCL-PR abs OVERLOAD(absInt : absFloat);`
 
 **RNF3308: Keyword name is not valid; the keyword is ignored.** (1)
 
 - `test71_enum_boolean.rpgle` — line 2: Keyword name is not valid; the keyword is ignored. — `DCL-S isActive BOOLEAN;`
 
-**RNF3466: The Decimal-Positions entry does not agree with the** (1)
+**RNF3466: The Decimal-Positions entry does not agree with the Data-Type entry; defaults to n.** (1)
 
-- `test158_fixed_ospec_editcode.rpgle` — line 3: The Decimal-Positions entry does not agree with the — `DAMT              S             10S`
+- `test158_fixed_ospec_editcode.rpgle` — line 3: The Decimal-Positions entry does not agree with the Data-Type entry; defaults to 0. — `DAMT              S             10S`
 
-**RNF3555: The keyword is not allowed in fixed-form definitions. The** (1)
+**RNF3555: The keyword is not allowed in fixed-form definitions. The keyword is ignored.** (1)
 
-- `test124_fixed_overlay.rpgle` — line 8: The keyword is not allowed in fixed-form definitions. The — `Did                             10I 0 POS(1)`
+- `test124_fixed_overlay.rpgle` — line 8: The keyword is not allowed in fixed-form definitions. The keyword is ignored. — `Did                             10I 0 POS(1)`
 
 **RNF5009: Factor n operand is required for specified operation.** (1)
 
 - `test182_fixed_cspec_cas_cab.rpgle` — line 16: Factor 1 operand is required for specified operation. — `C                   CAB                     done`
 
-**RNF5056: Either the error indicator or the E operation extender must** (1)
+**RNF5056: Either the error indicator or the E operation extender must be specified for the TEST operation.** (1)
 
-- `test47_test.rpgle` — line 7: Either the error indicator or the E operation extender must — `TEST(D) myDate;`
+- `test47_test.rpgle` — line 7: Either the error indicator or the E operation extender must be specified for the TEST operation. — `TEST(D) myDate;`
 
-**RNF5063: Factor n operand must not be an externally described file** (1)
+**RNF5063: Factor n operand must not be an externally described file for this operation.** (1)
 
-- `test146_fixed_cspec_write_upd_del.rpgle` — line 82: Factor 2 operand must not be an externally described file — ``
+- `test146_fixed_cspec_write_upd_del.rpgle` — line 82: Factor 2 operand must not be an externally described file for this operation. — ``
 
 **RNF5508: End of free-format statement is not blank.** (1)
 
 - `test221_ospec_decimals.rpgle` — line 18: End of free-format statement is not blank. — `itemno = 'WIDGET';  amount = 1250.00;  rate = 1.375;  uom = 'EACH  ';`
 
-**RNF7091: The Factor n operand is a Local-Data Area for UNLOCK** (1)
+**RNF7091: The Factor n operand is a Local-Data Area for UNLOCK operation.** (1)
 
-- `test92_data_area_lda.rpgle` — line 21: The Factor 2 operand is a Local-Data Area for UNLOCK — `UNLOCK LdaData;`
+- `test92_data_area_lda.rpgle` — line 21: The Factor 2 operand is a Local-Data Area for UNLOCK operation. — `UNLOCK LdaData;`
 
 **RNF7421: Operands are not compatible with the type of operator.** (1)
 
 - `test05_if.rpgle` — line 25: Operands are not compatible with the type of operator. — `IF NOT x = 0;`
 
-**RNF7510: The operand C6 is too small to contain a complete *ISO-** (1)
+**RNF7510: The operand C6 is too small to contain a complete *ISO- date.** (1)
 
-- `test212_fixed_cspec_move_dt_err.rpgle` — line 27: The operand C6 is too small to contain a complete *ISO- — `C     *ISO          MOVE      C6            DFLD`
+- `test212_fixed_cspec_move_dt_err.rpgle` — line 27: The operand C6 is too small to contain a complete *ISO- date. — `C     *ISO          MOVE      C6            DFLD`
 
-**RNF7512: The Result Field entry C6 is too small to contain a** (1)
+**RNF7512: The Result Field entry C6 is too small to contain a complete *ISO- Date.** (1)
 
-- `test211_fixed_cspec_move_dt_align.rpgle` — line 34: The Result Field entry C6 is too small to contain a — `C     *ISO          MOVEL     DFLD          C6`
+- `test211_fixed_cspec_move_dt_align.rpgle` — line 34: The Result Field entry C6 is too small to contain a complete *ISO- Date. — `C     *ISO          MOVEL     DFLD          C6`
 
-**RNF7563: The expression is not valid for assignment to built-in** (1)
+**RNF7563: The expression is not valid for assignment to built-in function %LEN or %ELEM.** (1)
 
-- `test111_elem_alloc.rpgle` — line 9: The expression is not valid for assignment to built-in — `%ELEM(nums : *ALLOC) = 50;`
+- `test111_elem_alloc.rpgle` — line 9: The expression is not valid for assignment to built-in function %LEN or %ELEM. — `%ELEM(nums : *ALLOC) = 50;`
 
 **Undefined name, cause not reported by IBM (RNF7030)** (1)
 
@@ -248,61 +248,61 @@ The first cause IBM's listing points at, with follow-on "not defined" messages (
 |---|---|---|
 | RNF7030 | 31 | The name or indicator DESC is not defined. |
 | RNF7503 | 24 | Expression contains an operand that is not defined. |
-| RNF0724 | 18 | The statement type is out of sequence for the main |
-| SQL0199 | 18 | Position 18 Keyword USING not expected. Valid tokens: |
-| RNF7016 | 16 | Display length 100 greater than maximum allowed of 52; |
-| SQL0104 | 15 | Position 20 Token <END-OF-STATEMENT> was not valid. |
-| RNF0637 | 9 | An operand was expected but was not found; specification is |
+| RNF0724 | 18 | The statement type is out of sequence for the main procedure. |
+| SQL0199 | 18 | Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>. |
+| RNF7016 | 16 | Display length 100 greater than maximum allowed of 52; specification is ignored. |
+| SQL0104 | 15 | Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>. Message Summary |
+| RNF0637 | 9 | An operand was expected but was not found; specification is ignored. |
 | RNF5347 | 9 | An assignment operator is expected with the EVAL operation. |
-| RNF5191 | 8 | The Result-Field is not a data structure when Factor 2 is a |
+| RNF5191 | 8 | The Result-Field is not a data structure when Factor 2 is a file name. |
 | RNF5377 | 5 | The end of the expression is expected. |
-| RNF0257 | 3 | Form-Type entry for main procedure not valid or out of |
-| RNF5005 | 3 | Operation entry following ENDSR operation is not valid; |
+| RNF0257 | 3 | Form-Type entry for main procedure not valid or out of sequence. |
+| RNF5005 | 3 | Operation entry following ENDSR operation is not valid; specification is ignored. |
 | RNF5454 | 3 | The third operand of DATA-GEN must be %GEN. |
 | RNF5508 | 3 | End of free-format statement is not blank. |
 | RNF6005 | 3 | The Type entry is not H, D, T, or E; defaults to D. |
 | RNF0622 | 2 | A qualified name is not allowed in this context. |
 | RNF2004 | 2 | The End-of-File entry is not blank or E; defaults to blank. |
-| RNF2093 | 2 | Blank File-Designation entry is not valid with File-Type |
+| RNF2093 | 2 | Blank File-Designation entry is not valid with File-Type entry; defaults to F. |
 | RNF3308 | 2 | Keyword name is not valid; the keyword is ignored. |
-| RNF5049 | 2 | The Operation Extender is not valid for the specified |
-| RNF7416 | 2 | The types of the right and left hand side do not match in |
+| RNF5049 | 2 | The Operation Extender is not valid for the specified Operation Code. |
+| RNF7416 | 2 | The types of the right and left hand side do not match in the EVAL operation. |
 | RNF7421 | 2 | Operands are not compatible with the type of operator. |
-| SQL0312 | 2 | Position 67 Variable EMPID not defined or not usable for |
-| RNF0203 | 1 | THE MESSAGE-TARGET OPERAND IS NOT VALID FOR THE SND-MSG |
-| RNF0289 | 1 | Entry contains data that is not valid; only valid data is |
-| RNF0592 | 1 | The second parameter NUMS for %LOOKUPxx must be a sequenced |
+| SQL0312 | 2 | Position 67 Variable EMPID not defined or not usable for reason code 1. Message Summary |
+| RNF0203 | 1 | THE MESSAGE-TARGET OPERAND IS NOT VALID FOR THE SND-MSG OPERATION. |
+| RNF0289 | 1 | Entry contains data that is not valid; only valid data is used. |
+| RNF0592 | 1 | The second parameter NUMS for %LOOKUPxx must be a sequenced array. |
 | RNF0597 | 1 | The second parameter CODES for %TLOOKUPxx is not valid. |
 | RNF0604 | 1 | The token is not valid; token is ignored. |
 | RNF0623 | 1 | The simple qualified name is not specified correctly. |
-| RNF0633 | 1 | An unexpected right parenthesis was encountered; right |
-| RNF2109 | 1 | All Record Formats for externally-described file RPTFILE |
-| RNF2120 | 1 | External descriptions for file CUSTMENU not found; file is |
-| RNF2121 | 1 | Record format RPTFILE in file RPTFILE already defined; |
-| RNF3244 | 1 | Return type I(10,0) does not match type *NONE of overloaded |
-| RNF3245 | 1 | No prototype in the OVERLOAD keyword of ABS matches the |
-| RNF3438 | 1 | LIKE keyword is expected for field ISACTIVE but not found; |
-| RNF3466 | 1 | The Decimal-Positions entry does not agree with the |
+| RNF0633 | 1 | An unexpected right parenthesis was encountered; right parenthesis is ignored. |
+| RNF2109 | 1 | All Record Formats for externally-described file RPTFILE ignored or dropped due to error; file ignored. |
+| RNF2120 | 1 | External descriptions for file CUSTMENU not found; file is ignored. |
+| RNF2121 | 1 | Record format RPTFILE in file RPTFILE already defined; record format is ignored. |
+| RNF3244 | 1 | Return type I(10,0) does not match type *NONE of overloaded prototype. |
+| RNF3245 | 1 | No prototype in the OVERLOAD keyword of ABS matches the call. |
+| RNF3438 | 1 | LIKE keyword is expected for field ISACTIVE but not found; definition is ignored. |
+| RNF3466 | 1 | The Decimal-Positions entry does not agree with the Data-Type entry; defaults to 0. |
 | RNF3551 | 1 | END-XX is not expected. |
-| RNF3555 | 1 | The keyword is not allowed in fixed-form definitions. The |
-| RNF3763 | 1 | A return value is expected for the procedure-interface |
-| RNF3767 | 1 | The name in positions 7 - 21 does not match the name of the |
+| RNF3555 | 1 | The keyword is not allowed in fixed-form definitions. The keyword is ignored. |
+| RNF3763 | 1 | A return value is expected for the procedure-interface specification. |
+| RNF3767 | 1 | The name in positions 7 - 21 does not match the name of the procedure being defined. |
 | RNF5009 | 1 | Factor 1 operand is required for specified operation. |
 | RNF5023 | 1 | Factor 2 operand is not specified for this operation. |
-| RNF5056 | 1 | Either the error indicator or the E operation extender must |
-| RNF5063 | 1 | Factor 2 operand must not be an externally described file |
-| RNF5198 | 1 | File in Factor 2 is not allowed for UPDATE or DELETE |
+| RNF5056 | 1 | Either the error indicator or the E operation extender must be specified for the TEST operation. |
+| RNF5063 | 1 | Factor 2 operand must not be an externally described file for this operation. |
+| RNF5198 | 1 | File in Factor 2 is not allowed for UPDATE or DELETE operation. |
 | RNF5343 | 1 | Array CODES has too many omitted indexes. |
-| RNF5403 | 1 | The prototyped call cannot be used in an expression because |
+| RNF5403 | 1 | The prototyped call cannot be used in an expression because it does not return a value. |
 | RNF5449 | 1 | The third operand of DATA-INTO must be %PARSER. |
 | RNF7018 | 1 | The operand INZSR1 of EXSR is not a subroutine name. |
-| RNF7091 | 1 | The Factor 2 operand is a Local-Data Area for UNLOCK |
-| RNF7510 | 1 | The operand C6 is too small to contain a complete *ISO- |
-| RNF7512 | 1 | The Result Field entry C6 is too small to contain a |
-| RNF7523 | 1 | Operation-Code extender D, T, or Z cannot be used with |
-| RNF7563 | 1 | The expression is not valid for assignment to built-in |
+| RNF7091 | 1 | The Factor 2 operand is a Local-Data Area for UNLOCK operation. |
+| RNF7510 | 1 | The operand C6 is too small to contain a complete *ISO- date. |
+| RNF7512 | 1 | The Result Field entry C6 is too small to contain a complete *ISO- Date. |
+| RNF7523 | 1 | Operation-Code extender D, T, or Z cannot be used with Result-Field entry MYDATE. |
+| RNF7563 | 1 | The expression is not valid for assignment to built-in function %LEN or %ELEM. |
 | RNF8003 | 1 | Field length 13 is greater than end position 10. |
-| SQL5011 | 1 | Position 9 Host structure array IDS not defined or not |
+| SQL5011 | 1 | Position 9 Host structure array IDS not defined or not usable for reason code 1. |
 
 ### B. rpgc leniency — the work queue (35)
 
@@ -310,35 +310,35 @@ The first cause IBM's listing points at, with follow-on "not defined" messages (
 
 - **RNF3308** (sev 20, line 33): Keyword name is not valid; the keyword is ignored.
   - `DCL-PI INT(10);`
-- **RNF0633** (sev 20, line 33): An unexpected right parenthesis was encountered; right
+- **RNF0633** (sev 20, line 33): An unexpected right parenthesis was encountered; right parenthesis is ignored.
   - `DCL-PI INT(10);`
-- **RNF3767** (sev 20, line 33): The name in positions 7 - 21 does not match the name of the
+- **RNF3767** (sev 20, line 33): The name in positions 7 - 21 does not match the name of the procedure being defined.
   - `DCL-PI INT(10);`
-- **RNF3763** (sev 20, line 33): A return value is expected for the procedure-interface
+- **RNF3763** (sev 20, line 33): A return value is expected for the procedure-interface specification.
   - `DCL-PI INT(10);`
 - **RNF3308** (sev 20, line 41): Keyword name is not valid; the keyword is ignored.
   - `DCL-PI INT(10);`
-- **RNF0633** (sev 20, line 41): An unexpected right parenthesis was encountered; right
+- **RNF0633** (sev 20, line 41): An unexpected right parenthesis was encountered; right parenthesis is ignored.
   - `DCL-PI INT(10);`
-- **RNF3767** (sev 20, line 41): The name in positions 7 - 21 does not match the name of the
+- **RNF3767** (sev 20, line 41): The name in positions 7 - 21 does not match the name of the procedure being defined.
   - `DCL-PI INT(10);`
-- **RNF3763** (sev 20, line 41): A return value is expected for the procedure-interface
+- **RNF3763** (sev 20, line 41): A return value is expected for the procedure-interface specification.
   - `DCL-PI INT(10);`
 - … and 5 more
 
 #### `test09_datastructs.rpgle`
 
-- **RNF0724** (sev 30, line 18): The statement type is out of sequence for the main
+- **RNF0724** (sev 30, line 18): The statement type is out of sequence for the main procedure.
   - `DCL-DS items QUALIFIED DIM(3);`
 - **RNF5347** (sev 30, line 19): An assignment operator is expected with the EVAL operation.
   - `desc VARCHAR(30);`
 - **RNF5347** (sev 30, line 20): An assignment operator is expected with the EVAL operation.
   - `qty INT(10);`
-- **RNF0724** (sev 30, line 21): The statement type is out of sequence for the main
+- **RNF0724** (sev 30, line 21): The statement type is out of sequence for the main procedure.
   - `END-DS;`
-- **RNF0724** (sev 30, line 30): The statement type is out of sequence for the main
+- **RNF0724** (sev 30, line 30): The statement type is out of sequence for the main procedure.
   - `DCL-S i INT(10);`
-- **RNF0724** (sev 30, line 31): The statement type is out of sequence for the main
+- **RNF0724** (sev 30, line 31): The statement type is out of sequence for the main procedure.
   - `DCL-S total INT(10);`
 - **RNF7030** (sev 30, line 19): The name or indicator DESC is not defined.
   - `desc VARCHAR(30);`
@@ -350,7 +350,7 @@ The first cause IBM's listing points at, with follow-on "not defined" messages (
 
 - **RNF5454** (sev 30, line 17): The third operand of DATA-GEN must be %GEN.
   - `DATA-GEN person %DATA(jsonOut : 'doc=string');`
-- **RNF0724** (sev 30, line 22): The statement type is out of sequence for the main
+- **RNF0724** (sev 30, line 22): The statement type is out of sequence for the main procedure.
   - `DCL-DS item QUALIFIED;`
 - **RNF5347** (sev 30, line 23): An assignment operator is expected with the EVAL operation.
   - `id INT(10);`
@@ -358,9 +358,9 @@ The first cause IBM's listing points at, with follow-on "not defined" messages (
   - `price PACKED(9:2);`
 - **RNF5347** (sev 30, line 25): An assignment operator is expected with the EVAL operation.
   - `active INT(10);`
-- **RNF0724** (sev 30, line 26): The statement type is out of sequence for the main
+- **RNF0724** (sev 30, line 26): The statement type is out of sequence for the main procedure.
   - `END-DS;`
-- **RNF0724** (sev 30, line 28): The statement type is out of sequence for the main
+- **RNF0724** (sev 30, line 28): The statement type is out of sequence for the main procedure.
   - `DCL-S jsonItem VARCHAR(300);`
 - **RNF5454** (sev 30, line 34): The third operand of DATA-GEN must be %GEN.
   - `DATA-GEN item %DATA(jsonItem);`
@@ -368,7 +368,7 @@ The first cause IBM's listing points at, with follow-on "not defined" messages (
 
 #### `test102_snd_msg.rpgle`
 
-- **RNF0203** (sev 30, line 15): THE MESSAGE-TARGET OPERAND IS NOT VALID FOR THE SND-MSG
+- **RNF0203** (sev 30, line 15): THE MESSAGE-TARGET OPERAND IS NOT VALID FOR THE SND-MSG OPERATION.
   - `SND-MSG TYPE(*INFO) 'Processing complete';`
 - **RNF5377** (sev 20, line 15): The end of the expression is expected.
   - `SND-MSG TYPE(*INFO) 'Processing complete';`
@@ -377,67 +377,67 @@ The first cause IBM's listing points at, with follow-on "not defined" messages (
 
 #### `test10_bifs_expanded.rpgle`
 
-- **RNF7016** (sev 20, line 19): Display length 100 greater than maximum allowed of 52;
+- **RNF7016** (sev 20, line 19): Display length 100 greater than maximum allowed of 52; specification is ignored.
   - `DSPLY result;`
-- **RNF7016** (sev 20, line 23): Display length 100 greater than maximum allowed of 52;
+- **RNF7016** (sev 20, line 23): Display length 100 greater than maximum allowed of 52; specification is ignored.
   - `DSPLY upper;`
-- **RNF7016** (sev 20, line 35): Display length 100 greater than maximum allowed of 52;
+- **RNF7016** (sev 20, line 35): Display length 100 greater than maximum allowed of 52; specification is ignored.
   - `DSPLY result;`
 
 #### `test110_overload.rpgle`
 
-- **RNF3244** (sev 30, line 27): Return type I(10,0) does not match type *NONE of overloaded
+- **RNF3244** (sev 30, line 27): Return type I(10,0) does not match type *NONE of overloaded prototype.
   - `DCL-PR abs OVERLOAD(absInt : absFloat);`
-- **RNF3244** (sev 30, line 27): Return type F(8) does not match type *NONE of overloaded
+- **RNF3244** (sev 30, line 27): Return type F(8) does not match type *NONE of overloaded prototype.
   - `DCL-PR abs OVERLOAD(absInt : absFloat);`
 - **RNF3551** (sev 20, line 28): END-XX is not expected.
   - `END-PR;`
-- **RNF3244** (sev 30, line 30): Return type I(10,0) does not match type *NONE of overloaded
+- **RNF3244** (sev 30, line 30): Return type I(10,0) does not match type *NONE of overloaded prototype.
   - `DCL-PR add OVERLOAD(addInt : addFloat);`
-- **RNF3244** (sev 30, line 30): Return type F(8) does not match type *NONE of overloaded
+- **RNF3244** (sev 30, line 30): Return type F(8) does not match type *NONE of overloaded prototype.
   - `DCL-PR add OVERLOAD(addInt : addFloat);`
 - **RNF3551** (sev 20, line 31): END-XX is not expected.
   - `END-PR;`
-- **RNF0637** (sev 30, line 42): An operand was expected but was not found; specification is
+- **RNF0637** (sev 30, line 42): An operand was expected but was not found; specification is ignored.
   - `DSPLY 'abs(-7)=' + %CHAR(i);`
-- **RNF0637** (sev 30, line 45): An operand was expected but was not found; specification is
+- **RNF0637** (sev 30, line 45): An operand was expected but was not found; specification is ignored.
   - `DSPLY 'abs(-3.0)=' + %CHAR(%INT(f));`
 - … and 10 more
 
 #### `test111_elem_alloc.rpgle`
 
-- **RNF0637** (sev 30, line 10): An operand was expected but was not found; specification is
+- **RNF0637** (sev 30, line 10): An operand was expected but was not found; specification is ignored.
   - `DSPLY 'cap=' + %CHAR(%ELEM(nums : *ALLOC));  // 50`
-- **RNF0637** (sev 30, line 11): An operand was expected but was not found; specification is
+- **RNF0637** (sev 30, line 11): An operand was expected but was not found; specification is ignored.
   - `DSPLY 'size=' + %CHAR(%ELEM(nums));           // 0`
-- **RNF0637** (sev 30, line 18): An operand was expected but was not found; specification is
+- **RNF0637** (sev 30, line 18): An operand was expected but was not found; specification is ignored.
   - `DSPLY 'size=' + %CHAR(%ELEM(nums));           // 5`
-- **RNF0637** (sev 30, line 19): An operand was expected but was not found; specification is
+- **RNF0637** (sev 30, line 19): An operand was expected but was not found; specification is ignored.
   - `DSPLY 'cap=' + %CHAR(%ELEM(nums : *ALLOC));   // 50`
-- **RNF0637** (sev 30, line 23): An operand was expected but was not found; specification is
+- **RNF0637** (sev 30, line 23): An operand was expected but was not found; specification is ignored.
   - `DSPLY 'size=' + %CHAR(%ELEM(nums));           // 3`
-- **RNF0637** (sev 30, line 24): An operand was expected but was not found; specification is
+- **RNF0637** (sev 30, line 24): An operand was expected but was not found; specification is ignored.
   - `DSPLY 'cap=' + %CHAR(%ELEM(nums : *ALLOC));   // still 50`
-- **RNF7563** (sev 30, line 9): The expression is not valid for assignment to built-in
+- **RNF7563** (sev 30, line 9): The expression is not valid for assignment to built-in function %LEN or %ELEM.
   - `%ELEM(nums : *ALLOC) = 50;`
 
 #### `test112_data_into_csv.rpgle`
 
-- **RNF0637** (sev 30, line 18): An operand was expected but was not found; specification is
+- **RNF0637** (sev 30, line 18): An operand was expected but was not found; specification is ignored.
   - `DSPLY 'Name: ' + person.name;`
-- **RNF0637** (sev 30, line 19): An operand was expected but was not found; specification is
+- **RNF0637** (sev 30, line 19): An operand was expected but was not found; specification is ignored.
   - `DSPLY 'Age: '  + %CHAR(person.age);`
-- **RNF0637** (sev 30, line 20): An operand was expected but was not found; specification is
+- **RNF0637** (sev 30, line 20): An operand was expected but was not found; specification is ignored.
   - `DSPLY 'City: ' + person.city;`
-- **RNF0724** (sev 30, line 23): The statement type is out of sequence for the main
+- **RNF0724** (sev 30, line 23): The statement type is out of sequence for the main procedure.
   - `DCL-DS emp DIM(*VAR:10) QUALIFIED;`
 - **RNF5347** (sev 30, line 24): An assignment operator is expected with the EVAL operation.
   - `name VARCHAR(40);`
 - **RNF5347** (sev 30, line 25): An assignment operator is expected with the EVAL operation.
   - `dept VARCHAR(20);`
-- **RNF0724** (sev 30, line 26): The statement type is out of sequence for the main
+- **RNF0724** (sev 30, line 26): The statement type is out of sequence for the main procedure.
   - `END-DS;`
-- **RNF0724** (sev 30, line 28): The statement type is out of sequence for the main
+- **RNF0724** (sev 30, line 28): The statement type is out of sequence for the main -=* http://pub400.com *=-
   - `DCL-S csvEmp VARCHAR(500);`
 - … and 32 more
 
@@ -447,33 +447,33 @@ The first cause IBM's listing points at, with follow-on "not defined" messages (
   - `DATA-GEN person %DATA(csvOut) %PARSER('CSV');`
 - **RNF5377** (sev 20, line 18): The end of the expression is expected.
   - `DATA-GEN person %DATA(csvOut) %PARSER('CSV');`
-- **RNF0724** (sev 30, line 22): The statement type is out of sequence for the main
+- **RNF0724** (sev 30, line 22): The statement type is out of sequence for the main procedure.
   - `DCL-DS item QUALIFIED;`
 - **RNF5347** (sev 30, line 23): An assignment operator is expected with the EVAL operation.
   - `label VARCHAR(50);`
 - **RNF5347** (sev 30, line 24): An assignment operator is expected with the EVAL operation.
   - `price PACKED(9:2);`
-- **RNF0724** (sev 30, line 25): The statement type is out of sequence for the main
+- **RNF0724** (sev 30, line 25): The statement type is out of sequence for the main procedure.
   - `END-DS;`
-- **RNF0724** (sev 30, line 27): The statement type is out of sequence for the main
+- **RNF0724** (sev 30, line 27): The statement type is out of sequence for the main procedure.
   - `DCL-S csvItem VARCHAR(300);`
-- **RNF5454** (sev 30, line 31): The third operand of DATA-GEN must be %GEN.
+- **RNF5454** (sev 30, line 31): The third operand of DATA-GEN must be %GEN. -=* http://pub400.com *=-
   - `DATA-GEN item %DATA(csvItem) %PARSER('CSV');`
 - … and 18 more
 
 #### `test114_data_into_json_parser.rpgle`
 
-- **RNF0637** (sev 30, line 19): An operand was expected but was not found; specification is
+- **RNF0637** (sev 30, line 19): An operand was expected but was not found; specification is ignored.
   - `DSPLY 'Name: ' + person.name;`
-- **RNF0637** (sev 30, line 20): An operand was expected but was not found; specification is
+- **RNF0637** (sev 30, line 20): An operand was expected but was not found; specification is ignored.
   - `DSPLY 'Age: '  + %CHAR(person.age);`
-- **RNF0637** (sev 30, line 21): An operand was expected but was not found; specification is
+- **RNF0637** (sev 30, line 21): An operand was expected but was not found; specification is ignored.
   - `DSPLY 'City: ' + person.city;`
 - **RNF5454** (sev 30, line 27): The third operand of DATA-GEN must be %GEN.
   - `DATA-GEN person %DATA(jsonOut) %PARSER('JSON');`
 - **RNF5377** (sev 20, line 27): The end of the expression is expected.
   - `DATA-GEN person %DATA(jsonOut) %PARSER('JSON');`
-- **RNF7016** (sev 20, line 29): Display length 500 greater than maximum allowed of 52;
+- **RNF7016** (sev 20, line 29): Display length 500 greater than maximum allowed of 52; specification is ignored.
   - `DSPLY jsonOut;`
 
 #### `test118_fixed_rla_chain.rpgle`
@@ -482,7 +482,7 @@ The first cause IBM's listing points at, with follow-on "not defined" messages (
   - `DcustomerNumb...  S`
 - **RNF0623** (sev 20, line 4): The simple qualified name is not specified correctly.
   - `DcustomerNumb...  S`
-- **RNF0289** (sev 20, line 4): Entry contains data that is not valid; only valid data is
+- **RNF0289** (sev 20, line 4): Entry contains data that is not valid; only valid data is used.
   - `DcustomerNumb...  S`
 - **RNF7030** (sev 30, line 95): The name or indicator CUSTOMERNUMBER is not defined.
 - **RNF7503** (sev 30, line 95): Expression contains an operand that is not defined.
@@ -492,11 +492,11 @@ The first cause IBM's listing points at, with follow-on "not defined" messages (
 
 #### `test130_fixed_cspec_eval_callp.rpgle`
 
-- **RNF0724** (sev 30, line 22): The statement type is out of sequence for the main
+- **RNF0724** (sev 30, line 22): The statement type is out of sequence for the main procedure.
   - `DCL-PR doubleIt;`
 - **RNF5347** (sev 30, line 23): An assignment operator is expected with the EVAL operation.
   - `n INT(10) VALUE;`
-- **RNF0724** (sev 30, line 24): The statement type is out of sequence for the main
+- **RNF0724** (sev 30, line 24): The statement type is out of sequence for the main procedure.
   - `END-PR;`
 - **RNF7030** (sev 30, line 23): The name or indicator INT is not defined.
   - `n INT(10) VALUE;`
@@ -505,35 +505,35 @@ The first cause IBM's listing points at, with follow-on "not defined" messages (
 
 #### `test13_subroutines.rpgle`
 
-- **RNF5005** (sev 30, line 17): Operation entry following ENDSR operation is not valid;
+- **RNF5005** (sev 30, line 17): Operation entry following ENDSR operation is not valid; specification is ignored.
   - `EXSR addTen;`
-- **RNF5005** (sev 30, line 18): Operation entry following ENDSR operation is not valid;
+- **RNF5005** (sev 30, line 18): Operation entry following ENDSR operation is not valid; specification is ignored.
   - `EXSR addTen;`
-- **RNF5005** (sev 30, line 19): Operation entry following ENDSR operation is not valid;
+- **RNF5005** (sev 30, line 19): Operation entry following ENDSR operation is not valid; specification is ignored.
   - `EXSR addTen;`
-- **RNF5005** (sev 30, line 20): Operation entry following ENDSR operation is not valid;
+- **RNF5005** (sev 30, line 20): Operation entry following ENDSR operation is not valid; specification is ignored.
   - `EXSR showTotal;`
-- **RNF5005** (sev 30, line 23): Operation entry following ENDSR operation is not valid;
+- **RNF5005** (sev 30, line 23): Operation entry following ENDSR operation is not valid; specification is ignored.
   - `x = 5;`
-- **RNF5005** (sev 30, line 30): Operation entry following ENDSR operation is not valid;
+- **RNF5005** (sev 30, line 30): Operation entry following ENDSR operation is not valid; specification is ignored.
   - `EXSR doubleIfSmall;`
-- **RNF5005** (sev 30, line 31): Operation entry following ENDSR operation is not valid;
+- **RNF5005** (sev 30, line 31): Operation entry following ENDSR operation is not valid; specification is ignored.
   - `DSPLY %CHAR(x);`
-- **RNF5005** (sev 30, line 33): Operation entry following ENDSR operation is not valid;
+- **RNF5005** (sev 30, line 33): Operation entry following ENDSR operation is not valid; specification is ignored.
   - `*INLR = *ON;`
 
 #### `test180_fixed_cspec_modern_opcodes.rpgle`
 
-- **RNF0637** (sev 30, line 9): An operand was expected but was not found; specification is
+- **RNF0637** (sev 30, line 9): An operand was expected but was not found; specification is ignored.
   - `C                             'case=any')`
-- **RNF7016** (sev 20, line 11): Display length 60 greater than maximum allowed of 52;
+- **RNF7016** (sev 20, line 11): Display length 60 greater than maximum allowed of 52; specification is ignored.
   - `C     r             DSPLY`
-- **RNF7016** (sev 20, line 13): Display length 60 greater than maximum allowed of 52;
+- **RNF7016** (sev 20, line 13): Display length 60 greater than maximum allowed of 52; specification is ignored.
   - `C     r             DSPLY`
 
 #### `test215_prog_ar_aging.rpgle`
 
-- **RNF2093** (sev 20, line 13): Blank File-Designation entry is not valid with File-Type
+- **RNF2093** (sev 20, line 13): Blank File-Designation entry is not valid with File-Type entry; defaults to F.
   - `FTESTFL215 U FA F   32        DISK`
 - **RNF2004** (sev 20, line 13): The End-of-File entry is not blank or E; defaults to blank.
   - `FTESTFL215 U FA F   32        DISK`
@@ -547,13 +547,13 @@ The first cause IBM's listing points at, with follow-on "not defined" messages (
   - `INVDTE = 20260520;  INVCTS = 34050;`
 - **RNF5508** (sev 30, line 53): End of free-format statement is not blank.
   - `CUSNO = 'C001';  INVNO = 'INV1003';`
-- **RNF5508** (sev 30, line 54): End of free-format statement is not blank.
+- **RNF5508** (sev 30, line 54): End of free-format statement is not blank. -=* http://pub400.com *=-
   - `INVDTE = 20260301;  INVCTS = 98075;`
 - … and 25 more
 
 #### `test216_prog_gl_post.rpgle`
 
-- **RNF2093** (sev 20, line 13): Blank File-Designation entry is not valid with File-Type
+- **RNF2093** (sev 20, line 13): Blank File-Designation entry is not valid with File-Type entry; defaults to F.
   - `FTESTFL216 U FA F   48        DISK`
 - **RNF2004** (sev 20, line 13): The End-of-File entry is not blank or E; defaults to blank.
   - `FTESTFL216 U FA F   48        DISK`
@@ -565,7 +565,7 @@ The first cause IBM's listing points at, with follow-on "not defined" messages (
   - `AMTCTS = 250000;  DESCR = 'APRIL ACCRUALS';`
 - **RNF5508** (sev 30, line 55): End of free-format statement is not blank.
   - `RECTYP = 'D';  BATNO = 'B00100';`
-- **RNF5508** (sev 30, line 56): End of free-format statement is not blank.
+- **RNF5508** (sev 30, line 56): End of free-format statement is not blank. -=* http://pub400.com *=-
   - `ACCTNO = '400100';  DRCR = 'D';`
 - **RNF5508** (sev 30, line 57): End of free-format statement is not blank.
   - `AMTCTS = 150000;  DESCR = 'RENT EXPENSE';`
@@ -573,19 +573,19 @@ The first cause IBM's listing points at, with follow-on "not defined" messages (
 
 #### `test217_prog_inv_reorder.rpgle`
 
-- **RNF7016** (sev 20, line 104): Display length 70 greater than maximum allowed of 52;
+- **RNF7016** (sev 20, line 104): Display length 70 greater than maximum allowed of 52; specification is ignored.
   - `C     RPTLIN        DSPLY`
-- **RNF7016** (sev 20, line 181): Display length 70 greater than maximum allowed of 52;
+- **RNF7016** (sev 20, line 181): Display length 70 greater than maximum allowed of 52; specification is ignored.
   - `C     RPTLIN        DSPLY`
-- **RNF7016** (sev 20, line 188): Display length 70 greater than maximum allowed of 52;
+- **RNF7016** (sev 20, line 188): Display length 70 greater than maximum allowed of 52; specification is ignored.
   - `C     RPTLIN        DSPLY`
-- **RNF7016** (sev 20, line 192): Display length 70 greater than maximum allowed of 52;
+- **RNF7016** (sev 20, line 192): Display length 70 greater than maximum allowed of 52; specification is ignored.
   - `C     RPTLIN        DSPLY`
-- **RNF7016** (sev 20, line 196): Display length 70 greater than maximum allowed of 52;
+- **RNF7016** (sev 20, line 196): Display length 70 greater than maximum allowed of 52; specification is ignored.
   - `C     RPTLIN        DSPLY`
-- **RNF7016** (sev 20, line 199): Display length 70 greater than maximum allowed of 52;
+- **RNF7016** (sev 20, line 199): Display length 70 greater than maximum allowed of 52; specification is ignored.
   - `C     RPTLIN        DSPLY`
-- **RNF7016** (sev 20, line 206): Display length 70 greater than maximum allowed of 52;
+- **RNF7016** (sev 20, line 206): Display length 70 greater than maximum allowed of 52; specification is ignored.
   - `C     RPTLIN        DSPLY`
 
 #### `test221_ospec_decimals.rpgle`
@@ -598,117 +598,117 @@ The first cause IBM's listing points at, with follow-on "not defined" messages (
   - `itemno = 'MAXVAL';  amount = 99999999.99; rate = 9999.999;`
 - **RNF6005** (sev 20, line 38): The Type entry is not H, D, T, or E; defaults to D.
   - `OTESTFL221`
-- **RNF5191** (sev 30, line 19): The Result-Field is not a data structure when Factor 2 is a
+- **RNF5191** (sev 30, line 19): The Result-Field is not a data structure when Factor 2 is a file name.
   - `WRITE TESTFL221;`
-- **RNF5191** (sev 30, line 21): The Result-Field is not a data structure when Factor 2 is a
+- **RNF5191** (sev 30, line 21): The Result-Field is not a data structure when Factor 2 is a file name.
   - `WRITE TESTFL221;`
-- **RNF5191** (sev 30, line 24): The Result-Field is not a data structure when Factor 2 is a
+- **RNF5191** (sev 30, line 24): The Result-Field is not a data structure when Factor 2 is a file name.
   - `WRITE TESTFL221;`
-- **RNF7016** (sev 20, line 33): Display length 60 greater than maximum allowed of 52;
+- **RNF7016** (sev 20, line 33): Display length 60 greater than maximum allowed of 52; specification is ignored.
   - `C     RPTLIN        DSPLY`
 
 #### `test222_half_adjust.rpgle`
 
-- **RNF7016** (sev 20, line 12): Display length 60 greater than maximum allowed of 52;
+- **RNF7016** (sev 20, line 12): Display length 60 greater than maximum allowed of 52; specification is ignored.
   - `C     RPTLIN        DSPLY`
-- **RNF7016** (sev 20, line 17): Display length 60 greater than maximum allowed of 52;
+- **RNF7016** (sev 20, line 17): Display length 60 greater than maximum allowed of 52; specification is ignored.
   - `C     RPTLIN        DSPLY`
-- **RNF7016** (sev 20, line 23): Display length 60 greater than maximum allowed of 52;
+- **RNF7016** (sev 20, line 23): Display length 60 greater than maximum allowed of 52; specification is ignored.
   - `C     RPTLIN        DSPLY`
-- **RNF7016** (sev 20, line 27): Display length 60 greater than maximum allowed of 52;
+- **RNF7016** (sev 20, line 27): Display length 60 greater than maximum allowed of 52; specification is ignored.
   - `C     RPTLIN        DSPLY`
-- **RNF7016** (sev 20, line 31): Display length 60 greater than maximum allowed of 52;
+- **RNF7016** (sev 20, line 31): Display length 60 greater than maximum allowed of 52; specification is ignored.
   - `C     RPTLIN        DSPLY`
-- **RNF7016** (sev 20, line 36): Display length 60 greater than maximum allowed of 52;
+- **RNF7016** (sev 20, line 36): Display length 60 greater than maximum allowed of 52; specification is ignored.
   - `C     RPTLIN        DSPLY`
 
 #### `test223_editc_decimals.rpgle`
 
-- **RNF7016** (sev 20, line 15): Display length 60 greater than maximum allowed of 52;
+- **RNF7016** (sev 20, line 15): Display length 60 greater than maximum allowed of 52; specification is ignored.
   - `C     RPTLIN        DSPLY`
-- **RNF7016** (sev 20, line 17): Display length 60 greater than maximum allowed of 52;
+- **RNF7016** (sev 20, line 17): Display length 60 greater than maximum allowed of 52; specification is ignored.
   - `C     RPTLIN        DSPLY`
-- **RNF7016** (sev 20, line 19): Display length 60 greater than maximum allowed of 52;
+- **RNF7016** (sev 20, line 19): Display length 60 greater than maximum allowed of 52; specification is ignored.
   - `C     RPTLIN        DSPLY`
-- **RNF7016** (sev 20, line 21): Display length 60 greater than maximum allowed of 52;
+- **RNF7016** (sev 20, line 21): Display length 60 greater than maximum allowed of 52; specification is ignored.
   - `C     RPTLIN        DSPLY`
 
 #### `test224_fixed_dspec_inz.rpgle`
 
-- **RNF7016** (sev 20, line 15): Display length 70 greater than maximum allowed of 52;
+- **RNF7016** (sev 20, line 15): Display length 70 greater than maximum allowed of 52; specification is ignored.
   - `C     RPTLIN        DSPLY`
-- **RNF7016** (sev 20, line 17): Display length 70 greater than maximum allowed of 52;
+- **RNF7016** (sev 20, line 17): Display length 70 greater than maximum allowed of 52; specification is ignored.
   - `C     RPTLIN        DSPLY`
-- **RNF7016** (sev 20, line 19): Display length 70 greater than maximum allowed of 52;
+- **RNF7016** (sev 20, line 19): Display length 70 greater than maximum allowed of 52; specification is ignored.
   - `C     RPTLIN        DSPLY`
-- **RNF7016** (sev 20, line 21): Display length 70 greater than maximum allowed of 52;
+- **RNF7016** (sev 20, line 21): Display length 70 greater than maximum allowed of 52; specification is ignored.
   - `C     RPTLIN        DSPLY`
-- **RNF7016** (sev 20, line 23): Display length 70 greater than maximum allowed of 52;
+- **RNF7016** (sev 20, line 23): Display length 70 greater than maximum allowed of 52; specification is ignored.
   - `C     RPTLIN        DSPLY`
-- **RNF7016** (sev 20, line 25): Display length 70 greater than maximum allowed of 52;
+- **RNF7016** (sev 20, line 25): Display length 70 greater than maximum allowed of 52; specification is ignored.
   - `C     RPTLIN        DSPLY`
-- **RNF7016** (sev 20, line 27): Display length 70 greater than maximum allowed of 52;
+- **RNF7016** (sev 20, line 27): Display length 70 greater than maximum allowed of 52; specification is ignored.
   - `C     RPTLIN        DSPLY`
-- **RNF7016** (sev 20, line 29): Display length 70 greater than maximum allowed of 52;
+- **RNF7016** (sev 20, line 29): Display length 70 greater than maximum allowed of 52; specification is ignored.
   - `C     RPTLIN        DSPLY`
 
 #### `test225_decimal_division.rpgle`
 
-- **RNF7016** (sev 20, line 12): Display length 70 greater than maximum allowed of 52;
+- **RNF7016** (sev 20, line 12): Display length 70 greater than maximum allowed of 52; specification is ignored.
   - `C     RPTLIN        DSPLY`
-- **RNF7016** (sev 20, line 17): Display length 70 greater than maximum allowed of 52;
+- **RNF7016** (sev 20, line 17): Display length 70 greater than maximum allowed of 52; specification is ignored.
   - `C     RPTLIN        DSPLY`
-- **RNF7016** (sev 20, line 21): Display length 70 greater than maximum allowed of 52;
+- **RNF7016** (sev 20, line 21): Display length 70 greater than maximum allowed of 52; specification is ignored.
   - `C     RPTLIN        DSPLY`
-- **RNF7016** (sev 20, line 25): Display length 70 greater than maximum allowed of 52;
+- **RNF7016** (sev 20, line 25): Display length 70 greater than maximum allowed of 52; specification is ignored.
   - `C     RPTLIN        DSPLY`
 
 #### `test244_pi_star_n.rpgle`
 
-- **RNF7016** (sev 20, line 26): Display length 54 greater than maximum allowed of 52;
+- **RNF7016** (sev 20, line 26): Display length 54 greater than maximum allowed of 52; specification is ignored.
   - `DSPLY ('RESULT:MUL=' + %CHAR(total*N) + ' ' + %CHAR(total * n));`
 
 #### `test249_ds_subfield_types.rpgle`
 
-- **RNF7016** (sev 20, line 40): Display length 53 greater than maximum allowed of 52;
+- **RNF7016** (sev 20, line 40): Display length 53 greater than maximum allowed of 52; specification is ignored.
   - `%CHAR(rec.active) + ' ' + %CHAR(rec.units) + ' ' + %CHAR(rec.due));`
 
 #### `test52_array_bifs.rpgle`
 
-- **RNF0592** (sev 20, line 21): The second parameter NUMS for %LOOKUPxx must be a sequenced
+- **RNF0592** (sev 20, line 21): The second parameter NUMS for %LOOKUPxx must be a sequenced array.
   - `idx = %LOOKUPGE(25 : nums);`
-- **RNF0592** (sev 20, line 25): The second parameter NUMS for %LOOKUPxx must be a sequenced
+- **RNF0592** (sev 20, line 25): The second parameter NUMS for %LOOKUPxx must be a sequenced array.
   - `idx = %LOOKUPLT(25 : nums);`
 
 #### `test66_pssr.rpgle`
 
-- **RNF5005** (sev 30, line 10): Operation entry following ENDSR operation is not valid;
+- **RNF5005** (sev 30, line 10): Operation entry following ENDSR operation is not valid; specification is ignored.
   - `result = 10;`
-- **RNF5005** (sev 30, line 11): Operation entry following ENDSR operation is not valid;
+- **RNF5005** (sev 30, line 11): Operation entry following ENDSR operation is not valid; specification is ignored.
   - `DSPLY %CHAR(result);`
-- **RNF5005** (sev 30, line 12): Operation entry following ENDSR operation is not valid;
+- **RNF5005** (sev 30, line 12): Operation entry following ENDSR operation is not valid; specification is ignored.
   - `*INLR = *ON;`
 
 #### `test67_pssr_error.rpgle`
 
-- **RNF5005** (sev 30, line 12): Operation entry following ENDSR operation is not valid;
+- **RNF5005** (sev 30, line 12): Operation entry following ENDSR operation is not valid; specification is ignored.
   - `DSPLY 'Before error';`
-- **RNF5005** (sev 30, line 13): Operation entry following ENDSR operation is not valid;
+- **RNF5005** (sev 30, line 13): Operation entry following ENDSR operation is not valid; specification is ignored.
   - `myDate = %DATE('2024-01-15');`
-- **RNF5005** (sev 30, line 14): Operation entry following ENDSR operation is not valid;
+- **RNF5005** (sev 30, line 14): Operation entry following ENDSR operation is not valid; specification is ignored.
   - `badDate = %DATE('not-a-date');`
-- **RNF5005** (sev 30, line 15): Operation entry following ENDSR operation is not valid;
+- **RNF5005** (sev 30, line 15): Operation entry following ENDSR operation is not valid; specification is ignored.
   - `diff = %DIFF(badDate:myDate:*DAYS);`
-- **RNF5005** (sev 30, line 16): Operation entry following ENDSR operation is not valid;
+- **RNF5005** (sev 30, line 16): Operation entry following ENDSR operation is not valid; specification is ignored.
   - `DSPLY 'After error';`
-- **RNF5005** (sev 30, line 17): Operation entry following ENDSR operation is not valid;
+- **RNF5005** (sev 30, line 17): Operation entry following ENDSR operation is not valid; specification is ignored.
   - `*INLR = *ON;`
 
 #### `test71_enum_boolean.rpgle`
 
 - **RNF3308** (sev 20, line 2): Keyword name is not valid; the keyword is ignored.
   - `DCL-S isActive BOOLEAN;`
-- **RNF3438** (sev 30, line 2): LIKE keyword is expected for field ISACTIVE but not found;
+- **RNF3438** (sev 30, line 2): LIKE keyword is expected for field ISACTIVE but not found; definition is ignored.
   - `DCL-S isActive BOOLEAN;`
 - **RNF3308** (sev 20, line 6): Keyword name is not valid; the keyword is ignored.
   - `RED = 1;`
@@ -726,18 +726,18 @@ The first cause IBM's listing points at, with follow-on "not defined" messages (
 
 #### `test74_concat.rpgle`
 
-- **RNF7016** (sev 20, line 13): Display length 100 greater than maximum allowed of 52;
+- **RNF7016** (sev 20, line 13): Display length 100 greater than maximum allowed of 52; specification is ignored.
   - `DSPLY result;  // Alice, Dallas, TX`
-- **RNF7016** (sev 20, line 17): Display length 100 greater than maximum allowed of 52;
+- **RNF7016** (sev 20, line 17): Display length 100 greater than maximum allowed of 52; specification is ignored.
   - `DSPLY result;  // 2024-03-15`
-- **RNF7016** (sev 20, line 21): Display length 100 greater than maximum allowed of 52;
+- **RNF7016** (sev 20, line 21): Display length 100 greater than maximum allowed of 52; specification is ignored.
   - `DSPLY result;  // Hello World`
-- **RNF7016** (sev 20, line 25): Display length 100 greater than maximum allowed of 52;
+- **RNF7016** (sev 20, line 25): Display length 100 greater than maximum allowed of 52; specification is ignored.
   - `DSPLY result;  // ABC`
 
 #### `test75_tlookup_elem.rpgle`
 
-- **RNF0724** (sev 30, line 37): The statement type is out of sequence for the main
+- **RNF0724** (sev 30, line 37): The statement type is out of sequence for the main procedure.
   - `DCL-S dynArr INT(10) DIM(*VAR:50);`
 - **RNF7030** (sev 30, line 38): The name or indicator DYNARR is not defined.
   - `%ELEM(dynArr) = 3;`
@@ -767,46 +767,46 @@ The first cause IBM's listing points at, with follow-on "not defined" messages (
   - `IF %GETENV('HOME') <> '';`
 - **RNF0604** (sev 20, line 30): The token is not valid; token is ignored.
   - `dbUrl = %GETENV('DATABASE_URL');`
-- **RNF7016** (sev 20, line 13): Display length 256 greater than maximum allowed of 52;
+- **RNF7016** (sev 20, line 13): Display length 256 greater than maximum allowed of 52; specification is ignored.
   - `DSPLY homePath;`
-- **RNF7016** (sev 20, line 32): Display length 256 greater than maximum allowed of 52;
+- **RNF7016** (sev 20, line 32): Display length 256 greater than maximum allowed of 52; specification is ignored.
   - `DSPLY dbUrl;`
 
 #### `test87.rpgle`
 
-- **RNF0637** (sev 30, line 20): An operand was expected but was not found; specification is
+- **RNF0637** (sev 30, line 20): An operand was expected but was not found; specification is ignored.
   - `DSPLY 'Order: ' + %CHAR(order.id);`
-- **RNF0637** (sev 30, line 21): An operand was expected but was not found; specification is
+- **RNF0637** (sev 30, line 21): An operand was expected but was not found; specification is ignored.
   - `DSPLY 'Customer: ' + order.customer;`
-- **RNF0637** (sev 30, line 22): An operand was expected but was not found; specification is
+- **RNF0637** (sev 30, line 22): An operand was expected but was not found; specification is ignored.
   - `DSPLY 'Item: ' + order.item;`
-- **RNF0637** (sev 30, line 23): An operand was expected but was not found; specification is
+- **RNF0637** (sev 30, line 23): An operand was expected but was not found; specification is ignored.
   - `DSPLY 'Qty: ' + %CHAR(order.qty);`
-- **RNF0637** (sev 30, line 24): An operand was expected but was not found; specification is
+- **RNF0637** (sev 30, line 24): An operand was expected but was not found; specification is ignored.
   - `DSPLY 'Price: ' + %CHAR(order.price);`
-- **RNF0724** (sev 30, line 27): The statement type is out of sequence for the main
+- **RNF0724** (sev 30, line 27): The statement type is out of sequence for the main procedure.
   - `DCL-DS person QUALIFIED;`
-- **RNF5347** (sev 30, line 28): An assignment operator is expected with the EVAL operation.
+- **RNF5347** (sev 30, line 28): An assignment operator is expected with the EVAL operation. -=* http://pub400.com *=-
   - `name VARCHAR(40);`
 - **RNF5347** (sev 30, line 29): An assignment operator is expected with the EVAL operation.
   - `age INT(10);`
-- … and 71 more
+- … and 72 more
 
 #### `test88.rpgle`
 
-- **RNF0637** (sev 30, line 17): An operand was expected but was not found; specification is
+- **RNF0637** (sev 30, line 17): An operand was expected but was not found; specification is ignored.
   - `DSPLY 'Item 1: ' + item(1).name + ' qty=' + %CHAR(item(1).qty) +`
 - **RNF5377** (sev 20, line 17): The end of the expression is expected.
   - `DSPLY 'Item 1: ' + item(1).name + ' qty=' + %CHAR(item(1).qty) +`
-- **RNF0637** (sev 30, line 19): An operand was expected but was not found; specification is
+- **RNF0637** (sev 30, line 19): An operand was expected but was not found; specification is ignored.
   - `DSPLY 'Item 2: ' + item(2).name + ' qty=' + %CHAR(item(2).qty) +`
 - **RNF5377** (sev 20, line 19): The end of the expression is expected.
   - `DSPLY 'Item 2: ' + item(2).name + ' qty=' + %CHAR(item(2).qty) +`
-- **RNF0637** (sev 30, line 21): An operand was expected but was not found; specification is
+- **RNF0637** (sev 30, line 21): An operand was expected but was not found; specification is ignored.
   - `DSPLY 'Item 3: ' + item(3).name + ' qty=' + %CHAR(item(3).qty) +`
 - **RNF5377** (sev 20, line 21): The end of the expression is expected.
   - `DSPLY 'Item 3: ' + item(3).name + ' qty=' + %CHAR(item(3).qty) +`
-- **RNF0724** (sev 30, line 25): The statement type is out of sequence for the main
+- **RNF0724** (sev 30, line 25): The statement type is out of sequence for the main procedure.
   - `DCL-DS emp QUALIFIED DIM(*VAR:10);`
 - **RNF5347** (sev 30, line 26): An assignment operator is expected with the EVAL operation.
   - `id INT(10);`
@@ -814,7 +814,7 @@ The first cause IBM's listing points at, with follow-on "not defined" messages (
 
 #### `test89.rpgle`
 
-- **RNF0637** (sev 30, line 17): An operand was expected but was not found; specification is
+- **RNF0637** (sev 30, line 17): An operand was expected but was not found; specification is ignored.
   - `DSPLY 'Order: ' + %CHAR(order.id) + ' ' + order.product +`
 - **RNF5377** (sev 20, line 17): The end of the expression is expected.
   - `DSPLY 'Order: ' + %CHAR(order.id) + ' ' + order.product +`
@@ -822,7 +822,7 @@ The first cause IBM's listing points at, with follow-on "not defined" messages (
   - `DSPLY 'Order: ' + %CHAR(order.id) + ' ' + order.product +`
 - **RNF0622** (sev 20, line 18): A qualified name is not allowed in this context.
   - `' qty=' + %CHAR(order.qty);`
-- **RNF0724** (sev 30, line 21): The statement type is out of sequence for the main
+- **RNF0724** (sev 30, line 21): The statement type is out of sequence for the main procedure.
   - `DCL-DS address QUALIFIED;`
 - **RNF5347** (sev 30, line 22): An assignment operator is expected with the EVAL operation.
   - `street VARCHAR(50);`
@@ -836,13 +836,13 @@ The first cause IBM's listing points at, with follow-on "not defined" messages (
 
 - **RNF5449** (sev 30, line 16): The third operand of DATA-INTO must be %PARSER.
   - `DATA-INTO person %DATA(jsonData : 'doc=string case=any');`
-- **RNF0637** (sev 30, line 18): An operand was expected but was not found; specification is
+- **RNF0637** (sev 30, line 18): An operand was expected but was not found; specification is ignored.
   - `DSPLY 'Name: ' + person.name;`
-- **RNF0637** (sev 30, line 19): An operand was expected but was not found; specification is
+- **RNF0637** (sev 30, line 19): An operand was expected but was not found; specification is ignored.
   - `DSPLY 'Age: ' + %CHAR(person.age);`
-- **RNF0637** (sev 30, line 20): An operand was expected but was not found; specification is
+- **RNF0637** (sev 30, line 20): An operand was expected but was not found; specification is ignored.
   - `DSPLY 'City: ' + person.city;`
-- **RNF0724** (sev 30, line 23): The statement type is out of sequence for the main
+- **RNF0724** (sev 30, line 23): The statement type is out of sequence for the main procedure.
   - `DCL-DS product QUALIFIED;`
 - **RNF5347** (sev 30, line 24): An assignment operator is expected with the EVAL operation.
   - `id INT(10);`
@@ -856,9 +856,9 @@ The first cause IBM's listing points at, with follow-on "not defined" messages (
 
 #### `test25_dclf.rpgle`
 
-- **RNF2121** (sev 30, line 4): Record format RPTFILE in file RPTFILE already defined;
+- **RNF2121** (sev 30, line 4): Record format RPTFILE in file RPTFILE already defined; record format is ignored.
   - `DCL-F RPTFILE PRINTER;`
-- **RNF2109** (sev 40, line 4): All Record Formats for externally-described file RPTFILE
+- **RNF2109** (sev 40, line 4): All Record Formats for externally-described file RPTFILE ignored or dropped due to error; file ignored.
   - `DCL-F RPTFILE PRINTER;`
 
 #### `test93_data_area_named.rpgle`
@@ -883,7 +883,7 @@ The first cause IBM's listing points at, with follow-on "not defined" messages (
 
 #### `test_exfmt.rpgle`
 
-- **RNF2120** (sev 40, line 8): External descriptions for file CUSTMENU not found; file is
+- **RNF2120** (sev 40, line 8): External descriptions for file CUSTMENU not found; file is ignored.
   - `DCL-F CUSTMENU WORKSTN;`
 - **RNF7030** (sev 30, line 40): The name or indicator ANSWER is not defined.
   - `ANSWER = ' ';`
@@ -905,9 +905,9 @@ The first cause IBM's listing points at, with follow-on "not defined" messages (
 
 #### `test155_fixed_ispec_multi.rpgle`
 
-- **RNF0257** (sev 30, line 7): Form-Type entry for main procedure not valid or out of
+- **RNF0257** (sev 30, line 7): Form-Type entry for main procedure not valid or out of sequence.
   - `DTYPECODE         S              1A`
-- **RNF0257** (sev 30, line 8): Form-Type entry for main procedure not valid or out of
+- **RNF0257** (sev 30, line 8): Form-Type entry for main procedure not valid or out of sequence.
   - `DTMPDSP           S             52A`
 - **RNF7030** (sev 30, line 25): The name or indicator TMPDSP is not defined.
   - `C                   EVAL      TMPDSP = %TRIM(NAME)`
@@ -915,17 +915,17 @@ The first cause IBM's listing points at, with follow-on "not defined" messages (
   - `TYPECODE = 'C';`
 - **RNF7503** (sev 30, line 10): Expression contains an operand that is not defined.
   - `TYPECODE = 'C';`
-- **RNF5191** (sev 30, line 12): The Result-Field is not a data structure when Factor 2 is a
+- **RNF5191** (sev 30, line 12): The Result-Field is not a data structure when Factor 2 is a file name.
   - `WRITE TESTFL155;`
 - **RNF7503** (sev 30, line 13): Expression contains an operand that is not defined.
   - `TYPECODE = 'P';`
-- **RNF5191** (sev 30, line 15): The Result-Field is not a data structure when Factor 2 is a
+- **RNF5191** (sev 30, line 15): The Result-Field is not a data structure when Factor 2 is a file name.
   - `WRITE TESTFL155;`
 - … and 1 more
 
 #### `test16_copy.rpgle`
 
-- **RNF0724** (sev 30, line 3): The statement type is out of sequence for the main
+- **RNF0724** (sev 30, line 3): The statement type is out of sequence for the main procedure.
   - `DCL-S local_val INT(10);`
 - **RNF7030** (sev 30, line 4): The name or indicator LOCAL_VAL is not defined.
   - `local_val = shared_val + 1;`
@@ -942,7 +942,7 @@ The first cause IBM's listing points at, with follow-on "not defined" messages (
 
 #### `test26_pointers.rpgle`
 
-- **RNF0724** (sev 30, line 35): The statement type is out of sequence for the main
+- **RNF0724** (sev 30, line 35): The statement type is out of sequence for the main procedure.
   - `DCL-S ptrSize INT(10);`
 - **RNF7030** (sev 30, line 36): The name or indicator PTRSIZE is not defined.
   - `ptrSize = %SIZE(ptr1);`
@@ -953,15 +953,15 @@ The first cause IBM's listing points at, with follow-on "not defined" messages (
 
 #### `test29_dclsubf_parm.rpgle`
 
-- **RNF0724** (sev 30, line 19): The statement type is out of sequence for the main
+- **RNF0724** (sev 30, line 19): The statement type is out of sequence for the main procedure.
   - `DCL-PR addNums INT(10);`
-- **RNF0724** (sev 30, line 20): The statement type is out of sequence for the main
+- **RNF0724** (sev 30, line 20): The statement type is out of sequence for the main procedure.
   - `DCL-PARM p1 INT(10) VALUE;`
-- **RNF0724** (sev 30, line 21): The statement type is out of sequence for the main
+- **RNF0724** (sev 30, line 21): The statement type is out of sequence for the main procedure.
   - `DCL-PARM p2 INT(10) VALUE;`
-- **RNF0724** (sev 30, line 22): The statement type is out of sequence for the main
+- **RNF0724** (sev 30, line 22): The statement type is out of sequence for the main procedure.
   - `END-PR;`
-- **RNF0724** (sev 30, line 24): The statement type is out of sequence for the main
+- **RNF0724** (sev 30, line 24): The statement type is out of sequence for the main procedure.
   - `DCL-S result INT(10);`
 - **RNF7030** (sev 30, line 25): The name or indicator RESULT is not defined.
   - `result = addNums(10 : 20);`
@@ -972,7 +972,7 @@ The first cause IBM's listing points at, with follow-on "not defined" messages (
 
 #### `test41_string_bifs.rpgle`
 
-- **RNF0724** (sev 30, line 14): The statement type is out of sequence for the main
+- **RNF0724** (sev 30, line 14): The statement type is out of sequence for the main procedure.
   - `DCL-S myDate DATE;`
 - **RNF7030** (sev 30, line 15): The name or indicator MYDATE is not defined.
   - `myDate = %DATE('2024-06-15');`
@@ -987,9 +987,9 @@ The first cause IBM's listing points at, with follow-on "not defined" messages (
 
 #### `test51_string_bifs.rpgle`
 
-- **RNF0724** (sev 30, line 18): The statement type is out of sequence for the main
+- **RNF0724** (sev 30, line 18): The statement type is out of sequence for the main procedure.
   - `DCL-S result VARCHAR(100);`
-- **RNF0724** (sev 30, line 19): The statement type is out of sequence for the main
+- **RNF0724** (sev 30, line 19): The statement type is out of sequence for the main procedure.
   - `DCL-S names VARCHAR(50);`
 - **RNF7030** (sev 30, line 20): The name or indicator NAMES is not defined.
   - `names = 'Alice,Bob,Charlie';`
@@ -1004,7 +1004,7 @@ The first cause IBM's listing points at, with follow-on "not defined" messages (
 
 #### `test54_memory_bifs.rpgle`
 
-- **RNF0724** (sev 30, line 15): The statement type is out of sequence for the main
+- **RNF0724** (sev 30, line 15): The statement type is out of sequence for the main procedure.
   - `DCL-S result VARCHAR(50);`
 - **RNF7030** (sev 30, line 16): The name or indicator RESULT is not defined.
   - `result = getMyName();`
@@ -1015,50 +1015,50 @@ The first cause IBM's listing points at, with follow-on "not defined" messages (
 
 #### `test61_no_free.rpgle`
 
-- **RNF0257** (sev 30, line 1): Form-Type entry for main procedure not valid or out of
+- **RNF0257** (sev 30, line 1): Form-Type entry for main procedure not valid or out of sequence.
   - `// Test 61: No **FREE directive`
-- **RNF0257** (sev 30, line 2): Form-Type entry for main procedure not valid or out of
+- **RNF0257** (sev 30, line 2): Form-Type entry for main procedure not valid or out of sequence.
   - `DCL-S x INT(10);`
-- **RNF0257** (sev 30, line 3): Form-Type entry for main procedure not valid or out of
+- **RNF0257** (sev 30, line 3): Form-Type entry for main procedure not valid or out of sequence.
   - `DCL-S msg CHAR(20);`
-- **RNF0257** (sev 30, line 4): Form-Type entry for main procedure not valid or out of
+- **RNF0257** (sev 30, line 4): Form-Type entry for main procedure not valid or out of sequence.
   - `x = 42;`
-- **RNF0257** (sev 30, line 5): Form-Type entry for main procedure not valid or out of
+- **RNF0257** (sev 30, line 5): Form-Type entry for main procedure not valid or out of sequence.
   - `msg = 'No FREE needed';`
-- **RNF0257** (sev 30, line 6): Form-Type entry for main procedure not valid or out of
+- **RNF0257** (sev 30, line 6): Form-Type entry for main procedure not valid or out of sequence.
   - `DSPLY msg;`
-- **RNF0257** (sev 30, line 7): Form-Type entry for main procedure not valid or out of
+- **RNF0257** (sev 30, line 7): Form-Type entry for main procedure not valid or out of sequence.
   - `DSPLY %CHAR(x);`
-- **RNF0257** (sev 30, line 8): Form-Type entry for main procedure not valid or out of
+- **RNF0257** (sev 30, line 8): Form-Type entry for main procedure not valid or out of sequence.
   - `*INLR = *ON;`
 
 #### `test94_extender_h.rpgle`
 
-- **RNF0724** (sev 30, line 16): The statement type is out of sequence for the main
+- **RNF0724** (sev 30, line 16): The statement type is out of sequence for the main procedure.
   - `DCL-S result2 INT(10);`
-- **RNF0724** (sev 30, line 25): The statement type is out of sequence for the main
+- **RNF0724** (sev 30, line 25): The statement type is out of sequence for the main procedure.
   - `DCL-S result3 INT(10);`
-- **RNF0724** (sev 30, line 34): The statement type is out of sequence for the main
+- **RNF0724** (sev 30, line 34): The statement type is out of sequence for the main procedure.
   - `DCL-S padStr CHAR(10) INZ('          ');`
-- **RNF5049** (sev 20, line 35): The Operation Extender is not valid for the specified
+- **RNF5049** (sev 20, line 35): The Operation Extender is not valid for the specified Operation Code.
   - `EVAL(P) padStr = 'HELLO';`
-- **RNF0724** (sev 30, line 43): The statement type is out of sequence for the main
+- **RNF0724** (sev 30, line 43): The statement type is out of sequence for the main procedure.
   - `DCL-S nval INT(10) INZ(1);`
-- **RNF5049** (sev 20, line 44): The Operation Extender is not valid for the specified
+- **RNF5049** (sev 20, line 44): The Operation Extender is not valid for the specified Operation Code.
   - `EVAL(N) nval = nval + 1;`
-- **RNF0724** (sev 30, line 52): The statement type is out of sequence for the main
+- **RNF0724** (sev 30, line 52): The statement type is out of sequence for the main procedure.
   - `DCL-S rTarget CHAR(10) INZ('          ');`
-- **RNF0724** (sev 30, line 53): The statement type is out of sequence for the main
+- **RNF0724** (sev 30, line 53): The statement type is out of sequence for the main procedure.
   - `DCL-S rNum PACKED(7:1) INZ(3.7);`
 - … and 17 more
 
 #### `test95_extender_e.rpgle`
 
-- **RNF0724** (sev 30, line 17): The statement type is out of sequence for the main
+- **RNF0724** (sev 30, line 17): The statement type is out of sequence for the main procedure.
   - `DCL-S x INT(10) INZ(10);`
-- **RNF5049** (sev 20, line 18): The Operation Extender is not valid for the specified
+- **RNF5049** (sev 20, line 18): The Operation Extender is not valid for the specified Operation Code.
   - `EVAL(E) x = x + 5;`
-- **RNF5049** (sev 20, line 26): The Operation Extender is not valid for the specified
+- **RNF5049** (sev 20, line 26): The Operation Extender is not valid for the specified Operation Code.
   - `EVAL(E) result = addOne(7);`
 - **RNF7030** (sev 30, line 18): The name or indicator X is not defined.
   - `EVAL(E) x = x + 5;`
@@ -1071,147 +1071,147 @@ The first cause IBM's listing points at, with follow-on "not defined" messages (
 
 #### `test103_rla_chain.rpgle`
 
-- **SQL0199** (sev 30, line 10): Position 18 Keyword USING not expected. Valid tokens:
+- **SQL0199** (sev 30, line 10): Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>.
   - `EXEC SQL CONNECT USING :connStr;`
-- **SQL0104** (sev 30, line 38): Position 20 Token <END-OF-STATEMENT> was not valid.
+- **SQL0104** (sev 30, line 38): Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>. Message Summary
   - `EXEC SQL DISCONNECT;`
 
 #### `test104_rla_read.rpgle`
 
-- **SQL0199** (sev 30, line 9): Position 18 Keyword USING not expected. Valid tokens:
+- **SQL0199** (sev 30, line 9): Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>.
   - `EXEC SQL CONNECT USING :connStr;`
-- **SQL0104** (sev 30, line 29): Position 20 Token <END-OF-STATEMENT> was not valid.
+- **SQL0104** (sev 30, line 29): Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>. Message Summary
   - `EXEC SQL DISCONNECT;`
 
 #### `test105_rla_write_upd_del.rpgle`
 
-- **SQL0199** (sev 30, line 10): Position 18 Keyword USING not expected. Valid tokens:
+- **SQL0199** (sev 30, line 10): Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>.
   - `EXEC SQL CONNECT USING :connStr;`
-- **SQL0104** (sev 30, line 52): Position 20 Token <END-OF-STATEMENT> was not valid.
+- **SQL0104** (sev 30, line 52): Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>. Message Summary
   - `EXEC SQL DISCONNECT;`
 
 #### `test106_rla_setll_reade.rpgle`
 
-- **SQL0199** (sev 30, line 10): Position 18 Keyword USING not expected. Valid tokens:
+- **SQL0199** (sev 30, line 10): Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>.
   - `EXEC SQL CONNECT USING :connStr;`
-- **SQL0104** (sev 30, line 45): Position 20 Token <END-OF-STATEMENT> was not valid.
+- **SQL0104** (sev 30, line 45): Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>. Message Summary
   - `EXEC SQL DISCONNECT;`
 
 #### `test109_sql_indicator.sqlrpgle`
 
-- **SQL0199** (sev 30, line 13): Position 18 Keyword USING not expected. Valid tokens:
+- **SQL0199** (sev 30, line 13): Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>.
   - `EXEC SQL CONNECT USING :connStr;`
-- **SQL0104** (sev 30, line 68): Position 20 Token <END-OF-STATEMENT> was not valid.
+- **SQL0104** (sev 30, line 68): Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>. Message Summary
   - `EXEC SQL DISCONNECT;`
 
 #### `test146_fixed_cspec_write_upd_del.rpgle`
 
-- **RNF5063** (sev 30, line 82): Factor 2 operand must not be an externally described file
-- **RNF5063** (sev 30, line 89): Factor 2 operand must not be an externally described file
-- **RNF5198** (sev 30, line 94): File in Factor 2 is not allowed for UPDATE or DELETE
+- **RNF5063** (sev 30, line 82): Factor 2 operand must not be an externally described file for this operation.
+- **RNF5063** (sev 30, line 89): Factor 2 operand must not be an externally described file for this operation.
+- **RNF5198** (sev 30, line 94): File in Factor 2 is not allowed for UPDATE or DELETE operation.
 
 #### `test188_fixed_cspec_exec_sql.sqlrpgle`
 
-- **SQL0199** (sev 30, line 9): Position 17 Keyword USING not expected. Valid tokens:
+- **SQL0199** (sev 30, line 9): Position 17 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>.
   - `C+ CONNECT USING :conn`
 
 #### `test219_prog_order_release.sqlrpgle`
 
-- **SQL0199** (sev 30, line 49): Position 17 Keyword USING not expected. Valid tokens:
+- **SQL0199** (sev 30, line 49): Position 17 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>.
   - `C+ CONNECT USING :CONN`
 
 #### `test237_sql_into_fit.sqlrpgle`
 
-- **SQL0199** (sev 30, line 18): Position 18 Keyword USING not expected. Valid tokens:
+- **SQL0199** (sev 30, line 18): Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>.
   - `EXEC SQL CONNECT USING :connStr;`
 
 #### `test238_rla_field_fit.rpgle`
 
-- **SQL0199** (sev 30, line 17): Position 18 Keyword USING not expected. Valid tokens:
+- **SQL0199** (sev 30, line 17): Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>.
   - `EXEC SQL CONNECT USING :connStr;`
-- **SQL0104** (sev 30, line 54): Position 20 Token <END-OF-STATEMENT> was not valid.
+- **SQL0104** (sev 30, line 54): Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>. Message Summary
   - `EXEC SQL DISCONNECT;`
 
 #### `test77_exec_sql.sqlrpgle`
 
-- **SQL0199** (sev 30, line 13): Position 18 Keyword USING not expected. Valid tokens:
+- **SQL0199** (sev 30, line 13): Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>.
   - `EXEC SQL CONNECT USING :connStr;`
-- **SQL0104** (sev 30, line 62): Position 20 Token <END-OF-STATEMENT> was not valid.
+- **SQL0104** (sev 30, line 62): Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>. Message Summary
   - `EXEC SQL DISCONNECT;`
 
 #### `test78_exec_sql_proc.sqlrpgle`
 
-- **SQL0199** (sev 30, line 9): Position 18 Keyword USING not expected. Valid tokens:
+- **SQL0199** (sev 30, line 9): Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>.
   - `EXEC SQL CONNECT USING :connStr;`
-- **SQL0104** (sev 30, line 29): Position 20 Token <END-OF-STATEMENT> was not valid.
+- **SQL0104** (sev 30, line 29): Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>.
   - `EXEC SQL DISCONNECT;`
-- **SQL0312** (sev 30, line 51): Position 67 Variable EMPID not defined or not usable for
+- **SQL0312** (sev 30, line 51): Position 67 Variable EMPID not defined or not usable for reason code 1. Message Summary
   - `EXEC SQL UPDATE emp78 SET salary = salary + :amount WHERE id = :empId;`
 
 #### `test79_sql_core.sqlrpgle`
 
-- **SQL0199** (sev 30, line 15): Position 18 Keyword USING not expected. Valid tokens:
+- **SQL0199** (sev 30, line 15): Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>.
   - `EXEC SQL CONNECT USING :connStr;`
-- **SQL0104** (sev 30, line 75): Position 20 Token <END-OF-STATEMENT> was not valid.
+- **SQL0104** (sev 30, line 75): Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>. Message Summary
   - `EXEC SQL DISCONNECT;`
 
 #### `test80_sql_cursors.sqlrpgle`
 
-- **SQL0199** (sev 30, line 12): Position 18 Keyword USING not expected. Valid tokens:
+- **SQL0199** (sev 30, line 12): Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>.
   - `EXEC SQL CONNECT USING :connStr;`
-- **SQL0104** (sev 30, line 72): Position 20 Token <END-OF-STATEMENT> was not valid.
+- **SQL0104** (sev 30, line 72): Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>. Message Summary
   - `EXEC SQL DISCONNECT;`
 
 #### `test81_sql_dynamic.sqlrpgle`
 
-- **SQL0199** (sev 30, line 12): Position 18 Keyword USING not expected. Valid tokens:
+- **SQL0199** (sev 30, line 12): Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>.
   - `EXEC SQL CONNECT USING :connStr;`
-- **SQL0104** (sev 30, line 48): Position 20 Token <END-OF-STATEMENT> was not valid.
+- **SQL0104** (sev 30, line 48): Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>. Message Summary
   - `EXEC SQL DISCONNECT;`
 
 #### `test82_sql_advanced.sqlrpgle`
 
-- **SQL0199** (sev 30, line 13): Position 18 Keyword USING not expected. Valid tokens:
+- **SQL0199** (sev 30, line 13): Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>.
   - `EXEC SQL CONNECT USING :connStr;`
-- **SQL0104** (sev 30, line 45): Position 23 Token <END-OF-STATEMENT> was not valid.
+- **SQL0104** (sev 30, line 45): Position 23 Token <END-OF-STATEMENT> was not valid. Valid tokens: ON UNIQUE.
   - `EXEC SQL SAVEPOINT sp1;`
-- **SQL0104** (sev 30, line 60): Position 20 Token <END-OF-STATEMENT> was not valid.
+- **SQL0104** (sev 30, line 60): Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>. Message Summary
   - `EXEC SQL DISCONNECT;`
 
 #### `test83_sql_multirow.sqlrpgle`
 
-- **SQL0199** (sev 30, line 13): Position 18 Keyword USING not expected. Valid tokens:
+- **SQL0199** (sev 30, line 13): Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>.
   - `EXEC SQL CONNECT USING :connStr;`
-- **SQL0312** (sev 30, line 35): Position 11 Variable IDS not defined or not usable for
+- **SQL0312** (sev 30, line 35): Position 11 Variable IDS not defined or not usable for reason code 2.
   - `VALUES(:ids, :names, :salaries)`
-- **SQL0312** (sev 30, line 35): Position 17 Variable NAMES not defined or not usable for
+- **SQL0312** (sev 30, line 35): Position 17 Variable NAMES not defined or not usable for reason code 2.
   - `VALUES(:ids, :names, :salaries)`
-- **SQL0312** (sev 30, line 35): Position 25 Variable SALARIES not defined or not usable
+- **SQL0312** (sev 30, line 35): Position 25 Variable SALARIES not defined or not usable for reason code 2.
   - `VALUES(:ids, :names, :salaries)`
-- **SQL0104** (sev 30, line 36): Position 7 Token : was not valid. Valid tokens: READ
+- **SQL0104** (sev 30, line 36): Position 7 Token : was not valid. Valid tokens: READ FETCH UPDATE.
   - `FOR :nRows ROWS;`
-- **SQL5011** (sev 30, line 53): Position 9 Host structure array IDS not defined or not
+- **SQL5011** (sev 30, line 53): Position 9 Host structure array IDS not defined or not usable for reason code 1.
   - `INTO :ids, :names, :salaries;`
-- **SQL0104** (sev 30, line 53): Position 12 Token , was not valid. Valid tokens:
+- **SQL0104** (sev 30, line 53): Position 12 Token , was not valid. Valid tokens: <END-OF-STATEMENT>.
   - `INTO :ids, :names, :salaries;`
-- **SQL0312** (sev 30, line 53): Position 15 Variable NAMES not defined or not usable for
+- **SQL0312** (sev 30, line 53): Position 15 Variable NAMES not defined or not usable for reason code 2.
   - `INTO :ids, :names, :salaries;`
 - … and 2 more
 
 #### `test84_sql_connect.sqlrpgle`
 
-- **SQL0199** (sev 30, line 12): Position 18 Keyword USING not expected. Valid tokens:
+- **SQL0199** (sev 30, line 12): Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>.
   - `EXEC SQL CONNECT USING :connStr;`
-- **SQL0104** (sev 30, line 23): Position 20 Token <END-OF-STATEMENT> was not valid.
+- **SQL0104** (sev 30, line 23): Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>.
   - `EXEC SQL DISCONNECT;`
-- **SQL0199** (sev 30, line 26): Position 18 Keyword USING not expected. Valid tokens:
+- **SQL0199** (sev 30, line 26): Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>.
   - `EXEC SQL CONNECT USING :connStr;`
 
 #### `test86.sqlrpgle`
 
-- **SQL0199** (sev 30, line 14): Position 18 Keyword USING not expected. Valid tokens:
+- **SQL0199** (sev 30, line 14): Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>.
   - `exec sql connect using :connStr;`
-- **SQL0104** (sev 30, line 40): Position 20 Token <END-OF-STATEMENT> was not valid.
+- **SQL0104** (sev 30, line 40): Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>. Message Summary
   - `exec sql disconnect;`
 
 ### F. needs individual review (16)
@@ -1223,16 +1223,16 @@ The first cause IBM's listing points at, with follow-on "not defined" messages (
 
 #### `test101_user.rpgle`
 
-- **RNF7416** (sev 30, line 8): The types of the right and left hand side do not match in
+- **RNF7416** (sev 30, line 8): The types of the right and left hand side do not match in the EVAL operation.
   - `currentUser = *USER;`
 - **RNF7421** (sev 30, line 18): Operands are not compatible with the type of operator.
   - `msg = 'Hello ' + *USER;`
 
 #### `test124_fixed_overlay.rpgle`
 
-- **RNF3555** (sev 20, line 8): The keyword is not allowed in fixed-form definitions. The
+- **RNF3555** (sev 20, line 8): The keyword is not allowed in fixed-form definitions. The keyword is ignored.
   - `Did                             10I 0 POS(1)`
-- **RNF3555** (sev 20, line 9): The keyword is not allowed in fixed-form definitions. The
+- **RNF3555** (sev 20, line 9): The keyword is not allowed in fixed-form definitions. The keyword is ignored.
   - `Dname                           20A   POS(5)`
 
 #### `test142_fixed_copy_in_free.rpgle`
@@ -1248,34 +1248,34 @@ The first cause IBM's listing points at, with follow-on "not defined" messages (
 
 #### `test154_fixed_ispec_single.rpgle`
 
-- **RNF5191** (sev 30, line 10): The Result-Field is not a data structure when Factor 2 is a
+- **RNF5191** (sev 30, line 10): The Result-Field is not a data structure when Factor 2 is a file name.
   - `WRITE TESTFL154;`
-- **RNF5191** (sev 30, line 13): The Result-Field is not a data structure when Factor 2 is a
+- **RNF5191** (sev 30, line 13): The Result-Field is not a data structure when Factor 2 is a file name.
   - `WRITE TESTFL154;`
-- **RNF5191** (sev 30, line 16): The Result-Field is not a data structure when Factor 2 is a
+- **RNF5191** (sev 30, line 16): The Result-Field is not a data structure when Factor 2 is a file name.
   - `WRITE TESTFL154;`
 
 #### `test156_fixed_ispec_field_ind.rpgle`
 
-- **RNF5191** (sev 30, line 7): The Result-Field is not a data structure when Factor 2 is a
+- **RNF5191** (sev 30, line 7): The Result-Field is not a data structure when Factor 2 is a file name.
   - `WRITE TESTFL156;`
-- **RNF5191** (sev 30, line 9): The Result-Field is not a data structure when Factor 2 is a
+- **RNF5191** (sev 30, line 9): The Result-Field is not a data structure when Factor 2 is a file name.
   - `WRITE TESTFL156;`
-- **RNF5191** (sev 30, line 11): The Result-Field is not a data structure when Factor 2 is a
+- **RNF5191** (sev 30, line 11): The Result-Field is not a data structure when Factor 2 is a file name.
   - `WRITE TESTFL156;`
 
 #### `test157_fixed_ispec_update.rpgle`
 
-- **RNF5191** (sev 30, line 7): The Result-Field is not a data structure when Factor 2 is a
+- **RNF5191** (sev 30, line 7): The Result-Field is not a data structure when Factor 2 is a file name.
   - `WRITE TESTFL157;`
-- **RNF5191** (sev 30, line 13): The Result-Field is not a data structure when Factor 2 is a
+- **RNF5191** (sev 30, line 13): The Result-Field is not a data structure when Factor 2 is a file name.
   - `C                   UPDATE    TESTFL157`
 
 #### `test158_fixed_ospec_editcode.rpgle`
 
-- **RNF3466** (sev 20, line 3): The Decimal-Positions entry does not agree with the
+- **RNF3466** (sev 20, line 3): The Decimal-Positions entry does not agree with the Data-Type entry; defaults to 0.
   - `DAMT              S             10S`
-- **RNF5191** (sev 30, line 6): The Result-Field is not a data structure when Factor 2 is a
+- **RNF5191** (sev 30, line 6): The Result-Field is not a data structure when Factor 2 is a file name.
   - `WRITE TESTFL158;`
 - **RNF8003** (sev 30, line 10): Field length 13 is greater than end position 10.
   - `O                       AMT           1     10`
@@ -1313,31 +1313,31 @@ The first cause IBM's listing points at, with follow-on "not defined" messages (
 
 #### `test211_fixed_cspec_move_dt_align.rpgle`
 
-- **RNF7512** (sev 30, line 34): The Result Field entry C6 is too small to contain a
+- **RNF7512** (sev 30, line 34): The Result Field entry C6 is too small to contain a complete *ISO- Date.
   - `C     *ISO          MOVEL     DFLD          C6`
-- **RNF7512** (sev 30, line 38): The Result Field entry C6 is too small to contain a
+- **RNF7512** (sev 30, line 38): The Result Field entry C6 is too small to contain a complete *ISO- Date.
   - `C     *ISO          MOVE      DFLD          C6`
 
 #### `test212_fixed_cspec_move_dt_err.rpgle`
 
-- **RNF7510** (sev 30, line 27): The operand C6 is too small to contain a complete *ISO-
+- **RNF7510** (sev 30, line 27): The operand C6 is too small to contain a complete *ISO- date.
   - `C     *ISO          MOVE      C6            DFLD`
 
 #### `test22_status_error.rpgle`
 
-- **RNF7416** (sev 30, line 10): The types of the right and left hand side do not match in
+- **RNF7416** (sev 30, line 10): The types of the right and left hand side do not match in the EVAL operation.
   - `errFlag = %ERROR();`
 
 #### `test47_test.rpgle`
 
-- **RNF5056** (sev 30, line 7): Either the error indicator or the E operation extender must
+- **RNF5056** (sev 30, line 7): Either the error indicator or the E operation extender must be specified for the TEST operation.
   - `TEST(D) myDate;`
-- **RNF7523** (sev 20, line 7): Operation-Code extender D, T, or Z cannot be used with
+- **RNF7523** (sev 20, line 7): Operation-Code extender D, T, or Z cannot be used with Result-Field entry MYDATE.
   - `TEST(D) myDate;`
 
 #### `test92_data_area_lda.rpgle`
 
-- **RNF7091** (sev 30, line 21): The Factor 2 operand is a Local-Data Area for UNLOCK
+- **RNF7091** (sev 30, line 21): The Factor 2 operand is a Local-Data Area for UNLOCK operation.
   - `UNLOCK LdaData;`
 
 ## IBM accepts, rpgc rejects — 14 files

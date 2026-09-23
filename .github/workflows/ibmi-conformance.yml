@@ -65,6 +65,10 @@ jobs:
     # free machine should not be reachable from untrusted branch contents.
     if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
+    # Write access for the wiki push only (the results page, below); every
+    # other job keeps the read-only default above.
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v6
         with:
@@ -89,6 +93,7 @@ jobs:
       # compiles a single file so the connection itself is exercised, and
       # leaves the baseline untouched.
       - name: Compile on IBM i
+        id: compile
         env:
           PUB400_USER: ${{ secrets.PUB400_USER }}
         run: |
@@ -115,3 +120,36 @@ jobs:
       - name: Show the baseline diff
         if: always()
         run: git --no-pager diff --stat -- ibmi-conformance-baseline.json || true
+
+      # The wiki's IBM-i-Conformance-Results page: which programs IBM
+      # compiled, which it did not, and IBM's reason for each. Rendered from
+      # the baseline this run refreshed, so it is complete even when only
+      # changed sources were sent. Published even when the compile step
+      # failed on a regression — that is when the page matters most. A smoke
+      # run leaves the baseline untouched, so it has nothing new to publish.
+      - name: Publish the results page to the wiki
+        if: >-
+          always() && github.event.inputs.mode != 'smoke' &&
+          steps.compile.outcome != 'skipped' && steps.compile.outcome != 'cancelled'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git clone --depth 1 \
+            "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.wiki.git" wiki
+          python3 scripts/conformance-wiki.py \
+            --out wiki/IBM-i-Conformance-Results.md \
+            --sidebar wiki/_Sidebar.md \
+            --mode "${{ github.event.inputs.mode || 'changed' }}" \
+            --commit "${{ github.sha }}" \
+            --run-url "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
+            --repo "${{ github.repository }}"
+          cd wiki
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add IBM-i-Conformance-Results.md _Sidebar.md
+          if git diff --cached --quiet; then
+            echo "results page unchanged"
+          else
+            git commit -q -m "IBM i conformance results, run ${{ github.run_id }}"
+            git push -q
+          fi

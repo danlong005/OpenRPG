@@ -14,6 +14,13 @@ import sys
 GUIDE = os.path.join(os.path.dirname(__file__), "..", "docs", "GUIDE.md")
 
 
+
+# Wiki pages that other scripts maintain (page name -> sidebar title).
+EXTERNAL_PAGES = {
+    "IBM-i-Compatibility": "IBM i Compatibility",               # conformance-summary.py
+    "IBM-i-Conformance-Results": "IBM i Conformance Results",   # conformance-wiki.py
+}
+
 def anchor(heading):
     """Reproduce GitHub's anchor slug for a heading."""
     a = re.sub(r"[^\w\s-]", "", heading.lower())
@@ -60,9 +67,12 @@ def main():
         # Chapters are their own pages now; the trailing rule is noise.
         return text.strip().rstrip("-").rstrip() + "\n"
 
-    # Clear out previously generated pages before writing.
+    # Clear out previously generated pages before writing — but not the pages
+    # generated elsewhere: the IBM i compatibility and conformance-results
+    # pages come from the conformance scripts, not the guide, and wiping them
+    # here left the wiki without them until the next conformance run.
     for f in os.listdir(wiki):
-        if f.endswith(".md"):
+        if f.endswith(".md") and f[:-3] not in EXTERNAL_PAGES:
             os.remove(os.path.join(wiki, f))
 
     for heading, body in chapters:
@@ -84,9 +94,11 @@ def main():
             "`scripts/sync-wiki.py` — edit the guide there, not these pages.\n\n"
             "## Contents\n\n%s\n" % (intro, toc))
 
+    external = ["- [%s](%s)" % (title, page) for page, title in EXTERNAL_PAGES.items()
+                if os.path.exists(os.path.join(wiki, page + ".md"))]
     with open(os.path.join(wiki, "_Sidebar.md"), "w") as fh:
         fh.write("### [OpenRPG User's Guide](Home)\n\n%s\n" % "\n".join(
-            "- [%s](%s)" % (h, pagename(h)) for h, _ in chapters))
+            ["- [%s](%s)" % (h, pagename(h)) for h, _ in chapters] + external))
 
     print("wrote %d chapter pages + Home.md + _Sidebar.md to %s"
           % (len(chapters), wiki))

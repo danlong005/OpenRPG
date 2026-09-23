@@ -32,6 +32,8 @@ Usage:
   conformance-baseline.py update  --transcript F [--baseline F] [--tests D]
 """
 import sys, os, json, glob, hashlib, argparse, datetime
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import conformance_lib as L
 
 def sources(tests):
     out = []
@@ -143,6 +145,11 @@ def main():
     if not a.transcript:
         print("update needs --transcript", file=sys.stderr); return 2
     fresh = parse_transcript(a.transcript)
+    # Why IBM rejected each source, kept with its verdict so that anything
+    # rendered from the baseline (conformance-wiki.py) can explain every
+    # rejection, including sources a --changed-only run did not re-send.
+    L.TESTS = a.tests
+    listings = L.load_transcript(a.transcript)
     regressions, improvements, added = [], [], []
     for p in srcs:
         n, d = os.path.basename(p), digest(p)
@@ -157,7 +164,18 @@ def main():
         elif old["verdict"] == "reject" and new["verdict"] == "accept":
             improvements.append(n)
         keep = files.get(n, {}).get("rpgc")
-        files[n] = {"sha256": d, "verdict": new["verdict"], "codes": new["codes"]}
+        files[n] = {"sha256": d, "verdict": new["verdict"], "codes": new["codes"],
+                    # when IBM last compiled this source; a --changed-only run
+                    # leaves the others' dates alone
+                    "verified": datetime.datetime.now(datetime.timezone.utc).date().isoformat()}
+        if new["verdict"] == "reject" and n in listings:
+            ms = L.ibm_messages(listings[n])
+            cause, detail = L.root_cause(n, ms)
+            files[n]["reason"] = cause
+            if detail: files[n]["reason_detail"] = detail
+            files[n]["messages"] = [
+                {"code": c, "severity": sev, "line": ln, "text": t}
+                for c, sev, ln, t in sorted(ms, key=lambda m: (m[2] or 10**9))[:5]]
         if keep: files[n]["rpgc"] = keep
     for n in [n for n in list(files) if n not in {os.path.basename(p) for p in srcs}]:
         del files[n]                       # source removed

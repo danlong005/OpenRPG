@@ -3280,6 +3280,28 @@ void CodeGen::visit(BinaryExpr& node) {
 }
 
 void CodeGen::visit(NotExpr& node) {
+    // NOT takes an indicator: a field of type IND, *INnn, a comparison, a
+    // logical expression, or a built-in like %FOUND. IBM i rejects it on a
+    // number or a string (RNF7421). NOT binds tighter than the comparisons,
+    // so this is what `NOT x = 0` reaches with a numeric x — IBM reads it
+    // as (NOT x) = 0, and so does rpgc now.
+    bool notIndicator = false;
+    Expression* op = node.operand.get();
+    if (dynamic_cast<IntLiteral*>(op) || dynamic_cast<FloatLiteral*>(op) ||
+        dynamic_cast<StringLiteral*>(op)) {
+        notIndicator = true;
+    } else if (auto* be = dynamic_cast<BinaryExpr*>(op)) {
+        notIndicator = be->op == BinOp::ADD || be->op == BinOp::SUB || be->op == BinOp::MUL ||
+                       be->op == BinOp::DIV || be->op == BinOp::POWER;
+    } else {
+        FieldAttrs fa = attrsOf(*op);
+        notIndicator = fa.known && fa.type != RPGType::IND;
+    }
+    if (notIndicator)
+        report_semantic_error(node.line > 0 ? node.line : cur_stmt_line_,
+            "Operands are not compatible with the type of "
+            "operator: NOT applies to an indicator, and binds tighter than a comparison — "
+            "write NOT (a = b) to negate a comparison (IBM: RNF7421)");
     expr_ << "!(";
     node.operand->accept(*this);
     expr_ << ")";

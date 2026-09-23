@@ -1897,11 +1897,10 @@ and_expr:
     }
     ;
 
+/* NOT is not here: it is a unary operator (see unary_expr), not a
+   comparison-level one. */
 not_expr:
     comparison_expr { $$ = $1; }
-    | KW_NOT comparison_expr {
-        $$ = new rpg::NotExpr(std::unique_ptr<rpg::Expression>($2));
-    }
     ;
 
 comparison_expr:
@@ -1980,8 +1979,16 @@ power_expr:
     }
     ;
 
+/* NOT binds as tightly as unary minus, above ** and every binary operator
+   — IBM's precedence order. It used to sit below the comparisons, so
+   `NOT x = 0` meant NOT (x = 0) here, while IBM reads (NOT x) = 0 and
+   rejects NOT on a number (RNF7421). Write NOT (x = 0) for the other. */
 unary_expr:
     postfix_expr { $$ = $1; }
+    | KW_NOT unary_expr {
+        $$ = new rpg::NotExpr(std::unique_ptr<rpg::Expression>($2));
+        $$->line = yylineno;   /* its own line, for RNF7421 */
+    }
     | MINUS postfix_expr {
         $$ = new rpg::BinaryExpr(rpg::BinOp::SUB,
             std::unique_ptr<rpg::Expression>(new rpg::IntLiteral(0)),

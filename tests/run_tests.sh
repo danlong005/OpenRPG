@@ -813,6 +813,8 @@ run_test "254" "Fixed-format unqualified DS subfields" "$TESTDIR/test254_fixed_u
 run_test "255" "Reject %DIV by a literal zero" "$TESTDIR/test255_err_div_zero_literal.rpgle" "error"
 run_test "256" "Reject INZ longer than its field" "$TESTDIR/test256_err_inz_too_long.rpgle" "error"
 run_test "257" "Reject ds.field on an unqualified DS" "$TESTDIR/test257_err_unqualified_dot.rpgle" "error"
+run_test "258" "Reject NOT on a number" "$TESTDIR/test258_err_not_numeric.rpgle" "error"
+run_test "259" "NOT binds tighter than = and AND" "$TESTDIR/test259_not_precedence.rpgle" "run"
 
 # ── Customer / drop-in tests ─────────────────────────────────────────────
 # Drop any .rpgle or .sqlrpgle file into tests/customer/ and it will be

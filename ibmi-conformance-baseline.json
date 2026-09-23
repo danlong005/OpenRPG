@@ -43,22 +43,10 @@
    "verified": "2026-09-23"
   },
   "test05_if.rpgle": {
-   "codes": [
-    "RNF7421"
-   ],
-   "messages": [
-    {
-     "code": "RNF7421",
-     "line": 25,
-     "severity": 30,
-     "text": "Operands are not compatible with the type of operator."
-    }
-   ],
-   "reason": "RNF7421: Operands are not compatible with the type of operator.",
-   "reason_detail": "line 25: Operands are not compatible with the type of operator. \u2014 `IF NOT x = 0;`",
+   "codes": [],
    "rpgc": "accept",
-   "sha256": "7ca9b939a405fdb967c300851be4d07bd70658f46f77d698499638452682e3ef",
-   "verdict": "reject",
+   "sha256": "39e42a6fbd7a65b717182fd82984ca5443fbc94bb14ccad3515d134d333326bb",
+   "verdict": "accept",
    "verified": "2026-09-23"
   },
   "test06_loops.rpgle": {
@@ -3414,6 +3402,32 @@
    "verdict": "reject",
    "verified": "2026-09-23"
   },
+  "test258_err_not_numeric.rpgle": {
+   "codes": [
+    "RNF7421"
+   ],
+   "messages": [
+    {
+     "code": "RNF7421",
+     "line": 6,
+     "severity": 30,
+     "text": "Operands are not compatible with the type of operator."
+    }
+   ],
+   "reason": "RNF7421: Operands are not compatible with the type of operator.",
+   "reason_detail": "line 6: Operands are not compatible with the type of operator. \u2014 `IF NOT x = 0;`",
+   "rpgc": "reject",
+   "sha256": "3de5e5924ce404656ac53f78ea2f3ad7cace208318cbd200dfdcdb49cc31aecd",
+   "verdict": "reject",
+   "verified": "2026-09-23"
+  },
+  "test259_not_precedence.rpgle": {
+   "codes": [],
+   "rpgc": "accept",
+   "sha256": "e9d02657ff6a11ae0f1771c5afdec3a86ec51e5038437f72d38f7b991e3b5211",
+   "verdict": "accept",
+   "verified": "2026-09-23"
+  },
   "test25_dclf.rpgle": {
    "codes": [
     "RNF2109",
@@ -4991,5 +5005,5 @@
    "verified": "2026-09-23"
   }
  },
- "generated": "2026-09-23T18:13:12+00:00"
+ "generated": "2026-09-23T19:33:16+00:00"
 }

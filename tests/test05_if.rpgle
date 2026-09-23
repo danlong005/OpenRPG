@@ -22,7 +22,7 @@ IF x < 10 OR x > 50;
   DSPLY 'Outside 10-50';
 ENDIF;
 
-IF NOT x = 0;
+IF NOT (x = 0);
   DSPLY 'Not zero';
 ENDIF;
 *INLR = *ON;

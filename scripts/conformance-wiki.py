@@ -146,35 +146,65 @@ for reason, ns in sorted(by_reason.items(), key=lambda kv: (-len(kv[1]), kv[0]))
     w(f"| {cell(reason)} | {len(ns)} |")
 w("")
 
-w(f"## All programs ({len(files)})\n")
-w("| Program | Should compile on IBM i | Compiled on IBM i | | Compiles with rpgc | Reason and IBM's messages | Last compiled |")
-w("|---|---|---|---|---|---|---|")
 def natural(name):
     """test9 before test10: compare the digit runs as numbers."""
     return [int(t) if t.isdigit() else t.lower() for t in re.split(r'(\d+)', name)]
 
+def short(name):
+    """The program's name without its extension, to keep the table narrow."""
+    return os.path.splitext(name)[0]
+
+def anchor(name):
+    """GitHub's id for the "### <short name>" heading in Details."""
+    return re.sub(r'[^a-z0-9_-]', '', short(name).lower())
+
+def yes_no(v):
+    return "✅" if v else "❌"
+
+# The table holds only short cells, so it fits the page: long text (IBM's
+# messages, why an expectation is an exception) is in Details below, one
+# entry per program that has any, linked from its row. With that text in
+# the table, GitHub cut off the right-hand columns.
+w(f"## All programs ({len(files)})\n")
+w("✅ compiled, ❌ did not. ⚠️ marks a result that differs from what the program "
+  "should do on IBM i.\n")
+w("| Program | Should compile | IBM i | rpgc | | Details | Last compiled |")
+w("|---|:-:|:-:|:-:|:-:|---|---|")
+detailed = []
 for n in sorted(files, key=natural):
+    r = files[n]
+    want, why = should[n]
+    got = compiled[n]
+    rp = r.get("rpgc")
+    has_detail = (not got) or bool(why)
+    if has_detail:
+        detailed.append(n)
+    w(f"| {src_link(n).replace(f'`{n}`', short(n))} | {'Yes' if want else 'No'} | {yes_no(got)} | "
+      f"{yes_no(rp == 'accept') if rp else '—'} | {'' if want == got else '⚠️'} | "
+      f"{f'[why](#{anchor(n)})' if has_detail else ''} | {r.get('verified', '—')} |")
+w("")
+
+w(f"## Details ({len(detailed)})\n")
+w("For each program that did not compile on IBM i, or whose expectation is an "
+  "exception to the rule: why.\n")
+for n in detailed:
     r = files[n]
     want, why = should[n]
     got = compiled[n]
     msgs = r.get("messages") or []
     first_line = next((m["line"] for m in msgs if m.get("line")), None)
-    want_cell = ("Yes" if want else "No") + (f" — {cell(why)}" if why else "")
-    got_cell = "✅ Yes" if got else "❌ No"
-    flag = "" if want == got else "⚠️ unexpected"
-    if got:
-        detail = ""
-    else:
-        detail = "<br>".join(
-            [f"**{cell(r.get('reason', '—'))}**"] +
-            [cell(f"{m['code']} (sev {m['severity']}"
-                  + (f", line {m['line']}" if m.get("line") else "") + f"): {m['text']}")
-             for m in msgs])
-    rp = r.get("rpgc")
-    rpgc_cell = "✅ Yes" if rp == "accept" else ("❌ No" if rp == "reject" else "—")
-    w(f"| {src_link(n, None if got else first_line)} | {want_cell} | {got_cell} | {flag} | "
-      f"{rpgc_cell} | {detail} | {r.get('verified', '—')} |")
-w("")
+    w(f"### {short(n)}\n")
+    w(f"{src_link(n, None if got else first_line)} — should "
+      f"{'compile' if want else 'be rejected'}"
+      + (f" ({cell(why)})" if why else "") + "; IBM i "
+      + ("compiled it." if got else "did not compile it.")
+      + ("" if want == got else " ⚠️") + "\n")
+    if not got:
+        w(f"**{cell(r.get('reason', 'No reason recorded'))}**\n")
+        for m in msgs:
+            w(f"- {m['code']} (severity {m['severity']}"
+              + (f", line {m['line']}" if m.get("line") else "") + f"): {cell(m['text'])}")
+        w("")
 
 open(a.out, "w").write("\n".join(out) + "\n")
 

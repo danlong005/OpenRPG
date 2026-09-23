@@ -2,6 +2,7 @@
 #include "free_bridge.h"
 #include <iomanip>
 #include <algorithm>
+#include <functional>
 
 namespace rpg {
 

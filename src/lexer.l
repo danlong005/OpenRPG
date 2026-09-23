@@ -145,6 +145,7 @@ static void parse_ctlopt(const char* text) {
 
 %x SKIPPING
 %x SQL
+%x PI_NAME
 
 %%
 
@@ -326,7 +327,15 @@ static void parse_ctlopt(const char* text) {
 "RETURN"            { return KW_RETURN; }
 "DCL-PROC"          { return KW_DCL_PROC; }
 "END-PROC"          { return KW_END_PROC; }
-"DCL-PI"            { return KW_DCL_PI; }
+"DCL-PI"            { BEGIN(PI_NAME); return KW_DCL_PI; }
+ /* *N — "no name" — is the standard way to write a procedure interface's
+    name, and IBM's recommended one. It is a name only in this position:
+    elsewhere "*N" is multiplication by N (total*N), so it is recognized
+    only as the first token after DCL-PI, and anything else there is
+    handed back to be scanned normally. */
+<PI_NAME>[ \t\r\n]+    { /* whitespace between DCL-PI and its name */ }
+<PI_NAME>"*N"/[^A-Za-z0-9_] { BEGIN(INITIAL); yylval.sval = strdup("*N"); return IDENTIFIER; }
+<PI_NAME>.            { yyless(0); BEGIN(INITIAL); }
 "END-PI"            { return KW_END_PI; }
 "DCL-PR"            { return KW_DCL_PR; }
 "END-PR"            { return KW_END_PR; }

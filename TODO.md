@@ -2078,6 +2078,11 @@ Smaller, all verified:
   to be omitted for a procedure with no parameters and no return value.
 - `DCL-PI *N;` is a syntax error. `*N` is IBM's standard unnamed-interface
   form and the recommended one in modern code.
+  ✅ **Fixed 2026-09-22** (Test 244). `*N` is lexed as a name only as the
+  first token after `DCL-PI` (the `PI_NAME` lexer state); elsewhere
+  `total*N` is still multiplication. Still open: a top-level `DCL-PI`
+  (a free-format program's own entry parameters) isn't in the grammar at
+  all; only `*ENTRY PLIST` is.
 - A bare `procname(args);` statement is a syntax error; `CALLP` is
   required. IBM made `CALLP` optional in free form.
 - An unqualified DS subfield cannot be referenced by its bare name — the

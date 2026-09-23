@@ -800,6 +800,7 @@ run_test "241" "Reject a hand-written EVAL(T)" "$TESTDIR/test241_err_eval_t.rpgl
 run_test "242" "Hex literals keep X'00'" "$TESTDIR/test242_hex_nul.rpgle" "run"
 run_test "243" "Arrays start initialized" "$TESTDIR/test243_array_init.rpgle" "run"
 run_test "244" "DCL-PI *N" "$TESTDIR/test244_pi_star_n.rpgle" "run"
+run_test "245" "Bare procedure call statements" "$TESTDIR/test245_bare_call.rpgle" "run"
 
 # ── Customer / drop-in tests ─────────────────────────────────────────────
 # Drop any .rpgle or .sqlrpgle file into tests/customer/ and it will be

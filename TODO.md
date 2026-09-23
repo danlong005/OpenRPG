@@ -2085,6 +2085,10 @@ Smaller, all verified:
   all; only `*ENTRY PLIST` is.
 - A bare `procname(args);` statement is a syntax error; `CALLP` is
   required. IBM made `CALLP` optional in free form.
+  ✅ **Fixed 2026-09-22** (Test 245). Only the one-argument form failed:
+  `proc(x);` reads like the start of `arr(x) = …;`, and the parser
+  committed to the assignment. A dedicated one-argument call rule lets the
+  token after `)` decide. `proc();` and `proc(a : b);` already parsed.
 - An unqualified DS subfield cannot be referenced by its bare name — the
   subfield is emitted inside the struct but referenced unqualified.
 - `IND` is not accepted as a DS subfield type.

@@ -1098,6 +1098,20 @@ expr_stmt:
         free($1);
         $$ = new rpg::ExprStmt(std::unique_ptr<rpg::Expression>(fc));
     }
+    /* A one-argument call, proc(x);, reads exactly like the start of an
+       array-element assignment, arr(x) = ...; — and the parser, seeing
+       `name ( expression` followed by `)`, shifts toward the assignment
+       (eval_target) reading, then failed on the `;`. Spelling the call out
+       here puts both readings in the same state after the `)`, where the
+       next token decides: `;` is a call, `=` an assignment. Calls with no
+       argument or several already parsed; CALLP was the workaround. */
+    | IDENTIFIER LPAREN expression RPAREN SEMICOLON {
+        auto* args = new std::vector<rpg::Expression*>();
+        args->push_back($3);
+        auto* fc = make_func($1, args);
+        free($1);
+        $$ = new rpg::ExprStmt(std::unique_ptr<rpg::Expression>(fc));
+    }
     ;
 
 /* --- Procedures --- */

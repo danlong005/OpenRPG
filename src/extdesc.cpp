@@ -35,12 +35,18 @@ static void mapSqlType(SQLSMALLINT sqlType, SQLULEN colSize, SQLSMALLINT decDigi
                         ExtField& f) {
     switch (sqlType) {
         case SQL_CHAR:
+        case SQL_WCHAR:
+            f.cppType  = "std::string";
+            f.bindKind = "str";
+            f.kind     = "char";
+            f.length   = static_cast<int>(colSize);
+            break;
         case SQL_VARCHAR:
         case SQL_LONGVARCHAR:
-        case SQL_WCHAR:
         case SQL_WVARCHAR:
             f.cppType  = "std::string";
             f.bindKind = "str";
+            f.kind     = "varchar";
             f.length   = static_cast<int>(colSize);
             break;
         case SQL_SMALLINT:
@@ -49,15 +55,25 @@ static void mapSqlType(SQLSMALLINT sqlType, SQLULEN colSize, SQLSMALLINT decDigi
         case SQL_BIGINT:
             f.cppType  = "long";
             f.bindKind = "int";
+            f.kind     = "int";
             f.length   = static_cast<int>(colSize);
             break;
         case SQL_NUMERIC:
         case SQL_DECIMAL:
+            f.cppType  = "double";
+            f.bindKind = "dbl";
+            f.kind     = "decimal";
+            f.length   = static_cast<int>(colSize);
+            f.decimals = static_cast<int>(decDigits);
+            break;
         case SQL_FLOAT:
         case SQL_REAL:
         case SQL_DOUBLE:
+            // Binary floating point has no scale to truncate to; whatever
+            // DECIMAL_DIGITS the driver reports for it is not one.
             f.cppType  = "double";
             f.bindKind = "dbl";
+            f.kind     = "float";
             f.length   = static_cast<int>(colSize);
             f.decimals = static_cast<int>(decDigits);
             break;
@@ -66,6 +82,7 @@ static void mapSqlType(SQLSMALLINT sqlType, SQLULEN colSize, SQLSMALLINT decDigi
         case SQL_TYPE_TIMESTAMP:
             f.cppType  = "std::string";
             f.bindKind = "str";
+            f.kind     = "datetime";
             f.length   = 26;
             break;
         default:
@@ -73,6 +90,45 @@ static void mapSqlType(SQLSMALLINT sqlType, SQLULEN colSize, SQLSMALLINT decDigi
             f.bindKind = "str";
             f.length   = static_cast<int>(colSize ? colSize : 256);
             break;
+    }
+}
+
+// Correct the mapping from the column's declared type name where the
+// driver's DATA_TYPE is less specific than the column. SQLite's ODBC driver
+// is the case in point: SQLite has no fixed-length character type, so it
+// reports CHAR(6) as SQL_VARCHAR, and it reports DECIMAL(7,2) as a 2-byte
+// string. TYPE_NAME still carries the declaration ("CHAR(6)",
+// "DECIMAL(7,2)"), and on a driver that reports types exactly (DB2 on IBM
+// i) this agrees with DATA_TYPE and changes nothing.
+static void refineFromTypeName(const std::string& typeName, ExtField& f) {
+    std::string t = toUpper(trim(typeName));
+    auto args = [&](int& a, int& b) {
+        a = b = -1;
+        size_t lp = t.find('('), rp = t.find(')');
+        if (lp == std::string::npos || rp == std::string::npos || rp < lp) return;
+        std::string in = t.substr(lp + 1, rp - lp - 1);
+        size_t comma = in.find(',');
+        try {
+            a = std::stoi(in.substr(0, comma));
+            if (comma != std::string::npos) b = std::stoi(in.substr(comma + 1));
+        } catch (...) { a = b = -1; }
+    };
+    auto startsWord = [&](const char* w) {
+        size_t n = strlen(w);
+        return t.compare(0, n, w) == 0 && (t.size() == n || t[n] == '(' || t[n] == ' ');
+    };
+    int a, b;
+    if (startsWord("CHAR") || startsWord("CHARACTER") || startsWord("NCHAR")) {
+        f.cppType = "std::string"; f.bindKind = "str"; f.kind = "char";
+        args(a, b); if (a > 0) f.length = a;
+    } else if (startsWord("VARCHAR") || startsWord("NVARCHAR") || startsWord("CHARACTER VARYING")) {
+        f.cppType = "std::string"; f.bindKind = "str"; f.kind = "varchar";
+        args(a, b); if (a > 0) f.length = a;
+    } else if (startsWord("DECIMAL") || startsWord("NUMERIC") || startsWord("DEC")) {
+        f.cppType = "double"; f.bindKind = "dbl"; f.kind = "decimal";
+        args(a, b);
+        if (a > 0) f.length = a;
+        f.decimals = (b >= 0) ? b : (a > 0 ? 0 : f.decimals);
     }
 }
 
@@ -87,7 +143,9 @@ static void writeCache(const std::string& path, const ExternalFileDesc& desc) {
         if (fld.length > 0) f << "(" << fld.length;
         if (fld.decimals > 0) f << ":" << fld.decimals;
         if (fld.length > 0) f << ")";
-        f << " " << fld.bindKind << "\n";
+        f << " " << fld.bindKind;
+        if (!fld.kind.empty()) f << " " << fld.kind;
+        f << "\n";
     }
 }
 
@@ -106,7 +164,7 @@ static bool readCache(const std::string& path, ExternalFileDesc& desc) {
         std::istringstream ss(line);
         ExtField ef;
         std::string typestr, bindkind;
-        ss >> ef.name >> typestr >> bindkind;
+        ss >> ef.name >> typestr >> bindkind >> ef.kind;
         if (ef.name.empty() || typestr.empty()) continue;
         // parse cpptype and optional (len:dec)
         auto paren = typestr.find('(');
@@ -154,7 +212,10 @@ static bool queryODBC(SQLHDBC hdbc, const std::string& tableName, ExternalFileDe
     SQLSMALLINT decDigits = 0;
     SQLLEN indName = 0, indType = 0, indSize = 0, indDec = 0;
 
+    char typeName[128] = {};
+    SQLLEN indTypeName = 0;
     SQLBindCol(hstmt, 4, SQL_C_CHAR,   colName,   sizeof(colName), &indName);
+    SQLBindCol(hstmt, 6, SQL_C_CHAR,   typeName,  sizeof(typeName), &indTypeName);
     SQLBindCol(hstmt, 5, SQL_C_SSHORT, &dataType, 0,               &indType);
     SQLBindCol(hstmt, 7, SQL_C_ULONG,  &colSize,  0,               &indSize);
     SQLBindCol(hstmt, 9, SQL_C_SSHORT, &decDigits,0,               &indDec);
@@ -164,6 +225,7 @@ static bool queryODBC(SQLHDBC hdbc, const std::string& tableName, ExternalFileDe
         ExtField ef;
         ef.name = toUpper(std::string(colName, (indName > 0) ? (size_t)indName : strlen(colName)));
         mapSqlType(dataType, colSize, decDigits, ef);
+        if (indTypeName > 0) refineFromTypeName(typeName, ef);
         desc.fields.push_back(ef);
         found = true;
     }

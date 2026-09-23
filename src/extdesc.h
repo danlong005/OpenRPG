@@ -12,6 +12,13 @@ struct ExtField {
     std::string bindKind;   // "str", "int", "dbl" — for ODBC binding dispatch
     int length = 0;
     int decimals = 0;
+    // What the column is, in the terms an RPG field needs, since cppType
+    // can't say: "char" (fixed length — the RPG field holds exactly
+    // `length` bytes, blank-padded), "varchar" (varying), "decimal" (exact,
+    // truncated to `decimals` on assignment), "int", "float" or "datetime".
+    // Empty when read from a cache written before the kind was recorded;
+    // such a field is declared and read exactly as it always was.
+    std::string kind;
 };
 
 struct ExternalFileDesc {
@@ -19,9 +26,11 @@ struct ExternalFileDesc {
     std::vector<ExtField> fields;   // ordered list of columns
 };
 
-// .extdesc cache line: "FIELDNAME TYPE(len:dec)"
-// e.g.  CUSTNO  VARCHAR(10)
-//        CUSTBAL  PACKED(9:2)
+// .extdesc cache line: "FIELDNAME cpptype(len[:dec]) bindkind [kind]"
+// e.g.  CUSTNO std::string(10) str char
+//       CUSTBAL double(9:2) dbl decimal
+// The trailing kind is optional, so a cache and a compiler from either
+// side of its introduction still read each other's files.
 
 // Query external descriptions for a caller-supplied list of DCL-F DISK
 // files: {rpgName, extdescOverride} pairs (extdescOverride empty means

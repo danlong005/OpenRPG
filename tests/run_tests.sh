@@ -793,6 +793,7 @@ run_test "234" "Reject /IF left open in a /COPY" "$TESTDIR/test234_err_copy_open
 run_test "235" "/EOF in a /COPY ends only it" "$TESTDIR/test235_copy_eof.rpgle" "run"
 run_test "236" "Non-EVAL stores fit the declaration" "$TESTDIR/test236_assign_fit_paths.rpgle" "run"
 run_test "237" "SQL INTO host vars fit" "$TESTDIR/test237_sql_into_fit.sqlrpgle" "run-sql"
+run_test "238" "RLA fields keep column shape" "$TESTDIR/test238_rla_field_fit.rpgle" "run-sql"
 
 # ── Customer / drop-in tests ─────────────────────────────────────────────
 # Drop any .rpgle or .sqlrpgle file into tests/customer/ and it will be

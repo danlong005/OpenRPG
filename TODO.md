@@ -2224,12 +2224,25 @@ pushed 99999999.99 past a whole unit (Test 221 caught it).
   - `DSPLY` has no response-variable form here at all, so there was
     nothing to fit (an earlier note listing it was wrong).
 
-  **Still unfitted:** record-level access. Reads into externally described
-  file fields (`CHAIN`/`READ`/`READE` and friends) still assign the raw
-  column value. Those fields are declared as unsized `std::string`, and
-  the `.extdesc` cache records a length but not whether the column is
-  `CHAR` (fixed-length, padded on IBM i) or `VARCHAR` (varying). Fitting
-  them needs that recorded first.
+  **Record-level access** ✅ (fixed 2026-09-22, Test 238). Reads into
+  externally described fields (`CHAIN`/`READ`/`READE` and friends)
+  assigned the raw column value into an unsized `std::string`. The fix:
+  - `.extdesc` now records each column's **kind**, as an optional trailing
+    token: `char` (fixed-length — padded on IBM i), `varchar`, `decimal`,
+    `int`, `float` or `datetime`. An older rpgc reads three tokens and
+    ignores it; this rpgc reading an older cache sees no kind and declares
+    and reads the field exactly as before.
+  - A `char` field is declared blank-filled. `char`/`varchar`/`decimal`/
+    `int` fields are registered in the attribute tables, so reads, `EVAL`
+    and `%CHAR` all use the column's shape. A `float` column is never
+    truncated, since the scale a driver reports for one isn't a scale.
+  - The live refresh reads `SQLColumns`' `TYPE_NAME` as well as
+    `DATA_TYPE`. SQLite's ODBC driver reports `CHAR(6)` as `SQL_VARCHAR`
+    (SQLite has no fixed-length type) and `DECIMAL(7,2)` as a 2-byte
+    string, but `TYPE_NAME` carries the declaration. On a driver that
+    reports types exactly, the two agree and nothing changes.
+  - The 13 committed test caches gained their kinds. Regenerating four of
+    them live from SQLite produced the same kinds.
 - **Integer-digit overflow isn't detected.** RPG `EVAL` of 123456 into a
   `PACKED(5:0)` raises RNX0103 (status 103). Here it stores the value.
 - **Float literals are emitted with 10 fixed decimals**

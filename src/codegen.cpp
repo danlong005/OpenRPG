@@ -1377,11 +1377,19 @@ void CodeGen::visit(DclF& node) {
     emitIndent();
     out_ << "// --- File " << node.name << " (table: " << desc.tableName << ") ---\n";
 
-    // Per-field variables (act as the "record buffer")
+    // Per-field variables (act as the "record buffer"). Each is a declared
+    // field like any other when the descriptor says what the column is: a
+    // CHAR column is a fixed-length field that starts as blanks, and all of
+    // them are registered so assignment, %CHAR and reads fit them (see
+    // emitRlaCopyBack). A field from a cache that predates the column kind
+    // is declared as it always was.
     for (auto& f : desc.fields) {
         emitIndent();
         std::string fvar = node.prefix.empty() ? f.name : node.prefix + f.name;
-        if (f.cppType == "std::string") {
+        registerExtField(fvar, f);
+        if (f.cppType == "std::string" && f.kind == "char" && f.length > 0) {
+            out_ << "std::string " << fvar << "(" << f.length << ", ' ');\n";
+        } else if (f.cppType == "std::string") {
             out_ << "std::string " << fvar << ";\n";
         } else if (f.cppType == "long") {
             out_ << "long " << fvar << " = 0;\n";
@@ -4478,6 +4486,24 @@ std::string CodeGen::rlaParamList(const ExternalFileDesc& /*desc*/, size_t count
     return s;
 }
 
+// An externally described field's RPG declaration, from what the column is.
+// Only kinds with an exact RPG equivalent are registered; a float or
+// date column, or one from a cache with no kind, stays unregistered and is
+// assigned as it always was.
+void CodeGen::registerExtField(const std::string& fvar, const ExtField& f) {
+    RPGType t;
+    int len = 0, digits = 0, dec = 0;
+    if (f.kind == "char")          { t = RPGType::CHAR;    len = f.length; }
+    else if (f.kind == "varchar")  { t = RPGType::VARCHAR; len = f.length; }
+    else if (f.kind == "decimal")  { t = RPGType::PACKED;  digits = f.length; dec = f.decimals; }
+    else if (f.kind == "int")      { t = RPGType::INT10; }
+    else return;
+    var_types_[fvar]    = t;
+    var_lengths_[fvar]  = len;
+    var_digits_[fvar]   = digits;
+    var_decimals_[fvar] = dec;
+}
+
 std::string CodeGen::rlaFieldVar(const std::string& fname, const std::string& fieldName) const {
     auto it = file_defs_.find(fname);
     if (it != file_defs_.end() && !it->second->prefix.empty())
@@ -4580,15 +4606,21 @@ void CodeGen::emitRlaCopyBack(const std::string& fname, const ExternalFileDesc& 
         auto& f = desc.fields[i];
         std::string fvar = rlaFieldVar(fname, f.name);
         emitIndent();
+        // The column value as the driver returned it, fitted to the
+        // field: a CHAR(10) key read back as 'C002' holds 'C002' plus six
+        // blanks, as the record's field does on IBM i.
+        FieldAttrs fa = attrsOfName(fvar);
         if (f.bindKind == "str") {
             out_ << "if (" << rcVar << " == SQL_SUCCESS || " << rcVar
-                 << " == SQL_SUCCESS_WITH_INFO) " << fvar << " = std::string(__rla_buf_" << i << ");\n";
+                 << " == SQL_SUCCESS_WITH_INFO) " << fvar << " = "
+                 << fitValue(fa, "std::string(__rla_buf_" + std::to_string(i) + ")") << ";\n";
         } else if (f.bindKind == "int") {
             out_ << "if (" << rcVar << " == SQL_SUCCESS || " << rcVar
                  << " == SQL_SUCCESS_WITH_INFO) " << fvar << " = (long)__rla_int_" << i << ";\n";
         } else {
             out_ << "if (" << rcVar << " == SQL_SUCCESS || " << rcVar
-                 << " == SQL_SUCCESS_WITH_INFO) " << fvar << " = (double)__rla_dbl_" << i << ";\n";
+                 << " == SQL_SUCCESS_WITH_INFO) " << fvar << " = "
+                 << fitValue(fa, "(double)__rla_dbl_" + std::to_string(i)) << ";\n";
         }
     }
 }

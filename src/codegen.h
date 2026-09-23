@@ -203,6 +203,7 @@ private:
     std::string refitStmt(const FieldAttrs& a, const std::string& target) const;
     void emitSqlIntoRefit(const std::string& decl, const std::string& target);
     FieldAttrs current_return_attrs_; // declared return of the procedure being emitted
+    void registerExtField(const std::string& fvar, const ExtField& f);
     const DclDS* dsOfExpr(const Expression& e) const;
     const DclDS* resolveDsDef(const std::string& name) const;
     std::string emitInzValue(const rpg::DclS& node);

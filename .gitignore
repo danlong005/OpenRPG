@@ -3,6 +3,7 @@ rpgc_debug
 .DS_Store
 build/*.o
 build/*.o.tmp
+build/*.d
 build/lexer.cpp
 build/parser.cpp
 build/parser.h

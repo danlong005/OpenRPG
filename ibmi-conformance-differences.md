@@ -251,7 +251,7 @@ The first cause IBM's listing points at, with follow-on "not defined" messages (
 | RNF0724 | 18 | The statement type is out of sequence for the main procedure. |
 | SQL0199 | 18 | Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>. |
 | RNF7016 | 16 | Display length 100 greater than maximum allowed of 52; specification is ignored. |
-| SQL0104 | 15 | Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>. Message Summary |
+| SQL0104 | 15 | Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>. |
 | RNF0637 | 9 | An operand was expected but was not found; specification is ignored. |
 | RNF5347 | 9 | An assignment operator is expected with the EVAL operation. |
 | RNF5191 | 8 | The Result-Field is not a data structure when Factor 2 is a file name. |
@@ -268,7 +268,7 @@ The first cause IBM's listing points at, with follow-on "not defined" messages (
 | RNF5049 | 2 | The Operation Extender is not valid for the specified Operation Code. |
 | RNF7416 | 2 | The types of the right and left hand side do not match in the EVAL operation. |
 | RNF7421 | 2 | Operands are not compatible with the type of operator. |
-| SQL0312 | 2 | Position 67 Variable EMPID not defined or not usable for reason code 1. Message Summary |
+| SQL0312 | 2 | Position 67 Variable EMPID not defined or not usable for reason code 1. |
 | RNF0203 | 1 | THE MESSAGE-TARGET OPERAND IS NOT VALID FOR THE SND-MSG OPERATION. |
 | RNF0289 | 1 | Entry contains data that is not valid; only valid data is used. |
 | RNF0592 | 1 | The second parameter NUMS for %LOOKUPxx must be a sequenced array. |
@@ -1073,35 +1073,35 @@ The first cause IBM's listing points at, with follow-on "not defined" messages (
 
 - **SQL0199** (sev 30, line 10): Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>.
   - `EXEC SQL CONNECT USING :connStr;`
-- **SQL0104** (sev 30, line 38): Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>. Message Summary
+- **SQL0104** (sev 30, line 38): Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>.
   - `EXEC SQL DISCONNECT;`
 
 #### `test104_rla_read.rpgle`
 
 - **SQL0199** (sev 30, line 9): Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>.
   - `EXEC SQL CONNECT USING :connStr;`
-- **SQL0104** (sev 30, line 29): Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>. Message Summary
+- **SQL0104** (sev 30, line 29): Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>.
   - `EXEC SQL DISCONNECT;`
 
 #### `test105_rla_write_upd_del.rpgle`
 
 - **SQL0199** (sev 30, line 10): Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>.
   - `EXEC SQL CONNECT USING :connStr;`
-- **SQL0104** (sev 30, line 52): Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>. Message Summary
+- **SQL0104** (sev 30, line 52): Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>.
   - `EXEC SQL DISCONNECT;`
 
 #### `test106_rla_setll_reade.rpgle`
 
 - **SQL0199** (sev 30, line 10): Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>.
   - `EXEC SQL CONNECT USING :connStr;`
-- **SQL0104** (sev 30, line 45): Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>. Message Summary
+- **SQL0104** (sev 30, line 45): Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>.
   - `EXEC SQL DISCONNECT;`
 
 #### `test109_sql_indicator.sqlrpgle`
 
 - **SQL0199** (sev 30, line 13): Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>.
   - `EXEC SQL CONNECT USING :connStr;`
-- **SQL0104** (sev 30, line 68): Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>. Message Summary
+- **SQL0104** (sev 30, line 68): Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>.
   - `EXEC SQL DISCONNECT;`
 
 #### `test146_fixed_cspec_write_upd_del.rpgle`
@@ -1129,14 +1129,14 @@ The first cause IBM's listing points at, with follow-on "not defined" messages (
 
 - **SQL0199** (sev 30, line 17): Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>.
   - `EXEC SQL CONNECT USING :connStr;`
-- **SQL0104** (sev 30, line 54): Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>. Message Summary
+- **SQL0104** (sev 30, line 54): Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>.
   - `EXEC SQL DISCONNECT;`
 
 #### `test77_exec_sql.sqlrpgle`
 
 - **SQL0199** (sev 30, line 13): Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>.
   - `EXEC SQL CONNECT USING :connStr;`
-- **SQL0104** (sev 30, line 62): Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>. Message Summary
+- **SQL0104** (sev 30, line 62): Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>.
   - `EXEC SQL DISCONNECT;`
 
 #### `test78_exec_sql_proc.sqlrpgle`
@@ -1145,28 +1145,28 @@ The first cause IBM's listing points at, with follow-on "not defined" messages (
   - `EXEC SQL CONNECT USING :connStr;`
 - **SQL0104** (sev 30, line 29): Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>.
   - `EXEC SQL DISCONNECT;`
-- **SQL0312** (sev 30, line 51): Position 67 Variable EMPID not defined or not usable for reason code 1. Message Summary
+- **SQL0312** (sev 30, line 51): Position 67 Variable EMPID not defined or not usable for reason code 1.
   - `EXEC SQL UPDATE emp78 SET salary = salary + :amount WHERE id = :empId;`
 
 #### `test79_sql_core.sqlrpgle`
 
 - **SQL0199** (sev 30, line 15): Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>.
   - `EXEC SQL CONNECT USING :connStr;`
-- **SQL0104** (sev 30, line 75): Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>. Message Summary
+- **SQL0104** (sev 30, line 75): Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>.
   - `EXEC SQL DISCONNECT;`
 
 #### `test80_sql_cursors.sqlrpgle`
 
 - **SQL0199** (sev 30, line 12): Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>.
   - `EXEC SQL CONNECT USING :connStr;`
-- **SQL0104** (sev 30, line 72): Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>. Message Summary
+- **SQL0104** (sev 30, line 72): Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>.
   - `EXEC SQL DISCONNECT;`
 
 #### `test81_sql_dynamic.sqlrpgle`
 
 - **SQL0199** (sev 30, line 12): Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>.
   - `EXEC SQL CONNECT USING :connStr;`
-- **SQL0104** (sev 30, line 48): Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>. Message Summary
+- **SQL0104** (sev 30, line 48): Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>.
   - `EXEC SQL DISCONNECT;`
 
 #### `test82_sql_advanced.sqlrpgle`
@@ -1175,7 +1175,7 @@ The first cause IBM's listing points at, with follow-on "not defined" messages (
   - `EXEC SQL CONNECT USING :connStr;`
 - **SQL0104** (sev 30, line 45): Position 23 Token <END-OF-STATEMENT> was not valid. Valid tokens: ON UNIQUE.
   - `EXEC SQL SAVEPOINT sp1;`
-- **SQL0104** (sev 30, line 60): Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>. Message Summary
+- **SQL0104** (sev 30, line 60): Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>.
   - `EXEC SQL DISCONNECT;`
 
 #### `test83_sql_multirow.sqlrpgle`
@@ -1211,7 +1211,7 @@ The first cause IBM's listing points at, with follow-on "not defined" messages (
 
 - **SQL0199** (sev 30, line 14): Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>.
   - `exec sql connect using :connStr;`
-- **SQL0104** (sev 30, line 40): Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>. Message Summary
+- **SQL0104** (sev 30, line 40): Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>.
   - `exec sql disconnect;`
 
 ### F. needs individual review (16)

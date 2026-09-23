@@ -288,7 +288,7 @@
      "code": "SQL0104",
      "line": 38,
      "severity": 30,
-     "text": "Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>. Message Summary"
+     "text": "Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>."
     }
    ],
    "reason": "SQL0199: Position n Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>.",
@@ -311,7 +311,7 @@
      "code": "SQL0104",
      "line": 29,
      "severity": 30,
-     "text": "Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>. Message Summary"
+     "text": "Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>."
     }
    ],
    "reason": "SQL0199: Position n Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>.",
@@ -334,7 +334,7 @@
      "code": "SQL0104",
      "line": 52,
      "severity": 30,
-     "text": "Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>. Message Summary"
+     "text": "Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>."
     }
    ],
    "reason": "SQL0199: Position n Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>.",
@@ -357,7 +357,7 @@
      "code": "SQL0104",
      "line": 45,
      "severity": 30,
-     "text": "Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>. Message Summary"
+     "text": "Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>."
     }
    ],
    "reason": "SQL0199: Position n Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>.",
@@ -394,7 +394,7 @@
      "code": "SQL0104",
      "line": 68,
      "severity": 30,
-     "text": "Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>. Message Summary"
+     "text": "Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>."
     }
    ],
    "reason": "Declaration after calculations",
@@ -3166,7 +3166,7 @@
      "code": "SQL0104",
      "line": 54,
      "severity": 30,
-     "text": "Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>. Message Summary"
+     "text": "Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>."
     }
    ],
    "reason": "SQL0199: Position n Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>.",
@@ -4278,7 +4278,7 @@
      "code": "SQL0104",
      "line": 62,
      "severity": 30,
-     "text": "Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>. Message Summary"
+     "text": "Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>."
     }
    ],
    "reason": "SQL0199: Position n Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>.",
@@ -4307,7 +4307,7 @@
      "code": "SQL0312",
      "line": 51,
      "severity": 30,
-     "text": "Position 67 Variable EMPID not defined or not usable for reason code 1. Message Summary"
+     "text": "Position 67 Variable EMPID not defined or not usable for reason code 1."
     }
    ],
    "reason": "SQL0199: Position n Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>.",
@@ -4330,7 +4330,7 @@
      "code": "SQL0104",
      "line": 75,
      "severity": 30,
-     "text": "Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>. Message Summary"
+     "text": "Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>."
     }
    ],
    "reason": "SQL0199: Position n Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>.",
@@ -4353,7 +4353,7 @@
      "code": "SQL0104",
      "line": 72,
      "severity": 30,
-     "text": "Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>. Message Summary"
+     "text": "Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>."
     }
    ],
    "reason": "SQL0199: Position n Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>.",
@@ -4376,7 +4376,7 @@
      "code": "SQL0104",
      "line": 48,
      "severity": 30,
-     "text": "Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>. Message Summary"
+     "text": "Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>."
     }
    ],
    "reason": "SQL0199: Position n Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>.",
@@ -4405,7 +4405,7 @@
      "code": "SQL0104",
      "line": 60,
      "severity": 30,
-     "text": "Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>. Message Summary"
+     "text": "Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>."
     }
    ],
    "reason": "SQL0199: Position n Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>.",
@@ -4542,7 +4542,7 @@
      "code": "SQL0104",
      "line": 40,
      "severity": 30,
-     "text": "Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>. Message Summary"
+     "text": "Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>."
     }
    ],
    "reason": "SQL0199: Position n Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>.",
@@ -4991,5 +4991,5 @@
    "verified": "2026-09-23"
   }
  },
- "generated": "2026-09-23T16:34:09+00:00"
+ "generated": "2026-09-23T16:50:06+00:00"
 }

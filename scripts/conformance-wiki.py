@@ -25,6 +25,9 @@ ap.add_argument("--commit", default="", help="commit the run verified (default: 
 ap.add_argument("--run-url", default="", help="link to the workflow run")
 ap.add_argument("--repo", default="danlong005/OpenRPG")
 ap.add_argument("--sidebar", default="", help="the wiki's _Sidebar.md: add a link to this page if missing")
+ap.add_argument("--expected", default="tests/ibmi-expected.txt",
+                help="exceptions to the should-compile rule (see that file)")
+ap.add_argument("--run-tests", default="tests/run_tests.sh")
 a = ap.parse_args()
 
 commit = a.commit
@@ -40,7 +43,10 @@ rejected = sorted(n for n, r in files.items() if r["verdict"] != "accept")
 
 def cell(s):
     """Text made safe for a Markdown table cell."""
-    return str(s).replace("|", "\\|").replace("\n", " ").strip()
+    # < and > too: IBM's SQL messages name tokens like <END-OF-STATEMENT>,
+    # which the wiki would otherwise take for HTML tags and drop.
+    return (str(s).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+            .replace("|", "\\|").replace("\n", " ").strip())
 
 def src_link(name, line=None):
     if not commit:
@@ -50,9 +56,28 @@ def src_link(name, line=None):
         url += f"#L{line}"
     return f"[`{name}`]({url})"
 
-def negative(name):
-    """A test written to be rejected: its rejection is the correct outcome."""
-    return bool(re.search(r'_err|^test11[a-e]_', name))
+# ---- should it compile on IBM i? ---------------------------------------------
+# A test registered in "error" mode is written to be rejected; everything else
+# should compile. tests/ibmi-expected.txt lists the exceptions, with reasons.
+modes = {m.group(1): m.group(2) for m in re.finditer(
+    r'run_test "[^"]+" "[^"]*" "\$TESTDIR/([^"]+)" "([^"]+)"', open(a.run_tests).read())}
+overrides = {}
+if os.path.exists(a.expected):
+    for ln in open(a.expected):
+        ln = ln.strip()
+        if not ln or ln.startswith("#"):
+            continue
+        parts = ln.split(None, 2)
+        if len(parts) >= 2 and parts[1] in ("compile", "reject"):
+            overrides[parts[0]] = (parts[1] == "compile", parts[2] if len(parts) > 2 else "")
+
+def expectation(name):
+    """(should compile, why) for a program."""
+    if name in overrides:
+        return overrides[name]
+    if modes.get(name) == "error":
+        return (False, "negative test: written to be rejected")
+    return (True, "")
 
 now = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
 out = []
@@ -81,18 +106,29 @@ if a.run_url:
     w(f"| Workflow run | [{a.run_url.rsplit('/', 1)[-1]}]({a.run_url}) |")
 w("")
 
-neg_rej = [n for n in rejected if negative(n)]
+should = {n: expectation(n) for n in files}
+compiled = {n: files[n]["verdict"] == "accept" for n in files}
+as_expected = [n for n in files if should[n][0] == compiled[n]]
+surprises = sorted(n for n in files if should[n][0] != compiled[n])
+
 w("## Summary\n")
-w("| | Programs |")
-w("|---|---|")
-w(f"| **Compiled on IBM i** | **{len(accepted)}** |")
-w(f"| **Did not compile** | **{len(rejected)}** |")
-w(f"| &nbsp;&nbsp;of which negative tests (written to be rejected) | {len(neg_rej)} |")
-w(f"| Total | {len(files)} |")
+w("| | Compiled on IBM i | Did not compile | Total |")
+w("|---|---|---|---|")
+for label, want in (("**Should compile**", True), ("**Should be rejected**", False)):
+    ns = [n for n in files if should[n][0] == want]
+    w(f"| {label} | {sum(compiled[n] for n in ns)} | {sum(not compiled[n] for n in ns)} | {len(ns)} |")
+w(f"| Total | {len(accepted)} | {len(rejected)} | {len(files)} |")
 w("")
-w("A negative test exists to check that invalid RPG is refused, so IBM rejecting it is the "
-  "correct outcome. The other rejections are either RPG that OpenRPG accepts but IBM does "
-  "not, or tests that need something only a real IBM i has (database files, data areas).\n")
+w(f"**{len(as_expected)} of {len(files)} programs behave as expected on IBM i.** "
+  f"The other {len(surprises)} are marked ⚠️ below: a program that should compile but "
+  "did not is either RPG that OpenRPG accepts and IBM does not, or a test that needs "
+  "something only a real IBM i has (database files, data areas); one that should be "
+  "rejected but compiled is a test IBM finds valid.\n")
+w("*Should compile* comes from how each test is registered: a test run in `error` mode "
+  "is written to be rejected, every other program should compile. The exceptions, with "
+  "their reasons, are in "
+  + (f"[`tests/ibmi-expected.txt`](https://github.com/{a.repo}/blob/{commit}/tests/ibmi-expected.txt)"
+     if commit else "`tests/ibmi-expected.txt`") + ".\n")
 
 # reasons at a glance
 by_reason = collections.defaultdict(list)
@@ -105,26 +141,32 @@ for reason, ns in sorted(by_reason.items(), key=lambda kv: (-len(kv[1]), kv[0]))
     w(f"| {cell(reason)} | {len(ns)} |")
 w("")
 
-w(f"## Did not compile ({len(rejected)})\n")
-w("| Program | Reason | IBM's messages | Last compiled |")
-w("|---|---|---|---|")
-for n in rejected:
+w(f"## All programs ({len(files)})\n")
+w("| Program | Should compile on IBM i | Compiled on IBM i | | Reason and IBM's messages | Last compiled |")
+w("|---|---|---|---|---|---|")
+def natural(name):
+    """test9 before test10: compare the digit runs as numbers."""
+    return [int(t) if t.isdigit() else t.lower() for t in re.split(r'(\d+)', name)]
+
+for n in sorted(files, key=natural):
     r = files[n]
+    want, why = should[n]
+    got = compiled[n]
     msgs = r.get("messages") or []
     first_line = next((m["line"] for m in msgs if m.get("line")), None)
-    name = src_link(n, first_line) + (" *(negative test)*" if negative(n) else "")
-    detail = "<br>".join(
-        cell(f"**{m['code']}** (sev {m['severity']}"
-             + (f", line {m['line']}" if m.get("line") else "") + f"): {m['text']}")
-        for m in msgs) or cell(", ".join(r.get("codes") or []) or "—")
-    w(f"| {name} | {cell(r.get('reason', '—'))} | {detail} | {r.get('verified', '—')} |")
-w("")
-
-w(f"## Compiled on IBM i ({len(accepted)})\n")
-w("| Program | Last compiled |")
-w("|---|---|")
-for n in accepted:
-    w(f"| {src_link(n)} | {files[n].get('verified', '—')} |")
+    want_cell = ("Yes" if want else "No") + (f" — {cell(why)}" if why else "")
+    got_cell = "✅ Yes" if got else "❌ No"
+    flag = "" if want == got else "⚠️ unexpected"
+    if got:
+        detail = ""
+    else:
+        detail = "<br>".join(
+            [f"**{cell(r.get('reason', '—'))}**"] +
+            [cell(f"{m['code']} (sev {m['severity']}"
+                  + (f", line {m['line']}" if m.get("line") else "") + f"): {m['text']}")
+             for m in msgs])
+    w(f"| {src_link(n, None if got else first_line)} | {want_cell} | {got_cell} | {flag} | "
+      f"{detail} | {r.get('verified', '—')} |")
 w("")
 
 open(a.out, "w").write("\n".join(out) + "\n")
@@ -139,4 +181,5 @@ if a.sidebar and os.path.exists(a.sidebar):
         side = side.replace(compat, compat + "\n" + entry, 1) if compat in side \
             else side.rstrip("\n") + "\n" + entry + "\n"
         open(a.sidebar, "w").write(side)
-print(f"wrote {a.out}: {len(accepted)} compiled, {len(rejected)} did not")
+print(f"wrote {a.out}: {len(accepted)} compiled, {len(rejected)} did not; "
+      f"{len(as_expected)} of {len(files)} as expected")

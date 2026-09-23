@@ -55,6 +55,10 @@ def ibm_messages(lines):
             last = [m.group(1), 30, None, m.group(2).strip()]
             raw.append(last); continue
         c = CONT.match(ln)
+        # The listing's own section headings are indented just as deeply:
+        # "Message Summary" followed an SQL message and was glued onto it.
+        if c and re.match(r'(Message Summary|\* \* \*|Total\b)', c.group(1).strip()):
+            c = None
         if c and last is not None and not re.match(r'^\s*\d', ln):
             last[3] = (last[3] + " " + c.group(1).strip()).strip()
             continue

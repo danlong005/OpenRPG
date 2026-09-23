@@ -1,0 +1,48 @@
+# Whether each test program should compile with IBM's ILE RPG compiler on a
+# real IBM i — the "Should compile" column of the wiki page
+# IBM-i-Conformance-Results (scripts/conformance-wiki.py).
+#
+# The default needs no entry here: a test registered in tests/run_tests.sh in
+# "error" mode is written to be rejected, so IBM should reject it too; every
+# other program should compile. This file lists only the exceptions, each with
+# the reason it is one.
+#
+# Format:  <file>  compile|reject  <reason>
+
+# rpgc refuses these on purpose — they are registered as error tests — but they
+# are valid RPG, and IBM compiles them.
+test159_fixed_ispec_err_zone.rpgle          compile  valid RPG; rpgc does not support I-spec record-identification zone codes
+test177_fixed_cspec_err_call_dynamic.rpgle  compile  valid RPG; rpgc links calls statically, so it refuses a dynamic CALL
+test195_fixed_cspec_err_move_declit.rpgle   compile  valid RPG; rpgc refuses MOVE of a decimal literal
+test205_fixed_cspec_err_entry_f2.rpgle      compile  valid RPG; rpgc does not support Factor 2 on an *ENTRY PARM
+test213_fixed_cspec_err_move_jobrun.rpgle   compile  valid RPG; rpgc has no job attributes for *JOBRUN
+test226_err_subfield_inz.rpgle              compile  valid RPG; rpgc does not support INZ on a subfield
+
+# Syntax-error tests, not registered through run_test.
+test11_errors.rpgle            reject  syntax-error test
+test11a_missing_semi.rpgle     reject  syntax-error test
+test11b_bad_type.rpgle         reject  syntax-error test
+test11c_unmatched_if.rpgle     reject  syntax-error test
+test11d_bad_expr.rpgle         reject  syntax-error test
+test11e_unmatched_paren.rpgle  reject  syntax-error test
+
+# OpenRPG connects to its database with EXEC SQL CONNECT USING :var, which is
+# not Db2 for i syntax (SQL0199); on IBM i a job is already connected. These
+# tests were deliberately kept in that form (TODO.md, "SQL connection model").
+test77_exec_sql.sqlrpgle             reject  uses OpenRPG's EXEC SQL CONNECT USING
+test78_exec_sql_proc.sqlrpgle        reject  uses OpenRPG's EXEC SQL CONNECT USING
+test79_sql_core.sqlrpgle             reject  uses OpenRPG's EXEC SQL CONNECT USING
+test80_sql_cursors.sqlrpgle          reject  uses OpenRPG's EXEC SQL CONNECT USING
+test81_sql_dynamic.sqlrpgle          reject  uses OpenRPG's EXEC SQL CONNECT USING
+test82_sql_advanced.sqlrpgle         reject  uses OpenRPG's EXEC SQL CONNECT USING
+test83_sql_multirow.sqlrpgle         reject  uses OpenRPG's EXEC SQL CONNECT USING
+test84_sql_connect.sqlrpgle          reject  uses OpenRPG's EXEC SQL CONNECT USING
+test86.sqlrpgle                      reject  uses OpenRPG's EXEC SQL CONNECT USING
+test103_rla_chain.rpgle              reject  uses OpenRPG's EXEC SQL CONNECT USING
+test104_rla_read.rpgle               reject  uses OpenRPG's EXEC SQL CONNECT USING
+test105_rla_write_upd_del.rpgle      reject  uses OpenRPG's EXEC SQL CONNECT USING
+test106_rla_setll_reade.rpgle        reject  uses OpenRPG's EXEC SQL CONNECT USING
+test188_fixed_cspec_exec_sql.sqlrpgle  reject  uses OpenRPG's EXEC SQL CONNECT USING
+test219_prog_order_release.sqlrpgle  reject  uses OpenRPG's EXEC SQL CONNECT USING
+test237_sql_into_fit.sqlrpgle        reject  uses OpenRPG's EXEC SQL CONNECT USING
+test238_rla_field_fit.rpgle          reject  uses OpenRPG's EXEC SQL CONNECT USING

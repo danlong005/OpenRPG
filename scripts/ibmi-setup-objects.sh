@@ -39,13 +39,15 @@ tests, stage = sys.argv[1], sys.argv[2]
 # ---- externally-described files, from the .extdesc sidecars ---------------
 def sqltype(cpp, kind):
     m = re.match(r'std::string\((\d+)\)', cpp)
-    # VARCHAR, not CHAR: the .extdesc sidecar records both as std::string(N),
-    # but the tests' own EXEC SQL CREATE TABLE declares VARCHAR, and IBM
-    # enforces the distinction on a keyed CHAIN (RNF7080 "Factor 1 field is
-    # not the same type as first key field"). The sidecar format cannot
-    # express the difference -- see TODO.md finding on the descriptor model.
-    if m: return f"VARCHAR({m.group(1)})"
+    # The sidecar's trailing kind token says CHAR or VARCHAR. IBM enforces the
+    # distinction on a keyed CHAIN (RNF7080 "Factor 1 field is not the same
+    # type as first key field"), so it matters. A sidecar written before the
+    # token existed has no kind; those tests' own EXEC SQL CREATE TABLE
+    # declares VARCHAR, which stays the default.
+    if m: return f"CHAR({m.group(1)})" if kind == 'char' else f"VARCHAR({m.group(1)})"
     m = re.match(r'double\((\d+):(\d+)\)', cpp)
+    # A float column's "precision:scale" is the driver's, not a decimal's.
+    if m and kind == 'float': return "DOUBLE"
     # spaces around the comma are REQUIRED -- see header note on decimal comma
     if m: return f"DECIMAL({m.group(1)} , {m.group(2)})"
     if cpp == 'long': return "INTEGER"
@@ -61,7 +63,7 @@ for p in sorted(glob.glob(os.path.join(tests, '*.extdesc'))):
             name = ln.split('=', 1)[1].strip().upper(); continue
         parts = ln.split()
         if len(parts) >= 2:
-            cols.append((parts[0].upper(), sqltype(parts[1], parts[2] if len(parts) > 2 else '')))
+            cols.append((parts[0].upper(), sqltype(parts[1], parts[3] if len(parts) > 3 else '')))
     if not name or not cols: continue
     defs = [f"{c} {t}" + (" NOT NULL" if i == 0 else "") for i, (c, t) in enumerate(cols)]
     defs.append(f"PRIMARY KEY({cols[0][0]})")   # first column is the key

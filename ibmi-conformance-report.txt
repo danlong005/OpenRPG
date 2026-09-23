@@ -1,17 +1,31 @@
 IBM i conformance -- acceptance of the OpenRPG test corpus
 ==============================================================
-compiled : 4
+compiled : 7
 accepted : 3
-rejected : 1
+rejected : 4
 
 REJECTIONS GROUPED BY DIAGNOSTIC
 --------------------------------------------------------------
-RNF5009  x1   1 Factor 1 operand is required for specified operation.
-      test182_fixed_cspec_cas_cab.rpgle
+RNF7503  x2   1 Expression contains an operand that is not defined.
+      test257_err_unqualified_dot.rpgle
+      test63_prefix.rpgle
 
-RNF5023  x1   1 Factor 2 operand is not specified for this operation.
-      test182_fixed_cspec_cas_cab.rpgle
+RNF7030  x2   1 The name or indicator is not defined.
+      test257_err_unqualified_dot.rpgle
+      test63_prefix.rpgle
+
+RNF0552  x1   1 The second parameter for %DIV is not valid; %DIV is ignored.
+      test255_err_div_zero_literal.rpgle
+
+RNF3431  x1   1 Length of initial value exceeds size of field.
+      test256_err_inz_too_long.rpgle
+
+RNF3529  x1   1 Keyword is not allowed for a program-described data
+      test63_prefix.rpgle
 
 REJECTED FILES
 --------------------------------------------------------------
-  test182_fixed_cspec_cas_cab.rpgle             RNF5009,RNF5023
+  test255_err_div_zero_literal.rpgle            RNF0552
+  test256_err_inz_too_long.rpgle                RNF3431
+  test257_err_unqualified_dot.rpgle             RNF7030,RNF7503
+  test63_prefix.rpgle                           RNF3529,RNF7030,RNF7503

@@ -2,6 +2,9 @@
 #define RPG_RUNTIME_H
 
 #include <string>
+#include <string_view>
+#include <functional>
+#include <type_traits>
 #include <array>
 #include <vector>
 #include <algorithm>
@@ -79,11 +82,89 @@ inline std::string rpg_xlate(const std::string& from, const std::string& to,
 inline bool rpg_found() { return false; }
 inline bool rpg_eof() { return false; }
 
+// --- Comparison -------------------------------------------------------------
+// RPG compares two character values of unequal length as if the shorter
+// were padded on the right with blanks, so a CHAR(5) holding five blanks
+// equals ' ', and CHAR(3) 'AB ' equals 'AB'. A plain std::string == is
+// false for both. Every relational operator in generated code goes through
+// rpg_eq ... rpg_ge below, which apply that rule when both operands are
+// character and are the ordinary C++ operator otherwise.
+//
+// "Character" is std::string or std::string_view only, never anything
+// merely convertible to one: a const char* or nullptr also converts to
+// std::string_view, and a pointer compared against *NULL must stay a
+// pointer comparison.
+template<typename T>
+constexpr bool rpg_is_char_v =
+    std::is_same_v<std::decay_t<T>, std::string> ||
+    std::is_same_v<std::decay_t<T>, std::string_view>;
+
+inline int rpg_cmp_char(std::string_view a, std::string_view b) {
+    std::size_t n = std::min(a.size(), b.size());
+    int c = a.substr(0, n).compare(b.substr(0, n));
+    if (c != 0) return c < 0 ? -1 : 1;
+    // Equal up to the shorter length: the longer one's tail is compared
+    // against the blanks the shorter one is padded with.
+    bool aLonger = a.size() > n;
+    std::string_view tail = aLonger ? a.substr(n) : b.substr(n);
+    for (unsigned char ch : tail) {
+        if (ch == ' ') continue;
+        bool tailHigher = ch > static_cast<unsigned char>(' ');
+        return (tailHigher == aLonger) ? 1 : -1;
+    }
+    return 0;
+}
+
+// *BLANKS, *ZEROS, *HIVAL and *LOVAL used as an operand. A figurative
+// constant has no length of its own; it takes the length of whatever it is
+// compared with, so it is expanded against the other operand at the point
+// of comparison: *BLANKS beside a CHAR(5) is five blanks, beside a number
+// is zero. (Assignment of one is handled in codegen, which knows the
+// target's declared type — see CodeGen::figConstValue.)
+struct RpgFigConst {
+    char   fill;  // character value, repeated to the other operand's length
+    double num;   // numeric value
+};
+inline const RpgFigConst RPG_BLANKS{' ', 0.0};
+inline const RpgFigConst RPG_ZEROS{'0', 0.0};
+inline const RpgFigConst RPG_HIVAL{'\xFF', DBL_MAX};
+inline const RpgFigConst RPG_LOVAL{'\x00', -DBL_MAX};
+
+template<typename T>
+constexpr bool rpg_is_fig_v = std::is_same_v<std::decay_t<T>, RpgFigConst>;
+
+template<typename Other>
+inline auto rpg_fig_like(const RpgFigConst& f, const Other& other) {
+    if constexpr (rpg_is_char_v<Other>)
+        return std::string(std::string_view(other).size(), f.fill);
+    else
+        return f.num;
+}
+
+template<typename A, typename B, typename Op>
+inline bool rpg_compare(const A& a, const B& b, Op op) {
+    if constexpr (rpg_is_fig_v<A>)
+        return rpg_compare(rpg_fig_like(a, b), b, op);
+    else if constexpr (rpg_is_fig_v<B>)
+        return rpg_compare(a, rpg_fig_like(b, a), op);
+    else if constexpr (rpg_is_char_v<A> && rpg_is_char_v<B>)
+        return op(rpg_cmp_char(a, b), 0);
+    else
+        return op(a, b);
+}
+
+template<typename A, typename B> inline bool rpg_eq(const A& a, const B& b) { return rpg_compare(a, b, std::equal_to<>()); }
+template<typename A, typename B> inline bool rpg_ne(const A& a, const B& b) { return rpg_compare(a, b, std::not_equal_to<>()); }
+template<typename A, typename B> inline bool rpg_lt(const A& a, const B& b) { return rpg_compare(a, b, std::less<>()); }
+template<typename A, typename B> inline bool rpg_gt(const A& a, const B& b) { return rpg_compare(a, b, std::greater<>()); }
+template<typename A, typename B> inline bool rpg_le(const A& a, const B& b) { return rpg_compare(a, b, std::less_equal<>()); }
+template<typename A, typename B> inline bool rpg_ge(const A& a, const B& b) { return rpg_compare(a, b, std::greater_equal<>()); }
+
 // %LOOKUP - find element in array, returns 1-based index (0 if not found)
 template<typename T, std::size_t N>
 inline int rpg_lookup(const T& val, const std::array<T, N>& arr) {
     for (std::size_t i = 0; i < N; i++) {
-        if (arr[i] == val) return static_cast<int>(i + 1);
+        if (rpg_eq(arr[i], val)) return static_cast<int>(i + 1);
     }
     return 0;
 }
@@ -1034,7 +1115,7 @@ inline RpgRange<T> rpg_range(T low, T high) {
 template<typename T, std::size_t N>
 inline int rpg_lookup_lt(const T& val, const std::array<T, N>& arr) {
     for (std::size_t i = 0; i < N; i++) {
-        if (arr[i] < val) return static_cast<int>(i + 1);
+        if (rpg_lt(arr[i], val)) return static_cast<int>(i + 1);
     }
     return 0;
 }
@@ -1042,7 +1123,7 @@ inline int rpg_lookup_lt(const T& val, const std::array<T, N>& arr) {
 template<typename T, std::size_t N>
 inline int rpg_lookup_gt(const T& val, const std::array<T, N>& arr) {
     for (std::size_t i = 0; i < N; i++) {
-        if (arr[i] > val) return static_cast<int>(i + 1);
+        if (rpg_gt(arr[i], val)) return static_cast<int>(i + 1);
     }
     return 0;
 }
@@ -1050,7 +1131,7 @@ inline int rpg_lookup_gt(const T& val, const std::array<T, N>& arr) {
 template<typename T, std::size_t N>
 inline int rpg_lookup_le(const T& val, const std::array<T, N>& arr) {
     for (std::size_t i = 0; i < N; i++) {
-        if (arr[i] <= val) return static_cast<int>(i + 1);
+        if (rpg_le(arr[i], val)) return static_cast<int>(i + 1);
     }
     return 0;
 }
@@ -1058,7 +1139,7 @@ inline int rpg_lookup_le(const T& val, const std::array<T, N>& arr) {
 template<typename T, std::size_t N>
 inline int rpg_lookup_ge(const T& val, const std::array<T, N>& arr) {
     for (std::size_t i = 0; i < N; i++) {
-        if (arr[i] >= val) return static_cast<int>(i + 1);
+        if (rpg_ge(arr[i], val)) return static_cast<int>(i + 1);
     }
     return 0;
 }
@@ -1067,7 +1148,7 @@ inline int rpg_lookup_ge(const T& val, const std::array<T, N>& arr) {
 template<typename V, typename T, std::size_t N>
 inline bool rpg_tlookup(const V& val, const std::array<T, N>& table) {
     for (std::size_t i = 0; i < N; i++) {
-        if (table[i] == val) return true;
+        if (rpg_eq(table[i], val)) return true;
     }
     return false;
 }
@@ -1075,7 +1156,7 @@ inline bool rpg_tlookup(const V& val, const std::array<T, N>& table) {
 template<typename V, typename T, std::size_t N, typename U, std::size_t M>
 inline bool rpg_tlookup(const V& val, const std::array<T, N>& table, std::array<U, M>& alt) {
     for (std::size_t i = 0; i < N && i < M; i++) {
-        if (table[i] == val) return true;
+        if (rpg_eq(table[i], val)) return true;
     }
     return false;
 }
@@ -1083,7 +1164,7 @@ inline bool rpg_tlookup(const V& val, const std::array<T, N>& table, std::array<
 template<typename V, typename T>
 inline bool rpg_tlookup(const V& val, const std::vector<T>& table) {
     for (std::size_t i = 0; i < table.size(); i++) {
-        if (table[i] == val) return true;
+        if (rpg_eq(table[i], val)) return true;
     }
     return false;
 }
@@ -1091,7 +1172,7 @@ inline bool rpg_tlookup(const V& val, const std::vector<T>& table) {
 template<typename V, typename T, std::size_t N>
 inline bool rpg_tlookup_lt(const V& val, const std::array<T, N>& table) {
     for (std::size_t i = 0; i < N; i++) {
-        if (table[i] < val) return true;
+        if (rpg_lt(table[i], val)) return true;
     }
     return false;
 }
@@ -1099,7 +1180,7 @@ inline bool rpg_tlookup_lt(const V& val, const std::array<T, N>& table) {
 template<typename V, typename T, std::size_t N>
 inline bool rpg_tlookup_gt(const V& val, const std::array<T, N>& table) {
     for (std::size_t i = 0; i < N; i++) {
-        if (table[i] > val) return true;
+        if (rpg_gt(table[i], val)) return true;
     }
     return false;
 }
@@ -1107,7 +1188,7 @@ inline bool rpg_tlookup_gt(const V& val, const std::array<T, N>& table) {
 template<typename V, typename T, std::size_t N>
 inline bool rpg_tlookup_le(const V& val, const std::array<T, N>& table) {
     for (std::size_t i = 0; i < N; i++) {
-        if (table[i] <= val) return true;
+        if (rpg_le(table[i], val)) return true;
     }
     return false;
 }
@@ -1115,7 +1196,7 @@ inline bool rpg_tlookup_le(const V& val, const std::array<T, N>& table) {
 template<typename V, typename T, std::size_t N>
 inline bool rpg_tlookup_ge(const V& val, const std::array<T, N>& table) {
     for (std::size_t i = 0; i < N; i++) {
-        if (table[i] >= val) return true;
+        if (rpg_ge(table[i], val)) return true;
     }
     return false;
 }
@@ -1757,14 +1838,14 @@ inline std::string rpg_all(const std::string& pattern, int len = 50) {
 template<typename T, typename... Args>
 inline bool rpg_in_list(const T& val, const std::vector<T>& list) {
     for (const auto& item : list) {
-        if (val == item) return true;
+        if (rpg_eq(val, item)) return true;
     }
     return false;
 }
 
 template<typename T>
 inline bool rpg_in_range(const T& val, const RpgRange<T>& range) {
-    return val >= range.low && val <= range.high;
+    return rpg_ge(val, range.low) && rpg_le(val, range.high);
 }
 
 // %SCANR — reverse scan (search right to left)

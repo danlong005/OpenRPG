@@ -1986,12 +1986,33 @@ in the order the reader meets them — is exactly the one that fails. Mutual
 recursion is impossible. TEST27 orders its subroutines leaf-first to work
 around it.
 
-**Character comparison does not blank-pad.** It compiles to plain
-`std::string ==`. So `if myfield = ' '` — the standard way to ask whether a
-field is blank — is **false** for any `CHAR(n)` with n > 1 that holds
-blanks. `*BLANKS` doesn't help: it works in an assignment but emits an
-undeclared `RPG_BLANKS` in a comparison. Two of the three normal ways to
-test a field for blank are broken.
+**Character comparison does not blank-pad.** ✅ **Fixed 2026-09-22** (Test
+229). It compiled to plain `std::string ==`, so `if myfield = ' '` — the
+standard way to ask whether a field is blank — was **false** for any
+`CHAR(n)` with n > 1 that holds blanks. `*BLANKS` in a comparison emitted an
+undeclared `RPG_BLANKS` and did not compile.
+
+The codegen has no expression types, so the fix lives in the runtime. Every
+relational operator now emits `rpg_eq`/`rpg_ne`/`rpg_lt`/`rpg_gt`/`rpg_le`/
+`rpg_ge`. These templates compare two character operands (`std::string` or
+`std::string_view` only, so a pointer against `*NULL` stays a pointer
+comparison) with the shorter one padded with blanks, and fall back to the
+plain C++ operator for anything else. `*BLANKS`/`*ZEROS`/`*HIVAL`/`*LOVAL`
+are now runtime `RpgFigConst` objects. In a comparison they take the other
+operand's length, so `*ZEROS` beside a `CHAR(3)` is `'000'` and beside a
+number is 0. `%LOOKUP`/`%LOOKUPxx`/`%TLOOKUPxx` and `IN` use the same
+helpers, so a `CHAR(3)` array searched for `'AB'` now finds it.
+
+Still open, found alongside:
+- A hex literal containing `X'00'` is emitted as `std::string("...\x00...")`
+  and truncated at the NUL. It needs the `(ptr, len)` constructor.
+- A figurative constant anywhere other than a comparison or an assignment
+  still doesn't compile. Examples are a concatenation (`'x' + *BLANKS`) and
+  a BIF argument.
+- `*HIVAL`/`*LOVAL` against a numeric are `±DBL_MAX`, not the extremes of
+  the field's declared digits. That only matters for equality.
+- Ordering uses ASCII, not EBCDIC, collation (as before). Digits sort below
+  letters here, above them on IBM i.
 
 **DS subfields lose their declared attributes.** A `CHAR(n)` subfield is
 emitted as an uninitialised `std::string`, so it starts empty rather than

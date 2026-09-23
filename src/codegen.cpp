@@ -2799,6 +2799,30 @@ void CodeGen::visit(BinaryExpr& node) {
         expr_ << ")";
         return;
     }
+    // Relational operators go through the runtime's rpg_eq ... rpg_ge, which
+    // compare two character operands as RPG does — the shorter padded with
+    // blanks — and expand a figurative-constant operand to the other side's
+    // length. A bare C++ == made `IF fld = ' '` false for any blank CHAR(n)
+    // with n > 1, and left *BLANKS in a comparison naming an undeclared
+    // identifier.
+    const char* cmpFn = nullptr;
+    switch (node.op) {
+        case BinOp::EQ: cmpFn = "rpg_eq"; break;
+        case BinOp::NE: cmpFn = "rpg_ne"; break;
+        case BinOp::LT: cmpFn = "rpg_lt"; break;
+        case BinOp::GT: cmpFn = "rpg_gt"; break;
+        case BinOp::LE: cmpFn = "rpg_le"; break;
+        case BinOp::GE: cmpFn = "rpg_ge"; break;
+        default: break;
+    }
+    if (cmpFn) {
+        expr_ << cmpFn << "(";
+        node.left->accept(*this);
+        expr_ << ", ";
+        node.right->accept(*this);
+        expr_ << ")";
+        return;
+    }
     expr_ << "(";
     node.left->accept(*this);
     switch (node.op) {

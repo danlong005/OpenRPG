@@ -4,9 +4,10 @@
 // The DCL-S grammar paired each type with a hand-picked subset of
 // keywords, so INZ on a ZONED, INZ on an array, a CHAR DIM(*VAR), or any
 // combination nobody had spelled out was a syntax error. The initial
-// value is also held to the declaration now, as an assigned one is.
+// value is also held to the declaration now, as an assigned one is. (An
+// initial value longer than a CHAR field is an error, as on IBM i: test 256.)
 DCL-S z    ZONED(7:2) INZ(12.345);
-DCL-S c5   CHAR(5) INZ('ABCDEFG');
+DCL-S c5   CHAR(5) INZ('ABC');
 DCL-S ca   CHAR(3) DIM(3) INZ('X');
 DCL-S na   PACKED(5:2) DIM(2) INZ(1.5);
 DCL-S cv   CHAR(2) DIM(*VAR:5);

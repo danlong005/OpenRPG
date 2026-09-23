@@ -178,6 +178,12 @@ private:
 
     void emitIndent();
     void emitLineDirective(int line);
+    int cur_stmt_line_ = 0; // line of the statement being emitted, for diagnostics
+    // IBM i rejects a qualified reference (ds.field) to a DS that is not
+    // QUALIFIED; reports it once per DS/field pair.
+    void checkQualifiedRef(const std::string& ds, const std::string& field);
+    std::set<std::string> reported_unqual_refs_;
+    bool in_bare_subfield_ = false; // emitting a bare subfield name as DS.field
     void emitStatements(std::vector<std::unique_ptr<Statement>>& stmts);
     std::string emitExpr(Expression& expr);
     std::string typeToString(RPGType type, int length = 0);

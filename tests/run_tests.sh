@@ -359,7 +359,7 @@ run_test "59" "%PASSED/%OMITTED" "$TESTDIR/test59_passed_omitted.rpgle" "run"
 run_test "60" "Data Types" "$TESTDIR/test60_datatypes.rpgle" "run"
 run_test "61" "No **FREE" "$TESTDIR/test61_no_free.rpgle" "run"
 run_test "62" "OVERLAY/POS" "$TESTDIR/test62_overlay_pos.rpgle" "run"
-run_test "63" "PREFIX" "$TESTDIR/test63_prefix.rpgle" "run"
+run_test "63" "PREFIX on a program-described DS" "$TESTDIR/test63_prefix.rpgle" "error"
 run_test "64" "OPTIONS(*OMIT)" "$TESTDIR/test64_omit.rpgle" "run"
 run_test "65" "DFTACTGRP/ACTGRP" "$TESTDIR/test65_actgrp.rpgle" "run"
 run_test "66" "*PSSR" "$TESTDIR/test66_pssr.rpgle" "run"
@@ -810,6 +810,9 @@ run_test "251" "DCL-DS header keywords, TEMPLATE" "$TESTDIR/test251_ds_template.
 run_test "252" "Nested subfields as assignment targets" "$TESTDIR/test252_nested_target.rpgle" "run"
 run_test "253" "Unqualified subfields by bare name" "$TESTDIR/test253_unqualified_subfields.rpgle" "run"
 run_test "254" "Fixed-format unqualified DS subfields" "$TESTDIR/test254_fixed_unqualified_ds.rpgle" "run"
+run_test "255" "Reject %DIV by a literal zero" "$TESTDIR/test255_err_div_zero_literal.rpgle" "error"
+run_test "256" "Reject INZ longer than its field" "$TESTDIR/test256_err_inz_too_long.rpgle" "error"
+run_test "257" "Reject ds.field on an unqualified DS" "$TESTDIR/test257_err_unqualified_dot.rpgle" "error"
 
 # ── Customer / drop-in tests ─────────────────────────────────────────────
 # Drop any .rpgle or .sqlrpgle file into tests/customer/ and it will be

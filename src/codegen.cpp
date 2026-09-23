@@ -75,6 +75,7 @@ static std::string cppEscape(const std::string& s) {
 }
 
 void CodeGen::emitLineDirective(int line) {
+    if (line > 0) cur_stmt_line_ = line;
     if (debug_mode_ && line > 0 && !source_file_.empty()) {
         out_ << "#line " << line << " \"" << source_file_ << "\"\n";
     }
@@ -1856,6 +1857,16 @@ std::string CodeGen::refitStmt(const FieldAttrs& a, const std::string& target) c
 // placeholder name instead, so "DCL-S c CHAR(6) INZ(*BLANKS)" generated
 // "std::string C = RPG_BLANKS;" -- C++ that does not compile.
 std::string CodeGen::emitInzValue(const rpg::DclS& node) {
+    // A character initial value longer than the field is an error on IBM i
+    // (RNF3431), not something to truncate. A numeric one with too many
+    // decimal places is only a note there (RNF3481) and is truncated, which
+    // fitValue below does.
+    if (auto* sl = dynamic_cast<const rpg::StringLiteral*>(node.inz_value.get())) {
+        if ((node.type == RPGType::CHAR || node.type == RPGType::VARCHAR) && node.length > 0 &&
+            static_cast<int>(sl->value.size()) > node.length)
+            report_semantic_error(node.line, "Length of initial value '" + sl->value +
+                "' exceeds length of field " + node.name + " (IBM: RNF3431)");
+    }
     if (auto* id = dynamic_cast<const rpg::Identifier*>(node.inz_value.get())) {
         std::string v = figConstValue(id->name, node.type, node.name);
         if (!v.empty()) return v;
@@ -2208,6 +2219,13 @@ void CodeGen::visit(DclDS& node) {
         return;
     }
 
+    // PREFIX renames the subfields an external description brings in; a
+    // data structure whose subfields are written out has none to rename, and
+    // IBM i rejects the keyword there (RNF3529).
+    if (!node.prefix.empty() && node.extname.empty())
+        report_semantic_error(node.line, "PREFIX is not allowed on data structure " + node.name +
+            ", which is program-described; it applies only with EXTNAME or LIKEREC (IBM: RNF3529)");
+
     // Apply PREFIX to field names
     if (!node.prefix.empty()) {
         for (auto& f : node.fields) {
@@ -2406,7 +2424,21 @@ void CodeGen::visit(DclEnum& node) {
     }
 }
 
+void CodeGen::checkQualifiedRef(const std::string& ds, const std::string& field) {
+    auto it = ds_defs_.find(ds);
+    if (it == ds_defs_.end()) return;
+    const DclDS* d = it->second;
+    // LIKEDS makes a DS qualified implicitly.
+    if (d->qualified || !d->like_ds.empty()) return;
+    if (!reported_unqual_refs_.insert(ds + "." + field).second) return;
+    report_semantic_error(cur_stmt_line_, "data structure " + ds + " is not QUALIFIED, so its "
+        "subfield is named " + field + " alone, not " + ds + "." + field +
+        "; add QUALIFIED to the DS to use the qualified form (IBM: RNF7030)");
+}
+
 void CodeGen::visit(DotExpr& node) {
+    if (auto* obj = dynamic_cast<Identifier*>(node.object.get()); obj && !in_bare_subfield_)
+        checkQualifiedRef(obj->name, node.field);
     // An OVERLAY subfield is a view built on demand, not a data member, so
     // it is reached by calling its accessor.
     auto isOverlay = [&](const std::string& dsName) {
@@ -2430,6 +2462,10 @@ void CodeGen::visit(DotExpr& node) {
 }
 
 void CodeGen::visit(ArrayAccess& node) {
+    // "DS.FIELD" is an element of a DIM'd subfield; the DS must be QUALIFIED.
+    size_t dot = node.name.find('.');
+    if (dot != std::string::npos && node.name.find('.', dot + 1) == std::string::npos)
+        checkQualifiedRef(node.name.substr(0, dot), node.name.substr(dot + 1));
     expr_ << node.name << "[";
     node.index->accept(*this);
     expr_ << " - 1]";  // RPG arrays are 1-based
@@ -3111,8 +3147,14 @@ void CodeGen::visit(Identifier& node) {
     if (!var_types_.count(node.name)) {
         auto uq = unqualified_subfields_.find(node.name);
         if (uq != unqualified_subfields_.end()) {
+            // Emitted as DS.field, but written bare — which is the correct
+            // form for an unqualified DS — so the qualified-reference check
+            // in visit(DotExpr) must not see this synthetic reference.
             DotExpr dot(std::make_unique<Identifier>(uq->second), node.name);
+            bool saved = in_bare_subfield_;
+            in_bare_subfield_ = true;
             dot.accept(*this);
+            in_bare_subfield_ = saved;
             return;
         }
     }
@@ -3450,6 +3492,18 @@ void CodeGen::visit(BIFCall& node) {
         expr_ << "std::abs(";
         node.args[0]->accept(*this);
         expr_ << ")";
+    } else if ((node.name == "DIV" || node.name == "REM") && node.args.size() >= 2 &&
+               [&] {
+                   if (auto* il = dynamic_cast<IntLiteral*>(node.args[1].get())) return il->value == 0;
+                   if (auto* fl = dynamic_cast<FloatLiteral*>(node.args[1].get())) return fl->value == 0.0;
+                   return false;
+               }()) {
+        // A divisor that is the constant 0 is a compile-time error on IBM i
+        // (RNF0552), not a runtime status 102 — that is for a divisor whose
+        // value is only known when the program runs.
+        report_semantic_error(cur_stmt_line_, "The second parameter 0 for %" + node.name +
+            " is not valid; %" + node.name + " cannot divide by zero (IBM: RNF0552)");
+        expr_ << "0";
     } else if (node.name == "DIV") {
         // Integer quotient; a zero divisor raises status 102 rather than
         // crashing the process with SIGFPE.

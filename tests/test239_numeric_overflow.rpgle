@@ -74,7 +74,8 @@ ON-ERROR;
   DSPLY ('RESULT:VALUE=' + %CHAR(%STATUS()));
 ENDMON;
 
-// Division by zero: 102, for / and %DIV alike.
+// Division by zero: 102, for / and %DIV alike. The divisor is a field:
+// a literal 0 is a compile-time error (IBM RNF0552; see test 255).
 MONITOR;
   q = a / zero;
   DSPLY 'RESULT:DIV=stored';
@@ -82,7 +83,7 @@ ON-ERROR;
   DSPLY ('RESULT:DIV=' + %CHAR(%STATUS()));
 ENDMON;
 MONITOR;
-  n = %DIV(10 : 0);
+  n = %DIV(10 : zero);
   DSPLY 'RESULT:PDIV=stored';
 ON-ERROR;
   DSPLY ('RESULT:PDIV=' + %CHAR(%STATUS()));

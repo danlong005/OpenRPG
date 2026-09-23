@@ -1489,6 +1489,35 @@ from compiling callee modules (`ADDTWO`, `test48_nomain`, `test174`,
 `test197`) standalone, not compile errors; a compile-only measurement would
 shrink that column.
 
+### Conformance run 2026-09-23, and four IBM rules enforced
+
+Full corpus re-run on PUB400 (265 sources). Agreement with IBM rose from
+58% (2026-08-30) to **165 of 265 (62%)**. `scripts/conformance-diff.py`
+writes `ibmi-conformance-differences.md`: every disagreement, grouped by root
+cause, with IBM's message, source line and text.
+- **The run's five "regressions" were environmental.** PUB400 had deleted
+  the test files and data areas in `LONGDM1`; `ibmi-setup-objects.sh`
+  recreates them. It now also honours the `.extdesc` column kind (`CHAR`
+  vs `VARCHAR`, `DOUBLE` for a float column).
+- **Enforced in rpgc, matching IBM's message IDs:**
+  - `%DIV`/`%REM` by a literal 0 (RNF0552)
+  - a `CHAR`/`VARCHAR` `INZ` longer than the field (RNF3431)
+  - `PREFIX` on a program-described DS (RNF3529)
+  - `ds.field` on a DS that isn't `QUALIFIED` (RNF7030)
+
+  Tests 239, 250 and 253, written this week, had used three of these;
+  they are corrected. Test 63, whose premise was `PREFIX` on a
+  program-described DS, is now an error test. Tests 255-257 are new. IBM
+  was re-run on all seven: every one agrees.
+- **The remaining leniency queue**, from the differences report, largest
+  first:
+  - declarations after calculations (17)
+  - `DSPLY` of a field declared longer than 52 (10)
+  - an unquoted `DTAARA(name)` (4)
+  - operations after `ENDSR` (3)
+  - type mismatches (3)
+  - `LIKE` of an unqualified sibling subfield (2)
+
 ### Load discipline
 
 PUB400 is a free community box run on donated hardware. This is a **manual or

@@ -1308,6 +1308,37 @@ dcl_proc_stmt:
         free($6);
         $$ = proc;
     }
+    /* No DCL-PI at all. IBM lets a procedure with no parameters and no
+       return value omit its interface; it was a syntax error here. The
+       statement list cannot begin with DCL-PI, so the next token after
+       `DCL-PROC name;` decides which form this is. */
+    | KW_DCL_PROC IDENTIFIER proc_export SEMICOLON
+      statement_list
+      KW_END_PROC SEMICOLON {
+        rpg::ProcInterface iface;
+        iface.has_return = false;
+        auto* proc = new rpg::DclProc($2, std::move(iface));
+        proc->is_export = ($3 != 0);
+        for (auto* s : $<stmt_list>5->stmts) proc->body.emplace_back(s);
+        delete $<stmt_list>5;
+        free($2);
+        $$ = proc;
+    }
+    | KW_DCL_PROC IDENTIFIER proc_export SEMICOLON
+      statement_list
+      KW_ON_EXIT SEMICOLON statement_list
+      KW_END_PROC SEMICOLON {
+        rpg::ProcInterface iface;
+        iface.has_return = false;
+        auto* proc = new rpg::DclProc($2, std::move(iface));
+        proc->is_export = ($3 != 0);
+        for (auto* s : $<stmt_list>5->stmts) proc->body.emplace_back(s);
+        delete $<stmt_list>5;
+        for (auto* s : $8->stmts) proc->on_exit_body.emplace_back(s);
+        delete $8;
+        free($2);
+        $$ = proc;
+    }
     ;
 
 proc_export:

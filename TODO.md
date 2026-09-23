@@ -2076,6 +2076,7 @@ Found alongside, all verified:
 Smaller, all verified:
 - `DCL-PROC` with no `DCL-PI` is a syntax error. IBM allows the interface
   to be omitted for a procedure with no parameters and no return value.
+  ✅ **Fixed 2026-09-22** (Test 248), with and without `ON-EXIT`.
 - `DCL-PI *N;` is a syntax error. `*N` is IBM's standard unnamed-interface
   form and the recommended one in modern code.
   ✅ **Fixed 2026-09-22** (Test 244). `*N` is lexed as a name only as the

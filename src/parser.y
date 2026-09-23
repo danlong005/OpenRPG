@@ -25,6 +25,17 @@ struct ParamList {
 struct DSFieldList {
     std::vector<rpg::DSField> fields;
 };
+
+// DCL-S keywords, collected by dcl_kws (see dcl_s_stmt).
+struct DclSKws {
+    int flags = 0;          // 1 STATIC, 2 TEMPLATE, 4 EXPORT, 8 IMPORT
+    bool is_const = false;
+    rpg::Expression* inz = nullptr;
+    int dim = 0;
+    int dim_type = 0;       // 0 fixed, 1 *VAR, 2 *AUTO
+    int sort = 0;           // 1 ASCEND, -1 DESCEND
+    std::string based, dtaara, datfmt, timfmt;
+};
 }
 
 %{
@@ -169,6 +180,28 @@ static int g_ret_len = 0, g_ret_digits = 0, g_ret_dec = 0;
     rpg::DSField* ds_field;
     std::vector<rpg::EnumConstant>* enum_const_list;
     std::vector<std::string>* str_list;
+    DclSKws* dcl_kws;
+}
+
+%code {
+// Builds a DCL-S from its type (a dcl_type result) and its keywords.
+static rpg::DclS* make_dcl_s(const char* name, rpg::ParamDecl* t, DclSKws* k) {
+    auto* n = new rpg::DclS(name, t->type, t->length, t->digits, t->decimals, k->is_const,
+                            std::unique_ptr<rpg::Expression>(k->inz), k->dim);
+    n->dim_type    = k->dim_type;
+    n->sort_order  = k->sort;
+    n->is_static   = (k->flags & 1) != 0;
+    n->is_template = (k->flags & 2) != 0;
+    n->is_export   = (k->flags & 4) != 0;
+    n->is_import   = (k->flags & 8) != 0;
+    n->based_ptr   = k->based;
+    n->dtaara_name = k->dtaara;
+    n->datfmt      = k->datfmt;
+    n->timfmt      = k->timfmt;
+    delete t;
+    delete k;
+    return n;
+}
 }
 
 %token KW_FREE
@@ -270,7 +303,9 @@ static int g_ret_len = 0, g_ret_digits = 0, g_ret_dec = 0;
 %type <param_decl> pi_param pr_param param_decl param_type
 %type <ds_field> ds_kws
 %type <ival> param_kws param_kw param_opts param_opt
-%type <ival> pi_return_type dcl_s_keywords proc_export
+%type <ival> pi_return_type proc_export
+%type <param_decl> dcl_type
+%type <dcl_kws> dcl_kws
 %type <sval> ident
 %type <enum_const_list> enum_constants enum_constant
 %type <str_list> overload_list
@@ -607,250 +642,77 @@ exfmt_stmt:
     ;
 
 /* DCL-S */
+/* A standalone field: a type, then any of its keywords in any order.
+   This replaced 48 alternatives, each pairing one type with a hand-picked
+   subset of INZ, CONST, DIM, ASCEND/DESCEND, BASED, DTAARA, EXPORT and
+   STATIC, so INZ on a ZONED or on an array, a CHAR DIM(*VAR), or any
+   combination not spelled out was a syntax error. */
 dcl_s_stmt:
-    KW_DCL_S ident KW_CHAR LPAREN INTEGER_LITERAL RPAREN dcl_s_keywords SEMICOLON {
-        auto* n = new rpg::DclS($2, rpg::RPGType::CHAR, $5);
-        n->is_static = ($7 & 1); n->is_template = ($7 & 2); n->is_export = ($7 & 4); n->is_import = ($7 & 8);
-        $$ = n; free($2);
+    KW_DCL_S ident dcl_type dcl_kws SEMICOLON {
+        $$ = make_dcl_s($2, $3, $4); free($2);
     }
-    | KW_DCL_S ident KW_VARCHAR LPAREN INTEGER_LITERAL RPAREN dcl_s_keywords SEMICOLON {
-        auto* n = new rpg::DclS($2, rpg::RPGType::VARCHAR, $5);
-        n->is_static = ($7 & 1); n->is_template = ($7 & 2); n->is_export = ($7 & 4); n->is_import = ($7 & 8);
-        $$ = n; free($2);
-    }
-    | KW_DCL_S ident KW_INT LPAREN INTEGER_LITERAL RPAREN dcl_s_keywords SEMICOLON {
-        auto* n = new rpg::DclS($2, rpg::RPGType::INT10, 0);
-        n->is_static = ($7 & 1); n->is_template = ($7 & 2); n->is_export = ($7 & 4); n->is_import = ($7 & 8);
-        $$ = n; free($2);
-    }
-    | KW_DCL_S ident KW_PACKED LPAREN INTEGER_LITERAL COLON INTEGER_LITERAL RPAREN dcl_s_keywords SEMICOLON {
-        auto* n = new rpg::DclS($2, rpg::RPGType::PACKED, 0, $5, $7);
-        n->is_static = ($9 & 1); n->is_template = ($9 & 2); n->is_export = ($9 & 4); n->is_import = ($9 & 8);
-        $$ = n; free($2);
-    }
-    | KW_DCL_S ident KW_ZONED LPAREN INTEGER_LITERAL COLON INTEGER_LITERAL RPAREN dcl_s_keywords SEMICOLON {
-        auto* n = new rpg::DclS($2, rpg::RPGType::ZONED, 0, $5, $7);
-        n->is_static = ($9 & 1); n->is_template = ($9 & 2); n->is_export = ($9 & 4); n->is_import = ($9 & 8);
-        $$ = n; free($2);
-    }
-    | KW_DCL_S ident KW_INT LPAREN INTEGER_LITERAL RPAREN KW_CONST KW_INZ LPAREN expression RPAREN SEMICOLON {
-        $$ = new rpg::DclS($2, rpg::RPGType::INT10, 0, 0, 0, true,
-                           std::unique_ptr<rpg::Expression>($10));
-        free($2);
-    }
-    | KW_DCL_S ident KW_CHAR LPAREN INTEGER_LITERAL RPAREN KW_CONST KW_INZ LPAREN expression RPAREN SEMICOLON {
-        $$ = new rpg::DclS($2, rpg::RPGType::CHAR, $5, 0, 0, true,
-                           std::unique_ptr<rpg::Expression>($10));
-        free($2);
-    }
-    | KW_DCL_S ident KW_PACKED LPAREN INTEGER_LITERAL COLON INTEGER_LITERAL RPAREN KW_CONST KW_INZ LPAREN expression RPAREN SEMICOLON {
-        $$ = new rpg::DclS($2, rpg::RPGType::PACKED, 0, $5, $7, true,
-                           std::unique_ptr<rpg::Expression>($<expr>12));
-        free($2);
-    }
-    | KW_DCL_S ident KW_INT LPAREN INTEGER_LITERAL RPAREN KW_INZ LPAREN expression RPAREN SEMICOLON {
-        $$ = new rpg::DclS($2, rpg::RPGType::INT10, 0, 0, 0, false,
-                           std::unique_ptr<rpg::Expression>($9));
-        free($2);
-    }
-    | KW_DCL_S ident KW_CHAR LPAREN INTEGER_LITERAL RPAREN KW_INZ LPAREN expression RPAREN SEMICOLON {
-        $$ = new rpg::DclS($2, rpg::RPGType::CHAR, $5, 0, 0, false,
-                           std::unique_ptr<rpg::Expression>($9));
-        free($2);
-    }
-    | KW_DCL_S ident KW_PACKED LPAREN INTEGER_LITERAL COLON INTEGER_LITERAL RPAREN KW_INZ LPAREN expression RPAREN SEMICOLON {
-        $$ = new rpg::DclS($2, rpg::RPGType::PACKED, 0, $5, $7, false,
-                           std::unique_ptr<rpg::Expression>($<expr>11));
-        free($2);
-    }
-    | KW_DCL_S ident KW_VARCHAR LPAREN INTEGER_LITERAL RPAREN KW_INZ LPAREN expression RPAREN SEMICOLON {
-        $$ = new rpg::DclS($2, rpg::RPGType::VARCHAR, $5, 0, 0, false,
-                           std::unique_ptr<rpg::Expression>($9));
-        free($2);
-    }
-    /* EXPORT INZ variants */
-    | KW_DCL_S ident KW_INT LPAREN INTEGER_LITERAL RPAREN KW_EXPORT KW_INZ LPAREN expression RPAREN SEMICOLON {
-        auto* n = new rpg::DclS($2, rpg::RPGType::INT10, 0, 0, 0, false,
-                           std::unique_ptr<rpg::Expression>($10));
-        n->is_export = true;
-        $$ = n; free($2);
-    }
-    | KW_DCL_S ident KW_CHAR LPAREN INTEGER_LITERAL RPAREN KW_EXPORT KW_INZ LPAREN expression RPAREN SEMICOLON {
-        auto* n = new rpg::DclS($2, rpg::RPGType::CHAR, $5, 0, 0, false,
-                           std::unique_ptr<rpg::Expression>($10));
-        n->is_export = true;
-        $$ = n; free($2);
-    }
-    | KW_DCL_S ident KW_IND SEMICOLON {
-        $$ = new rpg::DclS($2, rpg::RPGType::IND, 0);
-        free($2);
-    }
-    | KW_DCL_S ident KW_BOOLEAN SEMICOLON {
-        $$ = new rpg::DclS($2, rpg::RPGType::IND, 0);
-        free($2);
-    }
-    | KW_DCL_S ident KW_DATE SEMICOLON {
-        $$ = new rpg::DclS($2, rpg::RPGType::DATE, 0);
-        free($2);
-    }
-    | KW_DCL_S ident KW_TIME SEMICOLON {
-        $$ = new rpg::DclS($2, rpg::RPGType::TIME, 0);
-        free($2);
-    }
-    | KW_DCL_S ident KW_TIMESTAMP SEMICOLON {
-        $$ = new rpg::DclS($2, rpg::RPGType::TIMESTAMP, 0);
-        free($2);
-    }
-    | KW_DCL_S ident KW_POINTER SEMICOLON {
-        $$ = new rpg::DclS($2, rpg::RPGType::POINTER, 0);
-        free($2);
-    }
-    | KW_DCL_S ident KW_INT LPAREN INTEGER_LITERAL RPAREN KW_DIM LPAREN INTEGER_LITERAL RPAREN SEMICOLON {
-        $$ = new rpg::DclS($2, rpg::RPGType::INT10, 0, 0, 0, false, nullptr, $9);
-        free($2);
-    }
-    | KW_DCL_S ident KW_CHAR LPAREN INTEGER_LITERAL RPAREN KW_DIM LPAREN INTEGER_LITERAL RPAREN SEMICOLON {
-        $$ = new rpg::DclS($2, rpg::RPGType::CHAR, $5, 0, 0, false, nullptr, $9);
-        free($2);
-    }
-    | KW_DCL_S ident KW_VARCHAR LPAREN INTEGER_LITERAL RPAREN KW_DIM LPAREN INTEGER_LITERAL RPAREN SEMICOLON {
-        $$ = new rpg::DclS($2, rpg::RPGType::VARCHAR, $5, 0, 0, false, nullptr, $9);
-        free($2);
-    }
-    | KW_DCL_S ident KW_PACKED LPAREN INTEGER_LITERAL COLON INTEGER_LITERAL RPAREN KW_DIM LPAREN INTEGER_LITERAL RPAREN SEMICOLON {
-        $$ = new rpg::DclS($2, rpg::RPGType::PACKED, 0, $5, $7, false, nullptr, $<ival>11);
-        free($2);
-    }
-    | KW_DCL_S ident KW_INT LPAREN INTEGER_LITERAL RPAREN KW_DIM LPAREN KW_DIM_VAR COLON INTEGER_LITERAL RPAREN SEMICOLON {
-        auto* node = new rpg::DclS($2, rpg::RPGType::INT10, 0, 0, 0, false, nullptr, $11);
-        node->dim_type = 1;
-        free($2);
-        $$ = node;
-    }
-    | KW_DCL_S ident KW_INT LPAREN INTEGER_LITERAL RPAREN KW_DIM LPAREN KW_DIM_AUTO COLON INTEGER_LITERAL RPAREN SEMICOLON {
-        auto* node = new rpg::DclS($2, rpg::RPGType::INT10, 0, 0, 0, false, nullptr, $11);
-        node->dim_type = 2;
-        free($2);
-        $$ = node;
-    }
-    | KW_DCL_S ident KW_VARCHAR LPAREN INTEGER_LITERAL RPAREN KW_DIM LPAREN KW_DIM_VAR COLON INTEGER_LITERAL RPAREN SEMICOLON {
-        auto* node = new rpg::DclS($2, rpg::RPGType::VARCHAR, $5, 0, 0, false, nullptr, $11);
-        node->dim_type = 1;
-        free($2);
-        $$ = node;
-    }
-    | KW_DCL_S ident KW_VARCHAR LPAREN INTEGER_LITERAL RPAREN KW_DIM LPAREN KW_DIM_AUTO COLON INTEGER_LITERAL RPAREN SEMICOLON {
-        auto* node = new rpg::DclS($2, rpg::RPGType::VARCHAR, $5, 0, 0, false, nullptr, $11);
-        node->dim_type = 2;
-        free($2);
-        $$ = node;
-    }
-    | KW_DCL_S ident KW_LIKE LPAREN IDENTIFIER RPAREN SEMICOLON {
-        auto* node = new rpg::DclS($2, rpg::RPGType::INT10, 0);
-        node->like_var = $5;
-        free($2);
-        free($5);
-        $$ = node;
-    }
-    | KW_DCL_S ident KW_UNS LPAREN INTEGER_LITERAL RPAREN dcl_s_keywords SEMICOLON {
-        auto* n = new rpg::DclS($2, rpg::RPGType::UNS, $5);
-        n->is_static = ($7 & 1); n->is_template = ($7 & 2); n->is_export = ($7 & 4); n->is_import = ($7 & 8);
-        $$ = n; free($2);
-    }
-    | KW_DCL_S ident KW_FLOAT_TYPE LPAREN INTEGER_LITERAL RPAREN dcl_s_keywords SEMICOLON {
-        auto type = ($5 <= 4) ? rpg::RPGType::FLOAT4 : rpg::RPGType::FLOAT8;
-        auto* n = new rpg::DclS($2, type, $5);
-        n->is_static = ($7 & 1); n->is_template = ($7 & 2); n->is_export = ($7 & 4); n->is_import = ($7 & 8);
-        $$ = n; free($2);
-    }
-    | KW_DCL_S ident KW_BINDEC LPAREN INTEGER_LITERAL RPAREN dcl_s_keywords SEMICOLON {
-        auto* n = new rpg::DclS($2, rpg::RPGType::BINDEC, $5);
-        n->is_static = ($7 & 1); n->is_template = ($7 & 2); n->is_export = ($7 & 4); n->is_import = ($7 & 8);
-        $$ = n; free($2);
-    }
-    | KW_DCL_S ident KW_UCS2 LPAREN INTEGER_LITERAL RPAREN dcl_s_keywords SEMICOLON {
-        auto* n = new rpg::DclS($2, rpg::RPGType::UCS2, $5);
-        n->is_static = ($7 & 1); n->is_template = ($7 & 2); n->is_export = ($7 & 4); n->is_import = ($7 & 8);
-        $$ = n; free($2);
-    }
-    | KW_DCL_S ident KW_GRAPH LPAREN INTEGER_LITERAL RPAREN dcl_s_keywords SEMICOLON {
-        auto* n = new rpg::DclS($2, rpg::RPGType::UCS2, $5);
-        n->is_static = ($7 & 1); n->is_template = ($7 & 2); n->is_export = ($7 & 4); n->is_import = ($7 & 8);
-        $$ = n; free($2);
+    | KW_DCL_S ident KW_LIKE LPAREN IDENTIFIER RPAREN dcl_kws SEMICOLON {
+        auto* t = new rpg::ParamDecl{"", rpg::RPGType::INT10, 0, 0, 0, false};
+        auto* n = make_dcl_s($2, t, $7);
+        n->like_var = $5;
+        $$ = n; free($2); free($5);
     }
     | KW_DCL_S ident KW_OBJECT LPAREN KW_JAVA COLON STRING_LITERAL RPAREN SEMICOLON {
         auto* n = new rpg::DclS($2, rpg::RPGType::OBJECT, 0);
         n->java_class = $7;
         $$ = n; free($2); free($7);
     }
-    | KW_DCL_S ident KW_INT LPAREN INTEGER_LITERAL RPAREN KW_BASED LPAREN IDENTIFIER RPAREN SEMICOLON {
-        auto* n = new rpg::DclS($2, rpg::RPGType::INT10, 0);
-        n->based_ptr = $9;
-        $$ = n; free($2); free($9);
-    }
-    | KW_DCL_S ident KW_CHAR LPAREN INTEGER_LITERAL RPAREN KW_BASED LPAREN IDENTIFIER RPAREN SEMICOLON {
-        auto* n = new rpg::DclS($2, rpg::RPGType::CHAR, $5);
-        n->based_ptr = $9;
-        $$ = n; free($2); free($9);
-    }
-    | KW_DCL_S ident KW_INT LPAREN INTEGER_LITERAL RPAREN KW_DIM LPAREN INTEGER_LITERAL RPAREN KW_ASCEND SEMICOLON {
-        auto* n = new rpg::DclS($2, rpg::RPGType::INT10, 0, 0, 0, false, nullptr, $9);
-        n->sort_order = 1;
-        $$ = n; free($2);
-    }
-    | KW_DCL_S ident KW_INT LPAREN INTEGER_LITERAL RPAREN KW_DIM LPAREN INTEGER_LITERAL RPAREN KW_DESCEND SEMICOLON {
-        auto* n = new rpg::DclS($2, rpg::RPGType::INT10, 0, 0, 0, false, nullptr, $9);
-        n->sort_order = -1;
-        $$ = n; free($2);
-    }
-    | KW_DCL_S ident KW_CHAR LPAREN INTEGER_LITERAL RPAREN KW_DIM LPAREN INTEGER_LITERAL RPAREN KW_ASCEND SEMICOLON {
-        auto* n = new rpg::DclS($2, rpg::RPGType::CHAR, $5, 0, 0, false, nullptr, $9);
-        n->sort_order = 1;
-        $$ = n; free($2);
-    }
-    | KW_DCL_S ident KW_CHAR LPAREN INTEGER_LITERAL RPAREN KW_DIM LPAREN INTEGER_LITERAL RPAREN KW_DESCEND SEMICOLON {
-        auto* n = new rpg::DclS($2, rpg::RPGType::CHAR, $5, 0, 0, false, nullptr, $9);
-        n->sort_order = -1;
-        $$ = n; free($2);
-    }
-    | KW_DCL_S ident KW_DATE KW_DATFMT LPAREN IDENTIFIER RPAREN SEMICOLON {
-        auto* n = new rpg::DclS($2, rpg::RPGType::DATE, 0);
-        n->datfmt = $6;
-        $$ = n; free($2); free($6);
-    }
-    | KW_DCL_S ident KW_TIME KW_TIMFMT LPAREN IDENTIFIER RPAREN SEMICOLON {
-        auto* n = new rpg::DclS($2, rpg::RPGType::TIME, 0);
-        n->timfmt = $6;
-        $$ = n; free($2); free($6);
-    }
-    | KW_DCL_S ident KW_CHAR LPAREN INTEGER_LITERAL RPAREN KW_DTAARA LPAREN IDENTIFIER RPAREN SEMICOLON {
-        auto* n = new rpg::DclS($2, rpg::RPGType::CHAR, $5);
-        n->dtaara_name = $9;
-        $$ = n; free($2); free($9);
-    }
-    | KW_DCL_S ident KW_VARCHAR LPAREN INTEGER_LITERAL RPAREN KW_DTAARA LPAREN IDENTIFIER RPAREN SEMICOLON {
-        auto* n = new rpg::DclS($2, rpg::RPGType::VARCHAR, $5);
-        n->dtaara_name = $9;
-        $$ = n; free($2); free($9);
-    }
-    | KW_DCL_S ident KW_INT LPAREN INTEGER_LITERAL RPAREN KW_DTAARA LPAREN IDENTIFIER RPAREN SEMICOLON {
-        auto* n = new rpg::DclS($2, rpg::RPGType::INT10, 0);
-        n->dtaara_name = $9;
-        $$ = n; free($2); free($9);
-    }
-    | KW_DCL_S ident KW_PACKED LPAREN INTEGER_LITERAL COLON INTEGER_LITERAL RPAREN KW_DTAARA LPAREN IDENTIFIER RPAREN SEMICOLON {
-        auto* n = new rpg::DclS($2, rpg::RPGType::PACKED, 0, $5, $7);
-        n->dtaara_name = $11;
-        $$ = n; free($2); free($11);
-    }
     ;
 
-dcl_s_keywords:
-    /* empty */   { $$ = 0; }
-    | KW_STATIC   { $$ = 1; }
-    | KW_TEMPLATE { $$ = 2; }
-    | KW_EXPORT   { $$ = 4; }
-    | KW_IMPORT   { $$ = 8; }
+/* A DCL-S type, with the length conventions DclS has always used: INT
+   carries no length; UNS, FLOAT, BINDEC and UCS2 carry theirs; PACKED and
+   ZONED carry digits and scale. */
+dcl_type:
+    KW_CHAR LPAREN INTEGER_LITERAL RPAREN     { $$ = new rpg::ParamDecl{"", rpg::RPGType::CHAR, $3, 0, 0, false}; }
+    | KW_VARCHAR LPAREN INTEGER_LITERAL RPAREN { $$ = new rpg::ParamDecl{"", rpg::RPGType::VARCHAR, $3, 0, 0, false}; }
+    | KW_INT LPAREN INTEGER_LITERAL RPAREN    { $$ = new rpg::ParamDecl{"", rpg::RPGType::INT10, 0, 0, 0, false}; }
+    | KW_UNS LPAREN INTEGER_LITERAL RPAREN    { $$ = new rpg::ParamDecl{"", rpg::RPGType::UNS, $3, 0, 0, false}; }
+    | KW_PACKED LPAREN INTEGER_LITERAL COLON INTEGER_LITERAL RPAREN {
+        $$ = new rpg::ParamDecl{"", rpg::RPGType::PACKED, 0, $3, $5, false};
+    }
+    | KW_ZONED LPAREN INTEGER_LITERAL COLON INTEGER_LITERAL RPAREN {
+        $$ = new rpg::ParamDecl{"", rpg::RPGType::ZONED, 0, $3, $5, false};
+    }
+    | KW_FLOAT_TYPE LPAREN INTEGER_LITERAL RPAREN {
+        $$ = new rpg::ParamDecl{"", ($3 <= 4) ? rpg::RPGType::FLOAT4 : rpg::RPGType::FLOAT8, $3, 0, 0, false};
+    }
+    | KW_BINDEC LPAREN INTEGER_LITERAL RPAREN { $$ = new rpg::ParamDecl{"", rpg::RPGType::BINDEC, $3, 0, 0, false}; }
+    | KW_UCS2 LPAREN INTEGER_LITERAL RPAREN   { $$ = new rpg::ParamDecl{"", rpg::RPGType::UCS2, $3, 0, 0, false}; }
+    | KW_GRAPH LPAREN INTEGER_LITERAL RPAREN  { $$ = new rpg::ParamDecl{"", rpg::RPGType::UCS2, $3, 0, 0, false}; }
+    | KW_IND        { $$ = new rpg::ParamDecl{"", rpg::RPGType::IND, 0, 0, 0, false}; }
+    | KW_BOOLEAN    { $$ = new rpg::ParamDecl{"", rpg::RPGType::IND, 0, 0, 0, false}; }
+    | KW_DATE       { $$ = new rpg::ParamDecl{"", rpg::RPGType::DATE, 0, 0, 0, false}; }
+    | KW_TIME       { $$ = new rpg::ParamDecl{"", rpg::RPGType::TIME, 0, 0, 0, false}; }
+    | KW_TIMESTAMP  { $$ = new rpg::ParamDecl{"", rpg::RPGType::TIMESTAMP, 0, 0, 0, false}; }
+    | KW_POINTER    { $$ = new rpg::ParamDecl{"", rpg::RPGType::POINTER, 0, 0, 0, false}; }
+    ;
+
+dcl_kws:
+    /* empty */ { $$ = new DclSKws(); }
+    | dcl_kws KW_STATIC   { $$ = $1; $$->flags |= 1; }
+    | dcl_kws KW_TEMPLATE { $$ = $1; $$->flags |= 2; }
+    | dcl_kws KW_EXPORT   { $$ = $1; $$->flags |= 4; }
+    | dcl_kws KW_IMPORT   { $$ = $1; $$->flags |= 8; }
+    | dcl_kws KW_CONST    { $$ = $1; $$->is_const = true; }
+    | dcl_kws KW_INZ LPAREN expression RPAREN { $$ = $1; $$->inz = $4; }
+    | dcl_kws KW_DIM LPAREN INTEGER_LITERAL RPAREN { $$ = $1; $$->dim = $4; }
+    | dcl_kws KW_DIM LPAREN KW_DIM_VAR COLON INTEGER_LITERAL RPAREN {
+        $$ = $1; $$->dim = $6; $$->dim_type = 1;
+    }
+    | dcl_kws KW_DIM LPAREN KW_DIM_AUTO COLON INTEGER_LITERAL RPAREN {
+        $$ = $1; $$->dim = $6; $$->dim_type = 2;
+    }
+    | dcl_kws KW_ASCEND   { $$ = $1; $$->sort = 1; }
+    | dcl_kws KW_DESCEND  { $$ = $1; $$->sort = -1; }
+    | dcl_kws KW_BASED LPAREN IDENTIFIER RPAREN  { $$ = $1; $$->based = $4; free($4); }
+    | dcl_kws KW_DTAARA LPAREN IDENTIFIER RPAREN { $$ = $1; $$->dtaara = $4; free($4); }
+    | dcl_kws KW_DATFMT LPAREN IDENTIFIER RPAREN { $$ = $1; $$->datfmt = $4; free($4); }
+    | dcl_kws KW_TIMFMT LPAREN IDENTIFIER RPAREN { $$ = $1; $$->timfmt = $4; free($4); }
     ;
 
 /* DCL-C: named constants */

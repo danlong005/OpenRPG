@@ -1561,6 +1561,8 @@ void CodeGen::visit(DclS& node) {
         if (node.dim_type == 1 || node.dim_type == 2) {
             // DIM(*VAR:max) or DIM(*AUTO:max) — use std::vector
             out_ << "std::vector<" << typeToString(node.type, node.length) << "> " << node.name << ";\n";
+            std::string init = arrayElementInit(node);
+            if (!init.empty()) vector_fill_[node.name] = init;
             // Reserving capacity is a statement, not part of the
             // declaration, so at file scope it has to be deferred into
             // main() rather than emitted here.
@@ -1576,10 +1578,14 @@ void CodeGen::visit(DclS& node) {
             // left CHAR elements as empty strings, and inside a procedure
             // (automatic storage) left numeric elements uninitialized —
             // whatever was on the stack.
-            out_ << "std::array<" << typeToString(node.type, node.length) << ", " << node.dim << "> " << node.name;
-            if (node.type == RPGType::CHAR && node.length > 0)
-                out_ << " = rpg_filled_array<std::string, " << node.dim << ">(std::string("
-                     << node.length << ", ' '))";
+            std::string elemType = typeToString(node.type, node.length);
+            out_ << "std::array<" << elemType << ", " << node.dim << "> " << node.name;
+            // INZ on an array initializes every element; it used to be
+            // dropped here, and INZ with DIM was a syntax error besides.
+            std::string init = arrayElementInit(node);
+            if (!init.empty())
+                out_ << " = rpg_filled_array<" << elemType << ", " << node.dim << ">("
+                     << "static_cast<" << elemType << ">(" << init << "))";
             else
                 out_ << "{}";
             out_ << ";\n";
@@ -1842,7 +1848,21 @@ std::string CodeGen::emitInzValue(const rpg::DclS& node) {
         std::string v = figConstValue(id->name, node.type, node.name);
         if (!v.empty()) return v;
     }
-    return emitExpr(*node.inz_value);
+    // The initial value is held to the declaration like any assigned one:
+    // INZ('ABCDEFG') on a CHAR(5) is 'ABCDE', INZ(12.345) on a ZONED(7:2)
+    // is 12.34.
+    return fitValue(attrsOfName(node.name), emitExpr(*node.inz_value));
+}
+
+// The value each element of an array starts with (and a varying array's
+// new elements take when %ELEM grows it): its INZ value, fitted, when it
+// has one; otherwise its type's initial value, which for CHAR(n) is n
+// blanks. "" means the element type's own default is right.
+std::string CodeGen::arrayElementInit(const rpg::DclS& node) {
+    if (node.inz_value) return emitInzValue(node);
+    if (node.type == RPGType::CHAR && node.length > 0)
+        return "std::string(" + std::to_string(node.length) + ", ' ')";
+    return "";
 }
 
 std::string CodeGen::figConstValue(const std::string& name, RPGType type, const std::string& var_name) {
@@ -1892,10 +1912,19 @@ void CodeGen::visit(EvalStmt& node) {
             is_alloc = second && second->name == "__ALLOC";
             // *KEEP: resize without shrink — C++ .resize() already preserves capacity, same as default
         }
-        if (is_alloc)
+        if (is_alloc) {
             out_ << arr << ".reserve(" << val << ");";
-        else
-            out_ << arr << ".resize(" << val << ");";
+        } else {
+            // New elements take the array's initial value (for CHAR, blanks),
+            // not an empty string.
+            auto vf = vector_fill_.end();
+            if (auto* aid = dynamic_cast<rpg::Identifier*>(lhs_bif->args[0].get()))
+                vf = vector_fill_.find(aid->name);
+            if (vf != vector_fill_.end())
+                out_ << arr << ".resize(" << val << ", " << vf->second << ");";
+            else
+                out_ << arr << ".resize(" << val << ");";
+        }
         if (node.line > 0) out_ << " // line " << node.line;
         out_ << "\n";
         return;

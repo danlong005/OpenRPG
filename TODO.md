@@ -2076,9 +2076,9 @@ Found alongside, all verified:
   no initializer, so its elements held leftover stack contents (the test's
   negative control read 448, 64 × a previous call's 7s). Standalone arrays
   now start blank-filled (`CHAR`) or zeroed (everything else), and `DIM`'d
-  numeric subfields are zeroed too. Still open, same area: `INZ` on an
-  array and `CHAR(n) DIM(*VAR:m)` are both syntax errors (`INT DIM(*VAR)`
-  parses).
+  numeric subfields are zeroed too. `INZ` on an array and
+  `CHAR(n) DIM(*VAR:m)`, syntax errors when this was written, were fixed
+  with the `DCL-S` rewrite (Test 250).
 
 Smaller, all verified:
 - `DCL-PROC` with no `DCL-PI` is a syntax error. IBM allows the interface
@@ -2122,6 +2122,19 @@ Smaller, all verified:
     call sites don't take the argument's address).
 - `INZ` on a `ZONED` standalone is a syntax error, though `ZONED` itself
   works.
+  ✅ **Fixed 2026-09-22** (Test 250). `DCL-S` is now one rule — a type,
+  then any of its keywords in any order — replacing 48 alternatives that
+  each paired one type with a hand-picked keyword subset. Newly
+  expressible combinations got codegen:
+  - `INZ` on an array fills every element.
+  - A varying array's `%ELEM` growth uses the element's initial value
+    (blanks for `CHAR`).
+  - Every `INZ` value is fitted to its declaration: `INZ('ABCDEFG')` on a
+    `CHAR(5)` is `'ABCDE'`. Tests 3 and 115 had recorded unpadded `CHAR`
+    initial values.
+
+  Found alongside: the typed date literal `D'2026-09-22'` is a syntax
+  error.
 - `EXFMT` and `READC` are absent from the fixed-format C-spec opcode set,
   so no legacy interactive program can be compiled in native fixed columns
   at all.

@@ -209,6 +209,8 @@ private:
     FieldAttrs current_return_attrs_; // declared return of the procedure being emitted
     std::set<std::string> const_params_; // CONST parameters of the procedure being emitted
     std::string cppParamName(const ParamDecl& p) const;
+    std::string arrayElementInit(const rpg::DclS& node);
+    std::map<std::string, std::string> vector_fill_; // varying array -> new-element value
     void registerExtField(const std::string& fvar, const ExtField& f);
     const DclDS* dsOfExpr(const Expression& e) const;
     const DclDS* resolveDsDef(const std::string& name) const;

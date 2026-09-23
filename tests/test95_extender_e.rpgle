@@ -9,12 +9,13 @@ END-PR;
 
 DCL-S result INT(10);
 
+// EVAL(E): assign expression, should not halt on normal operation
+DCL-S x INT(10) INZ(10);
+
 // CALLP(E) on a successful procedure: %ERROR should be false after
 CALLP(E) addOne(5);
 // (we just verify parse and execution; return value discarded)
 
-// EVAL(E): assign expression, should not halt on normal operation
-DCL-S x INT(10) INZ(10);
 EVAL(E) x = x + 5;
 IF x = 15;
   DSPLY 'EVAL E OK';

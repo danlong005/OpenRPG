@@ -111,96 +111,53 @@
    "verified": "2026-09-23"
   },
   "test09_datastructs.rpgle": {
-   "codes": [
-    "RNF0724",
-    "RNF5347",
-    "RNF7030",
-    "RNF7503"
-   ],
-   "messages": [
-    {
-     "code": "RNF0724",
-     "line": 18,
-     "severity": 30,
-     "text": "The statement type is out of sequence for the main procedure."
-    },
-    {
-     "code": "RNF5347",
-     "line": 19,
-     "severity": 30,
-     "text": "An assignment operator is expected with the EVAL operation."
-    },
-    {
-     "code": "RNF7030",
-     "line": 19,
-     "severity": 30,
-     "text": "The name or indicator DESC is not defined."
-    },
-    {
-     "code": "RNF7030",
-     "line": 19,
-     "severity": 30,
-     "text": "The name or indicator VARCHAR is not defined."
-    },
-    {
-     "code": "RNF5347",
-     "line": 20,
-     "severity": 30,
-     "text": "An assignment operator is expected with the EVAL operation."
-    }
-   ],
-   "reason": "Declaration after calculations",
-   "reason_detail": "line 18: `DCL-DS items QUALIFIED DIM(3);`",
+   "codes": [],
    "rpgc": "accept",
-   "sha256": "9327256027c172e63f22b458f2283da6110720c0d0671722906659b80cf85610",
-   "verdict": "reject",
+   "sha256": "c25152dda4ecb254ed1d46f1ca58d612a041cda802f0303a89b5bfe8a98441fa",
+   "verdict": "accept",
    "verified": "2026-09-23"
   },
   "test100_data_gen.rpgle": {
    "codes": [
-    "RNF0724",
-    "RNF5347",
     "RNF5454",
-    "RNF7016",
-    "RNF7030",
-    "RNF7503"
+    "RNF7016"
    ],
    "messages": [
     {
      "code": "RNF5454",
-     "line": 17,
+     "line": 31,
      "severity": 30,
      "text": "The third operand of DATA-GEN must be %GEN."
     },
     {
      "code": "RNF7016",
-     "line": 19,
+     "line": 33,
      "severity": 20,
      "text": "Display length 500 greater than maximum allowed of 52; specification is ignored."
     },
     {
-     "code": "RNF0724",
-     "line": 22,
+     "code": "RNF5454",
+     "line": 39,
      "severity": 30,
-     "text": "The statement type is out of sequence for the main procedure."
+     "text": "The third operand of DATA-GEN must be %GEN."
     },
     {
-     "code": "RNF5347",
-     "line": 23,
-     "severity": 30,
-     "text": "An assignment operator is expected with the EVAL operation."
+     "code": "RNF7016",
+     "line": 41,
+     "severity": 20,
+     "text": "Display length 300 greater than maximum allowed of 52; specification is ignored."
     },
     {
-     "code": "RNF7030",
-     "line": 23,
+     "code": "RNF5454",
+     "line": 46,
      "severity": 30,
-     "text": "The name or indicator ID is not defined."
+     "text": "The third operand of DATA-GEN must be %GEN."
     }
    ],
-   "reason": "Declaration after calculations",
-   "reason_detail": "line 22: `DCL-DS item QUALIFIED;`",
+   "reason": "RNF5454: The third operand of DATA-GEN must be %GEN.",
+   "reason_detail": "line 31: The third operand of DATA-GEN must be %GEN. \u2014 `DATA-GEN person %DATA(jsonOut : 'doc=string');`",
    "rpgc": "accept",
-   "sha256": "170b158c56fb351240afd862a43026d056d76f2ba09fb871c6c4459b25accac1",
+   "sha256": "34718b63144278347bd24f2b94e0e34f2537fb150ce1628b30f241fe10aa09a0",
    "verdict": "reject",
    "verified": "2026-09-23"
   },
@@ -374,21 +331,21 @@
    "messages": [
     {
      "code": "SQL0199",
-     "line": 13,
+     "line": 16,
      "severity": 30,
      "text": "Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>."
     },
     {
      "code": "SQL0104",
-     "line": 68,
+     "line": 69,
      "severity": 30,
      "text": "Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>."
     }
    ],
-   "reason": "Declaration after calculations",
-   "reason_detail": "line 50: `DCL-S done IND;`",
+   "reason": "SQL0199: Position n Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>.",
+   "reason_detail": "line 16: Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>. \u2014 `EXEC SQL CONNECT USING :connStr;`",
    "rpgc": "accept",
-   "sha256": "c317347e994e9d8c7949062bd40bc886bdcc312b3de3991ffc38d16d5aca5f40",
+   "sha256": "24e53cffac514304cdae9616711a742d0880a05bf5200169b41099401a182ff2",
    "verdict": "reject",
    "verified": "2026-09-23"
   },
@@ -516,97 +473,89 @@
   },
   "test112_data_into_csv.rpgle": {
    "codes": [
-    "RNF0637",
-    "RNF0724",
-    "RNF5347",
-    "RNF7030",
-    "RNF7503"
+    "RNF0637"
    ],
    "messages": [
     {
      "code": "RNF0637",
-     "line": 18,
+     "line": 32,
      "severity": 30,
      "text": "An operand was expected but was not found; specification is ignored."
     },
     {
      "code": "RNF0637",
-     "line": 19,
+     "line": 33,
      "severity": 30,
      "text": "An operand was expected but was not found; specification is ignored."
     },
     {
      "code": "RNF0637",
-     "line": 20,
+     "line": 34,
      "severity": 30,
      "text": "An operand was expected but was not found; specification is ignored."
     },
     {
-     "code": "RNF0724",
-     "line": 23,
+     "code": "RNF0637",
+     "line": 40,
      "severity": 30,
-     "text": "The statement type is out of sequence for the main procedure."
+     "text": "An operand was expected but was not found; specification is ignored."
     },
     {
-     "code": "RNF5347",
-     "line": 24,
+     "code": "RNF0637",
+     "line": 41,
      "severity": 30,
-     "text": "An assignment operator is expected with the EVAL operation."
+     "text": "An operand was expected but was not found; specification is ignored."
     }
    ],
-   "reason": "Declaration after calculations",
-   "reason_detail": "line 23: `DCL-DS emp DIM(*VAR:10) QUALIFIED;`",
+   "reason": "RNF0637: An operand was expected but was not found; specification is ignored.",
+   "reason_detail": "line 32: An operand was expected but was not found; specification is ignored. \u2014 `DSPLY 'Name: ' + person.name;`",
    "rpgc": "accept",
-   "sha256": "5798d26841edc3802abecdba58b1823282570c5406047b644483212eb43694d1",
+   "sha256": "d92e243f0429d9e4b30a2a691dd8647cee3f8f21d41070f03183a3bc9e814bd5",
    "verdict": "reject",
    "verified": "2026-09-23"
   },
   "test113_data_gen_csv.rpgle": {
    "codes": [
-    "RNF0724",
-    "RNF5347",
     "RNF5377",
     "RNF5454",
-    "RNF7016",
-    "RNF7030",
-    "RNF7503"
+    "RNF7016"
    ],
    "messages": [
     {
      "code": "RNF5454",
-     "line": 18,
+     "line": 27,
      "severity": 30,
      "text": "The third operand of DATA-GEN must be %GEN."
     },
     {
      "code": "RNF5377",
-     "line": 18,
+     "line": 27,
      "severity": 20,
      "text": "The end of the expression is expected."
     },
     {
      "code": "RNF7016",
-     "line": 19,
+     "line": 28,
      "severity": 20,
      "text": "Display length 500 greater than maximum allowed of 52; specification is ignored."
     },
     {
-     "code": "RNF0724",
-     "line": 22,
+     "code": "RNF5454",
+     "line": 33,
      "severity": 30,
-     "text": "The statement type is out of sequence for the main procedure."
+     "text": "The third operand of DATA-GEN must be %GEN."
     },
     {
-     "code": "RNF5347",
-     "line": 23,
-     "severity": 30,
-     "text": "An assignment operator is expected with the EVAL operation."
+     "code": "RNF5377",
+     "line": 33,
+     "severity": 20,
+     "text": "The end of the expression is expected."
     }
    ],
-   "reason": "Declaration after calculations",
-   "reason_detail": "line 22: `DCL-DS item QUALIFIED;`",
+   "reason": "RNF5454: The third operand of DATA-GEN must be %GEN.",
+   "reason_detail": "line 27: The third operand of DATA-GEN must be %GEN. \u2014 `DATA-GEN person %DATA(csvOut) %PARSER('CSV');`",
    "rpgc": "accept",
-   "sha256": "fa2ff9afca1bad247bede21ac9decf6bd840d338ac4464f3ac813d9c51c57391",
+   "sha256": "f31291515f01c6c182e8a8bf9b96b772626d37115fc8cf48529051d19c7dfbeb",
    "verdict": "reject",
    "verified": "2026-09-23"
   },
@@ -988,48 +937,10 @@
    "verified": "2026-09-23"
   },
   "test130_fixed_cspec_eval_callp.rpgle": {
-   "codes": [
-    "RNF0724",
-    "RNF5347",
-    "RNF7030"
-   ],
-   "messages": [
-    {
-     "code": "RNF0724",
-     "line": 22,
-     "severity": 30,
-     "text": "The statement type is out of sequence for the main procedure."
-    },
-    {
-     "code": "RNF5347",
-     "line": 23,
-     "severity": 30,
-     "text": "An assignment operator is expected with the EVAL operation."
-    },
-    {
-     "code": "RNF7030",
-     "line": 23,
-     "severity": 30,
-     "text": "The name or indicator INT is not defined."
-    },
-    {
-     "code": "RNF7030",
-     "line": 23,
-     "severity": 30,
-     "text": "The name or indicator N is not defined."
-    },
-    {
-     "code": "RNF0724",
-     "line": 24,
-     "severity": 30,
-     "text": "The statement type is out of sequence for the main procedure."
-    }
-   ],
-   "reason": "RNF0724: The statement type is out of sequence for the main procedure.",
-   "reason_detail": "line 22: The statement type is out of sequence for the main procedure. \u2014 `DCL-PR doubleIt;`",
+   "codes": [],
    "rpgc": "accept",
-   "sha256": "9c4479f4b8b0ad874727e97ade12f01b1268b222155adf393e109aa3a0722ee7",
-   "verdict": "reject",
+   "sha256": "21794190e7496ece89a2873c94af60156f9a32f5e0017db2396fb5386afb6532",
+   "verdict": "accept",
    "verified": "2026-09-23"
   },
   "test131_fixed_cspec_clear_sorta.rpgle": {
@@ -3454,7 +3365,7 @@
    "verdict": "reject",
    "verified": "2026-09-23"
   },
-  "test26_pointers.rpgle": {
+  "test260_err_decl_after_calc.rpgle": {
    "codes": [
     "RNF0724",
     "RNF7030",
@@ -3463,34 +3374,68 @@
    "messages": [
     {
      "code": "RNF0724",
-     "line": 35,
+     "line": 6,
      "severity": 30,
      "text": "The statement type is out of sequence for the main procedure."
     },
     {
      "code": "RNF7030",
-     "line": 36,
+     "line": 7,
      "severity": 30,
-     "text": "The name or indicator PTRSIZE is not defined."
+     "text": "The name or indicator B is not defined."
     },
     {
      "code": "RNF7503",
-     "line": 36,
-     "severity": 30,
-     "text": "Expression contains an operand that is not defined."
-    },
-    {
-     "code": "RNF7503",
-     "line": 37,
+     "line": 7,
      "severity": 30,
      "text": "Expression contains an operand that is not defined."
     }
    ],
    "reason": "Declaration after calculations",
-   "reason_detail": "line 35: `DCL-S ptrSize INT(10);`",
-   "rpgc": "accept",
-   "sha256": "d1d6cf04d4a26a4d2bf0dd06ea043dd3e70d18e0e45658a94651029f2862883c",
+   "reason_detail": "line 6: `DCL-S b INT(10);`",
+   "rpgc": "reject",
+   "sha256": "77bb47acafcd2129adc85026a94a6ff2c247094bd6566990a7eebc9155a9189b",
    "verdict": "reject",
+   "verified": "2026-09-23"
+  },
+  "test261_err_decl_after_calc_proc.rpgle": {
+   "codes": [
+    "RNF0725",
+    "RNF7030",
+    "RNF7503"
+   ],
+   "messages": [
+    {
+     "code": "RNF0725",
+     "line": 15,
+     "severity": 30,
+     "text": "The statement type is out of sequence for the subprocedure."
+    },
+    {
+     "code": "RNF7030",
+     "line": 16,
+     "severity": 30,
+     "text": "The name or indicator LATE is not defined."
+    },
+    {
+     "code": "RNF7503",
+     "line": 16,
+     "severity": 30,
+     "text": "Expression contains an operand that is not defined."
+    }
+   ],
+   "reason": "RNF0725: The statement type is out of sequence for the subprocedure.",
+   "reason_detail": "line 15: The statement type is out of sequence for the subprocedure. \u2014 `DCL-S late INT(10);`",
+   "rpgc": "reject",
+   "sha256": "8e6a8e8dcc3f6bd86bb5c83b5635e5f0106bd84a20f2388cdd31f26f02b895b0",
+   "verdict": "reject",
+   "verified": "2026-09-23"
+  },
+  "test26_pointers.rpgle": {
+   "codes": [],
+   "rpgc": "accept",
+   "sha256": "55bf583c884f7386079c773172eeb20ce75f70be11d2ee98f337c9e9f5b2f60d",
+   "verdict": "accept",
    "verified": "2026-09-23"
   },
   "test27_arrays.rpgle": {
@@ -3508,48 +3453,10 @@
    "verified": "2026-09-23"
   },
   "test29_dclsubf_parm.rpgle": {
-   "codes": [
-    "RNF0724",
-    "RNF7030",
-    "RNF7503"
-   ],
-   "messages": [
-    {
-     "code": "RNF0724",
-     "line": 19,
-     "severity": 30,
-     "text": "The statement type is out of sequence for the main procedure."
-    },
-    {
-     "code": "RNF0724",
-     "line": 20,
-     "severity": 30,
-     "text": "The statement type is out of sequence for the main procedure."
-    },
-    {
-     "code": "RNF0724",
-     "line": 21,
-     "severity": 30,
-     "text": "The statement type is out of sequence for the main procedure."
-    },
-    {
-     "code": "RNF0724",
-     "line": 22,
-     "severity": 30,
-     "text": "The statement type is out of sequence for the main procedure."
-    },
-    {
-     "code": "RNF0724",
-     "line": 24,
-     "severity": 30,
-     "text": "The statement type is out of sequence for the main procedure."
-    }
-   ],
-   "reason": "Declaration after calculations",
-   "reason_detail": "line 19: `DCL-PR addNums INT(10);`",
+   "codes": [],
    "rpgc": "accept",
-   "sha256": "d3b293b97844c474da40c4e398652f0b73cd169baf7094f409f334e487a46d1b",
-   "verdict": "reject",
+   "sha256": "c0d8d8f5e1013c5314eb562b5ac7eccb25a2552369659c4c9d3287f501fa86c2",
+   "verdict": "accept",
    "verified": "2026-09-23"
   },
   "test30_like.rpgle": {
@@ -3630,48 +3537,10 @@
    "verified": "2026-09-23"
   },
   "test41_string_bifs.rpgle": {
-   "codes": [
-    "RNF0724",
-    "RNF7030",
-    "RNF7503"
-   ],
-   "messages": [
-    {
-     "code": "RNF0724",
-     "line": 14,
-     "severity": 30,
-     "text": "The statement type is out of sequence for the main procedure."
-    },
-    {
-     "code": "RNF7030",
-     "line": 15,
-     "severity": 30,
-     "text": "The name or indicator MYDATE is not defined."
-    },
-    {
-     "code": "RNF7503",
-     "line": 15,
-     "severity": 30,
-     "text": "Expression contains an operand that is not defined."
-    },
-    {
-     "code": "RNF7503",
-     "line": 16,
-     "severity": 30,
-     "text": "Expression contains an operand that is not defined."
-    },
-    {
-     "code": "RNF7503",
-     "line": 18,
-     "severity": 30,
-     "text": "Expression contains an operand that is not defined."
-    }
-   ],
-   "reason": "Declaration after calculations",
-   "reason_detail": "line 14: `DCL-S myDate DATE;`",
+   "codes": [],
    "rpgc": "accept",
-   "sha256": "1e663ac953e7bb9dd3def036583c939f4166318ecfeba3ffb9d914923f0ef942",
-   "verdict": "reject",
+   "sha256": "6b40af2cd9c5c7fe44595892e1789b320d927dee32773b890c929b8cb474d7de",
+   "verdict": "accept",
    "verified": "2026-09-23"
   },
   "test42_onexit.rpgle": {
@@ -3760,46 +3629,20 @@
   },
   "test51_string_bifs.rpgle": {
    "codes": [
-    "RNF0724",
-    "RNF7030",
-    "RNF7503"
+    "RNF7016"
    ],
    "messages": [
     {
-     "code": "RNF0724",
-     "line": 18,
-     "severity": 30,
-     "text": "The statement type is out of sequence for the main procedure."
-    },
-    {
-     "code": "RNF0724",
-     "line": 19,
-     "severity": 30,
-     "text": "The statement type is out of sequence for the main procedure."
-    },
-    {
-     "code": "RNF7030",
-     "line": 20,
-     "severity": 30,
-     "text": "The name or indicator NAMES is not defined."
-    },
-    {
-     "code": "RNF7503",
-     "line": 20,
-     "severity": 30,
-     "text": "Expression contains an operand that is not defined."
-    },
-    {
-     "code": "RNF7030",
-     "line": 21,
-     "severity": 30,
-     "text": "The name or indicator RESULT is not defined."
+     "code": "RNF7016",
+     "line": 23,
+     "severity": 20,
+     "text": "Display length 100 greater than maximum allowed of 52; specification is ignored."
     }
    ],
-   "reason": "Declaration after calculations",
-   "reason_detail": "line 18: `DCL-S result VARCHAR(100);`",
+   "reason": "RNF7016: Display length n greater than maximum allowed of n; specification is ignored.",
+   "reason_detail": "line 23: Display length 100 greater than maximum allowed of 52; specification is ignored. \u2014 `DSPLY result;`",
    "rpgc": "accept",
-   "sha256": "0fea503ab003f3370727d40a9a0e5a1324a885aef9edae5a51c34aa8fa4fb7ce",
+   "sha256": "5051f709b7c28fe7e3226123fc9afa5525cc2799db5f761c71e7a0b362880984",
    "verdict": "reject",
    "verified": "2026-09-23"
   },
@@ -3836,42 +3679,10 @@
    "verified": "2026-09-23"
   },
   "test54_memory_bifs.rpgle": {
-   "codes": [
-    "RNF0724",
-    "RNF7030",
-    "RNF7503"
-   ],
-   "messages": [
-    {
-     "code": "RNF0724",
-     "line": 15,
-     "severity": 30,
-     "text": "The statement type is out of sequence for the main procedure."
-    },
-    {
-     "code": "RNF7030",
-     "line": 16,
-     "severity": 30,
-     "text": "The name or indicator RESULT is not defined."
-    },
-    {
-     "code": "RNF7503",
-     "line": 16,
-     "severity": 30,
-     "text": "Expression contains an operand that is not defined."
-    },
-    {
-     "code": "RNF7503",
-     "line": 17,
-     "severity": 30,
-     "text": "Expression contains an operand that is not defined."
-    }
-   ],
-   "reason": "Declaration after calculations",
-   "reason_detail": "line 15: `DCL-S result VARCHAR(50);`",
+   "codes": [],
    "rpgc": "accept",
-   "sha256": "e35e350b261db4544f85b18e546f136ca45dadfd4f6cbe0ec40199a15b1efac7",
-   "verdict": "reject",
+   "sha256": "7f855977083ce66d6e0306e3bc1e0804137ec68f9e37cb5bce6eb347a4b85276",
+   "verdict": "accept",
    "verified": "2026-09-23"
   },
   "test55_figconst.rpgle": {
@@ -4228,47 +4039,44 @@
   "test75_tlookup_elem.rpgle": {
    "codes": [
     "RNF0597",
-    "RNF0724",
-    "RNF5343",
-    "RNF7030",
-    "RNF7503"
+    "RNF5343"
    ],
    "messages": [
     {
      "code": "RNF5343",
-     "line": 19,
+     "line": 22,
      "severity": 30,
      "text": "Array CODES has too many omitted indexes."
     },
     {
      "code": "RNF0597",
-     "line": 19,
+     "line": 22,
      "severity": 20,
      "text": "The second parameter CODES for %TLOOKUPxx is not valid."
     },
     {
      "code": "RNF5343",
-     "line": 25,
+     "line": 28,
      "severity": 30,
      "text": "Array CODES has too many omitted indexes."
     },
     {
      "code": "RNF0597",
-     "line": 25,
+     "line": 28,
      "severity": 20,
      "text": "The second parameter CODES for %TLOOKUPxx is not valid."
     },
     {
      "code": "RNF5343",
-     "line": 31,
+     "line": 34,
      "severity": 30,
      "text": "Array CODES has too many omitted indexes."
     }
    ],
-   "reason": "Declaration after calculations",
-   "reason_detail": "line 37: `DCL-S dynArr INT(10) DIM(*VAR:50);`",
+   "reason": "RNF5343: Array CODES has too many omitted indexes.",
+   "reason_detail": "line 22: Array CODES has too many omitted indexes. \u2014 `found = %TLOOKUP('LAX': codes);`",
    "rpgc": "accept",
-   "sha256": "7eded4f8881f593823236fba6ff990e5538f5e901e823489934252068187a96e",
+   "sha256": "e3b15d7d7ee3146127dd1ddf85a89c162bcb0ecfd31a252cfc4c610f44614feb",
    "verdict": "reject",
    "verified": "2026-09-23"
   },
@@ -4568,96 +4376,88 @@
   },
   "test87.rpgle": {
    "codes": [
-    "RNF0637",
-    "RNF0724",
-    "RNF5347",
-    "RNF7030",
-    "RNF7503"
+    "RNF0637"
    ],
    "messages": [
     {
      "code": "RNF0637",
-     "line": 20,
+     "line": 48,
      "severity": 30,
      "text": "An operand was expected but was not found; specification is ignored."
     },
     {
      "code": "RNF0637",
-     "line": 21,
+     "line": 49,
      "severity": 30,
      "text": "An operand was expected but was not found; specification is ignored."
     },
     {
      "code": "RNF0637",
-     "line": 22,
+     "line": 50,
      "severity": 30,
      "text": "An operand was expected but was not found; specification is ignored."
     },
     {
      "code": "RNF0637",
-     "line": 23,
+     "line": 51,
      "severity": 30,
      "text": "An operand was expected but was not found; specification is ignored."
     },
     {
      "code": "RNF0637",
-     "line": 24,
+     "line": 52,
      "severity": 30,
      "text": "An operand was expected but was not found; specification is ignored."
     }
    ],
-   "reason": "Declaration after calculations",
-   "reason_detail": "line 27: `DCL-DS person QUALIFIED;`",
+   "reason": "RNF0637: An operand was expected but was not found; specification is ignored.",
+   "reason_detail": "line 48: An operand was expected but was not found; specification is ignored. \u2014 `DSPLY 'Order: ' + %CHAR(order.id);`",
    "rpgc": "accept",
-   "sha256": "657275d1f29e161811ef238509589207975d2cbf6b06e3cc80cea920870871a6",
+   "sha256": "bf7aa605c1db8b1e744d5d55a8d1cae7a4b2774d801e4ae4302173ff1c23cef0",
    "verdict": "reject",
    "verified": "2026-09-23"
   },
   "test88.rpgle": {
    "codes": [
     "RNF0637",
-    "RNF0724",
-    "RNF5347",
-    "RNF5377",
-    "RNF7030",
-    "RNF7503"
+    "RNF5377"
    ],
    "messages": [
     {
      "code": "RNF0637",
-     "line": 17,
+     "line": 24,
      "severity": 30,
      "text": "An operand was expected but was not found; specification is ignored."
     },
     {
      "code": "RNF5377",
-     "line": 17,
+     "line": 24,
      "severity": 20,
      "text": "The end of the expression is expected."
     },
     {
      "code": "RNF0637",
-     "line": 19,
+     "line": 26,
      "severity": 30,
      "text": "An operand was expected but was not found; specification is ignored."
     },
     {
      "code": "RNF5377",
-     "line": 19,
+     "line": 26,
      "severity": 20,
      "text": "The end of the expression is expected."
     },
     {
      "code": "RNF0637",
-     "line": 21,
+     "line": 28,
      "severity": 30,
      "text": "An operand was expected but was not found; specification is ignored."
     }
    ],
-   "reason": "Declaration after calculations",
-   "reason_detail": "line 25: `DCL-DS emp QUALIFIED DIM(*VAR:10);`",
+   "reason": "RNF0637: An operand was expected but was not found; specification is ignored.",
+   "reason_detail": "line 24: An operand was expected but was not found; specification is ignored. \u2014 `DSPLY 'Item 1: ' + item(1).name + ' qty=' + %CHAR(item(1).qty) +`",
    "rpgc": "accept",
-   "sha256": "8b29abd3749ca1db3db5381092a2907990bf67a1f6b84b123c4c5cf72f69b64f",
+   "sha256": "6f1c3559fbf75f141e9e86336361b49c4e1149a7275bff7375a435d1ba5896f2",
    "verdict": "reject",
    "verified": "2026-09-23"
   },
@@ -4665,48 +4465,44 @@
    "codes": [
     "RNF0622",
     "RNF0637",
-    "RNF0724",
-    "RNF5347",
-    "RNF5377",
-    "RNF7030",
-    "RNF7503"
+    "RNF5377"
    ],
    "messages": [
     {
      "code": "RNF0637",
-     "line": 17,
+     "line": 42,
      "severity": 30,
      "text": "An operand was expected but was not found; specification is ignored."
     },
     {
      "code": "RNF5377",
-     "line": 17,
+     "line": 42,
      "severity": 20,
-     "text": "The end of the expression is expected."
+     "text": "The end of the expression is expected. -=* http://pub400.com *=-"
     },
     {
      "code": "RNF0622",
-     "line": 17,
+     "line": 42,
      "severity": 20,
      "text": "A qualified name is not allowed in this context."
     },
     {
      "code": "RNF0622",
-     "line": 18,
+     "line": 43,
      "severity": 20,
      "text": "A qualified name is not allowed in this context."
     },
     {
-     "code": "RNF0724",
-     "line": 21,
+     "code": "RNF0637",
+     "line": 49,
      "severity": 30,
-     "text": "The statement type is out of sequence for the main procedure."
+     "text": "An operand was expected but was not found; specification is ignored."
     }
    ],
-   "reason": "Declaration after calculations",
-   "reason_detail": "line 21: `DCL-DS address QUALIFIED;`",
+   "reason": "RNF0637: An operand was expected but was not found; specification is ignored.",
+   "reason_detail": "line 42: An operand was expected but was not found; specification is ignored. \u2014 `DSPLY 'Order: ' + %CHAR(order.id) + ' ' + order.product +`",
    "rpgc": "accept",
-   "sha256": "680c3c4c39d90fc2b759084cdc9a245c542c57e22237979122d02ce4776cdaff",
+   "sha256": "12cd8210b3a0f49dfab4d1959f8bf9b0879d16f9affc73efef8c674bbbd5013a",
    "verdict": "reject",
    "verified": "2026-09-23"
   },
@@ -4764,93 +4560,64 @@
   },
   "test94_extender_h.rpgle": {
    "codes": [
-    "RNF0724",
     "RNF5049",
-    "RNF7030",
-    "RNF7503"
+    "RNF7416"
    ],
    "messages": [
     {
-     "code": "RNF0724",
-     "line": 16,
-     "severity": 30,
-     "text": "The statement type is out of sequence for the main procedure."
+     "code": "RNF5049",
+     "line": 41,
+     "severity": 20,
+     "text": "The Operation Extender is not valid for the specified Operation Code."
     },
     {
-     "code": "RNF7030",
-     "line": 17,
-     "severity": 30,
-     "text": "The name or indicator RESULT2 is not defined."
+     "code": "RNF5049",
+     "line": 48,
+     "severity": 20,
+     "text": "The Operation Extender is not valid for the specified Operation Code."
     },
     {
-     "code": "RNF7503",
-     "line": 17,
-     "severity": 30,
-     "text": "Expression contains an operand that is not defined."
+     "code": "RNF5049",
+     "line": 55,
+     "severity": 20,
+     "text": "The Operation Extender is not valid for the specified Operation Code."
     },
     {
-     "code": "RNF7503",
-     "line": 18,
+     "code": "RNF7416",
+     "line": 55,
      "severity": 30,
-     "text": "Expression contains an operand that is not defined."
-    },
-    {
-     "code": "RNF0724",
-     "line": 25,
-     "severity": 30,
-     "text": "The statement type is out of sequence for the main procedure."
+     "text": "The types of the right and left hand side do not match in the EVAL operation."
     }
    ],
-   "reason": "Declaration after calculations",
-   "reason_detail": "line 16: `DCL-S result2 INT(10);`",
+   "reason": "RNF5049: The Operation Extender is not valid for the specified Operation Code.",
+   "reason_detail": "line 41: The Operation Extender is not valid for the specified Operation Code. \u2014 `EVAL(P) padStr = 'HELLO';`",
    "rpgc": "accept",
-   "sha256": "75571c0f8db5a7fcaa92c8ef406cf24772c47e6322be9cf02b775e8096755b0a",
+   "sha256": "1be8d5bb4a14809c52d1a3fe06ab6c46de7c88456923eb8c747c9091bef8247a",
    "verdict": "reject",
    "verified": "2026-09-23"
   },
   "test95_extender_e.rpgle": {
    "codes": [
-    "RNF0724",
-    "RNF5049",
-    "RNF7030",
-    "RNF7503"
+    "RNF5049"
    ],
    "messages": [
     {
-     "code": "RNF0724",
-     "line": 17,
-     "severity": 30,
-     "text": "The statement type is out of sequence for the main procedure."
-    },
-    {
      "code": "RNF5049",
-     "line": 18,
+     "line": 19,
      "severity": 20,
      "text": "The Operation Extender is not valid for the specified Operation Code."
     },
     {
-     "code": "RNF7030",
-     "line": 18,
-     "severity": 30,
-     "text": "The name or indicator X is not defined."
-    },
-    {
-     "code": "RNF7503",
-     "line": 18,
-     "severity": 30,
-     "text": "Expression contains an operand that is not defined."
-    },
-    {
-     "code": "RNF7503",
-     "line": 19,
-     "severity": 30,
-     "text": "Expression contains an operand that is not defined."
+     "code": "RNF5049",
+     "line": 27,
+     "severity": 20,
+     "text": "The Operation Extender is not valid for the specified Operation Code."
     }
    ],
-   "reason": "Declaration after calculations",
-   "reason_detail": "line 17: `DCL-S x INT(10) INZ(10);`",
+   "reason": "RNF5049: The Operation Extender is not valid for the specified Operation Code.",
+   "reason_detail": "line 19: The Operation Extender is not valid for the specified Operation Code. \u2014 `EVAL(E) x = x + 5;`",
    "rpgc": "accept",
-   "sha256": "0343d2854d3a7ddd06576359543c222e67ccbbec372151f4f5917d0915e040b3",
+   "sha256": "5d4a83915121b7d840de2edcba40f36b4b68563c2388393266b545a0c02803d5",
    "verdict": "reject",
    "verified": "2026-09-23"
   },
@@ -4914,48 +4681,44 @@
   "test99_data_into.rpgle": {
    "codes": [
     "RNF0637",
-    "RNF0724",
-    "RNF5347",
-    "RNF5449",
-    "RNF7030",
-    "RNF7503"
+    "RNF5449"
    ],
    "messages": [
     {
      "code": "RNF5449",
-     "line": 16,
+     "line": 32,
      "severity": 30,
      "text": "The third operand of DATA-INTO must be %PARSER."
     },
     {
      "code": "RNF0637",
-     "line": 18,
+     "line": 34,
      "severity": 30,
      "text": "An operand was expected but was not found; specification is ignored."
     },
     {
      "code": "RNF0637",
-     "line": 19,
+     "line": 35,
      "severity": 30,
      "text": "An operand was expected but was not found; specification is ignored."
     },
     {
      "code": "RNF0637",
-     "line": 20,
+     "line": 36,
      "severity": 30,
      "text": "An operand was expected but was not found; specification is ignored."
     },
     {
-     "code": "RNF0724",
-     "line": 23,
+     "code": "RNF5449",
+     "line": 40,
      "severity": 30,
-     "text": "The statement type is out of sequence for the main procedure."
+     "text": "The third operand of DATA-INTO must be %PARSER."
     }
    ],
-   "reason": "Declaration after calculations",
-   "reason_detail": "line 23: `DCL-DS product QUALIFIED;`",
+   "reason": "RNF5449: The third operand of DATA-INTO must be %PARSER.",
+   "reason_detail": "line 32: The third operand of DATA-INTO must be %PARSER. \u2014 `DATA-INTO person %DATA(jsonData : 'doc=string case=any');`",
    "rpgc": "accept",
-   "sha256": "e80a7e3ca8c46696567f2783133a7571dbbf0d9b0a3dfaf08f9d3a994390578a",
+   "sha256": "babe5b94d3af44bc235eefee93c1ab3daccf0ff5272669c6e0fff6753bea3fa6",
    "verdict": "reject",
    "verified": "2026-09-23"
   },
@@ -5005,5 +4768,5 @@
    "verified": "2026-09-23"
   }
  },
- "generated": "2026-09-23T19:33:16+00:00"
+ "generated": "2026-09-23T21:15:19+00:00"
 }

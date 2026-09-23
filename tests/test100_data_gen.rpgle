@@ -10,6 +10,20 @@ END-DS;
 
 DCL-S jsonOut VARCHAR(500);
 
+// Test 2: Numeric fields
+DCL-DS item QUALIFIED;
+  id INT(10);
+  price PACKED(9:2);
+  active INT(10);
+END-DS;
+DCL-S jsonItem VARCHAR(300);
+// Test 3: Special characters in strings
+DCL-DS msg QUALIFIED;
+  text VARCHAR(100);
+  code INT(10);
+END-DS;
+DCL-S jsonMsg VARCHAR(500);
+
 person.name = 'Bob';
 person.age = 25;
 person.city = 'Seattle';
@@ -18,15 +32,6 @@ DATA-GEN person %DATA(jsonOut : 'doc=string');
 
 DSPLY jsonOut;
 
-// Test 2: Numeric fields
-DCL-DS item QUALIFIED;
-  id INT(10);
-  price PACKED(9:2);
-  active INT(10);
-END-DS;
-
-DCL-S jsonItem VARCHAR(300);
-
 item.id = 99;
 item.price = 4.50;
 item.active = 1;
@@ -34,14 +39,6 @@ item.active = 1;
 DATA-GEN item %DATA(jsonItem);
 
 DSPLY jsonItem;
-
-// Test 3: Special characters in strings
-DCL-DS msg QUALIFIED;
-  text VARCHAR(100);
-  code INT(10);
-END-DS;
-
-DCL-S jsonMsg VARCHAR(500);
 
 msg.text = 'Hello "world"';
 msg.code = 42;

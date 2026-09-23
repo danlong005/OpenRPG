@@ -3,6 +3,9 @@ DCL-S str VARCHAR(30);
 DCL-S num PACKED(7:2);
 DCL-S flt INT(10);
 
+// %SUBDT - extract date part
+DCL-S myDate DATE;
+
 // %LOWER / %UPPER
 str = %LOWER('HELLO WORLD');
 DSPLY str;
@@ -10,8 +13,6 @@ DSPLY str;
 str = %UPPER('hello world');
 DSPLY str;
 
-// %SUBDT - extract date part
-DCL-S myDate DATE;
 myDate = %DATE('2024-06-15');
 flt = %SUBDT(myDate : *YEARS);
 DSPLY %CHAR(flt);

@@ -1085,6 +1085,11 @@ Program* parseFixedFormat(const std::string& src_text, const std::string& filena
         std::string trimmed = trim(line);
         if (upper(trimmed) == "/FREE") {
             if (inCSpecRun) flushCRun();
+            // An F-spec still being assembled belongs before the block: it is
+            // earlier in the source. Finalized only at the next spec line, it
+            // landed after the block's statements, so the file's declaration
+            // followed calculations it actually precedes.
+            if (pendingF.dclf) finalizeFSpec(program, pendingF);
             inFreeBlock = true;
             freeBlockStartLine = lineNo + 1;
             continue;

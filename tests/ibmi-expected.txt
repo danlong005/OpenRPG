@@ -42,6 +42,7 @@ test103_rla_chain.rpgle              reject  uses OpenRPG's EXEC SQL CONNECT USI
 test104_rla_read.rpgle               reject  uses OpenRPG's EXEC SQL CONNECT USING
 test105_rla_write_upd_del.rpgle      reject  uses OpenRPG's EXEC SQL CONNECT USING
 test106_rla_setll_reade.rpgle        reject  uses OpenRPG's EXEC SQL CONNECT USING
+test109_sql_indicator.sqlrpgle       reject  uses OpenRPG's EXEC SQL CONNECT USING
 test188_fixed_cspec_exec_sql.sqlrpgle  reject  uses OpenRPG's EXEC SQL CONNECT USING
 test219_prog_order_release.sqlrpgle  reject  uses OpenRPG's EXEC SQL CONNECT USING
 test237_sql_into_fit.sqlrpgle        reject  uses OpenRPG's EXEC SQL CONNECT USING

@@ -4,6 +4,9 @@ DCL-S myStr VARCHAR(50);
 DCL-S ptr1 POINTER;
 DCL-S ptr2 POINTER;
 
+// %SIZE of pointer
+DCL-S ptrSize INT(10);
+
 // Basic pointer operations
 myInt = 42;
 ptr1 = %ADDR(myInt);
@@ -31,8 +34,6 @@ IF ptr1 <> *NULL;
   DSPLY 'String pointer ok';
 ENDIF;
 
-// %SIZE of pointer
-DCL-S ptrSize INT(10);
 ptrSize = %SIZE(ptr1);
 DSPLY %CHAR(ptrSize);
 

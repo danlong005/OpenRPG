@@ -9,6 +9,9 @@ DCL-S empNote  VARCHAR(100);
 DCL-S nameInd  INT(5);
 DCL-S noteInd  INT(5);
 
+// Cursor FETCH with indicator variables
+DCL-S done IND;
+
 connStr = 'Driver={SQLite3};Database=/tmp/rpgc_test109.sqlite;';
 EXEC SQL CONNECT USING :connStr;
 
@@ -46,8 +49,6 @@ EXEC SQL SELECT name, note INTO :empName :nameInd, :empNote :noteInd
 DSPLY 'name=' + empName + ' noteInd=' + %CHAR(noteInd);
 DSPLY 'note=' + empNote;
 
-// Cursor FETCH with indicator variables
-DCL-S done IND;
 done = *OFF;
 EXEC SQL DECLARE C1 CURSOR FOR
   SELECT name, note FROM ind109 ORDER BY id;

@@ -4,6 +4,10 @@ DCL-S str VARCHAR(50);
 DCL-S left VARCHAR(50);
 DCL-S right VARCHAR(50);
 
+// %SPLIT and %CONCATARR via procedure
+DCL-S result VARCHAR(100);
+DCL-S names VARCHAR(50);
+
 str = 'Hello World';
 
 // %LEFT - left substring
@@ -14,9 +18,6 @@ DSPLY left;
 right = %RIGHT(str : 5);
 DSPLY right;
 
-// %SPLIT and %CONCATARR via procedure
-DCL-S result VARCHAR(100);
-DCL-S names VARCHAR(50);
 names = 'Alice,Bob,Charlie';
 result = names;
 DSPLY result;

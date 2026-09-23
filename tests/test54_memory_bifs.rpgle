@@ -7,12 +7,13 @@ END-PR;
 
 DCL-S pName VARCHAR(50);
 
+// Test %PROC inside a procedure
+DCL-S result VARCHAR(50);
+
 // %PROC - current procedure name (in main context)
 pName = %PROC;
 DSPLY pName;
 
-// Test %PROC inside a procedure
-DCL-S result VARCHAR(50);
 result = getMyName();
 DSPLY result;
 

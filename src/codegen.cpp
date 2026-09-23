@@ -636,7 +636,46 @@ void CodeGen::visit(ExecSqlStmt& node) {
     }
 }
 
+// Declarations come before executable code: in the main source section,
+// every DCL-S/DS/C/PR/F/ENUM precedes the first calculation, and in a
+// subprocedure every declaration precedes that procedure's first
+// calculation. IBM i rejects a declaration after a calculation (RNF0724 in
+// the main procedure, RNF0725 in a subprocedure: "The statement type is out
+// of sequence"); rpgc used to accept one
+// anywhere. Subroutines are calculations. Subprocedure definitions are
+// neither — they follow the main section by design — and fixed-format
+// I/O-spec layouts have spec-order rules of their own.
+static bool isDeclaration(const Statement* s) {
+    return dynamic_cast<const DclS*>(s) || dynamic_cast<const DclDS*>(s) ||
+           dynamic_cast<const DclC*>(s) || dynamic_cast<const DclPR*>(s) ||
+           dynamic_cast<const DclF*>(s) || dynamic_cast<const DclEnum*>(s);
+}
+
+static void checkDeclarationOrder(const std::vector<std::unique_ptr<Statement>>& stmts,
+                                  const std::string& scope) {
+    int firstCalc = 0;
+    for (const auto& up : stmts) {
+        const Statement* s = up.get();
+        if (dynamic_cast<const DclProc*>(s) || dynamic_cast<const IRecordFormat*>(s) ||
+            dynamic_cast<const ORecordFormat*>(s))
+            continue;
+        if (!isDeclaration(s)) {
+            if (!firstCalc) firstCalc = s->line > 0 ? s->line : -1;
+            continue;
+        }
+        if (firstCalc)
+            // IBM numbers the two scopes separately: RNF0724 for the main
+            // procedure, RNF0725 for a subprocedure.
+            report_semantic_error(s->line, "The statement type is out of sequence for " + scope +
+                ": declarations must come before its first executable statement" +
+                (firstCalc > 0 ? " (line " + std::to_string(firstCalc) + ")" : std::string()) +
+                "; move this declaration up (IBM: " +
+                (scope == "the main procedure" ? "RNF0724" : "RNF0725") + ")");
+    }
+}
+
 void CodeGen::visit(Program& node) {
+    checkDeclarationOrder(node.statements, "the main procedure");
     // Store date/time format settings
     datfmt_ = node.datfmt;
     timfmt_ = node.timfmt;
@@ -1132,6 +1171,7 @@ void CodeGen::visit(DclPR& node) {
 
 void CodeGen::visit(DclProc& node) {
     checkParamOptions(node.interface.params, node.name);
+    checkDeclarationOrder(node.body, "procedure " + node.name);
     bool has_nopass = std::any_of(node.interface.params.begin(), node.interface.params.end(),
                                   [](const ParamDecl& p) { return p.nopass; });
 

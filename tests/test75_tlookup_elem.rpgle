@@ -4,6 +4,9 @@ DCL-S names VARCHAR(20) DIM(4);
 DCL-S found IND;
 DCL-S count INT(10);
 
+// %ELEM on varying array
+DCL-S dynArr INT(10) DIM(*VAR:50);
+
 // Set up paired tables
 codes(1) = 'NYC';
 codes(2) = 'LAX';
@@ -33,8 +36,6 @@ IF found;
   DSPLY 'Found >= LAX';
 ENDIF;
 
-// %ELEM on varying array
-DCL-S dynArr INT(10) DIM(*VAR:50);
 %ELEM(dynArr) = 3;
 dynArr(1) = 10;
 dynArr(2) = 20;

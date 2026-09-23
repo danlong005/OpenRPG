@@ -3,6 +3,11 @@
      Dmsg              S              5A
      Di                S             10I 0
      DTMPDSP           S             52A
+      /free
+       DCL-PR doubleIt;
+         n INT(10) VALUE;
+       END-PR;
+      /end-free
      C                   EVAL      total = 5 + 3
      C                   EVALR     msg = 'HI'
      C                   FOR       i = 1 TO 6
@@ -19,9 +24,6 @@
      C                   CALLP     doubleIt(total)
      C                   RETURN
       /free
-       DCL-PR doubleIt;
-         n INT(10) VALUE;
-       END-PR;
        DCL-PROC doubleIt;
          DCL-PI doubleIt;
            n INT(10) VALUE;

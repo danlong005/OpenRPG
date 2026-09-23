@@ -13,30 +13,34 @@ name: IBM i conformance
 #              changed since it was last verified on IBM i, i.e. if someone
 #              edits a test without re-verifying it.
 #
-#   verify   — weekly and on demand. Sends only the sources whose hash moved,
-#              then refreshes the baseline. Fails on a REGRESSION: a source IBM
+#   verify   — on demand only (Actions → IBM i conformance → Run workflow,
+#              or `gh workflow run ibmi-conformance.yml -f mode=full`).
+#              `changed` sends only the sources whose hash moved; `full`
+#              sends the whole corpus; `smoke` compiles one file. A run then
+#              refreshes the baseline. Fails on a REGRESSION: a source IBM
 #              accepted before and rejects now. The absolute accepted count is
 #              deliberately not a gate; it conflates unrelated causes (missing
 #              IBM i objects, deliberate negative tests, real findings) — see
 #              TODO.md's bucket triage.
 #
 # Load discipline: PUB400 is a free community machine run on donated hardware.
-# The schedule is weekly, the run is serial, it sends only changed files, and
-# it deletes every object it creates. Do not make this a per-PR gate.
+# There is no schedule (removed 2026-09-23): a weekly run only uploaded its
+# refreshed baseline as an artifact and never committed it, so it re-sent the
+# same files every Monday without the result ever landing. The run is serial,
+# it sends only changed files, and it deletes every object it creates. Do not
+# make this a per-PR gate.
 
 on:
   push:
     branches: [main]
   pull_request:
     branches: [main]
-  schedule:
-    - cron: '0 6 * * 1'      # Mondays 06:00 UTC
   workflow_dispatch:
     inputs:
       mode:
-        description: 'changed = verify sources whose hash moved; smoke = compile one file to prove the connection'
+        description: 'changed = verify sources whose hash moved; full = compile the whole corpus; smoke = compile one file to prove the connection'
         type: choice
-        options: [changed, smoke]
+        options: [changed, full, smoke]
         default: changed
 
 permissions:
@@ -59,7 +63,7 @@ jobs:
     name: verify on IBM i
     # Never on pull_request: fork PRs cannot see the SSH secret, and a shared
     # free machine should not be reachable from untrusted branch contents.
-    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -88,11 +92,14 @@ jobs:
         env:
           PUB400_USER: ${{ secrets.PUB400_USER }}
         run: |
-          if [ "${{ github.event.inputs.mode }}" = "smoke" ]; then
-            scripts/ibmi-conformance.sh --limit 1 --no-baseline
-          else
-            scripts/ibmi-conformance.sh --changed-only
-          fi
+          case "${{ github.event.inputs.mode }}" in
+            smoke) scripts/ibmi-conformance.sh --limit 1 --no-baseline ;;
+            # Every source, whether or not it changed: the only mode that
+            # notices the environment drifting under unchanged tests (PUB400
+            # deleting the test files, say) rather than the tests changing.
+            full)  scripts/ibmi-conformance.sh ;;
+            *)     scripts/ibmi-conformance.sh --changed-only ;;
+          esac
 
       - name: Publish the run artefacts
         if: always()

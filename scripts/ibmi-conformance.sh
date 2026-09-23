@@ -30,7 +30,7 @@
 # bucket triage). For a network-free check on every push, use
 # scripts/conformance-baseline.py check.
 #
-# Load discipline: PUB400 is a free community box. This is a manual/weekly job,
+# Load discipline: PUB400 is a free community box. This is a manual job,
 # not a per-PR gate, and it runs serially on purpose.
 set -uo pipefail
 

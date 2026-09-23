@@ -1413,7 +1413,7 @@ Three pieces turn the manual expedition into something CI runs.
 |-------|------|
 | `ibmi-conformance-baseline.json` | The record: SHA-256 of every source plus the verdict IBM gave it. Committed — this, not the transcript, is the durable artefact. |
 | `scripts/conformance-baseline.py` | `check` (offline gate), `changed` (what to send), `update` (merge a run, report regressions). |
-| `.github/workflows/ibmi-conformance.yml` | `offline` job on every push/PR; `verify` job weekly and on demand. |
+| `.github/workflows/ibmi-conformance.yml` | `offline` job on every push/PR; `verify` job on demand only (the weekly schedule was removed 2026-09-23). |
 
 **The offline gate needs no network and no secrets**, so it runs on fork pull
 requests too. It fails when a source has changed since it was last verified —
@@ -1520,8 +1520,10 @@ cause, with IBM's message, source line and text.
 
 ### Load discipline
 
-PUB400 is a free community box run on donated hardware. This is a **manual or
-weekly** job, never a per-PR gate: serial, objects deleted as they go. Once the
+PUB400 is a free community box run on donated hardware. This is a **manual**
+job, never a per-PR gate: serial, objects deleted as they go. (A weekly
+schedule existed until 2026-09-23; it never committed its results, so it only
+re-sent the same files each Monday.) Once the
 oracle cache (step 3) exists, day-to-day CI needs no network at all.
 
 ---

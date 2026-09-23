@@ -130,7 +130,11 @@ def main():
             out = os.path.join(td, "o")
             for pth in srcs:
                 nm = os.path.basename(pth)
-                ok = subprocess.run([exe, pth, "-o", out],
+                # -c: compile, don't link. IBM compiles each source on its
+                # own, so this is the like-for-like verdict. Linking made the
+                # callers and callees of multi-program tests "fail" alone —
+                # ten of them, all compiling fine.
+                ok = subprocess.run([exe, "-c", pth, "-o", out],
                                     stdout=subprocess.DEVNULL,
                                     stderr=subprocess.DEVNULL).returncode == 0
                 files.setdefault(nm, {})["rpgc"] = "accept" if ok else "reject"

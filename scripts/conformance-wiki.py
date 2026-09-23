@@ -111,6 +111,9 @@ compiled = {n: files[n]["verdict"] == "accept" for n in files}
 as_expected = [n for n in files if should[n][0] == compiled[n]]
 surprises = sorted(n for n in files if should[n][0] != compiled[n])
 
+rpgc_ok = {n: files[n].get("rpgc") == "accept" for n in files}
+agree = sum(rpgc_ok[n] == compiled[n] for n in files)
+
 w("## Summary\n")
 w("| | Compiled on IBM i | Did not compile | Total |")
 w("|---|---|---|---|")
@@ -119,6 +122,8 @@ for label, want in (("**Should compile**", True), ("**Should be rejected**", Fal
     w(f"| {label} | {sum(compiled[n] for n in ns)} | {sum(not compiled[n] for n in ns)} | {len(ns)} |")
 w(f"| Total | {len(accepted)} | {len(rejected)} | {len(files)} |")
 w("")
+w(f"**rpgc compiles {sum(rpgc_ok.values())} of {len(files)}** programs, and agrees with IBM "
+  f"on **{agree} of {len(files)}**: both compile it, or both reject it.\n")
 w(f"**{len(as_expected)} of {len(files)} programs behave as expected on IBM i.** "
   f"The other {len(surprises)} are marked ⚠️ below: a program that should compile but "
   "did not is either RPG that OpenRPG accepts and IBM does not, or a test that needs "
@@ -142,8 +147,8 @@ for reason, ns in sorted(by_reason.items(), key=lambda kv: (-len(kv[1]), kv[0]))
 w("")
 
 w(f"## All programs ({len(files)})\n")
-w("| Program | Should compile on IBM i | Compiled on IBM i | | Reason and IBM's messages | Last compiled |")
-w("|---|---|---|---|---|---|")
+w("| Program | Should compile on IBM i | Compiled on IBM i | | Compiles with rpgc | Reason and IBM's messages | Last compiled |")
+w("|---|---|---|---|---|---|---|")
 def natural(name):
     """test9 before test10: compare the digit runs as numbers."""
     return [int(t) if t.isdigit() else t.lower() for t in re.split(r'(\d+)', name)]
@@ -165,8 +170,10 @@ for n in sorted(files, key=natural):
             [cell(f"{m['code']} (sev {m['severity']}"
                   + (f", line {m['line']}" if m.get("line") else "") + f"): {m['text']}")
              for m in msgs])
+    rp = r.get("rpgc")
+    rpgc_cell = "✅ Yes" if rp == "accept" else ("❌ No" if rp == "reject" else "—")
     w(f"| {src_link(n, None if got else first_line)} | {want_cell} | {got_cell} | {flag} | "
-      f"{detail} | {r.get('verified', '—')} |")
+      f"{rpgc_cell} | {detail} | {r.get('verified', '—')} |")
 w("")
 
 open(a.out, "w").write("\n".join(out) + "\n")

@@ -596,8 +596,21 @@ int main(int argc, char* argv[]) {
             }
             out << cpp_code;
         }
-        std::string cmd = q(rpgc_resolve_cxx()) + " -std=c++17 -I" + q(runtime_dir) + " -I" + q(src_dir) +
-                          " -c -o " + q(obj_path) + " " + q(cpp_path);
+        std::string cmd = q(rpgc_resolve_cxx()) + " -std=c++17 -I" + q(runtime_dir) + " -I" + q(src_dir);
+        // The include half of the library flags: the object still has to
+        // compile against <sql.h>, which on macOS lives under Homebrew's
+        // prefix. Without it an embedded-SQL program failed `-c` outright
+        // while building fine without it. The -L/-l half is for linking.
+        std::string incs;
+        if (is_sql) incs += RPGC_ODBC_FLAGS;
+        if (is_dspf) incs += RPGC_DSPF_FLAGS;
+        {
+            std::istringstream words(incs);
+            std::string w;
+            while (words >> w)
+                if (w.rfind("-I", 0) == 0) cmd += " " + w;
+        }
+        cmd += " -c -o " + q(obj_path) + " " + q(cpp_path);
         int rc = rpgc_system(cmd);
         std::remove(cpp_path.c_str());
         delete program;

@@ -2,14 +2,14 @@
  "files": {
   "ADDTWO.rpgle": {
    "codes": [],
-   "rpgc": "reject",
+   "rpgc": "accept",
    "sha256": "3bc3409889a69747f23075f7be45069c595f6566fee395215726d8f2ceff606e",
    "verdict": "accept",
    "verified": "2026-09-23"
   },
   "NETPAY.rpgle": {
    "codes": [],
-   "rpgc": "reject",
+   "rpgc": "accept",
    "sha256": "4055a6e736b924d355f47397847c9ede7090d7085a68a968e78801e22c9c0ec5",
    "verdict": "accept",
    "verified": "2026-09-23"
@@ -1960,14 +1960,14 @@
   },
   "test174_call_callee_module.rpgle": {
    "codes": [],
-   "rpgc": "reject",
+   "rpgc": "accept",
    "sha256": "6d7d65a572a02d0ac93a46756d92d6ceef738941d080ebf1611296b33af097b2",
    "verdict": "accept",
    "verified": "2026-09-23"
   },
   "test175_fixed_cspec_call_parm.rpgle": {
    "codes": [],
-   "rpgc": "reject",
+   "rpgc": "accept",
    "sha256": "a94b47088a9b9d73c273cdfeba989d606f61d213f6e0304d65fb2515fb237aff",
    "verdict": "accept",
    "verified": "2026-09-23"
@@ -2334,14 +2334,14 @@
   },
   "test197_fixed_cspec_plist.rpgle": {
    "codes": [],
-   "rpgc": "reject",
+   "rpgc": "accept",
    "sha256": "c4ae0cb004e9246b1e593ec11c8dcd9ee2852e5706c6646248f6fd0d4b1ac63a",
    "verdict": "accept",
    "verified": "2026-09-23"
   },
   "test198_fixed_cspec_parm_f1f2.rpgle": {
    "codes": [],
-   "rpgc": "reject",
+   "rpgc": "accept",
    "sha256": "3d6b0218cae5898a14d21c14ab5e0611f03e33226bacf251b55517b3d6a5c017",
    "verdict": "accept",
    "verified": "2026-09-23"
@@ -2445,7 +2445,7 @@
   },
   "test204_fixed_cspec_entry_caller.rpgle": {
    "codes": [],
-   "rpgc": "reject",
+   "rpgc": "accept",
    "sha256": "5b11f9ffe91f9b37a414b644d8653a02cec5982330bcc81275cac2c5bf586f1b",
    "verdict": "accept",
    "verified": "2026-09-23"
@@ -2773,7 +2773,7 @@
    ],
    "reason": "RNF7016: Display length n greater than maximum allowed of n; specification is ignored.",
    "reason_detail": "line 94: Display length 70 greater than maximum allowed of 52; specification is ignored. \u2014 `C     RPTLIN        DSPLY`",
-   "rpgc": "reject",
+   "rpgc": "accept",
    "sha256": "effb626f8a6cc19d4f276cfee1e29ab835521f47fb786143faa549cf70496c02",
    "verdict": "reject",
    "verified": "2026-09-23"
@@ -3723,7 +3723,7 @@
   },
   "test48_nomain.rpgle": {
    "codes": [],
-   "rpgc": "reject",
+   "rpgc": "accept",
    "sha256": "06ca83fb0da851a7b1363e04d7fa12ba7ab74e4e3927c9b347811b4bafe3de0c",
    "verdict": "accept",
    "verified": "2026-09-23"
@@ -3732,7 +3732,7 @@
    "codes": [],
    "messages": [],
    "reason": "Rejected with no diagnostic (return code only)",
-   "rpgc": "reject",
+   "rpgc": "accept",
    "sha256": "33f359a25f50675a989d53d1344af4fb04276ae17e958a7d588f7bc6482d7be0",
    "verdict": "reject",
    "verified": "2026-09-23"

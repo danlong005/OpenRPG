@@ -127,6 +127,19 @@ jobs:
       # changed sources were sent. Published even when the compile step
       # failed on a regression — that is when the page matters most. A smoke
       # run leaves the baseline untouched, so it has nothing new to publish.
+      # The page's "Compiles with rpgc" column: rpgc's own verdict on every
+      # program, recorded fresh from this commit rather than taken from
+      # whatever was last committed to the baseline.
+      - name: Build rpgc
+        if: >-
+          always() && github.event.inputs.mode != 'smoke' &&
+          steps.compile.outcome != 'skipped' && steps.compile.outcome != 'cancelled'
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq flex bison g++ unixodbc-dev libncurses-dev
+          make
+          python3 scripts/conformance-baseline.py rpgc
+
       - name: Publish the results page to the wiki
         if: >-
           always() && github.event.inputs.mode != 'smoke' &&

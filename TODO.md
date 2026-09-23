@@ -2080,6 +2080,12 @@ Found alongside, all verified:
     `CHAR(10)` program-name field was 4 bytes long; they are fitted now.
 - A nested `a.b.c` is readable but is a syntax error as an assignment
   target.
+  ✅ **Fixed 2026-09-22** (Test 252). The dotted target forms are one
+  left-recursive chain (`eval_target DOT IDENTIFIER [ (idx) ]`), so
+  `a.b.c`, `ds(i).sub.f` and `a.sub.arr(i)` all assign, and are fitted to
+  the nested field's declaration. The expression side's `ds.field(idx)`
+  likewise takes any chain of names as its base now. Still open: an
+  element of a `DIM` subfield under an *indexed* base, `items(1).f(2)`.
 - A standalone `CHAR(n) DIM(m)` array starts as empty strings, not blanks.
   ✅ **Fixed 2026-09-22** (Test 243). Found alongside it, and worse: a
   numeric array declared inside a procedure was a local `std::array` with

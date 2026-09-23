@@ -185,6 +185,16 @@ static int g_ret_len = 0, g_ret_digits = 0, g_ret_dec = 0;
 }
 
 %code {
+// "A" or "A.B.C" for a target that is a plain chain of names, else "".
+static std::string qualified_name(rpg::Expression* e) {
+    if (auto* id = dynamic_cast<rpg::Identifier*>(e)) return id->name;
+    if (auto* dot = dynamic_cast<rpg::DotExpr*>(e)) {
+        std::string base = qualified_name(dot->object.get());
+        return base.empty() ? "" : base + "." + dot->field;
+    }
+    return "";
+}
+
 // Combines the header keywords written before and after LIKEDS or PSDS.
 static rpg::DclDS* merge_ds_hdr(rpg::DclDS* a, rpg::DclDS* b) {
     a->qualified   = a->qualified || b->qualified;
@@ -757,27 +767,27 @@ eval_target:
     | INDICATOR {
         $$ = new rpg::IndicatorExpr($1);
     }
-    | IDENTIFIER DOT IDENTIFIER {
-        auto obj = std::unique_ptr<rpg::Expression>(new rpg::Identifier($1));
-        $$ = new rpg::DotExpr(std::move(obj), $3);
-        free($1);
+    /* Qualified targets chain to any depth: ds.f, ds.sub.f, ds(i).sub.f.
+       Only one level used to be accepted, so assigning to a subfield of a
+       LIKEDS subfield — readable as an expression — was a syntax error. */
+    | eval_target DOT IDENTIFIER {
+        $$ = new rpg::DotExpr(std::unique_ptr<rpg::Expression>($1), $3);
         free($3);
     }
     | IDENTIFIER LPAREN expression RPAREN {
         $$ = new rpg::ArrayAccess($1, std::unique_ptr<rpg::Expression>($3));
         free($1);
     }
-    | IDENTIFIER LPAREN expression RPAREN DOT IDENTIFIER {
-        auto* arr = new rpg::ArrayAccess($1, std::unique_ptr<rpg::Expression>($3));
-        $$ = new rpg::DotExpr(std::unique_ptr<rpg::Expression>(arr), $6);
-        free($1);
-        free($6);
-    }
-    /* Per-subfield array element: ds.field(idx) — field itself is DIM(n) */
-    | IDENTIFIER DOT IDENTIFIER LPAREN expression RPAREN {
-        std::string qualified = std::string($1) + "." + $3;
-        $$ = new rpg::ArrayAccess(qualified, std::unique_ptr<rpg::Expression>($5));
-        free($1);
+
+    /* Per-subfield array element: ds.field(idx), ds.sub.field(idx) — the
+       field itself is DIM(n). Part of the same chain as the rule above;
+       as a separate IDENTIFIER DOT ... rule it made the parser commit
+       before it could see whether a `(` followed. */
+    | eval_target DOT IDENTIFIER LPAREN expression RPAREN {
+        std::string base = qualified_name($1);
+        if (base.empty()) yyerror("an element of a DIM subfield of an array element is not supported as an assignment target");
+        $$ = new rpg::ArrayAccess(base + "." + $3, std::unique_ptr<rpg::Expression>($5));
+        delete $1;
         free($3);
     }
     | BIF_ELEM LPAREN arg_list RPAREN {
@@ -1985,17 +1995,16 @@ postfix_expr:
         $$ = new rpg::DotExpr(std::unique_ptr<rpg::Expression>($1), $3);
         free($3);
     }
-    /* Per-subfield array element (read): ds.field(idx) — field itself is DIM(n).
-       $1 must already be a simple Identifier (the DS name) — chained/indexed
-       bases (e.g. items(1).field(idx)) aren't supported, same scope limit
-       as item #5's declaration side. */
+    /* Per-subfield array element (read): ds.field(idx), ds.sub.field(idx) —
+       the field itself is DIM(n). The base may be any chain of names; an
+       indexed base (items(1).field(idx)) still isn't supported. */
     | postfix_expr DOT IDENTIFIER LPAREN expression RPAREN {
-        auto* base = dynamic_cast<rpg::Identifier*>($1);
-        if (!base) {
-            yyerror("subfield array access (ds.field(idx)) requires a simple data structure name before the dot");
+        std::string baseName = qualified_name($1);
+        if (baseName.empty()) {
+            yyerror("an element of a DIM subfield of an array element (items(1).field(idx)) is not supported");
             YYERROR;
         }
-        std::string qualified = base->name + "." + $3;
+        std::string qualified = baseName + "." + $3;
         delete $1;
         $$ = new rpg::ArrayAccess(qualified, std::unique_ptr<rpg::Expression>($5));
         free($3);

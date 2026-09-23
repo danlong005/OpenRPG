@@ -819,6 +819,8 @@ run_test "260" "Reject a declaration after code" "$TESTDIR/test260_err_decl_afte
 run_test "261" "Reject a declaration after code in a procedure" "$TESTDIR/test261_err_decl_after_calc_proc.rpgle" "error"
 run_test "262" "Reject an unparenthesized DSPLY expression" "$TESTDIR/test262_err_dsply_unparen.rpgle" "error"
 run_test "263" "Reject a DSPLY longer than 52" "$TESTDIR/test263_err_dsply_too_long.rpgle" "error"
+run_test "264" "Reject a DCL-PI with no name" "$TESTDIR/test264_err_pi_no_name.rpgle" "error"
+run_test "265" "Reject a DCL-PI named unlike its procedure" "$TESTDIR/test265_err_pi_wrong_name.rpgle" "error"
 
 # ── Customer / drop-in tests ─────────────────────────────────────────────
 # Drop any .rpgle or .sqlrpgle file into tests/customer/ and it will be

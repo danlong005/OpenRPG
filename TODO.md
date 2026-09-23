@@ -1548,6 +1548,16 @@ On PUB400, 15 of the edited tests now compile — among them `XML-INTO` tests
 in a fixed-format C-spec run, rpgc can report a statement's line a few
 lines late (test 217: 113 for 104).
 
+### DCL-PI must be named (2026-09-23)
+
+A procedure interface's name is `*N` or the procedure's own name; IBM i
+rejects anything else with RNF3767. Written with no name (`DCL-PI INT(10);`)
+IBM reads the return type as the name, so the same message covers both.
+rpgc accepted both; the `pi_name` rule now checks as soon as DCL-PI is
+read, so the error carries the DCL-PI's line, as IBM's does. Tests 08 and
+78 and four `docs/GUIDE.md` examples were unnamed; test 08 now compiles on
+IBM i. Tests 264-265 are the rejected forms, both matched on PUB400.
+
 ### Load discipline
 
 PUB400 is a free community box run on donated hardware. This is a **manual**

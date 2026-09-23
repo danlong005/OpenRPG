@@ -36,7 +36,7 @@ EXEC SQL DISCONNECT;
 *INLR = *ON;
 
 DCL-PROC GetEmployeeName;
-  DCL-PI VARCHAR(100);
+  DCL-PI *N VARCHAR(100);
     empId INT(10) VALUE;
   END-PI;
 
@@ -48,7 +48,7 @@ DCL-PROC GetEmployeeName;
 END-PROC;
 
 DCL-PROC UpdateSalary;
-  DCL-PI;
+  DCL-PI *N;
     empId  INT(10) VALUE;
     amount PACKED(9:2) VALUE;
   END-PI;

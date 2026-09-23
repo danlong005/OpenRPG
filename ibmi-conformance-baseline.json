@@ -64,49 +64,10 @@
    "verified": "2026-09-23"
   },
   "test08_procedures.rpgle": {
-   "codes": [
-    "RNF0633",
-    "RNF3308",
-    "RNF3763",
-    "RNF3767"
-   ],
-   "messages": [
-    {
-     "code": "RNF3308",
-     "line": 37,
-     "severity": 20,
-     "text": "Keyword name is not valid; the keyword is ignored."
-    },
-    {
-     "code": "RNF0633",
-     "line": 37,
-     "severity": 20,
-     "text": "An unexpected right parenthesis was encountered; right parenthesis is ignored."
-    },
-    {
-     "code": "RNF3767",
-     "line": 37,
-     "severity": 20,
-     "text": "The name in positions 7 - 21 does not match the name of the procedure being defined. -=* http://pub400.com *=-"
-    },
-    {
-     "code": "RNF3763",
-     "line": 37,
-     "severity": 20,
-     "text": "A return value is expected for the procedure-interface specification."
-    },
-    {
-     "code": "RNF3308",
-     "line": 45,
-     "severity": 20,
-     "text": "Keyword name is not valid; the keyword is ignored."
-    }
-   ],
-   "reason": "RNF3308: Keyword name is not valid; the keyword is ignored.",
-   "reason_detail": "line 37: Keyword name is not valid; the keyword is ignored. \u2014 `DCL-PI INT(10);`",
+   "codes": [],
    "rpgc": "accept",
-   "sha256": "9a6f60400b4a07d8311cd988229a58770b627855642b4ff3b06d78739dfdbec2",
-   "verdict": "reject",
+   "sha256": "111d5b993b81db6dac435f2aad1e3c0ee1484a6c697c2ddecbd97bd26ea68879",
+   "verdict": "accept",
    "verified": "2026-09-23"
   },
   "test09_datastructs.rpgle": {
@@ -3106,6 +3067,72 @@
    "verdict": "reject",
    "verified": "2026-09-23"
   },
+  "test264_err_pi_no_name.rpgle": {
+   "codes": [
+    "RNF0633",
+    "RNF3308",
+    "RNF3767",
+    "RNF5403",
+    "RNF5412"
+   ],
+   "messages": [
+    {
+     "code": "RNF5403",
+     "line": 5,
+     "severity": 30,
+     "text": "The prototyped call cannot be used in an expression because it does not return a value."
+    },
+    {
+     "code": "RNF3308",
+     "line": 10,
+     "severity": 20,
+     "text": "Keyword name is not valid; the keyword is ignored."
+    },
+    {
+     "code": "RNF0633",
+     "line": 10,
+     "severity": 20,
+     "text": "An unexpected right parenthesis was encountered; right parenthesis is ignored."
+    },
+    {
+     "code": "RNF3767",
+     "line": 10,
+     "severity": 20,
+     "text": "The name in positions 7 - 21 does not match the name of the procedure being defined."
+    },
+    {
+     "code": "RNF5412",
+     "line": 14,
+     "severity": 20,
+     "text": "An operand must not be specified for a procedure that does not return a value."
+    }
+   ],
+   "reason": "RNF5403: The prototyped call cannot be used in an expression because it does not return a value.",
+   "reason_detail": "line 5: The prototyped call cannot be used in an expression because it does not return a value. \u2014 `total = add(2 : 3);`",
+   "rpgc": "reject",
+   "sha256": "2c5201fcd5d554b8781503e3b7cb8e77fdc43ade22de0c645af50fb345a1f27d",
+   "verdict": "reject",
+   "verified": "2026-09-23"
+  },
+  "test265_err_pi_wrong_name.rpgle": {
+   "codes": [
+    "RNF3767"
+   ],
+   "messages": [
+    {
+     "code": "RNF3767",
+     "line": 9,
+     "severity": 20,
+     "text": "The name in positions 7 - 21 does not match the name of the procedure being defined."
+    }
+   ],
+   "reason": "RNF3767: The name in positions n - n does not match the name of the procedure being defined.",
+   "reason_detail": "line 9: The name in positions 7 - 21 does not match the name of the procedure being defined. \u2014 `DCL-PI sum INT(10);`",
+   "rpgc": "reject",
+   "sha256": "ee1a241486cea9af0370657a1292bfd2a9d2ed7a3836e97680f9a36c3963a03f",
+   "verdict": "reject",
+   "verified": "2026-09-23"
+  },
   "test26_pointers.rpgle": {
    "codes": [],
    "rpgc": "accept",
@@ -3757,18 +3784,12 @@
      "line": 34,
      "severity": 30,
      "text": "Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>."
-    },
-    {
-     "code": "SQL0312",
-     "line": 56,
-     "severity": 30,
-     "text": "Position 67 Variable EMPID not defined or not usable for reason code 1."
     }
    ],
    "reason": "SQL0199: Position n Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>.",
    "reason_detail": "line 12: Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>. \u2014 `EXEC SQL CONNECT USING :connStr;`",
    "rpgc": "accept",
-   "sha256": "9f44f8a3f8704fcc824e8c667528cb98bb8dadadabf1d86ae799f33348fc78bb",
+   "sha256": "ca1483b86c7a4a781691f6965d87a83d8befbddd03ade92b041c92a9bad4adc6",
    "verdict": "reject",
    "verified": "2026-09-23"
   },
@@ -4276,5 +4297,5 @@
    "verified": "2026-09-23"
   }
  },
- "generated": "2026-09-23T21:48:05+00:00"
+ "generated": "2026-09-23T22:24:20+00:00"
 }

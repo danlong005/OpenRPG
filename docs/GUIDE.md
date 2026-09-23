@@ -542,7 +542,7 @@ RETURN;
 
 // Implementation
 DCL-PROC Add;
-  DCL-PI INT(10);
+  DCL-PI *N INT(10);
     a INT(10) VALUE;
     b INT(10) VALUE;
   END-PI;
@@ -551,11 +551,14 @@ DCL-PROC Add;
 END-PROC;
 ```
 
+The procedure interface (`DCL-PI`) must be named: `*N`, or the procedure's
+own name (`DCL-PI Add INT(10);`). As on IBM i, `DCL-PI INT(10);` is an error.
+
 ### Optional Parameters
 
 ```rpgle
 DCL-PROC Greet;
-  DCL-PI VARCHAR(100);
+  DCL-PI *N VARCHAR(100);
     name VARCHAR(50) VALUE;
     title VARCHAR(20) VALUE OPTIONS(*NOPASS);
   END-PI;
@@ -640,7 +643,7 @@ ENDSR;
 
 ```rpgle
 DCL-PROC ProcessData;
-  DCL-PI;
+  DCL-PI *N;
   END-PI;
   DCL-S abnormal IND;
 
@@ -1161,7 +1164,7 @@ For larger applications, split code across modules:
 CTL-OPT NOMAIN;
 
 DCL-PROC Add EXPORT;
-  DCL-PI INT(10);
+  DCL-PI *N INT(10);
     a INT(10) VALUE;
     b INT(10) VALUE;
   END-PI;

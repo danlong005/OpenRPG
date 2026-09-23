@@ -90,7 +90,9 @@ def main():
         for p in srcs:
             n, d = os.path.basename(p), digest(p)
             rec = files.get(n)
-            if rec is None:
+            # an entry holding only an rpgc verdict (the rpgc action ran
+            # before IBM ever compiled the source) is not verified either
+            if rec is None or "verdict" not in rec:
                 unverified.append((n, "never verified on IBM i"))
                 changed.append(n)
             elif rec["sha256"] != d:
@@ -161,7 +163,7 @@ def main():
         if new is None:
             continue                       # not in this run (e.g. --changed-only)
         old = files.get(n)
-        if old is None:
+        if old is None or "verdict" not in old:     # new, or only an rpgc verdict so far
             added.append(n)
         elif old["verdict"] == "accept" and new["verdict"] == "reject":
             regressions.append((n, new["codes"][:4]))

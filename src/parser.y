@@ -42,6 +42,7 @@ struct DclSKws {
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <strings.h>
 #include <memory>
 #include <vector>
 #include <string>
@@ -325,6 +326,7 @@ static rpg::DclS* make_dcl_s(const char* name, rpg::ParamDecl* t, DclSKws* k) {
 %type <ds_field> ds_kws
 %type <ival> param_kws param_kw param_opts param_opt
 %type <ival> pi_return_type proc_export
+%type <sval> pi_name
 %type <param_decl> dcl_type
 %type <dcl_kws> dcl_kws
 %type <ds_hdr> ds_hdr_kws
@@ -1115,34 +1117,31 @@ overload_list:
     }
     ;
 
+/* A procedure interface's name: the procedure's own name, or *N. IBM
+   requires one; with none, it reads the return type (INT(10)) as the name.
+   Checked here, as soon as DCL-PI is read, so the error carries the DCL-PI's
+   line. $<sval>-3 is the procedure name: every use follows
+   `DCL-PROC name proc_export ; DCL-PI`. */
+pi_name:
+    IDENTIFIER {
+        const char* proc = $<sval>-3;
+        if (strcmp($1, "*N") != 0 && strcasecmp($1, proc) != 0) {
+            yyerror((std::string("DCL-PI name ") + $1 + " must be the procedure's name, " +
+                     proc + ", or *N (IBM: RNF3767)").c_str());
+        }
+        $$ = $1;
+    }
+    | %empty {
+        yyerror((std::string("DCL-PI needs a name: the procedure's name, ") + $<sval>-3 +
+                 ", or *N (IBM: RNF3767)").c_str());
+        $$ = strdup("*N");
+    }
+    ;
+
 /* DCL-PROC with embedded DCL-PI */
 dcl_proc_stmt:
     KW_DCL_PROC IDENTIFIER proc_export SEMICOLON
-    KW_DCL_PI pi_return_type SEMICOLON pi_params KW_END_PI SEMICOLON
-    statement_list
-    KW_END_PROC SEMICOLON {
-        rpg::ProcInterface iface;
-        if ($6 >= 0) {
-            iface.has_return = true;
-            iface.return_type = static_cast<rpg::RPGType>($6);
-            iface.return_length = g_ret_len;
-            iface.return_digits = g_ret_digits;
-            iface.return_decimals = g_ret_dec;
-        } else {
-            iface.has_return = false;
-        }
-        iface.params = std::move($8->params);
-        delete $8;
-        auto* proc = new rpg::DclProc($2, std::move(iface));
-        proc->is_export = ($3 != 0);
-        for (auto* s : $<stmt_list>11->stmts) proc->body.emplace_back(s);
-        delete $<stmt_list>11;
-        free($2);
-        $$ = proc;
-    }
-    /* DCL-PI with explicit name instead of *N */
-    | KW_DCL_PROC IDENTIFIER proc_export SEMICOLON
-      KW_DCL_PI IDENTIFIER pi_return_type SEMICOLON pi_params KW_END_PI SEMICOLON
+      KW_DCL_PI pi_name pi_return_type SEMICOLON pi_params KW_END_PI SEMICOLON
       statement_list
       KW_END_PROC SEMICOLON {
         rpg::ProcInterface iface;
@@ -1165,36 +1164,9 @@ dcl_proc_stmt:
         free($6);
         $$ = proc;
     }
-    /* With ON-EXIT (anonymous PI) */
+    /* With ON-EXIT */
     | KW_DCL_PROC IDENTIFIER proc_export SEMICOLON
-      KW_DCL_PI pi_return_type SEMICOLON pi_params KW_END_PI SEMICOLON
-      statement_list
-      KW_ON_EXIT SEMICOLON statement_list
-      KW_END_PROC SEMICOLON {
-        rpg::ProcInterface iface;
-        if ($6 >= 0) {
-            iface.has_return = true;
-            iface.return_type = static_cast<rpg::RPGType>($6);
-            iface.return_length = g_ret_len;
-            iface.return_digits = g_ret_digits;
-            iface.return_decimals = g_ret_dec;
-        } else {
-            iface.has_return = false;
-        }
-        iface.params = std::move($8->params);
-        delete $8;
-        auto* proc = new rpg::DclProc($2, std::move(iface));
-        proc->is_export = ($3 != 0);
-        for (auto* s : $<stmt_list>11->stmts) proc->body.emplace_back(s);
-        delete $<stmt_list>11;
-        for (auto* s : $14->stmts) proc->on_exit_body.emplace_back(s);
-        delete $14;
-        free($2);
-        $$ = proc;
-    }
-    /* With ON-EXIT (named PI) */
-    | KW_DCL_PROC IDENTIFIER proc_export SEMICOLON
-      KW_DCL_PI IDENTIFIER pi_return_type SEMICOLON pi_params KW_END_PI SEMICOLON
+      KW_DCL_PI pi_name pi_return_type SEMICOLON pi_params KW_END_PI SEMICOLON
       statement_list
       KW_ON_EXIT SEMICOLON statement_list
       KW_END_PROC SEMICOLON {

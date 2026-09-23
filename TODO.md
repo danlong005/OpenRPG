@@ -2014,13 +2014,43 @@ Still open, found alongside:
 - Ordering uses ASCII, not EBCDIC, collation (as before). Digits sort below
   letters here, above them on IBM i.
 
-**DS subfields lose their declared attributes.** A `CHAR(n)` subfield is
-emitted as an uninitialised `std::string`, so it starts empty rather than
-as n blanks — while a standalone `CHAR(n)` is correctly blank-filled. A
-`PACKED(9:2)` subfield becomes a bare `double` with no scale, so
-`%CHAR(ds.field)` prints `1250.000000` where the same value in a standalone
-field prints `1250.00`. Same family as the four defects tests 215-219
-found: a value that is not what RPG says it is.
+**DS subfields lose their declared attributes.** ✅ **Fixed 2026-09-22**
+(Test 230). A `CHAR(n)` subfield was emitted as an uninitialised
+`std::string`, so it started empty rather than as n blanks. A `PACKED(9:2)`
+subfield's scale was invisible to codegen, so `%CHAR(ds.field)` printed
+`1250.000000`. Both came from codegen keying declarations on bare names
+(`var_types_`/`var_lengths_`/`var_decimals_`), which a reference through a
+DS never matches.
+- Subfields now get the same initial value as a standalone field of their
+  type, as a default member initializer. That covers each DS-array
+  element, each `LIKEDS` copy, and `DIM`'d `CHAR` subfields (via
+  `rpg_filled_array`).
+- `CodeGen::attrsOf(expr)` returns the declared type, length, digits and
+  scale for a bare name *or* `ds.f`, `ds(i).f`, or `ds.nested.f` through
+  `LIKEDS`. `%CHAR`, `%SIZE`, `EVAL(H)` rounding, and `*BLANKS`/`*ALL'x'`
+  assignment use it now.
+- `*BLANKS` assigned to a `CHAR` subfield used to be treated as a numeric
+  target, emitting `= 0` into a `std::string`.
+- Seven goldens (tests 9, 29, 86-89, 99) had recorded the six-decimal
+  output and were regenerated. Every changed line matches its subfield's
+  declared scale.
+
+Found alongside, all verified:
+- **No `CHAR`/`PACKED` target keeps its declared length or scale on
+  assignment**, standalone or subfield. Declarations are right, but
+  assignment is plain C++. `c = 'AB'` into a `CHAR(5)` leaves a 2-byte
+  string, `'ABCDEFG'` stays 7 bytes, and `PACKED(9:2) = 1.239` stores
+  1.239. `%CHAR` hides the last one by rounding to the scale, which also
+  gets it wrong: RPG truncates to 1.23. This is the widest-reaching of
+  these: concatenation, `%LEN` and `%SUBST` all see the wrong value.
+- The subfield grammar is a hand-enumerated list covering only `INT`,
+  `CHAR`, `VARCHAR` and `PACKED` (with a few keyword combinations each). So
+  `ZONED`, `IND`, `DATE`, `UNS`, `FLOAT` and others are syntax errors in a
+  DS. This subsumes the `IND` entry below.
+- `TEMPLATE` on `DCL-DS` is a syntax error.
+- A nested `a.b.c` is readable but is a syntax error as an assignment
+  target.
+- A standalone `CHAR(n) DIM(m)` array starts as empty strings, not blanks.
 
 Smaller, all verified:
 - `DCL-PROC` with no `DCL-PI` is a syntax error. IBM allows the interface

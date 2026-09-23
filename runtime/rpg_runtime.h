@@ -160,6 +160,15 @@ template<typename A, typename B> inline bool rpg_gt(const A& a, const B& b) { re
 template<typename A, typename B> inline bool rpg_le(const A& a, const B& b) { return rpg_compare(a, b, std::less_equal<>()); }
 template<typename A, typename B> inline bool rpg_ge(const A& a, const B& b) { return rpg_compare(a, b, std::greater_equal<>()); }
 
+// A std::array with every element set to `v` — how a DIM'd CHAR(n)
+// subfield starts out as n blanks per element rather than empty strings.
+template<typename T, std::size_t N>
+inline std::array<T, N> rpg_filled_array(const T& v) {
+    std::array<T, N> a;
+    a.fill(v);
+    return a;
+}
+
 // %LOOKUP - find element in array, returns 1-based index (0 if not found)
 template<typename T, std::size_t N>
 inline int rpg_lookup(const T& val, const std::array<T, N>& arr) {

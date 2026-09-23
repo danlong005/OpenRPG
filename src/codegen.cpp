@@ -1550,6 +1550,70 @@ void CodeGen::visit(DclS& node) {
     }
 }
 
+// The DS definition a name refers to, following LIKEDS to the one that
+// actually declares the subfields.
+const DclDS* CodeGen::resolveDsDef(const std::string& name) const {
+    std::string cur = name;
+    for (int guard = 0; guard < 16; ++guard) {
+        auto it = ds_defs_.find(cur);
+        if (it == ds_defs_.end()) return nullptr;
+        if (it->second->like_ds.empty()) return it->second;
+        cur = it->second->like_ds;
+    }
+    return nullptr;
+}
+
+// The DS definition an expression denotes: a DS name, one element of a DS
+// array (which parses as either ArrayAccess or FuncCall), or a LIKEDS
+// subfield of another DS.
+const DclDS* CodeGen::dsOfExpr(const Expression& e) const {
+    if (auto* id = dynamic_cast<const Identifier*>(&e)) return resolveDsDef(id->name);
+    if (auto* aa = dynamic_cast<const ArrayAccess*>(&e)) return resolveDsDef(aa->name);
+    if (auto* fc = dynamic_cast<const FuncCall*>(&e)) return resolveDsDef(fc->name);
+    if (auto* dot = dynamic_cast<const DotExpr*>(&e)) {
+        const DclDS* parent = dsOfExpr(*dot->object);
+        if (!parent) return nullptr;
+        for (auto& f : parent->fields)
+            if (f.name == dot->field && !f.likeds.empty()) return resolveDsDef(f.likeds);
+    }
+    return nullptr;
+}
+
+// Declared type, length and scale of a field reference. Codegen keyed all
+// of this on bare names (var_types_ and friends), so anything reached
+// through a DS — ds.f, ds(i).f — lost its declaration: a PACKED(9:2)
+// subfield printed through %CHAR as 1250.000000, and *BLANKS assigned to a
+// CHAR subfield was taken for a numeric target.
+CodeGen::FieldAttrs CodeGen::attrsOf(const Expression& e) const {
+    FieldAttrs a;
+    if (auto* id = dynamic_cast<const Identifier*>(&e)) {
+        auto t = var_types_.find(id->name);
+        if (t == var_types_.end()) return a;
+        a.known = true;
+        a.type = t->second;
+        auto l = var_lengths_.find(id->name);  if (l != var_lengths_.end()) a.length = l->second;
+        auto g = var_digits_.find(id->name);   if (g != var_digits_.end()) a.digits = g->second;
+        auto d = var_decimals_.find(id->name); if (d != var_decimals_.end()) a.decimals = d->second;
+        return a;
+    }
+    const std::string* field = nullptr;
+    const Expression* object = nullptr;
+    if (auto* dot = dynamic_cast<const DotExpr*>(&e)) { field = &dot->field; object = dot->object.get(); }
+    if (!field) return a;
+    const DclDS* ds = dsOfExpr(*object);
+    if (!ds) return a;
+    for (auto& f : ds->fields) {
+        if (f.name != *field || !f.likeds.empty() || !f.like_var.empty() || f.dim > 0) continue;
+        a.known = true;
+        a.type = f.type;
+        a.length = f.length;
+        a.digits = f.digits;
+        a.decimals = f.decimals;
+        return a;
+    }
+    return a;
+}
+
 // An INZ value naming a figurative constant needs the type-aware expansion
 // figConstValue() gives it: *BLANKS is six spaces on a CHAR(6) and zero on
 // a numeric field. Emitting it as a plain expression printed the internal
@@ -1564,11 +1628,15 @@ std::string CodeGen::emitInzValue(const rpg::DclS& node) {
 }
 
 std::string CodeGen::figConstValue(const std::string& name, RPGType type, const std::string& var_name) {
+    auto it = var_lengths_.find(var_name);
+    return figConstValueLen(name, type, it != var_lengths_.end() ? it->second : 0);
+}
+
+std::string CodeGen::figConstValueLen(const std::string& name, RPGType type, int length) {
     if (name == "RPG_BLANKS") {
         if (type == RPGType::CHAR) {
-            auto it = var_lengths_.find(var_name);
-            if (it != var_lengths_.end() && it->second > 0)
-                return "std::string(" + std::to_string(it->second) + ", ' ')";
+            if (length > 0)
+                return "std::string(" + std::to_string(length) + ", ' ')";
             return "\"\"";
         }
         if (type == RPGType::VARCHAR) return "\"\"";
@@ -1621,11 +1689,9 @@ void CodeGen::visit(EvalStmt& node) {
     // Check for *ALL'x' on RHS
     auto* rhs_bif = dynamic_cast<BIFCall*>(node.value.get());
     if (rhs_bif && rhs_bif->name == "ALL" && !rhs_bif->args.empty()) {
-        auto* tgt_id = dynamic_cast<Identifier*>(node.target.get());
         int len = 50; // default
-        if (tgt_id && var_lengths_.count(tgt_id->name)) {
-            len = var_lengths_[tgt_id->name];
-        }
+        FieldAttrs ta = attrsOf(*node.target);
+        if (ta.known && ta.length > 0) len = ta.length;
         auto* sl = dynamic_cast<StringLiteral*>(rhs_bif->args[0].get());
         if (sl) {
             out_ << target_str << " = rpg_all(\"" << sl->value << "\", " << len << ");";
@@ -1640,14 +1706,9 @@ void CodeGen::visit(EvalStmt& node) {
     // Check for figurative constant on RHS
     auto* rhs_id = dynamic_cast<Identifier*>(node.value.get());
     if (rhs_id) {
-        std::string var_name;
-        RPGType ttype = RPGType::INT10;
-        auto* tgt_id = dynamic_cast<Identifier*>(node.target.get());
-        if (tgt_id && var_types_.count(tgt_id->name)) {
-            ttype = var_types_[tgt_id->name];
-            var_name = tgt_id->name;
-        }
-        std::string fc = figConstValue(rhs_id->name, ttype, var_name);
+        FieldAttrs ta = attrsOf(*node.target);
+        RPGType ttype = ta.known ? ta.type : RPGType::INT10;
+        std::string fc = figConstValueLen(rhs_id->name, ttype, ta.length);
         if (!fc.empty()) {
             out_ << target_str << " = " << fc << ";";
             if (node.line > 0) out_ << " // line " << node.line;
@@ -1663,10 +1724,10 @@ void CodeGen::visit(EvalStmt& node) {
     std::string rhs = emitExpr(*node.value);
     if (half_adj) {
         // Check if target is a numeric type so we apply rounding
-        auto* tgt_id = dynamic_cast<rpg::Identifier*>(node.target.get());
+        FieldAttrs ta = attrsOf(*node.target);
         bool is_numeric = false;
-        if (tgt_id && var_types_.count(tgt_id->name)) {
-            auto t = var_types_[tgt_id->name];
+        if (ta.known) {
+            auto t = ta.type;
             is_numeric = (t == RPGType::INT10 || t == RPGType::PACKED ||
                           t == RPGType::ZONED  || t == RPGType::FLOAT4 ||
                           t == RPGType::FLOAT8 || t == RPGType::UNS    ||
@@ -1678,8 +1739,7 @@ void CodeGen::visit(EvalStmt& node) {
             // of any scaled result; and decltype on a by-reference target
             // (a *ENTRY PARM, say) names a reference type, which cannot be
             // constructed from the rounded temporary at all.
-            int dec = var_decimals_.count(tgt_id->name)
-                      ? var_decimals_.at(tgt_id->name) : 0;
+            int dec = ta.decimals;
             rhs = "rpg_half_adjust(static_cast<double>(" + rhs + "), " +
                   std::to_string(dec) + ")";
         }
@@ -1886,6 +1946,17 @@ void CodeGen::visit(DclDS& node) {
     // the fallback does apply. Unresolved LIKE falls back to the field's
     // own placeholder type, same as top-level DclS's LIKE handling above.
     std::map<std::string, std::pair<RPGType, int>> ds_local_types;
+    // A subfield starts with the same value a standalone field of its type
+    // does: CHAR(n) as n blanks, numerics as zero. Emitted as a default
+    // member initializer, so every element of a DS array and every LIKEDS
+    // copy of the struct starts that way too. A CHAR subfield used to be
+    // an empty string, which is not a value RPG can produce.
+    auto initFor = [](RPGType t, int len) -> std::string {
+        if (t == RPGType::CHAR && len > 0) return " = std::string(" + std::to_string(len) + ", ' ')";
+        if (t == RPGType::INT10) return " = 0";
+        if (t == RPGType::PACKED || t == RPGType::ZONED) return " = 0.0";
+        return "";
+    };
     // subfield name -> (ultimate base subfield, 1-based position in it)
     std::map<std::string, std::pair<std::string, int>> ds_overlay_bases;
     for (auto& f : node.fields) {
@@ -1965,28 +2036,26 @@ void CodeGen::visit(DclDS& node) {
                     rlen = var_lengths_[f.like_var];
                 }
             }
-            out_ << "    " << typeToString(rtype, rlen) << " " << f.name;
-            if (rtype == RPGType::INT10) out_ << " = 0";
-            else if (rtype == RPGType::PACKED || rtype == RPGType::ZONED) out_ << " = 0.0";
-            out_ << "; // LIKE(" << f.like_var << ")\n";
+            out_ << "    " << typeToString(rtype, rlen) << " " << f.name << initFor(rtype, rlen)
+                 << "; // LIKE(" << f.like_var << ")\n";
             ds_local_types[f.name] = {rtype, rlen};
         } else if (f.dim > 0) {
             // Per-subfield DIM(n): the subfield itself is an array within the DS.
             out_ << "    std::array<" << typeToString(f.type, f.length) << ", " << f.dim
-                 << "> " << f.name << "; // DIM(" << f.dim << ")\n";
+                 << "> " << f.name;
+            if (f.type == RPGType::CHAR && f.length > 0)
+                out_ << " = rpg_filled_array<std::string, " << f.dim << ">(std::string("
+                     << f.length << ", ' '))";
+            out_ << "; // DIM(" << f.dim << ")\n";
             ds_local_types[f.name] = {f.type, f.length};
         } else if (f.pos > 0) {
             // POS field: emit with comment showing position
-            out_ << "    " << typeToString(f.type, f.length) << " " << f.name;
-            if (f.type == RPGType::INT10) out_ << " = 0";
-            else if (f.type == RPGType::PACKED || f.type == RPGType::ZONED) out_ << " = 0.0";
-            out_ << "; // POS(" << f.pos << ")\n";
+            out_ << "    " << typeToString(f.type, f.length) << " " << f.name << initFor(f.type, f.length)
+                 << "; // POS(" << f.pos << ")\n";
             ds_local_types[f.name] = {f.type, f.length};
         } else {
-            out_ << "    " << typeToString(f.type, f.length) << " " << f.name;
-            if (f.type == RPGType::INT10) out_ << " = 0";
-            else if (f.type == RPGType::PACKED || f.type == RPGType::ZONED) out_ << " = 0.0";
-            out_ << ";\n";
+            out_ << "    " << typeToString(f.type, f.length) << " " << f.name << initFor(f.type, f.length)
+                 << ";\n";
             ds_local_types[f.name] = {f.type, f.length};
         }
     }
@@ -2883,15 +2952,9 @@ void CodeGen::visit(FuncCall& node) {
 void CodeGen::visit(BIFCall& node) {
     if (node.name == "CHAR") {
         // Check if arg is a date/time variable and DATFMT/TIMFMT is set
-        auto* arg_id = dynamic_cast<Identifier*>(node.args[0].get());
-        bool is_date_var = false, is_time_var = false;
-        if (arg_id) {
-            auto vit = var_types_.find(arg_id->name);
-            if (vit != var_types_.end()) {
-                if (vit->second == RPGType::DATE) is_date_var = true;
-                if (vit->second == RPGType::TIME) is_time_var = true;
-            }
-        }
+        FieldAttrs aa = attrsOf(*node.args[0]);
+        bool is_date_var = aa.known && aa.type == RPGType::DATE;
+        bool is_time_var = aa.known && aa.type == RPGType::TIME;
         if (is_date_var && !datfmt_.empty()) {
             expr_ << "rpg_to_char(";
             node.args[0]->accept(*this);
@@ -2903,17 +2966,9 @@ void CodeGen::visit(BIFCall& node) {
         } else {
             // For PACKED/ZONED variables, emit the scale so formatting matches
             // the RPG declaration (e.g. PACKED(9:2) → "91000.00", not "91000.000000")
-            bool is_packed = false;
-            int dec_places = 0;
-            if (arg_id) {
-                auto vit = var_types_.find(arg_id->name);
-                auto dit = var_decimals_.find(arg_id->name);
-                if (vit != var_types_.end() && dit != var_decimals_.end() &&
-                    (vit->second == RPGType::PACKED || vit->second == RPGType::ZONED)) {
-                    is_packed = true;
-                    dec_places = dit->second;
-                }
-            }
+            bool is_packed = aa.known &&
+                (aa.type == RPGType::PACKED || aa.type == RPGType::ZONED);
+            int dec_places = is_packed ? aa.decimals : 0;
             if (is_packed) {
                 expr_ << "rpg_to_char_packed(";
                 node.args[0]->accept(*this);
@@ -3040,22 +3095,17 @@ void CodeGen::visit(BIFCall& node) {
     } else if (node.name == "SIZE") {
         // Return RPG-declared size, not C++ sizeof (which varies by platform/stdlib).
         // CHAR(N)/VARCHAR(N) → N bytes; PACKED(N:D) → ceil((N+1)/2); others → sizeof.
-        auto* id = dynamic_cast<Identifier*>(node.args[0].get());
         bool emitted = false;
-        if (id) {
-            auto tit = var_types_.find(id->name);
-            auto lit = var_lengths_.find(id->name);
-            if (tit != var_types_.end() && lit != var_lengths_.end()) {
-                if (tit->second == RPGType::CHAR || tit->second == RPGType::VARCHAR ||
-                    tit->second == RPGType::UCS2) {
-                    expr_ << lit->second;
-                    emitted = true;
-                } else if (tit->second == RPGType::PACKED || tit->second == RPGType::ZONED) {
-                    auto dit = var_digits_.find(id->name);
-                    int digits = (dit != var_digits_.end()) ? dit->second : lit->second;
-                    expr_ << ((digits + 1) / 2);
-                    emitted = true;
-                }
+        FieldAttrs sa = attrsOf(*node.args[0]);
+        if (sa.known) {
+            if (sa.type == RPGType::CHAR || sa.type == RPGType::VARCHAR ||
+                sa.type == RPGType::UCS2) {
+                expr_ << sa.length;
+                emitted = true;
+            } else if (sa.type == RPGType::PACKED || sa.type == RPGType::ZONED) {
+                int digits = sa.digits > 0 ? sa.digits : sa.length;
+                expr_ << ((digits + 1) / 2);
+                emitted = true;
             }
         }
         if (!emitted) {

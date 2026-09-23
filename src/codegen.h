@@ -188,6 +188,13 @@ private:
     int countRequiredParams(const std::vector<ParamDecl>& params);
     std::string fieldTypeDefault(RPGType type, int length);
     std::string figConstValue(const std::string& name, RPGType type, const std::string& var_name);
+    std::string figConstValueLen(const std::string& name, RPGType type, int length);
+    // Declared attributes of a field reference — a standalone name, or a
+    // DS subfield reached as ds.f, ds(i).f or through nested LIKEDS.
+    struct FieldAttrs { bool known = false; RPGType type = RPGType::INT10; int length = 0; int digits = 0; int decimals = 0; };
+    FieldAttrs attrsOf(const Expression& e) const;
+    const DclDS* dsOfExpr(const Expression& e) const;
+    const DclDS* resolveDsDef(const std::string& name) const;
     std::string emitInzValue(const rpg::DclS& node);
 
     // XML-INTO codegen helpers

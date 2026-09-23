@@ -2037,12 +2037,8 @@ DS never matches.
 
 Found alongside, all verified:
 - **No `CHAR`/`PACKED` target keeps its declared length or scale on
-  assignment**, standalone or subfield. Declarations are right, but
-  assignment is plain C++. `c = 'AB'` into a `CHAR(5)` leaves a 2-byte
-  string, `'ABCDEFG'` stays 7 bytes, and `PACKED(9:2) = 1.239` stores
-  1.239. `%CHAR` hides the last one by rounding to the scale, which also
-  gets it wrong: RPG truncates to 1.23. This is the widest-reaching of
-  these: concatenation, `%LEN` and `%SUBST` all see the wrong value.
+  assignment.** ✅ **Fixed 2026-09-22** (Test 231) — see "Assignment fits
+  the declaration" below.
 - The subfield grammar is a hand-enumerated list covering only `INT`,
   `CHAR`, `VARCHAR` and `PACKED` (with a few keyword combinations each). So
   `ZONED`, `IND`, `DATE`, `UNS`, `FLOAT` and others are syntax errors in a
@@ -2160,3 +2156,68 @@ subroutine returns from the *subroutine*, where IBM returns from the
 preserves the behaviour rather than changing it silently while moving the
 code — the file-scope function is emitted with `void_return_` set so a bare
 RETURN stays `return;`. Worth a separate pass.
+
+### Assignment fits the declaration ✅ (2026-09-22)
+
+Declarations were right, but assignment was a plain C++ assignment. A
+`CHAR(5)` assigned `'AB'` held two bytes and one assigned `'ABCDEFG'` held
+seven. A `PACKED(9:2)` assigned 1.239 held 1.239, which `%CHAR` then
+*rounded* to 1.24; RPG truncates to 1.23. Concatenation, `%LEN` and
+`%SUBST` all saw the wrong value.
+
+**The fix.** `EVAL` wraps the assigned value whenever
+`CodeGen::attrsOf` knows the target's declaration:
+- `CHAR(n)` → `rpg_fit_char`: pad with blanks, or truncate on the right.
+- `VARCHAR(n)` → `rpg_fit_varchar`: truncate past n, never pad.
+- `PACKED`/`ZONED` → `rpg_trunc_dec`: drop decimals past the scale, unless
+  `(H)` asked for rounding.
+
+That covers standalone fields, array elements, subfields, `DIM`'d subfield
+elements, and elements of a DS array. `EVALR` benefits too, since it
+right-adjusts to the target's (now always declared) length.
+`rpg_trunc_dec` nudges by a few ULPs before truncating, so 0.29 (stored as
+0.28999…) stays 0.29. A first version used a relative epsilon, which
+pushed 99999999.99 past a whole unit (Test 221 caught it).
+
+**What it took alongside:**
+- **Procedure declarations are now scoped.** The attribute tables were
+  flat maps, so a procedure-local sharing a global's name replaced the
+  global's entry for the rest of the compile. In test 8, main's
+  `RESULT INT(10)` was fitted as the procedure's `RESULT VARCHAR(100)` and
+  failed to compile. `visit(DclProc)` now saves and restores them.
+- **`LIKE` copies digits and decimals**, not only type and length. A LIKE
+  copy of a `PACKED(9:2)` had been printing, and would now have been
+  truncated, as a whole number. Test 30's golden had recorded `3` for
+  `3.14`.
+- **SQL string parameters are bound without trailing blanks.** A padded
+  key `'C002      '` no longer matched `'C002'` on SQLite. DB2 compares
+  character values blank-padded, so trimming reproduces its result. The
+  cost: a `VARCHAR` host variable deliberately ending in blanks loses them.
+- **The `READE`/`READPE` key check** uses `rpg_eq` instead of `==`.
+
+53 goldens were regenerated:
+- 42 differ only in trailing blanks from `DSPLY` of a now-padded `CHAR`
+  field.
+- 11 are corrections: `%LEN` of a `CHAR(20)` is 20, `LIKE`/`DIM` scales
+  print correctly, and report columns now include their fields' padding,
+  as they do on IBM i.
+
+**Still open, all verified or read from the code:**
+- **Only `EVAL`/`EVALR` fit.** Other paths still assign raw:
+  - procedure `VALUE` parameters and return values
+  - `FETCH`/`SELECT INTO` and RLA reads into `CHAR` fields (fetched values
+    arrive unpadded)
+  - `XML-INTO`/`DATA-INTO`
+  - `DSPLY`'s response variable
+
+  Procedure parameters and externally described file fields aren't
+  registered in the attribute tables at all, so `attrsOf` doesn't know
+  them.
+- **Integer-digit overflow isn't detected.** RPG `EVAL` of 123456 into a
+  `PACKED(5:0)` raises RNX0103 (status 103). Here it stores the value.
+- **Float literals are emitted with 10 fixed decimals**
+  (`setprecision(10)`), so `99999999.99` becomes `99999999.9899999946` in
+  the generated C++. Truncation absorbs it, but the literal itself is
+  lossy.
+- **`DCL-PI *N` is still a syntax error.** Test 231 names its interface.
+

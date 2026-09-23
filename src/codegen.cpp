@@ -1094,6 +1094,18 @@ void CodeGen::visit(DclProc& node) {
     out_ << ") {\n";
     indent_ = 1;
     in_procedure_ = true;
+    // A procedure's own declarations are local to it. The attribute tables
+    // are flat maps keyed by name, so without this a local that shares a
+    // global's name replaced the global's entry for the rest of the
+    // compile, and the mainline was generated against the local's type —
+    // harmless while nothing acted on the entry, but assignment now fits
+    // values to it, so a global INT(10) RESULT was being fitted as the
+    // VARCHAR(100) RESULT of a procedure emitted before main().
+    auto saved_types    = var_types_;
+    auto saved_lengths  = var_lengths_;
+    auto saved_digits   = var_digits_;
+    auto saved_decimals = var_decimals_;
+    auto saved_arrays   = array_vars_;
     current_proc_parm_count_ = static_cast<int>(node.interface.params.size());
     has_nopass_params_ = has_nopass;
     current_proc_name_ = node.name;
@@ -1173,6 +1185,11 @@ void CodeGen::visit(DclProc& node) {
         }
     }
     in_procedure_ = false;
+    var_types_    = std::move(saved_types);
+    var_lengths_  = std::move(saved_lengths);
+    var_digits_   = std::move(saved_digits);
+    var_decimals_ = std::move(saved_decimals);
+    array_vars_   = std::move(saved_arrays);
     current_proc_parm_count_ = 0;
     has_nopass_params_ = false;
     current_proc_name_.clear();
@@ -1408,6 +1425,10 @@ void CodeGen::visit(DclS& node) {
         if (it != var_types_.end()) {
             var_types_[node.name] = it->second;
             var_lengths_[node.name] = var_lengths_[node.like_var];
+            // Scale too: assignment truncates to it, so a LIKE copy of a
+            // PACKED(9:2) left at 0 decimals would lose its cents.
+            var_digits_[node.name] = var_digits_[node.like_var];
+            var_decimals_[node.name] = var_decimals_[node.like_var];
             emitIndent();
             std::string cppType = typeToString(it->second, var_lengths_[node.like_var]);
             if (node.is_static) out_ << "static ";
@@ -1596,6 +1617,33 @@ CodeGen::FieldAttrs CodeGen::attrsOf(const Expression& e) const {
         auto d = var_decimals_.find(id->name); if (d != var_decimals_.end()) a.decimals = d->second;
         return a;
     }
+    // An element of an array has the array's element declaration. A DIM'd
+    // subfield's element parses as ArrayAccess named "DS.FIELD"; a
+    // standalone array's as ArrayAccess (a target) or FuncCall (a value).
+    std::string arrName;
+    if (auto* aa = dynamic_cast<const ArrayAccess*>(&e)) arrName = aa->name;
+    else if (auto* fc = dynamic_cast<const FuncCall*>(&e)) {
+        if (fc->args.size() == 1 && array_vars_.count(fc->name)) arrName = fc->name;
+    }
+    if (!arrName.empty()) {
+        size_t dotPos = arrName.find('.');
+        if (dotPos == std::string::npos) {
+            if (!array_vars_.count(arrName) || ds_defs_.count(arrName)) return a;
+            Identifier id(arrName);
+            return attrsOf(id);
+        }
+        const DclDS* ds = resolveDsDef(arrName.substr(0, dotPos));
+        if (!ds) return a;
+        std::string fname = arrName.substr(dotPos + 1);
+        for (auto& f : ds->fields) {
+            if (f.name != fname || f.dim <= 0 || !f.likeds.empty() || !f.like_var.empty()) continue;
+            a.known = true; a.type = f.type; a.length = f.length;
+            a.digits = f.digits; a.decimals = f.decimals;
+            return a;
+        }
+        return a;
+    }
+
     const std::string* field = nullptr;
     const Expression* object = nullptr;
     if (auto* dot = dynamic_cast<const DotExpr*>(&e)) { field = &dot->field; object = dot->object.get(); }
@@ -1742,6 +1790,22 @@ void CodeGen::visit(EvalStmt& node) {
             int dec = ta.decimals;
             rhs = "rpg_half_adjust(static_cast<double>(" + rhs + "), " +
                   std::to_string(dec) + ")";
+        }
+    }
+
+    // Hold the value to the target's declaration, which a plain C++
+    // assignment does not: a CHAR(5) assigned 'AB' must hold 'AB   ', and
+    // a PACKED(9:2) assigned 1.239 must hold 1.23.
+    {
+        FieldAttrs fa = attrsOf(*node.target);
+        if (fa.known) {
+            if (fa.type == RPGType::CHAR && fa.length > 0)
+                rhs = "rpg_fit_char(" + rhs + ", " + std::to_string(fa.length) + ")";
+            else if (fa.type == RPGType::VARCHAR && fa.length > 0)
+                rhs = "rpg_fit_varchar(" + rhs + ", " + std::to_string(fa.length) + ")";
+            else if ((fa.type == RPGType::PACKED || fa.type == RPGType::ZONED) && !half_adj)
+                rhs = "rpg_trunc_dec(static_cast<double>(" + rhs + "), " +
+                      std::to_string(fa.decimals) + ")";
         }
     }
 
@@ -4683,7 +4747,7 @@ void CodeGen::visit(ReadeStmt& node) {
         emitIndent(); out_ << "if (__rla_rc == SQL_SUCCESS || __rla_rc == SQL_SUCCESS_WITH_INFO) {\n";
         indent_++;
         emitRlaCopyBack(node.filename, desc, node.filename + "_scroll", "__rla_rc");
-        emitIndent(); out_ << "if (!(" << fvar << " == " << keyVar << ")) __rla_rc = SQL_NO_DATA;\n";
+        emitIndent(); out_ << "if (!rpg_eq(" << fvar << ", " << keyVar << ")) __rla_rc = SQL_NO_DATA;\n";
         indent_--;
         emitIndent(); out_ << "}\n";
     } else {
@@ -4713,7 +4777,7 @@ void CodeGen::visit(ReadpeStmt& node) {
         emitIndent(); out_ << "if (__rla_rc == SQL_SUCCESS || __rla_rc == SQL_SUCCESS_WITH_INFO) {\n";
         indent_++;
         emitRlaCopyBack(node.filename, desc, node.filename + "_scroll", "__rla_rc");
-        emitIndent(); out_ << "if (!(" << fvar << " == " << keyVar << ")) __rla_rc = SQL_NO_DATA;\n";
+        emitIndent(); out_ << "if (!rpg_eq(" << fvar << ", " << keyVar << ")) __rla_rc = SQL_NO_DATA;\n";
         indent_--;
         emitIndent(); out_ << "}\n";
     } else {

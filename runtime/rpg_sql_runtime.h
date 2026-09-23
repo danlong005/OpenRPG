@@ -218,8 +218,16 @@ public:
     template<typename T>
     void bindParam(SQLHSTMT hstmt, int idx, T& val) {
         if constexpr (std::is_same_v<std::decay_t<T>, std::string>) {
+            // Bound without trailing blanks. A CHAR(n) field always holds n
+            // bytes, so a key of 'C002' arrives as 'C002      '. DB2 on
+            // IBM i compares character values blank-padded, so that still
+            // matches a stored 'C002'; SQLite and most ODBC targets compare
+            // exactly, and it would not. Trimming gives DB2's result on a
+            // database that doesn't pad. The cost: a VARCHAR host variable
+            // that deliberately ends in blanks loses them.
             param_bufs_.push_back(val);
             auto& buf = param_bufs_.back();
+            while (!buf.empty() && buf.back() == ' ') buf.pop_back();
             SQLBindParameter(hstmt, idx, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_VARCHAR,
                              buf.size(), 0, (SQLCHAR*)buf.c_str(), buf.size() + 1, nullptr);
         } else if constexpr (std::is_integral_v<std::decay_t<T>>) {

@@ -351,6 +351,43 @@ inline double rpg_half_adjust(double val, int decimals) {
     return std::round(val * scale) / scale;
 }
 
+// --- Assignment to a declared field ------------------------------------------
+// RPG holds every field to its declaration on assignment; C++ does not.
+// EVAL into a CHAR(n) left-adjusts the value and pads it with blanks or
+// truncates it on the right to exactly n; into a VARCHAR(n) it truncates
+// past n; into a PACKED/ZONED it drops decimals beyond the field's scale
+// (truncating, not rounding — (H) is how a program asks for rounding).
+// Codegen wraps the assigned value in these whenever it knows the
+// target's declaration.
+inline std::string rpg_fit_char(const std::string& v, int len) {
+    if (len <= 0) return v;
+    if (static_cast<int>(v.size()) >= len) return v.substr(0, static_cast<size_t>(len));
+    return v + std::string(static_cast<size_t>(len) - v.size(), ' ');
+}
+
+inline std::string rpg_fit_varchar(const std::string& v, int maxLen) {
+    if (maxLen <= 0 || static_cast<int>(v.size()) <= maxLen) return v;
+    return v.substr(0, static_cast<size_t>(maxLen));
+}
+
+inline double rpg_trunc_dec(double v, int decimals) {
+    if (decimals < 0) decimals = 0;
+    double scale = 1.0;
+    for (int i = 0; i < decimals; i++) scale *= 10.0;
+    double scaled = v * scale;
+    // A decimal value is rarely exact in binary: 0.29 is stored as
+    // 0.28999999999999998, and truncating that at two places would give
+    // 0.28. Nudge toward the next unit first, by a few steps of the
+    // value's own binary precision (never less than 1e-7 of a unit), so
+    // representation error is absorbed but a digit genuinely there is not.
+    // The nudge must stay far below one unit at every magnitude: one
+    // scaled with the value itself turned 99999999.99 into 100000000.xx.
+    double mag = std::fabs(scaled);
+    double ulp = std::nextafter(mag, HUGE_VAL) - mag;
+    double eps = std::max(1e-7, 4.0 * ulp);
+    return std::trunc(scaled + std::copysign(eps, scaled)) / scale;
+}
+
 // %EDITC - format number with edit code.
 //
 // `decimals` is the operand's own declared decimal position count. It is

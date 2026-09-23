@@ -786,6 +786,7 @@ run_test "227" "Subprocedures see module globals" "$TESTDIR/test227_proc_globals
 run_test "228" "EXSR resolves in either direction" "$TESTDIR/test228_exsr_order.rpgle" "run"
 run_test "229" "Char comparison pads with blanks" "$TESTDIR/test229_char_compare.rpgle" "run"
 run_test "230" "DS subfields keep declared attrs" "$TESTDIR/test230_ds_subfield_attrs.rpgle" "run"
+run_test "231" "Assignment fits the declaration" "$TESTDIR/test231_assign_fit.rpgle" "run"
 
 # ── Customer / drop-in tests ─────────────────────────────────────────────
 # Drop any .rpgle or .sqlrpgle file into tests/customer/ and it will be

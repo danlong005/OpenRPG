@@ -27,9 +27,14 @@ name: IBM i conformance
 # Load discipline: PUB400 is a free community machine run on donated hardware.
 # There is no schedule (removed 2026-09-23): a weekly run only uploaded its
 # refreshed baseline as an artifact and never committed it, so it re-sent the
-# same files every Monday without the result ever landing. The run is serial,
-# it sends only changed files, and it deletes every object it creates. Do not
-# make this a per-PR gate.
+# same files every Monday without the result ever landing. The run is serial
+# and it sends only changed files. Do not make this a per-PR gate.
+#
+# Every run that contacts the machine first CLEARS the whole library (CLRLIB)
+# and rebuilds the objects the corpus needs (scripts/ibmi-setup-objects.sh).
+# The library is shared with other projects that do the same: each one owns it
+# for the length of its run. A 'changed' run with nothing changed touches
+# nothing.
 
 on:
   push:

@@ -116,6 +116,8 @@ format name replaced with the file name to move between the two.
   declared length — not the value. A `CHAR(100)` field cannot be displayed even
   if it holds three characters (`RNF7016`). Assign to a `VARCHAR(52)` field
   and display that.
+- **Subroutines come last** in their procedure: after the first `BEGSR`, a
+  statement that is not another subroutine is rejected (`RNF5005`).
 - **A procedure interface is named** `*N` or the procedure's own name:
   `DCL-PI *N INT(10);`. `DCL-PI INT(10);` is rejected (`RNF3767`).
 - **`ds.field` needs a `QUALIFIED` data structure** (`RNF7030`), **`PREFIX`

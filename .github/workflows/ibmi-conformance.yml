@@ -126,14 +126,15 @@ jobs:
       # compiled, which it did not, and IBM's reason for each. Rendered from
       # the baseline this run refreshed, so it is complete even when only
       # changed sources were sent. Published even when the compile step
-      # failed on a regression — that is when the page matters most. A smoke
-      # run leaves the baseline untouched, so it has nothing new to publish.
+      # failed on a regression — that is when the page matters most. Every
+      # run, smoke included, rebuilds rpgc and records its verdicts, so the
+      # page's compatibility rating is recomputed on every run.
       # The page's "Compiles with rpgc" column: rpgc's own verdict on every
       # program, recorded fresh from this commit rather than taken from
       # whatever was last committed to the baseline.
       - name: Build rpgc
         if: >-
-          always() && github.event.inputs.mode != 'smoke' &&
+          always() &&
           steps.compile.outcome != 'skipped' && steps.compile.outcome != 'cancelled'
         run: |
           sudo apt-get update -qq
@@ -150,8 +151,9 @@ jobs:
       # only in a full run, so they are committed from full runs alone.
       # A push with the workflow's own token starts no further workflow runs.
       - name: Commit the refreshed baseline
-        if: >-
-          github.event.inputs.mode != 'smoke' && steps.compile.outcome == 'success'
+        # A smoke run leaves IBM's verdicts alone (--no-baseline), so what it
+        # commits is rpgc's refreshed verdicts only.
+        if: steps.compile.outcome == 'success'
         run: |
           files="ibmi-conformance-baseline.json"
           if [ "${{ github.event.inputs.mode }}" = "full" ]; then
@@ -175,7 +177,7 @@ jobs:
 
       - name: Publish the results page to the wiki
         if: >-
-          always() && github.event.inputs.mode != 'smoke' &&
+          always() &&
           steps.compile.outcome != 'skipped' && steps.compile.outcome != 'cancelled'
         env:
           GH_TOKEN: ${{ github.token }}

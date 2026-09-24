@@ -916,47 +916,11 @@
    "verified": "2026-09-23"
   },
   "test13_subroutines.rpgle": {
-   "codes": [
-    "RNF5005"
-   ],
-   "messages": [
-    {
-     "code": "RNF5005",
-     "line": 17,
-     "severity": 30,
-     "text": "Operation entry following ENDSR operation is not valid; specification is ignored."
-    },
-    {
-     "code": "RNF5005",
-     "line": 18,
-     "severity": 30,
-     "text": "Operation entry following ENDSR operation is not valid; specification is ignored."
-    },
-    {
-     "code": "RNF5005",
-     "line": 19,
-     "severity": 30,
-     "text": "Operation entry following ENDSR operation is not valid; specification is ignored."
-    },
-    {
-     "code": "RNF5005",
-     "line": 20,
-     "severity": 30,
-     "text": "Operation entry following ENDSR operation is not valid; specification is ignored."
-    },
-    {
-     "code": "RNF5005",
-     "line": 23,
-     "severity": 30,
-     "text": "Operation entry following ENDSR operation is not valid; specification is ignored."
-    }
-   ],
-   "reason": "RNF5005: Operation entry following ENDSR operation is not valid; specification is ignored.",
-   "reason_detail": "line 17: Operation entry following ENDSR operation is not valid; specification is ignored. \u2014 `EXSR addTen;`",
+   "codes": [],
    "rpgc": "accept",
-   "sha256": "35a269c512a5701dfb81084b9934019b89ae179c98afe8ce76b7138b37734ca0",
-   "verdict": "reject",
-   "verified": "2026-09-23"
+   "sha256": "4e544ab89f84b6a274fc7e979e0e19f7ff0a4f8f1874284a3a8fb7a9d12fc4a4",
+   "verdict": "accept",
+   "verified": "2026-09-24"
   },
   "test140_fixed_copy_cspec.rpgle": {
    "codes": [],
@@ -3133,6 +3097,37 @@
    "verdict": "reject",
    "verified": "2026-09-23"
   },
+  "test266_err_calc_after_subroutine.rpgle": {
+   "codes": [
+    "RNF5005"
+   ],
+   "messages": [
+    {
+     "code": "RNF5005",
+     "line": 11,
+     "severity": 30,
+     "text": "Operation entry following ENDSR operation is not valid; specification is ignored."
+    },
+    {
+     "code": "RNF5005",
+     "line": 12,
+     "severity": 30,
+     "text": "Operation entry following ENDSR operation is not valid; specification is ignored."
+    },
+    {
+     "code": "RNF5005",
+     "line": 13,
+     "severity": 30,
+     "text": "Operation entry following ENDSR operation is not valid; specification is ignored."
+    }
+   ],
+   "reason": "RNF5005: Operation entry following ENDSR operation is not valid; specification is ignored.",
+   "reason_detail": "line 11: Operation entry following ENDSR operation is not valid; specification is ignored. \u2014 `EXSR bump;`",
+   "rpgc": "reject",
+   "sha256": "f3deb70b114430e0cf3662260c8b7b14c67d2d9e8b0f3d60f01b0436b69c0e9b",
+   "verdict": "reject",
+   "verified": "2026-09-24"
+  },
   "test26_pointers.rpgle": {
    "codes": [],
    "rpgc": "accept",
@@ -3528,78 +3523,18 @@
    "verified": "2026-09-23"
   },
   "test66_pssr.rpgle": {
-   "codes": [
-    "RNF5005"
-   ],
-   "messages": [
-    {
-     "code": "RNF5005",
-     "line": 10,
-     "severity": 30,
-     "text": "Operation entry following ENDSR operation is not valid; specification is ignored."
-    },
-    {
-     "code": "RNF5005",
-     "line": 11,
-     "severity": 30,
-     "text": "Operation entry following ENDSR operation is not valid; specification is ignored."
-    },
-    {
-     "code": "RNF5005",
-     "line": 12,
-     "severity": 30,
-     "text": "Operation entry following ENDSR operation is not valid; specification is ignored."
-    }
-   ],
-   "reason": "RNF5005: Operation entry following ENDSR operation is not valid; specification is ignored.",
-   "reason_detail": "line 10: Operation entry following ENDSR operation is not valid; specification is ignored. \u2014 `result = 10;`",
+   "codes": [],
    "rpgc": "accept",
-   "sha256": "7d6eced11cb0c07b13dea29c1ae657dbfa33a199107f6fb1104c4a58ba7660e6",
-   "verdict": "reject",
-   "verified": "2026-09-23"
+   "sha256": "33a0271f05a3f4d28a4518c0576f6af919a180c615740ef862f4839caa326f67",
+   "verdict": "accept",
+   "verified": "2026-09-24"
   },
   "test67_pssr_error.rpgle": {
-   "codes": [
-    "RNF5005"
-   ],
-   "messages": [
-    {
-     "code": "RNF5005",
-     "line": 12,
-     "severity": 30,
-     "text": "Operation entry following ENDSR operation is not valid; specification is ignored."
-    },
-    {
-     "code": "RNF5005",
-     "line": 13,
-     "severity": 30,
-     "text": "Operation entry following ENDSR operation is not valid; specification is ignored."
-    },
-    {
-     "code": "RNF5005",
-     "line": 14,
-     "severity": 30,
-     "text": "Operation entry following ENDSR operation is not valid; specification is ignored."
-    },
-    {
-     "code": "RNF5005",
-     "line": 15,
-     "severity": 30,
-     "text": "Operation entry following ENDSR operation is not valid; specification is ignored."
-    },
-    {
-     "code": "RNF5005",
-     "line": 16,
-     "severity": 30,
-     "text": "Operation entry following ENDSR operation is not valid; specification is ignored."
-    }
-   ],
-   "reason": "RNF5005: Operation entry following ENDSR operation is not valid; specification is ignored.",
-   "reason_detail": "line 12: Operation entry following ENDSR operation is not valid; specification is ignored. \u2014 `DSPLY 'Before error';`",
+   "codes": [],
    "rpgc": "accept",
-   "sha256": "dec33b5f569b1f2922f32fbd34b158a113c90f232b16011a81ddbce6d15d1ef2",
-   "verdict": "reject",
-   "verified": "2026-09-23"
+   "sha256": "9d25ff9946e9ad68aa93e1da25174039c215a7acae5bbb94c80b35739a4cca22",
+   "verdict": "accept",
+   "verified": "2026-09-24"
   },
   "test68_bitwise_power.rpgle": {
    "codes": [],
@@ -4297,5 +4232,5 @@
    "verified": "2026-09-23"
   }
  },
- "generated": "2026-09-23T22:24:20+00:00"
+ "generated": "2026-09-24T03:03:54+00:00"
 }

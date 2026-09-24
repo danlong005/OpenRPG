@@ -1558,6 +1558,18 @@ read, so the error carries the DCL-PI's line, as IBM's does. Tests 08 and
 78 and four `docs/GUIDE.md` examples were unnamed; test 08 now compiles on
 IBM i. Tests 264-265 are the rejected forms, both matched on PUB400.
 
+### Subroutines come last (2026-09-23)
+
+Once a procedure's first `BEGSR` appears, only more subroutines may follow in
+it; IBM i ignores each calculation after an `ENDSR` with RNF5005 (severity
+30). rpgc ran such statements as mainline. `checkSubroutinesLast` now reports
+each one, in the main procedure and in each subprocedure, skipping
+declarations (RNF0724/0725's to report), subprocedure definitions and
+fixed-format I/O layouts. Tests 13, 66 and 67 had mainline after their
+subroutines; with the subroutines moved to the end, all three compile on
+IBM i, output unchanged. Test 266 is the rejected form; IBM and rpgc flag
+the same three lines.
+
 ### Load discipline
 
 PUB400 is a free community box run on donated hardware. This is a **manual**

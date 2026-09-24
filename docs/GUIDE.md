@@ -646,6 +646,10 @@ BEGSR *PSSR;
 ENDSR;
 ```
 
+Subroutines, `*PSSR` included, come after all other calculations in their
+procedure: once the first `BEGSR` appears, only more subroutines may follow.
+As on IBM i, a statement after an `ENDSR` is an error (RNF5005).
+
 ### ON-EXIT
 
 ```rpgle

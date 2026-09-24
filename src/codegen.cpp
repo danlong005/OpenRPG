@@ -675,8 +675,31 @@ static void checkDeclarationOrder(const std::vector<std::unique_ptr<Statement>>&
     }
 }
 
+// Subroutines come last: once a procedure's first BEGSR appears, nothing but
+// further subroutines may follow in it (the main procedure's subroutines
+// end the mainline; a subprocedure's end the procedure). IBM i ignores
+// each calculation after an ENDSR with RNF5005, severity 30; rpgc used to
+// run it as mainline. Declarations there are RNF0724/0725's to report, and
+// subprocedure definitions and fixed-format I/O layouts are not
+// calculations.
+static void checkSubroutinesLast(const std::vector<std::unique_ptr<Statement>>& stmts,
+                                 const std::string& scope) {
+    bool inSubroutines = false;
+    for (const auto& up : stmts) {
+        const Statement* s = up.get();
+        if (dynamic_cast<const BegSR*>(s)) { inSubroutines = true; continue; }
+        if (!inSubroutines || isDeclaration(s) || dynamic_cast<const DclProc*>(s) ||
+            dynamic_cast<const IRecordFormat*>(s) || dynamic_cast<const ORecordFormat*>(s))
+            continue;
+        report_semantic_error(s->line, "Operation entry following ENDSR operation is not valid: "
+            "subroutines must come after all other calculations in " + scope +
+            "; move this statement above the first BEGSR (IBM: RNF5005)");
+    }
+}
+
 void CodeGen::visit(Program& node) {
     checkDeclarationOrder(node.statements, "the main procedure");
+    checkSubroutinesLast(node.statements, "the main procedure");
     // Store date/time format settings
     datfmt_ = node.datfmt;
     timfmt_ = node.timfmt;
@@ -1173,6 +1196,7 @@ void CodeGen::visit(DclPR& node) {
 void CodeGen::visit(DclProc& node) {
     checkParamOptions(node.interface.params, node.name);
     checkDeclarationOrder(node.body, "procedure " + node.name);
+    checkSubroutinesLast(node.body, "procedure " + node.name);
     bool has_nopass = std::any_of(node.interface.params.begin(), node.interface.params.end(),
                                   [](const ParamDecl& p) { return p.nopass; });
 

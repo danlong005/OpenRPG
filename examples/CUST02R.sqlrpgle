@@ -10,6 +10,7 @@ dcl-s msgId  packed(10:0);
 dcl-s custId packed(10:0);
 dcl-s email  varchar(100);
 dcl-s fname  varchar(50);
+dcl-s dspLine varchar(52);   // dsply shows at most 52 characters
 
 exec sql declare c1 cursor for
   select id, customer_id
@@ -31,7 +32,8 @@ dow sqlstate < '02000';
                   status = 'X'
            where  id = :msgId;
 
-  dsply 'Email queued for ' + %trim(fname) + ': ' + %trim(email);
+  dspLine = 'Email queued for ' + %trim(fname) + ': ' + %trim(email);
+  dsply dspLine;
 
   exec sql fetch next from c1 into :msgId, :custId;
 enddo;

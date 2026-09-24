@@ -18,6 +18,7 @@ DCL-S dept     VARCHAR(30);
 DCL-S salary   PACKED(9:2);
 DCL-S total    PACKED(11:2);
 DCL-S rowCount INT(10);
+DCL-S dspLine  VARCHAR(52);   // DSPLY shows at most 52 characters
 
 // Connect — adjust Server/Uid to match your PostgreSQL setup
 connStr = 'Driver={PostgreSQL Unicode};Server=localhost;Port=5432;Database=rpgdemo;Uid=dlong;Pwd=;';
@@ -45,7 +46,8 @@ EXEC SQL OPEN c1;
 DOW SQLCODE = 0;
   EXEC SQL FETCH c1 INTO :empName, :salary;
   IF SQLCODE = 0;
-    DSPLY (empName + '  $' + %CHAR(salary));
+    dspLine = empName + '  $' + %CHAR(salary);
+    DSPLY dspLine;
   ENDIF;
 ENDDO;
 

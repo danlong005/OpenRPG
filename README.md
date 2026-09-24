@@ -250,6 +250,7 @@ DCL-S empName  VARCHAR(50);
 DCL-S salary   PACKED(9:2);
 DCL-S total    PACKED(11:2);
 DCL-S rowCount INT(10);
+DCL-S dspLine  VARCHAR(52);   // DSPLY shows at most 52 characters
 
 connStr = 'Driver={PostgreSQL Unicode};Server=localhost;Port=5432;Database=rpgdemo;Uid=dlong;Pwd=;';
 EXEC SQL CONNECT USING :connStr;
@@ -274,7 +275,8 @@ EXEC SQL OPEN c1;
 DOW SQLCODE = 0;
   EXEC SQL FETCH c1 INTO :empName, :salary;
   IF SQLCODE = 0;
-    DSPLY (empName + '  $' + %CHAR(salary));
+    dspLine = empName + '  $' + %CHAR(salary);
+    DSPLY dspLine;
   ENDIF;
 ENDDO;
 EXEC SQL CLOSE c1;

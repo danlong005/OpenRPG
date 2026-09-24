@@ -32,8 +32,8 @@ DOW NOT %EOF(ORDERS);
       EXEC SQL INSERT INTO messages(customer_id, order_id, message, email, status)
                VALUES(:custId, :orderId, :msg, '', ' ');
 
-      DSPLY 'Message queued for ' + %TRIM(CUST_FIRST_NAME) + ' ' +
-            %TRIM(CUST_LAST_NAME);
+      DSPLY ('Message queued for ' + %TRIM(CUST_FIRST_NAME) + ' ' +
+             %TRIM(CUST_LAST_NAME));
     ENDIF;
   ENDIF;
 

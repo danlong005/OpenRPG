@@ -296,15 +296,22 @@ All programs begin with `**FREE` to indicate free-format RPG IV:
 **FREE
 
 // Declarations go here
-DCL-S name VARCHAR(50);
+DCL-S name VARCHAR(40);
 
 // Executable statements
 name = 'World';
-DSPLY 'Hello, ' + %TRIM(name) + '!';
+DSPLY ('Hello, ' + %TRIM(name) + '!');
 
 *INLR = *ON;
 RETURN;
 ```
+
+`DSPLY` follows IBM i's rules. An expression must be in parentheses —
+`DSPLY ('Total: ' + x);`, not `DSPLY 'Total: ' + x;` — and the message may be
+at most 52 characters, judged at compile time from the declared lengths of
+what it shows (`'Hello, '` + a `VARCHAR(40)` + `'!'` is 48). To show something
+longer, assign it to a `VARCHAR(52)` work field and display that; the
+assignment keeps the first 52 characters.
 
 ### Comments
 
@@ -578,7 +585,7 @@ END-PROC;
 ### String Functions
 
 ```rpgle
-DCL-S s VARCHAR(100);
+DCL-S s VARCHAR(50);
 
 s = '  Hello World  ';
 DSPLY %TRIM(s);         // 'Hello World'
@@ -635,7 +642,7 @@ ENDMON;
 
 ```rpgle
 BEGSR *PSSR;
-  DSPLY 'Unhandled error: ' + %CHAR(%STATUS);
+  DSPLY ('Unhandled error: ' + %CHAR(%STATUS));
 ENDSR;
 ```
 
@@ -696,7 +703,7 @@ DSPLY empName;
 
 // Check SQLCODE after operations
 IF SQLCOD <> 0;
-  DSPLY 'SQL error: ' + %CHAR(SQLCOD);
+  DSPLY ('SQL error: ' + %CHAR(SQLCOD));
 ENDIF;
 
 // Clean up
@@ -715,7 +722,7 @@ Use cursors to iterate over result sets:
 **FREE
 
 DCL-S connStr VARCHAR(200);
-DCL-S name    VARCHAR(50);
+DCL-S name    VARCHAR(30);
 DCL-S salary  PACKED(9:2);
 
 connStr = 'Driver={SQLite3};Database=myapp.sqlite;';
@@ -731,7 +738,7 @@ EXEC SQL OPEN empCur;
 
 EXEC SQL FETCH empCur INTO :name, :salary;
 DOW SQLCOD = 0;
-  DSPLY name + ': ' + %CHAR(salary);
+  DSPLY (name + ': ' + %CHAR(salary));
   EXEC SQL FETCH empCur INTO :name, :salary;
 ENDDO;
 
@@ -746,7 +753,7 @@ You can fetch directly into a qualified data structure:
 ```rpgle
 DCL-DS emp QUALIFIED;
   id   INT(10);
-  name VARCHAR(50);
+  name VARCHAR(30);
   salary PACKED(9:2);
 END-DS;
 
@@ -757,7 +764,7 @@ EXEC SQL OPEN c1;
 
 EXEC SQL FETCH NEXT FROM c1 INTO :emp;
 DOW SQLSTATE < '02000';
-  DSPLY %CHAR(emp.id) + ' ' + %TRIM(emp.name);
+  DSPLY (%CHAR(emp.id) + ' ' + %TRIM(emp.name));
   EXEC SQL FETCH NEXT FROM c1 INTO :emp;
 ENDDO;
 
@@ -868,7 +875,7 @@ EXEC SQL UPDATE employees SET salary = salary * 1.1
   WHERE department = 'ENG';
 
 EXEC SQL GET DIAGNOSTICS :rowCount = ROW_COUNT;
-DSPLY 'Updated ' + %CHAR(rowCount) + ' employees';
+DSPLY ('Updated ' + %CHAR(rowCount) + ' employees');
 ```
 
 ### SQLCODE and SQLSTATE
@@ -886,7 +893,7 @@ EXEC SQL SELECT name INTO :empName FROM employees WHERE id = 999;
 IF SQLCOD = 100;
   DSPLY 'Employee not found';
 ELSEIF SQLCOD < 0;
-  DSPLY 'SQL error: ' + %CHAR(SQLCOD);
+  DSPLY ('SQL error: ' + %CHAR(SQLCOD));
 ENDIF;
 ```
 
@@ -1208,9 +1215,11 @@ Read environment variables at runtime with `%GETENV`:
 ```rpgle
 DCL-S home VARCHAR(200);
 DCL-S dbUrl VARCHAR(300);
+DCL-S dspLine VARCHAR(52);   // DSPLY shows at most 52 characters
 
 home = %GETENV('HOME');
-DSPLY 'Home directory: ' + home;
+dspLine = 'Home directory: ' + home;
+DSPLY dspLine;
 
 dbUrl = %GETENV('DATABASE_URL');
 IF dbUrl = '';
@@ -1251,7 +1260,7 @@ scores(1) = 90;
 scores(2) = 85;
 // ...
 
-DSPLY 'Count: ' + %CHAR(%ELEM(scores));   // 5
+DSPLY ('Count: ' + %CHAR(%ELEM(scores)));   // 5
 ```
 
 ### DIM(\*AUTO) — Grows Automatically
@@ -1349,7 +1358,7 @@ Prevents a runtime error from halting the program. After the operation, check
 ```rpgle
 CALLP(E) riskProc(arg);
 IF %ERROR;
-  DSPLY 'Call failed: ' + %CHAR(%STATUS);
+  DSPLY ('Call failed: ' + %CHAR(%STATUS));
 ENDIF;
 
 EVAL(E) x = someCalc();
@@ -1466,10 +1475,10 @@ END-DS;
 
 ```rpgle
 IF %TRIM(PgmInfo.UserID) <> '';
-  DSPLY 'Running as: ' + PgmInfo.UserID;
+  DSPLY ('Running as: ' + PgmInfo.UserID);
 ENDIF;
 
-DSPLY 'Started: ' + PgmInfo.RunDate + ' ' + PgmInfo.RunTime;
+DSPLY ('Started: ' + PgmInfo.RunDate + ' ' + PgmInfo.RunTime);
 ```
 
 The PSDS also syncs before every `ON-ERROR` handler fires, so you can read
@@ -1587,7 +1596,7 @@ SND-MSG *DIAG msg;
 MONITOR;
   SND-MSG *ESCAPE 'Validation failed';
 ON-ERROR;
-  DSPLY 'Caught: ' + %CHAR(%STATUS);
+  DSPLY ('Caught: ' + %CHAR(%STATUS));
 ENDMON;
 ```
 
@@ -1696,7 +1705,7 @@ SETLL key CUSTFL;
 
 READ CUSTFL;
 DOW NOT %EOF(CUSTFL) AND CUSTNO <= 'B999';
-  DSPLY CUSTNO + ' ' + CUSTNAME;
+  DSPLY (CUSTNO + ' ' + CUSTNAME);
   READ CUSTFL;
 ENDDO;
 ```
@@ -1770,13 +1779,13 @@ EXEC SQL INSERT INTO employees VALUES('E003','Carol',91000);
 key = 'E002';
 CHAIN key EMPFL;
 IF %FOUND(EMPFL);
-  DSPLY 'Found: ' + EMPNAME;
+  DSPLY ('Found: ' + EMPNAME);
 ENDIF;
 
 // Sequential scan
 READ EMPFL;
 DOW NOT %EOF(EMPFL);
-  DSPLY EMPNO + ' ' + EMPNAME;
+  DSPLY (EMPNO + ' ' + EMPNAME);
   READ EMPFL;
 ENDDO;
 
@@ -1854,6 +1863,7 @@ DCL-DS item QUALIFIED;
 END-DS;
 
 DCL-S json VARCHAR(300);
+DCL-S dspLine VARCHAR(52);   // DSPLY shows at most 52 characters
 
 item.id    = 42;
 item.price = 19.99;
@@ -1861,7 +1871,8 @@ item.label = 'Widget';
 
 DATA-GEN item %DATA(json : 'doc=string');
 
-DSPLY json;   // {"id":42,"price":19.99,"label":"Widget"}
+dspLine = json;
+DSPLY dspLine;   // {"id":42,"price":19.99,"label":"Widget"}
 ```
 
 ### Numeric Types
@@ -2029,7 +2040,7 @@ element, and the target DS array receives one element per child:
 
 ```rpgle
 DCL-DS item QUALIFIED DIM(5);
-  name  VARCHAR(50);
+  name  VARCHAR(30);
   qty   INT(10);
   price PACKED(9:2);
 END-DS;
@@ -2041,8 +2052,8 @@ xml = '<items>' +
 
 XML-INTO item %XML(xml : 'case=any path=items');
 
-DSPLY item(1).name + ' qty=' + %CHAR(item(1).qty);   // Widget qty=5
-DSPLY item(2).name + ' qty=' + %CHAR(item(2).qty);   // Gadget qty=3
+DSPLY (item(1).name + ' qty=' + %CHAR(item(1).qty));   // Widget qty=5
+DSPLY (item(2).name + ' qty=' + %CHAR(item(2).qty));   // Gadget qty=3
 ```
 
 Use `DIM(*VAR: n)` to handle a variable number of elements:
@@ -2055,7 +2066,7 @@ END-DS;
 
 XML-INTO emp %XML(xml : 'case=any path=employees');
 
-DSPLY 'Count: ' + %CHAR(%ELEM(emp));
+DSPLY ('Count: ' + %CHAR(%ELEM(emp)));
 ```
 
 ### Nested Data Structures with LIKEDS
@@ -2858,7 +2869,7 @@ DSPLY '--- Employee Report ---';
 EXEC SQL FETCH empCur INTO :emp.id, :emp.name, :emp.salary;
 
 DOW SQLCOD = 0;
-  DSPLY %CHAR(emp.id) + '  ' + %TRIM(emp.name) + '  $' + %CHAR(emp.salary);
+  DSPLY (%CHAR(emp.id) + '  ' + %TRIM(emp.name) + '  $' + %CHAR(emp.salary));
   total += emp.salary;
   count += 1;
   EXEC SQL FETCH empCur INTO :emp.id, :emp.name, :emp.salary;
@@ -2867,8 +2878,8 @@ ENDDO;
 EXEC SQL CLOSE empCur;
 
 DSPLY '-----------------------';
-DSPLY 'Employees: ' + %CHAR(count);
-DSPLY 'Total Payroll: $' + %CHAR(total);
+DSPLY ('Employees: ' + %CHAR(count));
+DSPLY ('Total Payroll: $' + %CHAR(total));
 
 EXEC SQL DISCONNECT;
 

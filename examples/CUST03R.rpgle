@@ -20,7 +20,7 @@ DOW NOT %EOF(MESSAGES);
     IF %FOUND(ORDERS);
       ORD_THANKED = 'Y';
       UPDATE ORDERS;
-      DSPLY 'Order ' + %CHAR(%INT(orderId)) + ' marked as thanked';
+      DSPLY ('Order ' + %CHAR(%INT(orderId)) + ' marked as thanked');
     ENDIF;
   ENDIF;
 

@@ -3135,6 +3135,20 @@
    "verdict": "accept",
    "verified": "2026-09-24"
   },
+  "test268_inlr_indicator.rpgle": {
+   "codes": [],
+   "rpgc": "accept",
+   "sha256": "1bdf3795c36552aa573b648e7a0ff35610283f399ccb79cafe27d9dbbb60bf15",
+   "verdict": "accept",
+   "verified": "2026-09-24"
+  },
+  "test269_fixed_inlr.rpgle": {
+   "codes": [],
+   "rpgc": "accept",
+   "sha256": "b8107cd1d5e4cd52bbd2659f253e5a0499960717869584c104f1da9f44d43570",
+   "verdict": "accept",
+   "verified": "2026-09-24"
+  },
   "test26_pointers.rpgle": {
    "codes": [],
    "rpgc": "accept",
@@ -4239,5 +4253,5 @@
    "verified": "2026-09-23"
   }
  },
- "generated": "2026-09-24T03:13:22+00:00"
+ "generated": "2026-09-24T03:27:19+00:00"
 }

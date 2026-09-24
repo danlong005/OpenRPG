@@ -47,3 +47,6 @@ test188_fixed_cspec_exec_sql.sqlrpgle  reject  uses OpenRPG's EXEC SQL CONNECT U
 test219_prog_order_release.sqlrpgle  reject  uses OpenRPG's EXEC SQL CONNECT USING
 test237_sql_into_fit.sqlrpgle        reject  uses OpenRPG's EXEC SQL CONNECT USING
 test238_rla_field_fit.rpgle          reject  uses OpenRPG's EXEC SQL CONNECT USING
+
+# OpenRPG extensions: accepted by rpgc on purpose, rejected by IBM i.
+test61_no_free.rpgle                 reject  OpenRPG extension: free-form without **FREE; IBM i requires the directive

@@ -906,6 +906,7 @@ void CodeGen::visit(Program& node) {
     indent_ = 0;
     at_file_scope_ = true;
     out_ << "bool rpg_indicators[100] = {};\n";
+    out_ << "bool rpg_inlr = false;   // *INLR\n";
 
     // DS instances. Only the declaration belongs out here; anything that has
     // to *run* (a vector's reserve, PSDS field initialisation) stays in main.
@@ -1055,7 +1056,7 @@ void CodeGen::visit(Program& node) {
         out_ << "__sql_env.connectStr(\"" << conf_dsn_ << "\");\n";
     }
 
-    // Emit RAII auto-disconnect guard (fires before any return, including *INLR = *ON)
+    // Emit RAII auto-disconnect guard (fires before any return)
     if (uses_sql_) {
         emitIndent();
         out_ << "struct __SqlGuard { ~__SqlGuard() { __sql_env.disconnect(); } } __sql_guard;\n";
@@ -3240,6 +3241,7 @@ void CodeGen::visit(DumpStmt& node) {
 
 void CodeGen::visit(IndicatorExpr& node) {
     uses_indicators_ = true;
+    if (node.number == IndicatorExpr::LR) { expr_ << "rpg_inlr"; return; }
     expr_ << "rpg_indicators[" << node.number << "]";
 }
 

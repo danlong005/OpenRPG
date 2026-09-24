@@ -823,6 +823,8 @@ run_test "264" "Reject a DCL-PI with no name" "$TESTDIR/test264_err_pi_no_name.r
 run_test "265" "Reject a DCL-PI named unlike its procedure" "$TESTDIR/test265_err_pi_wrong_name.rpgle" "error"
 run_test "266" "Reject a calculation after a subroutine" "$TESTDIR/test266_err_calc_after_subroutine.rpgle" "error"
 run_test "267" "Compound assignment (+= -= *= /= **=)" "$TESTDIR/test267_compound_assign.rpgle" "run"
+run_test "268" "*INLR is an indicator; setting it does not end the program" "$TESTDIR/test268_inlr_indicator.rpgle" "run"
+run_test "269" "Fixed-format *INLR: EVAL and LR conditioning" "$TESTDIR/test269_fixed_inlr.rpgle" "run"
 
 # ── Customer / drop-in tests ─────────────────────────────────────────────
 # Drop any .rpgle or .sqlrpgle file into tests/customer/ and it will be

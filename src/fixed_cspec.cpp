@@ -47,13 +47,13 @@ static std::string rawCols(const std::string& line, const ColSpec& spec) {
 
 // The RPG IV indicators that are real conditioning indicators but that
 // this compiler has no representation for — everything outside *IN01-*IN99
-// (see TODO.md "Indicator Types (beyond *IN01-*IN99, *INLR)" under Not
-// Planned). Recognized only so they get a "not supported here" diagnostic
+// and LR (see TODO.md "Indicator Types (beyond *IN01-*IN99, *INLR)" under
+// Not Planned). Recognized only so they get a "not supported here" diagnostic
 // instead of being reported as a typo.
 static bool isUnsupportedIndicatorName(const std::string& s) {
     if (s.size() != 2) return false;
     char a = s[0], b = s[1];
-    if (s == "LR" || s == "MR" || s == "RT" || s == "OV" || s == "1P") return true;
+    if (s == "MR" || s == "RT" || s == "OV" || s == "1P") return true;
     if ((a == 'L' || a == 'H') && b >= '1' && b <= '9') return true; // L1-L9, H1-H9
     if (a == 'U' && b >= '1' && b <= '8') return true;               // U1-U8
     if (a == 'K' && b >= 'A' && b <= 'Y' && b != 'O') return true;   // KA-KN, KP-KY
@@ -87,10 +87,14 @@ static bool parseCondIndicator(const std::string& line, int lineNo, std::string&
         cond = (notFlag == 'N') ? ("NOT *IN" + name) : ("*IN" + name);
         return true;
     }
+    if (name == "LR") {
+        cond = (notFlag == 'N') ? "NOT *INLR" : "*INLR";
+        return true;
+    }
     if (isUnsupportedIndicatorName(name)) {
         report_fixed_format_error(lineNo, "C-spec: conditioning indicator '" + name +
             "' is not supported — this compiler implements only the numbered indicators "
-            "*IN01-*IN99 (see TODO.md \"Indicator Types\")");
+            "*IN01-*IN99 and LR (see TODO.md \"Indicator Types\")");
         return false;
     }
     report_fixed_format_error(lineNo, std::string("C-spec: malformed conditioning indicator '") +
@@ -153,10 +157,11 @@ static bool parseResultIndicator(const std::string& raw, int lineNo,
         name = "*IN" + up;
         return true;
     }
+    if (up == "LR") { name = "*INLR"; return true; }
     if (isUnsupportedIndicatorName(up)) {
         report_fixed_format_error(lineNo, std::string("C-spec: COMP ") + which +
             " resulting indicator '" + up + "' is not supported — this compiler implements "
-            "only the numbered indicators *IN01-*IN99 (see TODO.md \"Indicator Types\")");
+            "only the numbered indicators *IN01-*IN99 and LR (see TODO.md \"Indicator Types\")");
         return false;
     }
     report_fixed_format_error(lineNo, std::string("C-spec: COMP ") + which +

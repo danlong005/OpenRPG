@@ -89,6 +89,18 @@ extern bool ctlopt_nomain;
 // Set line number on AST node
 #define SET_LINE(node) do { if (node) (node)->line = yylineno; } while(0)
 
+// *INLR tested (first line) and set anywhere. IBM i rejects a program that
+// tests an indicator it never sets: RNF7030, "The name or indicator *INLR
+// is not defined". Checked once the whole source is parsed.
+static int g_lr_tested_line = 0;
+static bool g_lr_set = false;
+
+static void check_lr_defined() {
+    if (g_lr_tested_line && !g_lr_set)
+        report_semantic_error(g_lr_tested_line, "The name or indicator *INLR is not defined: the "
+            "program tests LR but never sets it (IBM: RNF7030)");
+}
+
 // The value of target op= value: target op (value), with the target copied,
 // since it is also the assignment's left-hand side.
 static rpg::Expression* compound_value(rpg::Expression* target, int op, rpg::Expression* value) {
@@ -250,7 +262,7 @@ static rpg::DclS* make_dcl_s(const char* name, rpg::ParamDecl* t, DclSKws* k) {
 %token KW_STATIC KW_TEMPLATE KW_BASED KW_OPTIONS KW_NOPASS KW_OMIT
 %token KW_EXPORT KW_IMPORT KW_EXTPGM KW_EXTPROC KW_CTLOPT KW_OVERLOAD
 %token KW_RETURN
-%token KW_INLR KW_ON
+%token KW_ON
 %token KW_BLANKS KW_ZEROS KW_HIVAL KW_LOVAL KW_USER
 %token KW_IF KW_ELSEIF KW_ELSE KW_ENDIF
 %token KW_DOW KW_DOU KW_ENDDO
@@ -314,7 +326,7 @@ static rpg::DclS* make_dcl_s(const char* name, rpg::ParamDecl* t, DclSKws* k) {
 %token NE LE GE LT GT
 
 %type <program> program
-%type <stmt> statement dcl_f_stmt dcl_s_stmt dcl_c_stmt eval_stmt eval_corr_stmt evalr_stmt dsply_stmt inlr_stmt return_stmt expr_stmt reset_stmt clear_stmt sorta_stmt dump_stmt callp_stmt leavesr_stmt dealloc_stmt test_stmt
+%type <stmt> statement dcl_f_stmt dcl_s_stmt dcl_c_stmt eval_stmt eval_corr_stmt evalr_stmt dsply_stmt return_stmt expr_stmt reset_stmt clear_stmt sorta_stmt dump_stmt callp_stmt leavesr_stmt dealloc_stmt test_stmt
 %type <stmt> if_stmt dow_stmt dou_stmt for_stmt for_each_stmt select_stmt iter_stmt leave_stmt
 %type <stmt> dcl_proc_stmt dcl_pr_stmt dcl_ds_stmt dcl_enum_stmt
 %type <str_list> call_parm_list
@@ -352,9 +364,11 @@ static rpg::DclS* make_dcl_s(const char* name, rpg::ParamDecl* t, DclSKws* k) {
 
 program:
     KW_FREE statements_opt {
+        check_lr_defined();
         $$ = g_program;
     }
     | statements_opt {
+        check_lr_defined();
         $$ = g_program;
     }
     ;
@@ -393,7 +407,6 @@ statement:
     | eval_stmt   { $$ = $1; SET_LINE($$); }
     | eval_corr_stmt { $$ = $1; SET_LINE($$); }
     | dsply_stmt  { $$ = $1; SET_LINE($$); }
-    | inlr_stmt   { $$ = $1; SET_LINE($$); }
     | return_stmt { $$ = $1; SET_LINE($$); }
     | if_stmt     { $$ = $1; SET_LINE($$); }
     | dow_stmt    { $$ = $1; SET_LINE($$); }
@@ -779,6 +792,7 @@ eval_target:
     | KW_TIMFMT { $$ = new rpg::Identifier("TIMFMT"); }
     | KW_EXTNAME { $$ = new rpg::Identifier("EXTNAME"); }
     | INDICATOR {
+        if ($1 == rpg::IndicatorExpr::LR) g_lr_set = true;
         $$ = new rpg::IndicatorExpr($1);
     }
     /* Qualified targets chain to any depth: ds.f, ds.sub.f, ds(i).sub.f.
@@ -1033,12 +1047,6 @@ dsply_stmt:
             yyerror("DSPLY: an expression must be in parentheses, e.g. DSPLY ('Total: ' + x) (IBM: RNF0637)");
         }
         $$ = new rpg::DsplyStmt(std::unique_ptr<rpg::Expression>(e));
-    }
-    ;
-
-inlr_stmt:
-    KW_INLR EQUALS KW_ON SEMICOLON {
-        $$ = new rpg::ReturnStmt(0);
     }
     ;
 
@@ -2481,6 +2489,7 @@ primary_expr:
         $$ = make_bif("GETENV", $3);
     }
     | INDICATOR {
+        if ($1 == rpg::IndicatorExpr::LR && !g_lr_tested_line) g_lr_tested_line = yylineno;
         $$ = new rpg::IndicatorExpr($1);
     }
     | KW_ON {

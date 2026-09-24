@@ -378,7 +378,7 @@ public:
 
 class ReturnStmt : public Statement {
 public:
-    int code;                              // used for *INLR = *ON (code=0)
+    int code;                              // exit code for a bare RETURN
     std::unique_ptr<Expression> expr;      // used for RETURN expr;
     bool has_expr;
     explicit ReturnStmt(int code);
@@ -613,7 +613,11 @@ public:
 // Indicator access (*INxx)
 class IndicatorExpr : public Expression {
 public:
-    int number; // 1-99
+    // *INLR. Setting it does not end the program: the calculations run on,
+    // and the program ends where the mainline does. The numbered indicators
+    // are 01-99, so slot 0 is free for it.
+    static constexpr int LR = 0;
+    int number; // 1-99, or LR
     explicit IndicatorExpr(int number);
     void accept(ASTVisitor& visitor) override;
 };

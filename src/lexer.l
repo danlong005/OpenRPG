@@ -515,7 +515,7 @@ static void parse_ctlopt(const char* text) {
 "*INFO"             { return KW_STAR_INFO; }
 "*DIAG"             { return KW_STAR_DIAG; }
 "*ESCAPE"           { return KW_STAR_ESCAPE; }
-"*INLR"             { return KW_INLR; }
+"*INLR"             { yylval.ival = 0; return INDICATOR; }  /* LR: slot 0, see IndicatorExpr::LR */
 "*ON"               { return KW_ON; }
 "*OFF"              { return KW_OFF; }
 "*NULL"             { return KW_NULL; }

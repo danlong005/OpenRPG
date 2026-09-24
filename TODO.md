@@ -1580,6 +1580,28 @@ subfields, strings and `EVAL(H)`, and compiles on PUB400. Found alongside:
 fixed-format `C EVAL *INLR = *ON` is a syntax error in rpgc, with or
 without compound operators. Not yet fixed.
 
+### *INLR is a real indicator (2026-09-24)
+
+`*INLR = *ON;` was the only form rpgc knew, and it compiled to `RETURN` —
+so the statements after it never ran, where IBM i runs the rest of the
+calculations and ends the program where the mainline ends. `*INLR = *OFF`,
+`IF *INLR`, `NOT *INLR` and fixed-format `EVAL *INLR = *ON` were syntax
+errors. `*INLR` is now an indicator (`IndicatorExpr::LR`, emitted as
+`rpg_inlr`), and fixed-format `LR`/`NLR` conditioning and COMP resulting
+indicators accept it. As on IBM i, a program that tests LR without setting
+it anywhere is rejected (RNF7030); test 166 now fails for that reason, the
+same line and code as IBM. Tests 268-269 compile on PUB400.
+
+Not emulated: with LR off at the end of the mainline, an IBM i cycle
+program with no primary file runs its calculations again; rpgc ends.
+
+Found alongside, not yet done:
+- IBM rejects any indicator tested but never set (RNF7030), not only LR.
+  rpgc checks LR alone: for numbered indicators the ones a display file
+  sets have to count as set.
+- Fixed-format factor 1 must be left-adjusted (RNF0262, severity 20); rpgc
+  accepts it anywhere in columns 12-25.
+
 ### Load discipline
 
 PUB400 is a free community box run on donated hardware. This is a **manual**

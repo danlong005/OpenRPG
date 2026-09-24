@@ -207,6 +207,8 @@ private:
     // HighTrunc: drop excess high-order digits instead (the fixed-format
     // arithmetic opcodes, marked EVAL(T)).
     enum class FitMode { Scale, Overflow, HighTrunc };
+    // DCL-ENUM name -> its constants as C++ names (ENUM.X when QUALIFIED).
+    std::map<std::string, std::vector<std::string>> enum_members_;
     std::string fitValue(RPGType type, int length, int decimals, const std::string& rhs) const;
     std::string fitValue(const FieldAttrs& a, const std::string& rhs, FitMode mode = FitMode::Scale) const;
     // "X = fit(X);" for a target assigned by something other than EVAL, or "".

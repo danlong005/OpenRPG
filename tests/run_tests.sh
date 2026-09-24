@@ -367,7 +367,7 @@ run_test "67" "*PSSR Error" "$TESTDIR/test67_pssr_error.rpgle" "run"
 run_test "68" "Bitwise & Power" "$TESTDIR/test68_bitwise_power.rpgle" "run"
 run_test "69" "%SCANR" "$TESTDIR/test69_scanr.rpgle" "run"
 run_test "70" "%EDITFLT & %UNSH" "$TESTDIR/test70_editflt_unsh.rpgle" "run"
-run_test "71" "Enum & Boolean" "$TESTDIR/test71_enum_boolean.rpgle" "run"
+run_test "71" "Enum & indicator" "$TESTDIR/test71_enum_boolean.rpgle" "run"
 run_test "72" "DIM(*VAR)" "$TESTDIR/test72_dim_var.rpgle" "run"
 run_test "73" "Date Formats" "$TESTDIR/test73_date_formats.rpgle" "run"
 run_test "74" "%CONCAT" "$TESTDIR/test74_concat.rpgle" "run"
@@ -825,6 +825,7 @@ run_test "266" "Reject a calculation after a subroutine" "$TESTDIR/test266_err_c
 run_test "267" "Compound assignment (+= -= *= /= **=)" "$TESTDIR/test267_compound_assign.rpgle" "run"
 run_test "268" "*INLR is an indicator; setting it does not end the program" "$TESTDIR/test268_inlr_indicator.rpgle" "run"
 run_test "269" "Fixed-format *INLR: EVAL and LR conditioning" "$TESTDIR/test269_fixed_inlr.rpgle" "run"
+run_test "270" "Reject a DCL-ENUM constant with no value" "$TESTDIR/test270_err_enum_no_value.rpgle" "error"
 
 # ── Customer / drop-in tests ─────────────────────────────────────────────
 # Drop any .rpgle or .sqlrpgle file into tests/customer/ and it will be

@@ -305,7 +305,7 @@ static rpg::DclS* make_dcl_s(const char* name, rpg::ParamDecl* t, DclSKws* k) {
 %token KW_DTAARA KW_OUT KW_UNLOCK
 %token KW_RTNPARM KW_OPDESC KW_ASCEND KW_DESCEND KW_NULLIND
 %token KW_VARSIZE KW_STRING_OPT KW_TRIM_OPT
-%token KW_DCL_ENUM KW_END_ENUM KW_BOOLEAN
+%token KW_DCL_ENUM KW_END_ENUM
 %token <sval> EXEC_SQL_TEXT
 %token POWER
 %token KW_DIM_VAR KW_DIM_AUTO
@@ -734,7 +734,6 @@ dcl_type:
     | KW_UCS2 LPAREN INTEGER_LITERAL RPAREN   { $$ = new rpg::ParamDecl{"", rpg::RPGType::UCS2, $3, 0, 0, false}; }
     | KW_GRAPH LPAREN INTEGER_LITERAL RPAREN  { $$ = new rpg::ParamDecl{"", rpg::RPGType::UCS2, $3, 0, 0, false}; }
     | KW_IND        { $$ = new rpg::ParamDecl{"", rpg::RPGType::IND, 0, 0, 0, false}; }
-    | KW_BOOLEAN    { $$ = new rpg::ParamDecl{"", rpg::RPGType::IND, 0, 0, 0, false}; }
     | KW_DATE       { $$ = new rpg::ParamDecl{"", rpg::RPGType::DATE, 0, 0, 0, false}; }
     | KW_TIME       { $$ = new rpg::ParamDecl{"", rpg::RPGType::TIME, 0, 0, 0, false}; }
     | KW_TIMESTAMP  { $$ = new rpg::ParamDecl{"", rpg::RPGType::TIMESTAMP, 0, 0, 0, false}; }
@@ -1598,23 +1597,39 @@ enum_constants:
     }
     ;
 
+/* IBM's form: a name and its value, written like DCL-C — `RED 1;` or
+   `RED CONST(1);`. The value is required (RNF3905 without one). */
 enum_constant:
-    IDENTIFIER SEMICOLON {
+    ident expression SEMICOLON {
         auto* v = new std::vector<rpg::EnumConstant>();
         rpg::EnumConstant ec;
         ec.name = $1;
+        ec.value.reset($2);
         free($1);
         v->push_back(std::move(ec));
         $$ = v;
     }
-    | IDENTIFIER EQUALS expression SEMICOLON {
+    | ident KW_CONST LPAREN expression RPAREN SEMICOLON {
         auto* v = new std::vector<rpg::EnumConstant>();
         rpg::EnumConstant ec;
         ec.name = $1;
-        ec.value.reset($3);
+        ec.value.reset($4);
         free($1);
         v->push_back(std::move(ec));
         $$ = v;
+    }
+    | ident SEMICOLON {
+        yyerror((std::string("DCL-ENUM constant ") + $1 + " needs a value, e.g. " + $1 +
+                 " 1; (IBM: RNF3905)").c_str());
+        free($1);
+        $$ = new std::vector<rpg::EnumConstant>();
+    }
+    | ident EQUALS expression SEMICOLON {
+        yyerror((std::string("DCL-ENUM constant ") + $1 + ": write the value without '=', e.g. " +
+                 $1 + " 1;").c_str());
+        delete $3;
+        free($1);
+        $$ = new std::vector<rpg::EnumConstant>();
     }
     ;
 

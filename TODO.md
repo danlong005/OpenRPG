@@ -10,7 +10,7 @@
 - DCL-C, DCL-F (stub), DCL-DS/END-DS (QUALIFIED, DIM, DIM(*VAR), LIKEDS, OVERLAY, POS, PREFIX, EXTNAME stub)
 - DCL-SUBF, DCL-PARM
 - DCL-PR/END-PR, DCL-PROC/END-PROC, DCL-PI/END-PI (VALUE, return types, LIKEDS params)
-- DCL-ENUM/END-ENUM (QUALIFIED), BOOLEAN data type (Test 71)
+- DCL-ENUM/END-ENUM (QUALIFIED) (Test 71)
 - EXPORT, IMPORT, EXTPGM, EXTPROC, NOMAIN (Tests 48/49)
 - OPTIONS(*NOPASS) (Test 46), OPTIONS(*OMIT) (Test 64)
 
@@ -1602,6 +1602,21 @@ Found alongside, not yet done:
 - Fixed-format factor 1 must be left-adjusted (RNF0262, severity 20); rpgc
   accepts it anywhere in columns 12-25.
 
+### BOOLEAN removed, DCL-ENUM in IBM's syntax (2026-09-24)
+
+rpgc accepted a `BOOLEAN` data type as an alias for `IND`, added in the
+belief that IBM shipped one with DCL-ENUM in 7.5 TR3 / 7.4 TR9. It did not:
+IBM i rejects `DCL-S x BOOLEAN;` (RNF3308). Removed; use `IND`.
+
+DCL-ENUM constants were written `RED = 1;`, or `RED;` for an automatic
+0, 1, 2...; IBM i accepts neither. Its form is DCL-C's: `RED 1;` or
+`RED CONST(1);`, with the value required (RNF3905 without one). Checked on
+PUB400: character values ('O'), negative values and `x IN enum` are all
+valid, and rpgc now handles each — constants are typed from their value as
+DCL-C constants are, and `IN` expands the enum into its constants. An
+operation-code name (`open`) cannot be a constant on IBM i; rpgc does not
+check that. Test 71 now compiles on IBM i; test 270 is the rejected form.
+
 ### Load discipline
 
 PUB400 is a free community box run on donated hardware. This is a **manual**
@@ -1671,7 +1686,7 @@ The differentiators. Every row is "Not under consideration" at IBM.
 | 27 | Relax the `%SUBST` "length exceeds data" error | Diagnostic policy, not new machinery. |
 | 25 | `%CHAR` with `%EDITC` formatting | Both BIFs already ship; this merges them. |
 | 15 | Multiple conditions in one `/IF` directive | Directive handling already lives in the lexer. |
-| 13 | `*TRUE` / `*FALSE` figurative constants | `BOOLEAN` already ships (Test 71). |
+| 13 | `*TRUE` / `*FALSE` figurative constants | Aliases of `*ON` / `*OFF` for `IND`. |
 
 ### Tier 2 — "Future consideration" at IBM, small-to-medium here
 
@@ -1877,7 +1892,7 @@ member's C-spec to host modern free-format statements.
 | 68 | Bitwise & Power |
 | 69 | %SCANR |
 | 70 | %EDITFLT & %UNSH |
-| 71 | Enum & Boolean |
+| 71 | Enum & indicator |
 | 72 | DIM(*VAR) |
 | 73 | Date Formats |
 | 74 | %CONCAT |

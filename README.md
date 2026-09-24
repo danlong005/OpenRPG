@@ -392,7 +392,7 @@ See the [User's Guide](docs/GUIDE.md#multi-module-programs) for details.
 - 90+ built-in functions
 - Data structures (QUALIFIED, TEMPLATE, DIM, LIKEDS, OVERLAY, POS)
 - Procedures with prototypes, optional parameters (*NOPASS, *OMIT)
-- Enumerations (DCL-ENUM) and BOOLEAN type
+- Enumerations (DCL-ENUM)
 - Varying-dimension arrays (DIM(*VAR), DIM(*AUTO))
 - Date/time arithmetic with all format constants
 - MONITOR/ON-ERROR error handling, *PSSR, ON-EXIT

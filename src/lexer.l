@@ -189,7 +189,6 @@ static void parse_ctlopt(const char* text) {
 "DCL-C"             { return KW_DCL_C; }
 "DCL-ENUM"          { return KW_DCL_ENUM; }
 "END-ENUM"          { return KW_END_ENUM; }
-"BOOLEAN"           { return KW_BOOLEAN; }
 "CHAR"              { return KW_CHAR; }
 "VARCHAR"           { return KW_VARCHAR; }
 "INT"               { return KW_INT; }

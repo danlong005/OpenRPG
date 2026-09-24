@@ -3156,6 +3156,32 @@
    "verdict": "accept",
    "verified": "2026-09-23"
   },
+  "test270_err_enum_no_value.rpgle": {
+   "codes": [
+    "RNF3905",
+    "RNF7030"
+   ],
+   "messages": [
+    {
+     "code": "RNF3905",
+     "line": 5,
+     "severity": 30,
+     "text": "Keyword CONST is missing for definition of constant SMALL; specification is ignored."
+    },
+    {
+     "code": "RNF7030",
+     "line": 5,
+     "severity": 30,
+     "text": "The name or indicator SMALL is not defined."
+    }
+   ],
+   "reason": "RNF3905: Keyword CONST is missing for definition of constant SMALL; specification is ignored.",
+   "reason_detail": "line 5: Keyword CONST is missing for definition of constant SMALL; specification is ignored. \u2014 `small;`",
+   "rpgc": "reject",
+   "sha256": "578cfff25fe2e9d53e2c188121181aa8f186dc0a95b28807a8e757bfb93a98fd",
+   "verdict": "reject",
+   "verified": "2026-09-24"
+  },
   "test27_arrays.rpgle": {
    "codes": [],
    "rpgc": "accept",
@@ -3586,50 +3612,11 @@
    "verified": "2026-09-23"
   },
   "test71_enum_boolean.rpgle": {
-   "codes": [
-    "RNF3308",
-    "RNF3438",
-    "RNF7030",
-    "RNF7503"
-   ],
-   "messages": [
-    {
-     "code": "RNF3308",
-     "line": 2,
-     "severity": 20,
-     "text": "Keyword name is not valid; the keyword is ignored."
-    },
-    {
-     "code": "RNF3438",
-     "line": 2,
-     "severity": 30,
-     "text": "LIKE keyword is expected for field ISACTIVE but not found; definition is ignored."
-    },
-    {
-     "code": "RNF7030",
-     "line": 2,
-     "severity": 30,
-     "text": "The name or indicator ISACTIVE is not defined."
-    },
-    {
-     "code": "RNF3308",
-     "line": 6,
-     "severity": 20,
-     "text": "Keyword name is not valid; the keyword is ignored."
-    },
-    {
-     "code": "RNF3308",
-     "line": 7,
-     "severity": 20,
-     "text": "Keyword name is not valid; the keyword is ignored."
-    }
-   ],
-   "reason": "RNF3308: Keyword name is not valid; the keyword is ignored.",
-   "reason_detail": "line 2: Keyword name is not valid; the keyword is ignored. \u2014 `DCL-S isActive BOOLEAN;`",
+   "codes": [],
    "rpgc": "accept",
-   "sha256": "9bd4704dc6daf71f063e81a5d08417535b1863f4c1c1a0ee3bc99f7a526c75f1",
-   "verdict": "reject",
-   "verified": "2026-09-23"
+   "sha256": "fd77caf85bd8ada5b4bf866c52c03a2a2b96d6cdfed79b1cf0f8d63eab757837",
+   "verdict": "accept",
+   "verified": "2026-09-24"
   },
   "test72_dim_var.rpgle": {
    "codes": [],
@@ -4253,5 +4240,5 @@
    "verified": "2026-09-23"
   }
  },
- "generated": "2026-09-24T03:27:19+00:00"
+ "generated": "2026-09-24T03:38:45+00:00"
 }

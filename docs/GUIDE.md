@@ -343,7 +343,6 @@ Statements end with a semicolon (`;`).
 | `TIME` | `DCL-S x TIME;` | Time value |
 | `TIMESTAMP` | `DCL-S x TIMESTAMP;` | Timestamp value |
 | `POINTER` | `DCL-S x POINTER;` | Memory pointer |
-| `BOOLEAN` | `DCL-S x BOOLEAN;` | Boolean (true/false) |
 
 ---
 
@@ -1428,14 +1427,21 @@ EVALR(H) target = n;   // rounds to 4, right-justified in 10 chars
 
 ## Enumerations
 
-`DCL-ENUM` defines a named set of constants. Use `QUALIFIED` so each value is
+`DCL-ENUM` defines a named set of constants. Each constant is a name and its
+value, as with `DCL-C` — `Red 1;` or `Red CONST(1);`. The value is required,
+and may be a number or a character literal. Use `QUALIFIED` so each value is
 accessed with the enum name as a prefix.
 
 ```rpgle
 DCL-ENUM Color QUALIFIED;
-  Red;       // 0
-  Green;     // 1
-  Blue;      // 2
+  Red 1;
+  Green 2;
+  Blue 3;
+END-ENUM;
+
+DCL-ENUM Status QUALIFIED;
+  IsOpen 'O';
+  IsClosed 'C';
 END-ENUM;
 
 DCL-S paint INT(10);
@@ -1449,20 +1455,10 @@ SELECT;
   WHEN paint = Color.Blue;
     DSPLY 'Blue';
 ENDSL;
-```
 
-### BOOLEAN Type
-
-`BOOLEAN` is a built-in type that holds `*ON` or `*OFF`:
-
-```rpgle
-DCL-S isReady BOOLEAN INZ(*OFF);
-DCL-S hasError BOOLEAN;
-
-isReady = *ON;
-
-IF isReady AND NOT hasError;
-  DSPLY 'Ready and no errors';
+// IN tests a value against every constant of the enum
+IF paint IN Color;
+  DSPLY 'A color';
 ENDIF;
 ```
 

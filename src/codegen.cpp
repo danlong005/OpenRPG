@@ -2515,6 +2515,20 @@ void CodeGen::visit(DclDS& node) {
 }
 
 void CodeGen::visit(DclEnum& node) {
+    // Each constant is typed from its value, as a DCL-C is: IBM allows
+    // character values ('O') as well as numeric ones.
+    auto constDecl = [&](const EnumConstant& c) {
+        std::string type = "int";
+        if (dynamic_cast<StringLiteral*>(c.value.get())) type = "std::string";
+        else if (dynamic_cast<FloatLiteral*>(c.value.get())) type = "double";
+        return "const " + type + " " + c.name + " = " + emitExpr(*c.value) + ";\n";
+    };
+    // `x IN enum` tests x against every constant.
+    std::vector<std::string>& members = enum_members_[node.name];
+    members.clear();
+    for (const auto& c : node.constants)
+        members.push_back(node.qualified ? node.name + "." + c.name : c.name);
+
     // For QUALIFIED enums, we need RPG's dot-access (COLORS.RED) to work.
     // C++ enum class uses ::, so we register as a "DS-like" to make DotExpr
     // emit the right field access. We use a simple struct with non-static members
@@ -2524,18 +2538,7 @@ void CodeGen::visit(DclEnum& node) {
         emitIndent();
         out_ << "struct " << node.name << "_t {\n";
         indent_++;
-        int auto_val = 0;
-        for (size_t i = 0; i < node.constants.size(); i++) {
-            emitIndent();
-            out_ << "const int " << node.constants[i].name << " = ";
-            if (node.constants[i].value) {
-                out_ << emitExpr(*node.constants[i].value);
-            } else {
-                out_ << auto_val;
-            }
-            out_ << ";\n";
-            auto_val++;
-        }
+        for (const auto& c : node.constants) { emitIndent(); out_ << constDecl(c); }
         indent_--;
         emitIndent();
         out_ << "};\n";
@@ -2543,18 +2546,7 @@ void CodeGen::visit(DclEnum& node) {
         out_ << node.name << "_t " << node.name << ";\n";
     } else {
         // Non-qualified: emit as plain constants
-        int auto_val = 0;
-        for (size_t i = 0; i < node.constants.size(); i++) {
-            emitIndent();
-            out_ << "const int " << node.constants[i].name << " = ";
-            if (node.constants[i].value) {
-                out_ << emitExpr(*node.constants[i].value);
-            } else {
-                out_ << auto_val;
-            }
-            out_ << ";\n";
-            auto_val++;
-        }
+        for (const auto& c : node.constants) { emitIndent(); out_ << constDecl(c); }
     }
 }
 
@@ -4836,6 +4828,15 @@ void CodeGen::visit(InExpr& node) {
         bif->args[0]->accept(*this);
         expr_ << ", ";
         bif->args[1]->accept(*this);
+        expr_ << "))";
+    } else if (auto* id = dynamic_cast<Identifier*>(node.collection.get());
+               id && enum_members_.count(id->name)) {
+        // x IN enum: x against each of the enum's constants.
+        expr_ << "rpg_in_list(";
+        node.value->accept(*this);
+        expr_ << ", rpg_list(";
+        const auto& m = enum_members_[id->name];
+        for (size_t i = 0; i < m.size(); i++) expr_ << (i ? ", " : "") << m[i];
         expr_ << "))";
     } else {
         // Generic: assume collection is iterable

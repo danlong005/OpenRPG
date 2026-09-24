@@ -837,6 +837,10 @@ public:
     void accept(ASTVisitor& visitor) override;
 };
 
+// A deep copy of an expression. Compound assignment needs its target twice:
+// x += y is parsed as x = x + (y).
+std::unique_ptr<Expression> cloneExpr(const Expression& e);
+
 // --- Embedded SQL ---
 
 enum class SqlStmtKind {

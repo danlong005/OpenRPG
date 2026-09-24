@@ -1,4 +1,5 @@
 #include "ast.h"
+#include <stdexcept>
 
 namespace rpg {
 
@@ -263,5 +264,33 @@ void SetllStmt::accept(ASTVisitor& v) { v.visit(*this); }
 SetgtStmt::SetgtStmt(std::vector<std::unique_ptr<Expression>> k, std::string f)
     : keys(std::move(k)), filename(std::move(f)) {}
 void SetgtStmt::accept(ASTVisitor& v) { v.visit(*this); }
+
+std::unique_ptr<Expression> cloneExpr(const Expression& e) {
+    std::unique_ptr<Expression> c;
+    auto list = [](const std::vector<std::unique_ptr<Expression>>& v) {
+        std::vector<std::unique_ptr<Expression>> out;
+        for (const auto& a : v) out.push_back(a ? cloneExpr(*a) : nullptr);
+        return out;
+    };
+    if (auto* x = dynamic_cast<const Identifier*>(&e))         c = std::make_unique<Identifier>(x->name);
+    else if (auto* x = dynamic_cast<const IntLiteral*>(&e))    c = std::make_unique<IntLiteral>(x->value);
+    else if (auto* x = dynamic_cast<const FloatLiteral*>(&e))  c = std::make_unique<FloatLiteral>(*x);
+    else if (auto* x = dynamic_cast<const StringLiteral*>(&e)) c = std::make_unique<StringLiteral>(x->value);
+    else if (auto* x = dynamic_cast<const IndicatorExpr*>(&e)) c = std::make_unique<IndicatorExpr>(x->number);
+    else if (auto* x = dynamic_cast<const BinaryExpr*>(&e))
+        c = std::make_unique<BinaryExpr>(x->op, cloneExpr(*x->left), cloneExpr(*x->right));
+    else if (auto* x = dynamic_cast<const NotExpr*>(&e))   c = std::make_unique<NotExpr>(cloneExpr(*x->operand));
+    else if (auto* x = dynamic_cast<const BIFCall*>(&e))   c = std::make_unique<BIFCall>(x->name, list(x->args));
+    else if (auto* x = dynamic_cast<const FuncCall*>(&e))  c = std::make_unique<FuncCall>(x->name, list(x->args));
+    else if (auto* x = dynamic_cast<const DotExpr*>(&e))   c = std::make_unique<DotExpr>(cloneExpr(*x->object), x->field);
+    else if (auto* x = dynamic_cast<const ArrayAccess*>(&e))
+        c = std::make_unique<ArrayAccess>(x->name, x->index ? cloneExpr(*x->index) : nullptr);
+    else if (auto* x = dynamic_cast<const InExpr*>(&e))
+        c = std::make_unique<InExpr>(cloneExpr(*x->value), cloneExpr(*x->collection));
+    else throw std::logic_error("cloneExpr: unhandled expression type");
+    c->line = e.line;
+    c->parenthesized = e.parenthesized;
+    return c;
+}
 
 } // namespace rpg

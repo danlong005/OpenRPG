@@ -1570,6 +1570,16 @@ subroutines; with the subroutines moved to the end, all three compile on
 IBM i, output unchanged. Test 266 is the rejected form; IBM and rpgc flag
 the same three lines.
 
+### Compound assignment (2026-09-24)
+
+`+=`, `-=`, `*=`, `/=` and `**=` are parsed as `target = target op (value)`,
+with `cloneExpr` copying the target, for a plain assignment, `EVAL` and
+`EVAL(x)`, so codegen needed nothing new. rpgc had none of them, and IBM i
+accepts them all; test 267 covers each operator, arrays, qualified
+subfields, strings and `EVAL(H)`, and compiles on PUB400. Found alongside:
+fixed-format `C EVAL *INLR = *ON` is a syntax error in rpgc, with or
+without compound operators. Not yet fixed.
+
 ### Load discipline
 
 PUB400 is a free community box run on donated hardware. This is a **manual**

@@ -379,6 +379,23 @@ DCL-C PI 3.14159;
 | `*NULL` | Null pointer |
 | `*ALL'x'` | Repeated character pattern |
 
+### Assignment
+
+```rpgle
+total = price * qty;
+total += tax;          // total = total + tax
+count -= 1;
+amount *= 1 + rate;    // amount = amount * (1 + rate)
+share /= 3;
+area **= 2;
+name += '!';           // concatenation, for strings
+EVAL(H) share /= 3;    // extenders work as with EVAL
+```
+
+`+=`, `-=`, `*=`, `/=` and `**=` take everything to their right as one
+operand. They work anywhere an assignment does: arrays, subfields, and
+fixed-format `EVAL`.
+
 ---
 
 ## Data Structures

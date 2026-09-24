@@ -539,6 +539,13 @@ static void parse_ctlopt(const char* text) {
 "*KEEP"             { return KW_STAR_KEEP; }
 
 ";"                 { return SEMICOLON; }
+ /* Compound assignment: x += y is x = x + (y). No expression can contain
+    one of these pairs, so they are safe to take as single tokens. */
+"+="                { yylval.ival = 0; return COMPOUND_ASSIGN; }
+"-="                { yylval.ival = 1; return COMPOUND_ASSIGN; }
+"*="                { yylval.ival = 2; return COMPOUND_ASSIGN; }
+"/="                { yylval.ival = 3; return COMPOUND_ASSIGN; }
+"**="               { yylval.ival = 4; return COMPOUND_ASSIGN; }
 "="                 { return EQUALS; }
 "("                 { return LPAREN; }
 ")"                 { return RPAREN; }

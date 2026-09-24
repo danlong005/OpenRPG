@@ -89,6 +89,17 @@ extern bool ctlopt_nomain;
 // Set line number on AST node
 #define SET_LINE(node) do { if (node) (node)->line = yylineno; } while(0)
 
+// The value of target op= value: target op (value), with the target copied,
+// since it is also the assignment's left-hand side.
+static rpg::Expression* compound_value(rpg::Expression* target, int op, rpg::Expression* value) {
+    static const rpg::BinOp ops[] = {rpg::BinOp::ADD, rpg::BinOp::SUB, rpg::BinOp::MUL,
+                                     rpg::BinOp::DIV, rpg::BinOp::POWER};
+    auto* e = new rpg::BinaryExpr(ops[op], rpg::cloneExpr(*target),
+                                  std::unique_ptr<rpg::Expression>(value));
+    e->line = value->line;
+    return e;
+}
+
 // DCL-F option globals (reset at start of each dclf_opts parse)
 static bool g_dclf_keyed = false;
 static bool g_dclf_usropn = false;
@@ -298,6 +309,7 @@ static rpg::DclS* make_dcl_s(const char* name, rpg::ParamDecl* t, DclSKws* k) {
 %token <sval> STRING_LITERAL
 
 %token SEMICOLON EQUALS LPAREN RPAREN COLON
+%token <ival> COMPOUND_ASSIGN   /* += -= *= /= **= : 0..4 */
 %token PLUS MINUS STAR SLASH
 %token NE LE GE LT GT
 
@@ -798,7 +810,27 @@ eval_target:
     ;
 
 eval_stmt:
-    eval_target EQUALS expression SEMICOLON {
+    /* Compound assignment: target op= value is target = target op (value).
+       The value is one operand, whatever its own operators: x *= a + b
+       multiplies by (a + b). */
+    eval_target COMPOUND_ASSIGN expression SEMICOLON {
+        $$ = new rpg::EvalStmt(std::unique_ptr<rpg::Expression>($1),
+                               std::unique_ptr<rpg::Expression>(compound_value($1, $2, $3)));
+    }
+    | KW_EVAL eval_target COMPOUND_ASSIGN expression SEMICOLON {
+        $$ = new rpg::EvalStmt(std::unique_ptr<rpg::Expression>($2),
+                               std::unique_ptr<rpg::Expression>(compound_value($2, $3, $4)));
+    }
+    | KW_EVAL_EXT eval_target COMPOUND_ASSIGN expression SEMICOLON {
+        if (strchr($1, 'T') && !g_allow_fixed_only_stmts) {
+            yyerror("EVAL(T) is not a valid operation extender");
+        }
+        auto* s = new rpg::EvalStmt(std::unique_ptr<rpg::Expression>($2),
+                                    std::unique_ptr<rpg::Expression>(compound_value($2, $3, $4)));
+        s->extenders = $1; free($1);
+        $$ = s;
+    }
+    | eval_target EQUALS expression SEMICOLON {
         $$ = new rpg::EvalStmt(
             std::unique_ptr<rpg::Expression>($1),
             std::unique_ptr<rpg::Expression>($3)

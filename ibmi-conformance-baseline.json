@@ -304,50 +304,11 @@
    "verified": "2026-09-23"
   },
   "test110_overload.rpgle": {
-   "codes": [
-    "RNF3244",
-    "RNF3245",
-    "RNF3551",
-    "RNF5403"
-   ],
-   "messages": [
-    {
-     "code": "RNF3244",
-     "line": 27,
-     "severity": 30,
-     "text": "Return type I(10,0) does not match type *NONE of overloaded prototype."
-    },
-    {
-     "code": "RNF3244",
-     "line": 27,
-     "severity": 30,
-     "text": "Return type F(8) does not match type *NONE of overloaded prototype."
-    },
-    {
-     "code": "RNF3551",
-     "line": 28,
-     "severity": 20,
-     "text": "END-XX is not expected."
-    },
-    {
-     "code": "RNF3244",
-     "line": 30,
-     "severity": 30,
-     "text": "Return type I(10,0) does not match type *NONE of overloaded prototype."
-    },
-    {
-     "code": "RNF3244",
-     "line": 30,
-     "severity": 30,
-     "text": "Return type F(8) does not match type *NONE of overloaded prototype."
-    }
-   ],
-   "reason": "RNF3244: Return type I(n,n) does not match type *NONE of overloaded prototype.",
-   "reason_detail": "line 27: Return type I(10,0) does not match type *NONE of overloaded prototype. \u2014 `DCL-PR abs OVERLOAD(absInt : absFloat);`",
+   "codes": [],
    "rpgc": "accept",
-   "sha256": "ef66ba1182a5f837b09f1ac210ac37323a7f8e2f401acb601540445f3c961037",
-   "verdict": "reject",
-   "verified": "2026-09-23"
+   "sha256": "05e1aba8ba2f4d96d29eaba2cf6ea1b7b5c01d785ed84dc4bad9b91bf3b0751f",
+   "verdict": "accept",
+   "verified": "2026-09-24"
   },
   "test111_elem_alloc.rpgle": {
    "codes": [
@@ -3182,6 +3143,82 @@
    "verdict": "reject",
    "verified": "2026-09-24"
   },
+  "test271_err_overload_end_pr.rpgle": {
+   "codes": [
+    "RNF3551"
+   ],
+   "messages": [
+    {
+     "code": "RNF3551",
+     "line": 12,
+     "severity": 20,
+     "text": "END-XX is not expected."
+    }
+   ],
+   "reason": "RNF3551: END-XX is not expected.",
+   "reason_detail": "line 12: END-XX is not expected. \u2014 `END-PR;`",
+   "rpgc": "reject",
+   "sha256": "dab7afc68545a2c0ff9bfd75bc1ce8875bd0b18ff0c0d967918576ba78b02e93",
+   "verdict": "reject",
+   "verified": "2026-09-24"
+  },
+  "test272_err_overload_return.rpgle": {
+   "codes": [
+    "RNF3244"
+   ],
+   "messages": [
+    {
+     "code": "RNF3244",
+     "line": 11,
+     "severity": 30,
+     "text": "Return type I(10,0) does not match type A(40) VARYING(2) of overloaded prototype."
+    }
+   ],
+   "reason": "RNF3244: Return type I(n,n) does not match type A(n) VARYING(n) of overloaded prototype.",
+   "reason_detail": "line 11: Return type I(10,0) does not match type A(40) VARYING(2) of overloaded prototype. \u2014 `DCL-PR format VARCHAR(40) OVERLOAD(fmtNum : fmtLen);`",
+   "rpgc": "reject",
+   "sha256": "1fbd09f65d7ba24de5392ff47ac4d6189e76f28ff927ae6f7488f00dc0f51f6d",
+   "verdict": "reject",
+   "verified": "2026-09-24"
+  },
+  "test273_err_overload_ambiguous.rpgle": {
+   "codes": [
+    "RNF3246"
+   ],
+   "messages": [
+    {
+     "code": "RNF3246",
+     "line": 15,
+     "severity": 30,
+     "text": "Prototypes ABSINT and ABSFLOAT both match the call; first match assumed."
+    }
+   ],
+   "reason": "RNF3246: Prototypes ABSINT and ABSFLOAT both match the call; first match assumed.",
+   "reason_detail": "line 15: Prototypes ABSINT and ABSFLOAT both match the call; first match assumed. \u2014 `DSPLY %CHAR(%INT(abs(-7)));`",
+   "rpgc": "reject",
+   "sha256": "06a99c8846eb0a3d812d3c0526dba550481a68474edbb9066af321d3722e1e3a",
+   "verdict": "reject",
+   "verified": "2026-09-24"
+  },
+  "test274_err_overload_no_match.rpgle": {
+   "codes": [
+    "RNF3245"
+   ],
+   "messages": [
+    {
+     "code": "RNF3245",
+     "line": 16,
+     "severity": 30,
+     "text": "No prototype in the OVERLOAD keyword of FORMAT matches the call."
+    }
+   ],
+   "reason": "RNF3245: No prototype in the OVERLOAD keyword of FORMAT matches the call.",
+   "reason_detail": "line 16: No prototype in the OVERLOAD keyword of FORMAT matches the call. \u2014 `DSPLY format(due);`",
+   "rpgc": "reject",
+   "sha256": "bdc4919f8f1608b77baaab9c267e1c1bc4bda5aeccaf39461fe74e26c6e6e0d5",
+   "verdict": "reject",
+   "verified": "2026-09-24"
+  },
   "test27_arrays.rpgle": {
    "codes": [],
    "rpgc": "accept",
@@ -4240,5 +4277,5 @@
    "verified": "2026-09-23"
   }
  },
- "generated": "2026-09-24T03:38:45+00:00"
+ "generated": "2026-09-24T03:55:49+00:00"
 }

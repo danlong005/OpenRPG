@@ -845,7 +845,10 @@ void CodeGen::visit(Program& node) {
     // Pre-collect all procedure/prototype signatures (needed for OVERLOAD wrapper generation)
     for (auto* s : proc_stmts) {
         if (auto* pr = dynamic_cast<DclPR*>(s)) {
-            if (pr->overload_impls.empty()) proc_sigs_[pr->name] = pr->interface;
+            // An OVERLOAD prototype's signature is its return type: what a
+            // call through it yields.
+            proc_sigs_[pr->name] = pr->interface;
+            if (!pr->overload_impls.empty()) overloads_[pr->name] = pr->overload_impls;
         } else if (auto* proc = dynamic_cast<DclProc*>(s)) {
             proc_sigs_[proc->name] = proc->interface;
         }
@@ -1127,8 +1130,51 @@ static void checkParamOptions(const std::vector<ParamDecl>& params, const std::s
 
 void CodeGen::visit(DclPR& node) {
     checkParamOptions(node.interface.params, node.name);
-    // OVERLOAD: emit inline C++ wrapper functions, one per implementation
+    // OVERLOAD: every candidate returns what the overloaded prototype does
+    // (IBM: RNF3244). A call normally goes straight to the one candidate it
+    // fits (resolveOverload); the inline wrappers below serve the calls
+    // whose argument types codegen cannot tell, and leave the choice to C++.
     if (!node.overload_impls.empty()) {
+        // A return type as RPG spells it: INT(10), PACKED(9:2), VARCHAR(30).
+        auto retText = [](const ProcInterface& p) -> std::string {
+            if (!p.has_return) return "*NONE";
+            auto n = [](int v) { return std::to_string(v); };
+            switch (p.return_type) {
+                case RPGType::CHAR:      return "CHAR(" + n(p.return_length) + ")";
+                case RPGType::VARCHAR:   return "VARCHAR(" + n(p.return_length) + ")";
+                case RPGType::INT10:     return "INT(" + n(p.return_digits ? p.return_digits : 10) + ")";
+                case RPGType::UNS:       return "UNS(" + n(p.return_digits ? p.return_digits : 10) + ")";
+                case RPGType::PACKED:    return "PACKED(" + n(p.return_digits) + ":" + n(p.return_decimals) + ")";
+                case RPGType::ZONED:     return "ZONED(" + n(p.return_digits) + ":" + n(p.return_decimals) + ")";
+                case RPGType::FLOAT4:    return "FLOAT(4)";
+                case RPGType::FLOAT8:    return "FLOAT(8)";
+                case RPGType::IND:       return "IND";
+                case RPGType::DATE:      return "DATE";
+                case RPGType::TIME:      return "TIME";
+                case RPGType::TIMESTAMP: return "TIMESTAMP";
+                case RPGType::POINTER:   return "POINTER";
+                default:                 return "another type";
+            }
+        };
+        for (auto& impl : node.overload_impls) {
+            auto it = proc_sigs_.find(impl);
+            if (it == proc_sigs_.end()) {
+                report_semantic_error(node.line, "OVERLOAD(" + impl + ") of " + node.name +
+                    ": " + impl + " is not a prototyped procedure");
+                continue;
+            }
+            const ProcInterface& c = it->second;
+            const ProcInterface& o = node.interface;
+            bool same = c.has_return == o.has_return &&
+                (!c.has_return || (c.return_type == o.return_type &&
+                                   c.return_length == o.return_length &&
+                                   c.return_digits == o.return_digits &&
+                                   c.return_decimals == o.return_decimals));
+            if (!same)
+                report_semantic_error(node.line, "Return type " + retText(c) + " of " + impl +
+                    " does not match type " + retText(o) + " of overloaded prototype " +
+                    node.name + ": every candidate must return the overload's type (IBM: RNF3244)");
+        }
         for (auto& impl : node.overload_impls) {
             auto it = proc_sigs_.find(impl);
             if (it == proc_sigs_.end()) continue;
@@ -1542,6 +1588,7 @@ void CodeGen::visit(IRecordFormat&) {}
 void CodeGen::visit(ORecordFormat&) {}
 
 void CodeGen::visit(DclC& node) {
+    const_cats_[node.name] = argCategory(*node.value);
     emitIndent();
     // Determine type from value expression
     if (dynamic_cast<StringLiteral*>(node.value.get())) {
@@ -2526,8 +2573,10 @@ void CodeGen::visit(DclEnum& node) {
     // `x IN enum` tests x against every constant.
     std::vector<std::string>& members = enum_members_[node.name];
     members.clear();
-    for (const auto& c : node.constants)
+    for (const auto& c : node.constants) {
         members.push_back(node.qualified ? node.name + "." + c.name : c.name);
+        const_cats_[members.back()] = argCategory(*c.value);
+    }
 
     // For QUALIFIED enums, we need RPG's dot-access (COLORS.RED) to work.
     // C++ enum class uses ::, so we register as a "DS-like" to make DotExpr
@@ -3434,6 +3483,146 @@ void CodeGen::visit(NotExpr& node) {
     expr_ << ")";
 }
 
+CodeGen::ArgCat CodeGen::typeCategory(RPGType t) {
+    switch (t) {
+        case RPGType::CHAR: case RPGType::VARCHAR: return ArgCat::Char;
+        case RPGType::INT10: case RPGType::UNS: case RPGType::PACKED: case RPGType::ZONED:
+        case RPGType::FLOAT4: case RPGType::FLOAT8: case RPGType::BINDEC: return ArgCat::Numeric;
+        case RPGType::DATE: return ArgCat::Date;
+        case RPGType::TIME: return ArgCat::Time;
+        case RPGType::TIMESTAMP: return ArgCat::Timestamp;
+        case RPGType::IND: return ArgCat::Ind;
+        case RPGType::POINTER: return ArgCat::Pointer;
+        default: return ArgCat::Unknown;
+    }
+}
+
+// The type family of an argument, as far as codegen can tell.
+CodeGen::ArgCat CodeGen::argCategory(const Expression& e) const {
+    if (dynamic_cast<const IntLiteral*>(&e) || dynamic_cast<const FloatLiteral*>(&e)) return ArgCat::Numeric;
+    if (dynamic_cast<const StringLiteral*>(&e)) return ArgCat::Char;
+    if (dynamic_cast<const IndicatorExpr*>(&e) || dynamic_cast<const NotExpr*>(&e) ||
+        dynamic_cast<const InExpr*>(&e)) return ArgCat::Ind;
+    if (auto* b = dynamic_cast<const BinaryExpr*>(&e)) {
+        switch (b->op) {
+            case BinOp::ADD: {
+                ArgCat l = argCategory(*b->left), r = argCategory(*b->right);
+                if (l == ArgCat::Char || r == ArgCat::Char) return ArgCat::Char;
+                if (l == ArgCat::Numeric && r == ArgCat::Numeric) return ArgCat::Numeric;
+                return ArgCat::Unknown;   // date + duration, or unknown operands
+            }
+            case BinOp::SUB: {
+                ArgCat l = argCategory(*b->left), r = argCategory(*b->right);
+                if (l == ArgCat::Numeric && r == ArgCat::Numeric) return ArgCat::Numeric;
+                return ArgCat::Unknown;
+            }
+            case BinOp::MUL: case BinOp::DIV: case BinOp::POWER: return ArgCat::Numeric;
+            default: return ArgCat::Ind;   // comparisons, AND, OR
+        }
+    }
+    if (auto* bif = dynamic_cast<const BIFCall*>(&e)) {
+        static const std::set<std::string> chr = {"CHAR", "TRIM", "TRIML", "TRIMR", "SUBST", "UPPER",
+            "LOWER", "XLATE", "SCANRPL", "REPLACE", "EDITC", "EDITW", "STR", "EDITFLT"};
+        static const std::set<std::string> num = {"INT", "INTH", "DEC", "DECH", "FLOAT", "UNS", "UNSH",
+            "LEN", "SCAN", "SCANR", "CHECK", "CHECKR", "ELEM", "ABS", "DIV", "REM", "SIZE", "DIFF",
+            "SUBDT", "LOOKUP", "TLOOKUP", "STATUS", "PARMS", "SQRT", "MAX", "MIN"};
+        if (chr.count(bif->name)) return ArgCat::Char;
+        if (num.count(bif->name)) return ArgCat::Numeric;
+        if (bif->name == "DATE") return ArgCat::Date;
+        if (bif->name == "TIME") return ArgCat::Time;
+        if (bif->name == "TIMESTAMP") return ArgCat::Timestamp;
+        if (bif->name == "FOUND" || bif->name == "EOF" || bif->name == "EQUAL" ||
+            bif->name == "ERROR" || bif->name == "OPEN" || bif->name == "PASSED" ||
+            bif->name == "OMITTED" || bif->name == "NULLIND") return ArgCat::Ind;
+        if (bif->name == "ADDR" || bif->name == "ALLOC" || bif->name == "REALLOC" ||
+            bif->name == "PADDR") return ArgCat::Pointer;
+        return ArgCat::Unknown;
+    }
+    if (auto* id = dynamic_cast<const Identifier*>(&e)) {
+        if (id->name == "nullptr") return ArgCat::Omit;   // *OMIT and *NULL
+        if (ds_defs_.count(id->name)) return ArgCat::DS;
+        auto c = const_cats_.find(id->name);
+        if (c != const_cats_.end()) return c->second;
+    }
+    if (auto* dot = dynamic_cast<const DotExpr*>(&e)) {
+        if (auto* obj = dynamic_cast<const Identifier*>(dot->object.get())) {
+            auto c = const_cats_.find(obj->name + "." + dot->field);
+            if (c != const_cats_.end()) return c->second;
+        }
+    }
+    if (auto* fc = dynamic_cast<const FuncCall*>(&e)) {
+        if (!array_vars_.count(fc->name)) {
+            auto sig = proc_sigs_.find(fc->name);
+            if (sig == proc_sigs_.end()) return ArgCat::Unknown;
+            return sig->second.has_return ? typeCategory(sig->second.return_type) : ArgCat::Unknown;
+        }
+    }
+    if (dsOfExpr(e)) return ArgCat::DS;
+    FieldAttrs a = attrsOf(e);
+    return a.known ? typeCategory(a.type) : ArgCat::Unknown;
+}
+
+// Whether a call's arguments fit one OVERLOAD candidate, by IBM i's rules:
+// the argument count is within the candidate's (OPTIONS(*NOPASS) makes the
+// trailing parameters optional); a VALUE or CONST parameter takes any
+// argument of its type family (a number for any numeric type, a string for
+// CHAR or VARCHAR); a parameter passed by reference takes only a variable of
+// exactly its type.
+CodeGen::Fit CodeGen::candidateFit(const ProcInterface& sig,
+                                   const std::vector<std::unique_ptr<Expression>>& args) const {
+    size_t required = 0;
+    while (required < sig.params.size() && !sig.params[required].nopass) required++;
+    if (args.size() < required || args.size() > sig.params.size()) return Fit::No;
+    Fit fit = Fit::Yes;
+    for (size_t i = 0; i < args.size(); i++) {
+        const ParamDecl& p = sig.params[i];
+        const Expression& a = *args[i];
+        ArgCat ac = argCategory(a);
+        if (ac == ArgCat::Omit) {
+            if (!p.omit && p.type != RPGType::POINTER) return Fit::No;
+            continue;
+        }
+        ArgCat pc = p.likeds.empty() ? typeCategory(p.type) : ArgCat::DS;
+        if (ac == ArgCat::Unknown || pc == ArgCat::Unknown) { fit = Fit::Maybe; continue; }
+        if (ac != pc) return Fit::No;
+        if (!p.by_value && !p.is_const && pc != ArgCat::DS) {
+            // By reference: a variable of exactly the parameter's type.
+            FieldAttrs fa = attrsOf(a);
+            if (!fa.known) return Fit::No;   // an expression or literal
+            if (fa.type != p.type) return Fit::No;
+        }
+    }
+    return fit;
+}
+
+std::string CodeGen::resolveOverload(const FuncCall& call) {
+    const auto& cands = overloads_[call.name];
+    std::vector<std::string> fits, maybes;
+    for (const auto& c : cands) {
+        auto sig = proc_sigs_.find(c);
+        if (sig == proc_sigs_.end()) continue;
+        Fit f = candidateFit(sig->second, call.args);
+        if (f == Fit::Yes) fits.push_back(c);
+        else if (f == Fit::Maybe) maybes.push_back(c);
+    }
+    int line = call.line > 0 ? call.line : cur_stmt_line_;
+    if (fits.size() == 1 && maybes.empty()) return fits[0];
+    if (fits.size() > 1) {
+        report_semantic_error(line, "Prototypes " + fits[0] + " and " + fits[1] +
+            " both match the call of " + call.name + "; overloaded candidates must differ so "
+            "that only one fits, e.g. in type family (number, character, date) or number of "
+            "parameters (IBM: RNF3246)");
+        return fits[0];
+    }
+    if (fits.empty() && maybes.empty()) {
+        report_semantic_error(line, "No prototype in the OVERLOAD keyword of " + call.name +
+            " matches the call (IBM: RNF3245)");
+        return call.name;
+    }
+    // An argument's type is unknown here: let C++ choose among the wrappers.
+    return call.name;
+}
+
 void CodeGen::visit(FuncCall& node) {
     // Check if this is actually an array access
     if (array_vars_.count(node.name) && node.args.size() == 1) {
@@ -3442,9 +3631,11 @@ void CodeGen::visit(FuncCall& node) {
         expr_ << " - 1]";
         return;
     }
+    // An overloaded name calls the one candidate the arguments fit.
+    const std::string target = overloads_.count(node.name) ? resolveOverload(node) : node.name;
     // Resolve EXTPROC/EXTPGM name mapping
-    std::string callName = node.name;
-    auto eit = extproc_map_.find(node.name);
+    std::string callName = target;
+    auto eit = extproc_map_.find(target);
     if (eit != extproc_map_.end()) callName = eit->second;
     expr_ << callName << "(";
     for (size_t i = 0; i < node.args.size(); i++) {
@@ -3452,8 +3643,8 @@ void CodeGen::visit(FuncCall& node) {
         node.args[i]->accept(*this);
     }
     // If this function has NOPASS params, fill defaults for skipped params and append parm count
-    if (nopass_procs_.count(node.name)) {
-        auto it = nopass_proc_params_.find(node.name);
+    if (nopass_procs_.count(target)) {
+        auto it = nopass_proc_params_.find(target);
         if (it != nopass_proc_params_.end()) {
             // No leading comma when no argument was written: a call with
             // every parameter omitted, M(), came out as M(, 0, 0).

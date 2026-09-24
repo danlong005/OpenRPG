@@ -207,6 +207,16 @@ private:
     // HighTrunc: drop excess high-order digits instead (the fixed-format
     // arithmetic opcodes, marked EVAL(T)).
     enum class FitMode { Scale, Overflow, HighTrunc };
+    // OVERLOAD resolution, as IBM i does it: a call goes to the one
+    // candidate its arguments fit; none is RNF3245, several RNF3246.
+    enum class ArgCat { Unknown, Numeric, Char, Date, Time, Timestamp, Ind, Pointer, DS, Omit };
+    static ArgCat typeCategory(RPGType t);
+    ArgCat argCategory(const Expression& e) const;
+    enum class Fit { No, Yes, Maybe };   // Maybe: an argument's type is unknown
+    Fit candidateFit(const ProcInterface& sig, const std::vector<std::unique_ptr<Expression>>& args) const;
+    std::string resolveOverload(const FuncCall& call);
+    std::map<std::string, std::vector<std::string>> overloads_;   // name -> candidates
+    std::map<std::string, ArgCat> const_cats_;   // DCL-C and enum constants
     // DCL-ENUM name -> its constants as C++ names (ENUM.X when QUALIFIED).
     std::map<std::string, std::vector<std::string>> enum_members_;
     std::string fitValue(RPGType type, int length, int decimals, const std::string& rhs) const;

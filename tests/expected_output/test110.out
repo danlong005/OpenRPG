@@ -1,4 +1,6 @@
-abs(-7)=7
-abs(-3.0)=3
-add(10:32)=42
-add(1.5:2.5)=4
+number 42.00
+number 3.50
+date 2024-01-15
+text hello
+16
+15

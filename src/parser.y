@@ -183,6 +183,29 @@ static rpg::FuncCall* make_func(const char* name, std::vector<rpg::Expression*>*
 }
 // Length/digits/scale of the most recent pi_return_type (see that rule).
 static int g_ret_len = 0, g_ret_digits = 0, g_ret_dec = 0;
+
+// DCL-PR name [type] OVERLOAD(a : b ...);  ret is pi_return_type's value.
+// Line of the OVERLOAD keyword's list. The statement is only reduced after
+// the parser has read the next token (to see whether END-PR follows), by
+// which point yylineno has moved on.
+static int g_overload_line = 0;
+static rpg::DclPR* make_overload_pr(char* name, int ret, std::vector<std::string>* impls) {
+    rpg::ProcInterface iface{};
+    iface.has_return = ret >= 0;
+    if (iface.has_return) {
+        iface.return_type = static_cast<rpg::RPGType>(ret);
+        iface.return_length = g_ret_len;
+        iface.return_digits = g_ret_digits;
+        iface.return_decimals = g_ret_dec;
+    }
+    auto* pr = new rpg::DclPR(name, std::move(iface));
+    pr->overload_impls = std::move(*impls);
+    pr->line = g_overload_line;
+    delete impls;
+    free(name);
+    return pr;
+}
+
 %}
 
 %union {
@@ -417,7 +440,7 @@ statement:
     | iter_stmt   { $$ = $1; SET_LINE($$); }
     | leave_stmt  { $$ = $1; SET_LINE($$); }
     | dcl_proc_stmt { $$ = $1; SET_LINE($$); }
-    | dcl_pr_stmt   { $$ = $1; SET_LINE($$); }
+    | dcl_pr_stmt   { $$ = $1; if (!$$->line) SET_LINE($$); }
     | dcl_ds_stmt   { $$ = $1; SET_LINE($$); }
     | dcl_enum_stmt { $$ = $1; SET_LINE($$); }
     | monitor_stmt  { $$ = $1; SET_LINE($$); }
@@ -1133,18 +1156,23 @@ dcl_pr_stmt:
         free($5);
         $$ = pr;
     }
-    /* OVERLOAD variant */
-    | KW_DCL_PR IDENTIFIER KW_OVERLOAD LPAREN overload_list RPAREN SEMICOLON KW_END_PR SEMICOLON {
-        auto* pr = new rpg::DclPR($2, rpg::ProcInterface{});
-        pr->overload_impls = std::move(*$5);
-        delete $5;
-        free($2);
-        $$ = pr;
+    /* OVERLOAD: one statement, as on IBM i — an overloaded prototype has no
+       parameters, so no END-PR (RNF3551 with one). Its return type is the
+       one every candidate must have (checked in codegen, RNF3244). */
+    | KW_DCL_PR IDENTIFIER pi_return_type KW_OVERLOAD LPAREN overload_list RPAREN SEMICOLON {
+        $$ = make_overload_pr($2, $3, $6);
+    }
+    | KW_DCL_PR IDENTIFIER pi_return_type KW_OVERLOAD LPAREN overload_list RPAREN SEMICOLON
+      KW_END_PR SEMICOLON {
+        yyerror("END-PR is not expected: an OVERLOAD prototype has no parameters, so it is "
+                "a single statement, e.g. DCL-PR fmt VARCHAR(30) OVERLOAD(a : b); (IBM: RNF3551)");
+        $$ = make_overload_pr($2, $3, $6);
     }
     ;
 
 overload_list:
     IDENTIFIER {
+        g_overload_line = yylineno;   /* the OVERLOAD statement's own line */
         $$ = new std::vector<std::string>();
         $$->push_back($1);
         free($1);

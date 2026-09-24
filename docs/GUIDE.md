@@ -2117,37 +2117,48 @@ DSPLY customer.addr.state;     // MA
 
 ## Procedure Overloading
 
-`OVERLOAD` declares a generic procedure name that dispatches to one of several
-typed implementations based on argument types at call time.
+`OVERLOAD` declares one procedure name that calls one of several candidate
+procedures, chosen by the arguments at each call. rpgc follows IBM i's rules.
 
 ### Declaration
 
 ```rpgle
-// Typed implementations
-DCL-PR absInt INT(10);
-  n INT(10) VALUE;
+DCL-PR fmtNum VARCHAR(40);
+  n PACKED(15:2) VALUE;
 END-PR;
 
-DCL-PR absFloat FLOAT(8);
-  n FLOAT(8) VALUE;
+DCL-PR fmtText VARCHAR(40);
+  s VARCHAR(30) CONST;
 END-PR;
 
-// Generic overloaded name
-DCL-PR abs OVERLOAD(absInt : absFloat);
-END-PR;
+DCL-PR format VARCHAR(40) OVERLOAD(fmtNum : fmtText);
 ```
+
+- The overloaded prototype is **one statement**: it has no parameters, so no
+  `END-PR` (RNF3551).
+- **Every candidate returns the overloaded prototype's type** — here
+  `VARCHAR(40)` (RNF3244).
 
 ### Calling
 
-The compiler selects the implementation whose parameter types best match the
-argument types at the call site:
+A call goes to the one candidate its arguments fit:
+
+- the number of arguments must be one the candidate takes (`OPTIONS(*NOPASS)`
+  makes trailing parameters optional);
+- a `VALUE` or `CONST` parameter takes any argument of its **type family** — a
+  number for any numeric type, a string for `CHAR` or `VARCHAR`, a date for a
+  `DATE`;
+- a parameter passed by reference takes only a variable of exactly its type.
+
+If no candidate fits, the call is an error (RNF3245); so is a call that more
+than one fits (RNF3246). rpgc does not pick the closest match. An `INT(10)`
+candidate and a `FLOAT(8)` one, both by `VALUE`, both fit `abs(-7)`, so that
+pair cannot be overloaded. Make candidates differ in type family or in number
+of parameters instead.
 
 ```rpgle
-DCL-S i INT(10);
-DCL-S f FLOAT(8);
-
-i = abs(-7);      // calls absInt
-f = abs(-3.5);    // calls absFloat
+format(42);        // a number: fmtNum
+format('hello');   // a string: fmtText
 ```
 
 ### Full Example
@@ -2157,36 +2168,83 @@ f = abs(-3.5);    // calls absFloat
 
 CTL-OPT MAIN(main);
 
-DCL-PR formatInt   VARCHAR(30);
-  n INT(10) VALUE;
+DCL-PR fmtNum VARCHAR(40);
+  n PACKED(15:2) VALUE;
 END-PR;
 
-DCL-PR formatFloat VARCHAR(30);
-  n FLOAT(8) VALUE;
+DCL-PR fmtDate VARCHAR(40);
+  d DATE VALUE;
 END-PR;
 
-DCL-PR format OVERLOAD(formatInt : formatFloat);
+DCL-PR fmtText VARCHAR(40);
+  s VARCHAR(30) CONST;
 END-PR;
+
+DCL-PR square INT(10);
+  side INT(10) VALUE;
+END-PR;
+
+DCL-PR rectangle INT(10);
+  width INT(10) VALUE;
+  height INT(10) VALUE;
+END-PR;
+
+// An overloaded prototype is one statement: no parameters, no END-PR
+DCL-PR format VARCHAR(40) OVERLOAD(fmtNum : fmtDate : fmtText);
+DCL-PR area INT(10) OVERLOAD(square : rectangle);
 
 DCL-PROC main;
-  DCL-PI main; END-PI;
+  DCL-PI *N;
+  END-PI;
 
-  DSPLY format(42);      // calls formatInt  → "INT:42"
-  DSPLY format(3.14);    // calls formatFloat → "FLT:3"
+  DCL-S count INT(10) INZ(42);
+  DCL-S due DATE;
+
+  due = %DATE('2024-01-15');
+
+  DSPLY format(count);         // a number: fmtNum
+  DSPLY format(3.5);           // any numeric type: fmtNum
+  DSPLY format(due);           // a date: fmtDate
+  DSPLY format('hello');       // a string: fmtText
+
+  DSPLY %CHAR(area(4));        // one argument: square
+  DSPLY %CHAR(area(3 : 5));    // two: rectangle
 END-PROC;
 
-DCL-PROC formatInt EXPORT;
-  DCL-PI formatInt VARCHAR(30);
-    n INT(10) VALUE;
+DCL-PROC fmtNum;
+  DCL-PI *N VARCHAR(40);
+    n PACKED(15:2) VALUE;
   END-PI;
-  RETURN 'INT:' + %CHAR(n);
+  RETURN 'number ' + %CHAR(n);
 END-PROC;
 
-DCL-PROC formatFloat EXPORT;
-  DCL-PI formatFloat VARCHAR(30);
-    n FLOAT(8) VALUE;
+DCL-PROC fmtDate;
+  DCL-PI *N VARCHAR(40);
+    d DATE VALUE;
   END-PI;
-  RETURN 'FLT:' + %CHAR(%INT(n));
+  RETURN 'date ' + %CHAR(d);
+END-PROC;
+
+DCL-PROC fmtText;
+  DCL-PI *N VARCHAR(40);
+    s VARCHAR(30) CONST;
+  END-PI;
+  RETURN 'text ' + s;
+END-PROC;
+
+DCL-PROC square;
+  DCL-PI *N INT(10);
+    side INT(10) VALUE;
+  END-PI;
+  RETURN side * side;
+END-PROC;
+
+DCL-PROC rectangle;
+  DCL-PI *N INT(10);
+    width INT(10) VALUE;
+    height INT(10) VALUE;
+  END-PI;
+  RETURN width * height;
 END-PROC;
 ```
 

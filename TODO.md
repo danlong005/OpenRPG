@@ -1617,6 +1617,31 @@ DCL-C constants are, and `IN` expands the enum into its constants. An
 operation-code name (`open`) cannot be a constant on IBM i; rpgc does not
 check that. Test 71 now compiles on IBM i; test 270 is the rejected form.
 
+### OVERLOAD follows IBM i (2026-09-24)
+
+rpgc turned OVERLOAD into C++ overloading, so C++ picked the closest
+candidate: `abs(-7)` went to an INT(10) candidate over a FLOAT(8) one. IBM
+i does not rank candidates. A call must fit exactly one, and all three of
+IBM's OVERLOAD rules are now enforced, each matched on PUB400:
+- the overloaded prototype is one statement, no END-PR (RNF3551);
+- every candidate returns the overload's type (RNF3244);
+- a call that fits no candidate is RNF3245, one that fits several RNF3246.
+  A VALUE/CONST parameter takes any argument of its type family (number,
+  character, date, time, timestamp, indicator, pointer); a by-reference
+  parameter takes only a variable of exactly its type (checked on PUB400:
+  a literal fits neither of two by-reference candidates).
+
+`resolveOverload` sends each call straight to the one candidate it fits.
+When an argument's type cannot be worked out in codegen, it falls back to
+the old C++ wrappers rather than report a false error. Test 110 was
+rewritten: INT-vs-FLOAT dispatch through VALUE is ambiguous on IBM i. It
+now overloads by type family and by number of parameters, and compiles
+on PUB400. Tests 271-274 are the four rejected forms.
+
+Found alongside, not yet done: typed literals (`D'2024-01-15'`, `T'...'`,
+`Z'...'`) and `%DATE(string : *ISO)` with a format are syntax errors in
+rpgc; IBM i accepts both.
+
 ### Load discipline
 
 PUB400 is a free community box run on donated hardware. This is a **manual**

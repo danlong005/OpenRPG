@@ -119,6 +119,11 @@ format name replaced with the file name to move between the two.
 - **A `DCL-ENUM` constant is a name and a value**, as with `DCL-C`: `RED 1;`
   or `RED CONST(1);`. A constant with no value is rejected (`RNF3905`).
   There is no `BOOLEAN` type; use `IND`.
+- **An `OVERLOAD` prototype is one statement** with no `END-PR` (`RNF3551`),
+  every candidate returns its type (`RNF3244`), and a call must fit exactly
+  one candidate — none is `RNF3245`, several `RNF3246`. A number passed by
+  `VALUE` fits any numeric parameter, so an `INT` and a `FLOAT` candidate
+  cannot be told apart.
 - **Subroutines come last** in their procedure: after the first `BEGSR`, a
   statement that is not another subroutine is rejected (`RNF5005`).
 - **A procedure interface is named** `*N` or the procedure's own name:

@@ -826,6 +826,10 @@ run_test "267" "Compound assignment (+= -= *= /= **=)" "$TESTDIR/test267_compoun
 run_test "268" "*INLR is an indicator; setting it does not end the program" "$TESTDIR/test268_inlr_indicator.rpgle" "run"
 run_test "269" "Fixed-format *INLR: EVAL and LR conditioning" "$TESTDIR/test269_fixed_inlr.rpgle" "run"
 run_test "270" "Reject a DCL-ENUM constant with no value" "$TESTDIR/test270_err_enum_no_value.rpgle" "error"
+run_test "271" "Reject END-PR after an OVERLOAD prototype" "$TESTDIR/test271_err_overload_end_pr.rpgle" "error"
+run_test "272" "Reject an OVERLOAD candidate with another return type" "$TESTDIR/test272_err_overload_return.rpgle" "error"
+run_test "273" "Reject a call that fits two OVERLOAD candidates" "$TESTDIR/test273_err_overload_ambiguous.rpgle" "error"
+run_test "274" "Reject a call that fits no OVERLOAD candidate" "$TESTDIR/test274_err_overload_no_match.rpgle" "error"
 
 # ── Customer / drop-in tests ─────────────────────────────────────────────
 # Drop any .rpgle or .sqlrpgle file into tests/customer/ and it will be

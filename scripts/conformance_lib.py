@@ -65,6 +65,9 @@ def ibm_messages(lines):
         last = None
     seen, out = set(), []
     for code, sev, line, text in raw:
+        # The machine's page-header banner (-=* ... *=-) can land on a
+        # wrapped message line; it is not part of IBM's message.
+        text = re.sub(r"\s*-=\*.*?\*=-\s*", " ", text).strip()
         if code.startswith("RN") and sev < 20: continue
         if code.startswith("SQL") and sev < 30: continue
         key = (code, line, text)

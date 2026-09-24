@@ -370,7 +370,7 @@
      "code": "RNF5454",
      "line": 41,
      "severity": 30,
-     "text": "The third operand of DATA-GEN must be %GEN. -=* http://pub400.com *=-"
+     "text": "The third operand of DATA-GEN must be %GEN."
     }
    ],
    "reason": "RNF5454: The third operand of DATA-GEN must be %GEN.",

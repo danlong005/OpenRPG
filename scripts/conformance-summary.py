@@ -106,11 +106,26 @@ So: database access names the file, display access names the format. Source
 doing record-level access on externally-described database files needs the
 format name replaced with the file name to move between the two.
 
-### Other limits worth knowing
+### Free-format declarations and statements
 
+- **Declarations come before executable code** — in the main procedure and in
+  each subprocedure (`RNF0724`, `RNF0725`).
+- **A `DSPLY` expression must be in parentheses**: `DSPLY ('Total: ' + x);`,
+  not `DSPLY 'Total: ' + x;` (`RNF0637`).
 - **`DSPLY` caps at 52 characters**, enforced at *compile* time against the
   declared length — not the value. A `CHAR(100)` field cannot be displayed even
-  if it holds three characters.
+  if it holds three characters (`RNF7016`). Assign to a `VARCHAR(52)` field
+  and display that.
+- **A procedure interface is named** `*N` or the procedure's own name:
+  `DCL-PI *N INT(10);`. `DCL-PI INT(10);` is rejected (`RNF3767`).
+- **`ds.field` needs a `QUALIFIED` data structure** (`RNF7030`), **`PREFIX`
+  is not allowed on a program-described DS** (`RNF3529`), and **`INZ` may not
+  be longer than its field** (`RNF3431`).
+- **`NOT` applies to indicators only** (`RNF7421`), and **`%DIV`/`%REM` by a
+  literal zero** is a compile-time error (`RNF0552`).
+
+### Other limits worth knowing
+
 - **Object names cap at 10 characters** on IBM i, including data area names.
 - **`EXTDESC('name')` is case-sensitive** and IBM i object names are uppercase,
   so a lowercase literal never resolves.

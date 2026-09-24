@@ -4,6 +4,14 @@
 
 OpenRPG is an open-source, clean-room compiler for IBM RPG IV free-format source code. The `rpgc` binary compiles `.rpgle` source into executables that run on macOS, Linux, or Windows — no IBM i required.
 
+<!-- ibmi-compat:start -->
+## IBM i compatibility
+
+**76.6%** — of the 282 test programs in this repository, rpgc does the same thing as IBM's ILE RPG compiler with 216: both compile the program, or both reject it.
+
+**What this rating means:** it measures the RPG that OpenRPG implements, as exercised by the test programs in this repository. It is not a claim that OpenRPG supports that share of IBM i RPG. Features OpenRPG does not have yet have no test programs, so they are not in the count. The rating is recalculated each time the IBM i conformance workflow runs (last: 2026-09-24). Details: [IBM i Conformance Results](https://github.com/danlong005/OpenRPG/wiki/IBM-i-Conformance-Results).
+<!-- ibmi-compat:end -->
+
 ## Installation
 
 Pre-built packages are available on the [Releases](../../releases) page.

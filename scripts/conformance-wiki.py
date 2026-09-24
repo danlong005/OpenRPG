@@ -28,6 +28,8 @@ ap.add_argument("--sidebar", default="", help="the wiki's _Sidebar.md: add a lin
 ap.add_argument("--expected", default="tests/ibmi-expected.txt",
                 help="exceptions to the should-compile rule (see that file)")
 ap.add_argument("--run-tests", default="tests/run_tests.sh")
+ap.add_argument("--readme", default="",
+                help="README to update: the rating between its ibmi-compat markers")
 a = ap.parse_args()
 
 commit = a.commit
@@ -92,6 +94,12 @@ w("Every test program in the repository is compiled with IBM's own ILE RPG compi
   "and which it did not, with IBM's reason. Programs are compiled, not run. "
   "See [IBM i Compatibility](IBM-i-Compatibility) for what the differences mean.\n")
 
+# What the rating does and does not claim; on this page and in the README.
+MEANING = ("**What this rating means:** it measures the RPG that OpenRPG implements, as "
+           "exercised by the test programs in this repository. It is not a claim that "
+           "OpenRPG supports that share of IBM i RPG. Features OpenRPG does not have yet "
+           "have no test programs, so they are not in the count.")
+
 should = {n: expectation(n) for n in files}
 compiled = {n: files[n]["verdict"] == "accept" for n in files}
 as_expected = [n for n in files if should[n][0] == compiled[n]]
@@ -112,6 +120,7 @@ w("## Compatibility rating\n")
 w(f"# {rating:.1f}%\n")
 w(f"rpgc does the same thing as IBM i's compiler with **{agree} of {len(rated)}** programs: "
   "both compile it, or both reject it.\n")
+w(MEANING + "\n")
 w("| | Programs |")
 w("|---|---|")
 w(f"| Both compile | {both_ok} |")
@@ -229,6 +238,28 @@ for n in detailed:
         w("")
 
 open(a.out, "w").write("\n".join(out) + "\n")
+
+# The README carries the rating between two markers, rewritten on every run.
+if a.readme:
+    START, END = "<!-- ibmi-compat:start -->", "<!-- ibmi-compat:end -->"
+    readme = open(a.readme).read()
+    if START not in readme or END not in readme:
+        sys.exit(f"{a.readme}: no {START} ... {END} block to update")
+    page = f"https://github.com/{a.repo}/wiki/IBM-i-Conformance-Results"
+    block = "\n".join([
+        START,
+        "## IBM i compatibility",
+        "",
+        f"**{rating:.1f}%** — of the {len(rated)} test programs in this repository, rpgc "
+        f"does the same thing as IBM's ILE RPG compiler with {agree}: both compile the "
+        "program, or both reject it.",
+        "",
+        MEANING + f" The rating is recalculated each time the IBM i conformance workflow "
+        f"runs (last: {now[:10]}). Details: [IBM i Conformance Results]({page}).",
+        END])
+    head, rest = readme.split(START, 1)
+    readme = head + block + rest.split(END, 1)[1]
+    open(a.readme, "w").write(readme)
 
 # The page is reachable from the wiki's sidebar. Placed after the compatibility
 # page's entry when there is one; sync-wiki.py keeps both when it regenerates.

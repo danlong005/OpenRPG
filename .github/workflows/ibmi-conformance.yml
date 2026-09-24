@@ -141,6 +141,9 @@ jobs:
           sudo apt-get install -y -qq flex bison g++ unixodbc-dev libncurses-dev
           make
           python3 scripts/conformance-baseline.py rpgc
+          # The README's compatibility rating, from the verdicts just recorded
+          python3 scripts/conformance-wiki.py --out /tmp/page.md \
+            --readme README.md --repo "${{ github.repository }}"
 
       # The run's results land in the repository, not only in an artifact: a
       # changed run then sends each edited source once, and the offline check
@@ -155,7 +158,7 @@ jobs:
         # commits is rpgc's refreshed verdicts only.
         if: steps.compile.outcome == 'success'
         run: |
-          files="ibmi-conformance-baseline.json"
+          files="ibmi-conformance-baseline.json README.md"
           if [ "${{ github.event.inputs.mode }}" = "full" ]; then
             python3 scripts/conformance-diff.py
             files="$files ibmi-conformance-report.txt ibmi-conformance-differences.md"
@@ -174,6 +177,25 @@ jobs:
             sleep 5
           done
           echo "::warning::could not push the refreshed baseline; it is in the run's artifact"
+
+      # A regression run commits no baseline (above), but the README's
+      # rating is refreshed on every run: commit it alone.
+      - name: Commit the README rating
+        if: always() && steps.compile.outcome == 'failure'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add README.md
+          if git diff --cached --quiet; then
+            echo "rating unchanged"
+            exit 0
+          fi
+          git commit -q -m "README: IBM i compatibility rating, run ${{ github.run_id }}"
+          for attempt in 1 2 3; do
+            git pull -q --rebase --autostash origin "${GITHUB_REF_NAME}" && git push -q origin "HEAD:${GITHUB_REF_NAME}" && exit 0
+            sleep 5
+          done
+          echo "::warning::could not push the README rating"
 
       - name: Publish the results page to the wiki
         if: >-

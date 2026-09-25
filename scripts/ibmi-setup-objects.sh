@@ -129,6 +129,28 @@ cl.append("DLTF FILE(LONGDM1/RPTFILE)")
 cl.append("CRTPRTF FILE(LONGDM1/RPTFILE)")
 open(os.path.join(stage, 'setup.cl'), 'w').write('\n'.join(cl) + '\n')
 
+# ---- display files, from OpenDSPF's column-based DDS ----------------------
+# A test that declares DCL-F name WORKSTN compiles against a real display
+# file on IBM i. OpenDSPF keeps an IBM-compatible column-based source for each
+# one as <NAME>_fixed.dspf; it is folded to ASCII (the CCSID 819 tag cannot
+# carry an em-dash) and compiled with CRTDSPF, which takes only a source
+# member, not a stream file.
+dspf_dir = os.path.join(os.path.dirname(tests), 'OpenDSPF', 'tests')
+dspf = set()
+for p in glob.glob(os.path.join(tests, '*.rpgle')):
+    for m in re.finditer(r'DCL-F\s+(\w+)\s+WORKSTN', open(p, encoding='utf-8', errors='replace').read(), re.I):
+        dspf.add(m.group(1).upper())
+made = []
+for nm in sorted(dspf):
+    src = os.path.join(dspf_dir, nm + '_fixed.dspf')
+    if not os.path.exists(src):
+        print(f"  display file {nm}: no {os.path.basename(src)} in OpenDSPF/tests, skipped")
+        continue
+    t = open(src, encoding='utf-8').read().replace('\u2014', '-').replace('\u2013', '-')
+    open(os.path.join(stage, nm + '.dds'), 'w').write(t.encode('ascii', 'replace').decode())
+    made.append(nm)
+print(f"  display files: {len(made)}  {made}")
+
 print(f"  tables      : {len([l for l in ddl if l.startswith('CREATE')])}")
 print(f"  program PFs : {len(pf)}  {sorted(pf.items())}")
 print(f"  data areas  : {len([n for n in da if len(n) <= 10])}  "
@@ -166,6 +188,20 @@ while IFS= read -r cmd; do
          else echo "  FAIL $cmd"; echo "$out" | head -2 | sed 's/^/         /'; fi ;;
     esac
 done < "$W/setup.cl"
+
+echo "=== display files (CRTDSPF) ==="
+"$SYS" "CRTSRCPF FILE(LONGDM1/QDDSSRC) RCDLEN(112)" </dev/null >/dev/null 2>&1
+for f in "$W"/*.dds; do
+    [ -f "$f" ] || continue
+    nm=$(basename "$f" .dds)
+    setccsid 819 "$f" </dev/null >/dev/null 2>&1
+    "$SYS" "CPYFRMSTMF FROMSTMF('$f') TOMBR('/QSYS.LIB/LONGDM1.LIB/QDDSSRC.FILE/$nm.MBR') MBROPT(*REPLACE)" </dev/null >/dev/null 2>&1
+    "$SYS" "DLTF FILE(LONGDM1/$nm)" </dev/null >/dev/null 2>&1
+    out=$("$SYS" "CRTDSPF FILE(LONGDM1/$nm) SRCFILE(LONGDM1/QDDSSRC) SRCMBR($nm)" </dev/null 2>&1)
+    if echo "$out" | grep -q CPC7301; then echo "  ok   CRTDSPF $nm"
+    else echo "  FAIL CRTDSPF $nm"; echo "$out" | grep -E '\* CPD' | head -4 | sed 's/^/         /'; fi
+done
+"$SYS" "DLTF FILE(LONGDM1/QDDSSRC)" </dev/null >/dev/null 2>&1
 REMOTE
 
 echo
@@ -174,5 +210,8 @@ SSH=(-p "$PORT" -o BatchMode=yes)
 ssh "${SSH[@]}" "${USER_ID}@${HOST}" "mkdir -p rpgc-setup" </dev/null || exit 1
 scp -q -P "$PORT" -o BatchMode=yes "$STAGE/setup.sql" "$STAGE/setup.cl" "$STAGE/setup_remote.sh" \
     "${USER_ID}@${HOST}:rpgc-setup/" || exit 1
+for dds in "$STAGE"/*.dds; do
+    [ -f "$dds" ] && { scp -q -P "$PORT" -o BatchMode=yes "$dds" "${USER_ID}@${HOST}:rpgc-setup/" || exit 1; }
+done
 ssh "${SSH[@]}" "${USER_ID}@${HOST}" 'sh $HOME/rpgc-setup/setup_remote.sh' </dev/null 2>&1 \
   | grep -v 'WELCOME\|access is logged\|be polite\|other users\|limited support\|see https\|Enter your password\|^\*\*\*\|^\* '

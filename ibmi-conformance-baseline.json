@@ -85,30 +85,11 @@
    "verified": "2026-09-25"
   },
   "test101_user.rpgle": {
-   "codes": [
-    "RNF7416",
-    "RNF7421"
-   ],
-   "messages": [
-    {
-     "code": "RNF7416",
-     "line": 8,
-     "severity": 30,
-     "text": "The types of the right and left hand side do not match in the EVAL operation."
-    },
-    {
-     "code": "RNF7421",
-     "line": 18,
-     "severity": 30,
-     "text": "Operands are not compatible with the type of operator."
-    }
-   ],
-   "reason": "RNF7416: The types of the right and left hand side do not match in the EVAL operation.",
-   "reason_detail": "line 8: The types of the right and left hand side do not match in the EVAL operation. \u2014 `currentUser = *USER;`",
+   "codes": [],
    "rpgc": "accept",
-   "sha256": "61c29dd37937685cbcf3d5313a50a53c861c268fdff9def0cb0f1d9e678afc58",
-   "verdict": "reject",
-   "verified": "2026-09-24"
+   "sha256": "c6a87c6420c44ce7223c5261267e33d1fd31fcb5f45ad7b8988698f368ab19a0",
+   "verdict": "accept",
+   "verified": "2026-09-25"
   },
   "test102_snd_msg.rpgle": {
    "codes": [],
@@ -206,23 +187,11 @@
    "verified": "2026-09-24"
   },
   "test111_elem_alloc.rpgle": {
-   "codes": [
-    "RNF7563"
-   ],
-   "messages": [
-    {
-     "code": "RNF7563",
-     "line": 9,
-     "severity": 30,
-     "text": "The expression is not valid for assignment to built-in function %LEN or %ELEM."
-    }
-   ],
-   "reason": "RNF7563: The expression is not valid for assignment to built-in function %LEN or %ELEM.",
-   "reason_detail": "line 9: The expression is not valid for assignment to built-in function %LEN or %ELEM. \u2014 `%ELEM(nums : *ALLOC) = 50;`",
+   "codes": [],
    "rpgc": "accept",
-   "sha256": "0249d077170b3e6d3de5ccdc25d9e843a581d4af90ceab05d9dd4f5a45a69815",
-   "verdict": "reject",
-   "verified": "2026-09-24"
+   "sha256": "68386d570019a019a517bf0d27d06f6496a087f0a6109b61c99bcf489a834e3f",
+   "verdict": "accept",
+   "verified": "2026-09-25"
   },
   "test112_data_into_csv.rpgle": {
    "codes": [],
@@ -267,52 +236,11 @@
    "verified": "2026-09-24"
   },
   "test118_fixed_rla_chain.rpgle": {
-   "codes": [
-    "RNF0289",
-    "RNF0622",
-    "RNF0623",
-    "RNF3438",
-    "RNF7030",
-    "RNF7503"
-   ],
-   "messages": [
-    {
-     "code": "RNF0622",
-     "line": 4,
-     "severity": 20,
-     "text": "A qualified name is not allowed in this context."
-    },
-    {
-     "code": "RNF0623",
-     "line": 4,
-     "severity": 20,
-     "text": "The simple qualified name is not specified correctly."
-    },
-    {
-     "code": "RNF0289",
-     "line": 4,
-     "severity": 20,
-     "text": "Entry contains data that is not valid; only valid data is used."
-    },
-    {
-     "code": "RNF7030",
-     "line": 95,
-     "severity": 30,
-     "text": "The name or indicator CUSTOMERNUMBER is not defined."
-    },
-    {
-     "code": "RNF7503",
-     "line": 95,
-     "severity": 30,
-     "text": "Expression contains an operand that is not defined."
-    }
-   ],
-   "reason": "RNF0622: A qualified name is not allowed in this context.",
-   "reason_detail": "line 4: A qualified name is not allowed in this context. \u2014 `DcustomerNumb...  S`",
+   "codes": [],
    "rpgc": "accept",
-   "sha256": "174715155806ad9be38b425ff78715f67e0cc48c9023608d90e8e3cd3a83d498",
-   "verdict": "reject",
-   "verified": "2026-09-24"
+   "sha256": "7c75a4394209aac9d1874272d261bd055c3f56f0fa9d5f750277184f0d49630d",
+   "verdict": "accept",
+   "verified": "2026-09-25"
   },
   "test119_fixed_free_error.rpgle": {
    "codes": [
@@ -510,29 +438,11 @@
    "verified": "2026-09-24"
   },
   "test124_fixed_overlay.rpgle": {
-   "codes": [
-    "RNF3555"
-   ],
-   "messages": [
-    {
-     "code": "RNF3555",
-     "line": 8,
-     "severity": 20,
-     "text": "The keyword is not allowed in fixed-form definitions. The keyword is ignored."
-    },
-    {
-     "code": "RNF3555",
-     "line": 9,
-     "severity": 20,
-     "text": "The keyword is not allowed in fixed-form definitions. The keyword is ignored."
-    }
-   ],
-   "reason": "RNF3555: The keyword is not allowed in fixed-form definitions. The keyword is ignored.",
-   "reason_detail": "line 8: The keyword is not allowed in fixed-form definitions. The keyword is ignored. \u2014 `Did                             10I 0 POS(1)`",
+   "codes": [],
    "rpgc": "accept",
-   "sha256": "9e13b2e68197e7e6ece9a0b121652e91c5f152797b876f06e8ddaee450d39bcd",
-   "verdict": "reject",
-   "verified": "2026-09-24"
+   "sha256": "a3957c29d11db19dac28d784b132b5774dfadabfbeda7177e161222c8d82b504",
+   "verdict": "accept",
+   "verified": "2026-09-25"
   },
   "test125_fixed_cspec_if.rpgle": {
    "codes": [],
@@ -950,170 +860,39 @@
    "verified": "2026-09-24"
   },
   "test154_fixed_ispec_single.rpgle": {
-   "codes": [
-    "RNF5191"
-   ],
-   "messages": [
-    {
-     "code": "RNF5191",
-     "line": 10,
-     "severity": 30,
-     "text": "The Result-Field is not a data structure when Factor 2 is a file name."
-    },
-    {
-     "code": "RNF5191",
-     "line": 13,
-     "severity": 30,
-     "text": "The Result-Field is not a data structure when Factor 2 is a file name."
-    },
-    {
-     "code": "RNF5191",
-     "line": 16,
-     "severity": 30,
-     "text": "The Result-Field is not a data structure when Factor 2 is a file name."
-    }
-   ],
-   "reason": "RNF5191: The Result-Field is not a data structure when Factor n is a file name.",
-   "reason_detail": "line 10: The Result-Field is not a data structure when Factor 2 is a file name. \u2014 `WRITE TESTFL154;`",
+   "codes": [],
    "rpgc": "accept",
-   "sha256": "527ed37ec6e858920c6e7f37456233bf0855dbe9fe02e4cc3362022c765a6de9",
-   "verdict": "reject",
-   "verified": "2026-09-24"
+   "sha256": "7787dfdc55328f3ddc6d4c9649a06cb88c0b23636ba499644307de94587baa3c",
+   "verdict": "accept",
+   "verified": "2026-09-25"
   },
   "test155_fixed_ispec_multi.rpgle": {
-   "codes": [
-    "RNF0257",
-    "RNF5191",
-    "RNF7030",
-    "RNF7503"
-   ],
-   "messages": [
-    {
-     "code": "RNF0257",
-     "line": 7,
-     "severity": 30,
-     "text": "Form-Type entry for main procedure not valid or out of sequence."
-    },
-    {
-     "code": "RNF0257",
-     "line": 8,
-     "severity": 30,
-     "text": "Form-Type entry for main procedure not valid or out of sequence."
-    },
-    {
-     "code": "RNF7030",
-     "line": 10,
-     "severity": 30,
-     "text": "The name or indicator TYPECODE is not defined."
-    },
-    {
-     "code": "RNF7503",
-     "line": 10,
-     "severity": 30,
-     "text": "Expression contains an operand that is not defined."
-    },
-    {
-     "code": "RNF5191",
-     "line": 12,
-     "severity": 30,
-     "text": "The Result-Field is not a data structure when Factor 2 is a file name."
-    }
-   ],
-   "reason": "RNF0257: Form-Type entry for main procedure not valid or out of sequence.",
-   "reason_detail": "line 7: Form-Type entry for main procedure not valid or out of sequence. \u2014 `DTYPECODE         S              1A`",
+   "codes": [],
    "rpgc": "accept",
-   "sha256": "3cba77b0f2ced919e7c05d9c763d6959a682788c40ecb4818a89fca19c6ea565",
-   "verdict": "reject",
-   "verified": "2026-09-24"
+   "sha256": "e92aa3f93f9125cf8e9f50a54da503c30397a1674f347dc026ef786cce43dfd1",
+   "verdict": "accept",
+   "verified": "2026-09-25"
   },
   "test156_fixed_ispec_field_ind.rpgle": {
-   "codes": [
-    "RNF5191"
-   ],
-   "messages": [
-    {
-     "code": "RNF5191",
-     "line": 7,
-     "severity": 30,
-     "text": "The Result-Field is not a data structure when Factor 2 is a file name."
-    },
-    {
-     "code": "RNF5191",
-     "line": 9,
-     "severity": 30,
-     "text": "The Result-Field is not a data structure when Factor 2 is a file name."
-    },
-    {
-     "code": "RNF5191",
-     "line": 11,
-     "severity": 30,
-     "text": "The Result-Field is not a data structure when Factor 2 is a file name."
-    }
-   ],
-   "reason": "RNF5191: The Result-Field is not a data structure when Factor n is a file name.",
-   "reason_detail": "line 7: The Result-Field is not a data structure when Factor 2 is a file name. \u2014 `WRITE TESTFL156;`",
+   "codes": [],
    "rpgc": "accept",
-   "sha256": "cb7a27726e46282e5eb3e4a485bf39118853ceceb400b8d2d254b3bb95190494",
-   "verdict": "reject",
-   "verified": "2026-09-24"
+   "sha256": "a94600c82a63bbfe586010a08e7c054f45ab707816941b1313da99bdcc2ea09d",
+   "verdict": "accept",
+   "verified": "2026-09-25"
   },
   "test157_fixed_ispec_update.rpgle": {
-   "codes": [
-    "RNF5191"
-   ],
-   "messages": [
-    {
-     "code": "RNF5191",
-     "line": 7,
-     "severity": 30,
-     "text": "The Result-Field is not a data structure when Factor 2 is a file name."
-    },
-    {
-     "code": "RNF5191",
-     "line": 13,
-     "severity": 30,
-     "text": "The Result-Field is not a data structure when Factor 2 is a file name."
-    }
-   ],
-   "reason": "RNF5191: The Result-Field is not a data structure when Factor n is a file name.",
-   "reason_detail": "line 7: The Result-Field is not a data structure when Factor 2 is a file name. \u2014 `WRITE TESTFL157;`",
+   "codes": [],
    "rpgc": "accept",
-   "sha256": "5564a8e30fc21f18be6d5f826f7edf5146723c741d10ed8bb6b3b93f3a5eabde",
-   "verdict": "reject",
-   "verified": "2026-09-24"
+   "sha256": "114344dedb66d762238990367a3d0d822b9ca57664b4d91228ec1d903dfcf91f",
+   "verdict": "accept",
+   "verified": "2026-09-25"
   },
   "test158_fixed_ospec_editcode.rpgle": {
-   "codes": [
-    "RNF3466",
-    "RNF5191",
-    "RNF8003"
-   ],
-   "messages": [
-    {
-     "code": "RNF3466",
-     "line": 3,
-     "severity": 20,
-     "text": "The Decimal-Positions entry does not agree with the Data-Type entry; defaults to 0."
-    },
-    {
-     "code": "RNF5191",
-     "line": 6,
-     "severity": 30,
-     "text": "The Result-Field is not a data structure when Factor 2 is a file name."
-    },
-    {
-     "code": "RNF8003",
-     "line": 10,
-     "severity": 30,
-     "text": "Field length 13 is greater than end position 10."
-    }
-   ],
-   "reason": "RNF3466: The Decimal-Positions entry does not agree with the Data-Type entry; defaults to n.",
-   "reason_detail": "line 3: The Decimal-Positions entry does not agree with the Data-Type entry; defaults to 0. \u2014 `DAMT              S             10S`",
+   "codes": [],
    "rpgc": "accept",
-   "sha256": "99f5b002c6d9b98f7f4e27af55fdadc21921ba277f3491a5cd7d6b01aa2f5256",
-   "verdict": "reject",
-   "verified": "2026-09-24"
+   "sha256": "711478a44ff14f02ebfef5987f55e0c78acabff0bc17248c54dd82621b65b514",
+   "verdict": "accept",
+   "verified": "2026-09-25"
   },
   "test159_fixed_ispec_err_zone.rpgle": {
    "codes": [],
@@ -1156,86 +935,18 @@
    "verified": "2026-09-24"
   },
   "test162_fixed_subf_like.rpgle": {
-   "codes": [
-    "RNF7030",
-    "RNF7503"
-   ],
-   "messages": [
-    {
-     "code": "RNF7030",
-     "line": 5,
-     "severity": 30,
-     "text": "The name or indicator PRICE is not defined."
-    },
-    {
-     "code": "RNF7030",
-     "line": 5,
-     "severity": 30,
-     "text": "The name or indicator UNITPRICE is not defined."
-    },
-    {
-     "code": "RNF7503",
-     "line": 9,
-     "severity": 30,
-     "text": "Expression contains an operand that is not defined."
-    },
-    {
-     "code": "RNF7503",
-     "line": 10,
-     "severity": 30,
-     "text": "Expression contains an operand that is not defined."
-    }
-   ],
-   "reason": "LIKE naming a sibling subfield without its DS qualifier",
-   "reason_detail": "line 5: `Dprice                                LIKE(unitPrice)`",
+   "codes": [],
    "rpgc": "accept",
-   "sha256": "26811e9c3bd76fc8ef0c9d25a80dc91c9e59b602e59f83ebbb33aec1eafad8c0",
-   "verdict": "reject",
-   "verified": "2026-09-24"
+   "sha256": "2eccfb62c524824aaa05e484ca6090d53677459033de575dc1a11ad029970b2e",
+   "verdict": "accept",
+   "verified": "2026-09-25"
   },
   "test163_subfield_like_dim.rpgle": {
-   "codes": [
-    "RNF7030",
-    "RNF7503"
-   ],
-   "messages": [
-    {
-     "code": "RNF7030",
-     "line": 6,
-     "severity": 30,
-     "text": "The name or indicator PRICE is not defined."
-    },
-    {
-     "code": "RNF7030",
-     "line": 6,
-     "severity": 30,
-     "text": "The name or indicator UNITPRICE is not defined."
-    },
-    {
-     "code": "RNF7503",
-     "line": 12,
-     "severity": 30,
-     "text": "Expression contains an operand that is not defined."
-    },
-    {
-     "code": "RNF7503",
-     "line": 15,
-     "severity": 30,
-     "text": "Expression contains an operand that is not defined."
-    },
-    {
-     "code": "RNF7503",
-     "line": 17,
-     "severity": 30,
-     "text": "Expression contains an operand that is not defined."
-    }
-   ],
-   "reason": "LIKE naming a sibling subfield without its DS qualifier",
-   "reason_detail": "line 6: `price LIKE(unitPrice);`",
+   "codes": [],
    "rpgc": "accept",
-   "sha256": "c60d20b2dfaa8b9583e8604b0b7131a2a89107b047bbde5e80708f31627e8612",
-   "verdict": "reject",
-   "verified": "2026-09-24"
+   "sha256": "3c35ce1adfbcb003d2d1ed93df6c08120f67c4f5c0c920196e7baca102d62e02",
+   "verdict": "accept",
+   "verified": "2026-09-25"
   },
   "test164_fixed_cspec_cond_ind.rpgle": {
    "codes": [],
@@ -1581,30 +1292,11 @@
    "verified": "2026-09-24"
   },
   "test182_fixed_cspec_cas_cab.rpgle": {
-   "codes": [
-    "RNF5009",
-    "RNF5023"
-   ],
-   "messages": [
-    {
-     "code": "RNF5009",
-     "line": 16,
-     "severity": 30,
-     "text": "Factor 1 operand is required for specified operation."
-    },
-    {
-     "code": "RNF5023",
-     "line": 16,
-     "severity": 30,
-     "text": "Factor 2 operand is not specified for this operation."
-    }
-   ],
-   "reason": "RNF5009: Factor n operand is required for specified operation.",
-   "reason_detail": "line 16: Factor 1 operand is required for specified operation. \u2014 `C                   CAB                     done`",
+   "codes": [],
    "rpgc": "accept",
-   "sha256": "c66bfcf6bb0ae64e1158c32d26ba2bb915d0a2c76bfcb25af0bdb2074c2b8e6e",
-   "verdict": "reject",
-   "verified": "2026-09-24"
+   "sha256": "d2d6297a46d09a116a00e068c277a8aa40a193e70e8fcf8cf66cf515f3fb1e8f",
+   "verdict": "accept",
+   "verified": "2026-09-25"
   },
   "test183_fixed_cspec_err_endcs_orphan.rpgle": {
    "codes": [
@@ -1725,9 +1417,9 @@
   "test18_datetime.rpgle": {
    "codes": [],
    "rpgc": "accept",
-   "sha256": "0a7788e6a2256d1b2b1c45c371cce0e048cdd891e3aa973249e53aed9f6937e7",
+   "sha256": "0c28ed2df823fb68d496a448d9d5143f381e45df2761d8cbf7009d65f7853029",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test190_fixed_cspec_err_sql_unterminated.sqlrpgle": {
    "codes": [],
@@ -1973,9 +1665,9 @@
   "test209_fixed_cspec_move_dt_nosep.rpgle": {
    "codes": [],
    "rpgc": "accept",
-   "sha256": "6625f74b51991183e2956e91e842a668f866f8a7edc36247122d20148dcc4c41",
+   "sha256": "97a208a281a9b3d7180004c51128295f6a6b5f9013aab559ea2c43a136b83286",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test20_memory_bifs.rpgle": {
    "codes": [],
@@ -1992,48 +1684,18 @@
    "verified": "2026-09-24"
   },
   "test211_fixed_cspec_move_dt_align.rpgle": {
-   "codes": [
-    "RNF7512"
-   ],
-   "messages": [
-    {
-     "code": "RNF7512",
-     "line": 34,
-     "severity": 30,
-     "text": "The Result Field entry C6 is too small to contain a complete *ISO- Date."
-    },
-    {
-     "code": "RNF7512",
-     "line": 38,
-     "severity": 30,
-     "text": "The Result Field entry C6 is too small to contain a complete *ISO- Date."
-    }
-   ],
-   "reason": "RNF7512: The Result Field entry C6 is too small to contain a complete *ISO- Date.",
-   "reason_detail": "line 34: The Result Field entry C6 is too small to contain a complete *ISO- Date. \u2014 `C     *ISO          MOVEL     DFLD          C6`",
+   "codes": [],
    "rpgc": "accept",
-   "sha256": "7fd7d00b32723474beb372f86a4611c8caa06e052b4b6a537899ff0c6583bb47",
-   "verdict": "reject",
-   "verified": "2026-09-24"
+   "sha256": "7d3312cf39f9ddd0b48161a99f52d98ba89ae8b30f805a12fbb108ee3f0aad1a",
+   "verdict": "accept",
+   "verified": "2026-09-25"
   },
   "test212_fixed_cspec_move_dt_err.rpgle": {
-   "codes": [
-    "RNF7510"
-   ],
-   "messages": [
-    {
-     "code": "RNF7510",
-     "line": 27,
-     "severity": 30,
-     "text": "The operand C6 is too small to contain a complete *ISO- date."
-    }
-   ],
-   "reason": "RNF7510: The operand C6 is too small to contain a complete *ISO- date.",
-   "reason_detail": "line 27: The operand C6 is too small to contain a complete *ISO- date. \u2014 `C     *ISO          MOVE      C6            DFLD`",
+   "codes": [],
    "rpgc": "accept",
-   "sha256": "4ed4f6e4e1fd1409939a3a2219c0c04d4eba2cbb7de0de220b63c326be058ab4",
-   "verdict": "reject",
-   "verified": "2026-09-24"
+   "sha256": "0cc0741e16c82d6cbf7b0b727805de27d279849b2e1a0b2cc84f1959be3c2f30",
+   "verdict": "accept",
+   "verified": "2026-09-25"
   },
   "test213_fixed_cspec_err_move_jobrun.rpgle": {
    "codes": [],
@@ -2063,102 +1725,21 @@
   },
   "test215_prog_ar_aging.rpgle": {
    "codes": [
-    "RNF2004",
-    "RNF2093",
-    "RNF5191",
-    "RNF5508",
-    "RNF6005",
     "RNF7031"
    ],
-   "messages": [
-    {
-     "code": "RNF2093",
-     "line": 13,
-     "severity": 20,
-     "text": "Blank File-Designation entry is not valid with File-Type entry; defaults to F."
-    },
-    {
-     "code": "RNF2004",
-     "line": 13,
-     "severity": 20,
-     "text": "The End-of-File entry is not blank or E; defaults to blank."
-    },
-    {
-     "code": "RNF5508",
-     "line": 47,
-     "severity": 30,
-     "text": "End of free-format statement is not blank."
-    },
-    {
-     "code": "RNF5508",
-     "line": 48,
-     "severity": 30,
-     "text": "End of free-format statement is not blank."
-    },
-    {
-     "code": "RNF5191",
-     "line": 49,
-     "severity": 30,
-     "text": "The Result-Field is not a data structure when Factor 2 is a file name."
-    }
-   ],
-   "reason": "RNF2093: Blank File-Designation entry is not valid with File-Type entry; defaults to F.",
-   "reason_detail": "line 13: Blank File-Designation entry is not valid with File-Type entry; defaults to F. \u2014 `FTESTFL215 U FA F   32        DISK`",
    "rpgc": "accept",
-   "sha256": "ecc5e8063d64ddf8fc7e300d037e5a0befd0156c020563d9054d94c7864e2e34",
-   "verdict": "reject",
-   "verified": "2026-09-24"
+   "sha256": "81f2a1163c7455342f7412188b06ae81dc08a6833cf9811d87a2021dd99e84ab",
+   "verdict": "accept",
+   "verified": "2026-09-25"
   },
   "test216_prog_gl_post.rpgle": {
    "codes": [
-    "RNF0257",
-    "RNF2004",
-    "RNF2093",
-    "RNF5191",
-    "RNF5508",
-    "RNF6005",
-    "RNF7018",
-    "RNF7030",
     "RNF7031"
    ],
-   "messages": [
-    {
-     "code": "RNF2093",
-     "line": 13,
-     "severity": 20,
-     "text": "Blank File-Designation entry is not valid with File-Type entry; defaults to F."
-    },
-    {
-     "code": "RNF2004",
-     "line": 13,
-     "severity": 20,
-     "text": "The End-of-File entry is not blank or E; defaults to blank."
-    },
-    {
-     "code": "RNF5508",
-     "line": 51,
-     "severity": 30,
-     "text": "End of free-format statement is not blank."
-    },
-    {
-     "code": "RNF5508",
-     "line": 52,
-     "severity": 30,
-     "text": "End of free-format statement is not blank."
-    },
-    {
-     "code": "RNF5508",
-     "line": 53,
-     "severity": 30,
-     "text": "End of free-format statement is not blank."
-    }
-   ],
-   "reason": "RNF2093: Blank File-Designation entry is not valid with File-Type entry; defaults to F.",
-   "reason_detail": "line 13: Blank File-Designation entry is not valid with File-Type entry; defaults to F. \u2014 `FTESTFL216 U FA F   48        DISK`",
    "rpgc": "accept",
-   "sha256": "f573578cf2c33f2f44be404635f2091625e6bad1f1b35dc21126cad00efce422",
-   "verdict": "reject",
-   "verified": "2026-09-24"
+   "sha256": "7971ecb1580ba521a24089d6a35a493bbfe5f24ca93d3a4f893877082bcca8aa",
+   "verdict": "accept",
+   "verified": "2026-09-25"
   },
   "test217_prog_inv_reorder.rpgle": {
    "codes": [],
@@ -2226,49 +1807,11 @@
    "verified": "2026-09-24"
   },
   "test221_ospec_decimals.rpgle": {
-   "codes": [
-    "RNF5191",
-    "RNF5508",
-    "RNF6005"
-   ],
-   "messages": [
-    {
-     "code": "RNF5508",
-     "line": 18,
-     "severity": 30,
-     "text": "End of free-format statement is not blank."
-    },
-    {
-     "code": "RNF5191",
-     "line": 19,
-     "severity": 30,
-     "text": "The Result-Field is not a data structure when Factor 2 is a file name."
-    },
-    {
-     "code": "RNF5508",
-     "line": 20,
-     "severity": 30,
-     "text": "End of free-format statement is not blank."
-    },
-    {
-     "code": "RNF5191",
-     "line": 21,
-     "severity": 30,
-     "text": "The Result-Field is not a data structure when Factor 2 is a file name."
-    },
-    {
-     "code": "RNF5508",
-     "line": 22,
-     "severity": 30,
-     "text": "End of free-format statement is not blank."
-    }
-   ],
-   "reason": "RNF5508: End of free-format statement is not blank.",
-   "reason_detail": "line 18: End of free-format statement is not blank. \u2014 `itemno = 'WIDGET';  amount = 1250.00;  rate = 1.375;  uom = 'EACH  ';`",
+   "codes": [],
    "rpgc": "accept",
-   "sha256": "1a92754e28d3f4f484c08237e0905c859cb10c626d96d3d32b971a1f38c46641",
-   "verdict": "reject",
-   "verified": "2026-09-24"
+   "sha256": "6d5dffb8848080b2752f1a616cc97f78fe2c9b141370569143db8c1fcfdaa388",
+   "verdict": "accept",
+   "verified": "2026-09-25"
   },
   "test222_half_adjust.rpgle": {
    "codes": [],
@@ -2327,23 +1870,11 @@
    "verified": "2026-09-24"
   },
   "test22_status_error.rpgle": {
-   "codes": [
-    "RNF7416"
-   ],
-   "messages": [
-    {
-     "code": "RNF7416",
-     "line": 10,
-     "severity": 30,
-     "text": "The types of the right and left hand side do not match in the EVAL operation."
-    }
-   ],
-   "reason": "RNF7416: The types of the right and left hand side do not match in the EVAL operation.",
-   "reason_detail": "line 10: The types of the right and left hand side do not match in the EVAL operation. \u2014 `errFlag = %ERROR();`",
+   "codes": [],
    "rpgc": "accept",
-   "sha256": "fae59508724b0959a56251bf7554ce625e74bf556d1a27be21acaacd86e2ae58",
-   "verdict": "reject",
-   "verified": "2026-09-24"
+   "sha256": "63c33729ddba93614457553830b62c67e8846ab11e90fe25aea5d11de0560d26",
+   "verdict": "accept",
+   "verified": "2026-09-25"
   },
   "test230_ds_subfield_attrs.rpgle": {
    "codes": [],
@@ -2455,9 +1986,9 @@
   "test23_reset_clear.rpgle": {
    "codes": [],
    "rpgc": "accept",
-   "sha256": "d20ffa14125aa0c31703671981d6debc7febb82101eba80c093b93f48b781e41",
+   "sha256": "c4933a35d11656ffd9ba6857a4b7b7df7901b294077f0a40577015900dd18318",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test240_fixed_arith_trunc.rpgle": {
    "codes": [],
@@ -2686,30 +2217,11 @@
    "verified": "2026-09-24"
   },
   "test25_dclf.rpgle": {
-   "codes": [
-    "RNF2109",
-    "RNF2121"
-   ],
-   "messages": [
-    {
-     "code": "RNF2121",
-     "line": 4,
-     "severity": 30,
-     "text": "Record format RPTFILE in file RPTFILE already defined; record format is ignored."
-    },
-    {
-     "code": "RNF2109",
-     "line": 4,
-     "severity": 40,
-     "text": "All Record Formats for externally-described file RPTFILE ignored or dropped due to error; file ignored."
-    }
-   ],
-   "reason": "RNF2121: Record format RPTFILE in file RPTFILE already defined; record format is ignored.",
-   "reason_detail": "line 4: Record format RPTFILE in file RPTFILE already defined; record format is ignored. \u2014 `DCL-F RPTFILE PRINTER;`",
+   "codes": [],
    "rpgc": "accept",
-   "sha256": "865d39b8d7cd97ede590c6b4d156c1100d5d57cbdeae0d21596ae55921db8189",
-   "verdict": "reject",
-   "verified": "2026-09-24"
+   "sha256": "122fb2af5af780f03218b975700f7323bcdfde97aa17a8bbdb84b9637646c5c4",
+   "verdict": "accept",
+   "verified": "2026-09-25"
   },
   "test260_err_decl_after_calc.rpgle": {
    "codes": [
@@ -3224,6 +2736,127 @@
    "verdict": "accept",
    "verified": "2026-09-25"
   },
+  "test284_err_elem_over_max.rpgle": {
+   "codes": [
+    "RNF7563"
+   ],
+   "messages": [
+    {
+     "code": "RNF7563",
+     "line": 5,
+     "severity": 30,
+     "text": "The expression is not valid for assignment to built-in function %LEN or %ELEM."
+    }
+   ],
+   "reason": "RNF7563: The expression is not valid for assignment to built-in function %LEN or %ELEM.",
+   "reason_detail": "line 5: The expression is not valid for assignment to built-in function %LEN or %ELEM. \u2014 `%ELEM(nums : *ALLOC) = 50;`",
+   "rpgc": "reject",
+   "sha256": "ef19067fab2eb9a9fa760f046ff8aea3ad9787c86dacb7f255986e07d4bae9da",
+   "verdict": "reject",
+   "verified": "2026-09-25"
+  },
+  "test285_err_user_expression.rpgle": {
+   "codes": [
+    "RNF7416"
+   ],
+   "messages": [
+    {
+     "code": "RNF7416",
+     "line": 5,
+     "severity": 30,
+     "text": "The types of the right and left hand side do not match in the EVAL operation."
+    }
+   ],
+   "reason": "RNF7416: The types of the right and left hand side do not match in the EVAL operation.",
+   "reason_detail": "line 5: The types of the right and left hand side do not match in the EVAL operation. \u2014 `who = *USER;`",
+   "rpgc": "reject",
+   "sha256": "b0af0a9f9cb612b861fd6611bce926057ffd25e8ee831a2958a0e6c3d504e91b",
+   "verdict": "reject",
+   "verified": "2026-09-25"
+  },
+  "test286_err_assign_type.rpgle": {
+   "codes": [
+    "RNF7416"
+   ],
+   "messages": [
+    {
+     "code": "RNF7416",
+     "line": 5,
+     "severity": 30,
+     "text": "The types of the right and left hand side do not match in the EVAL operation."
+    }
+   ],
+   "reason": "RNF7416: The types of the right and left hand side do not match in the EVAL operation.",
+   "reason_detail": "line 5: The types of the right and left hand side do not match in the EVAL operation. \u2014 `qty = '12';`",
+   "rpgc": "reject",
+   "sha256": "8cc8061e4345cf00222a8903d5412ba83a540c04b00a6a07df1c2a3646f28be0",
+   "verdict": "reject",
+   "verified": "2026-09-25"
+  },
+  "test287_err_unlock_lda.rpgle": {
+   "codes": [
+    "RNF7091"
+   ],
+   "messages": [
+    {
+     "code": "RNF7091",
+     "line": 6,
+     "severity": 30,
+     "text": "The Factor 2 operand is a Local-Data Area for UNLOCK operation."
+    }
+   ],
+   "reason": "RNF7091: The Factor n operand is a Local-Data Area for UNLOCK operation.",
+   "reason_detail": "line 6: The Factor 2 operand is a Local-Data Area for UNLOCK operation. \u2014 `UNLOCK lda;`",
+   "rpgc": "reject",
+   "sha256": "62ae570f3227421cc1cbf0e5d8f142566e35eedd3107451d8288ccce8ffcf481",
+   "verdict": "reject",
+   "verified": "2026-09-25"
+  },
+  "test288_err_dtaara_name_length.rpgle": {
+   "codes": [
+    "RNF0653",
+    "RNF7064"
+   ],
+   "messages": [
+    {
+     "code": "RNF0653",
+     "line": 4,
+     "severity": 20,
+     "text": "Library or object name exceeds 10 characters."
+    },
+    {
+     "code": "RNF7064",
+     "line": 5,
+     "severity": 30,
+     "text": "The Factor 2 operand DA of IN or OUT is not a data area."
+    }
+   ],
+   "reason": "RNF0653: Library or object name exceeds n characters.",
+   "reason_detail": "line 4: Library or object name exceeds 10 characters. \u2014 `DCL-S da CHAR(10) DTAARA('CONFIGAREA1');`",
+   "rpgc": "reject",
+   "sha256": "7947a3191d4402fa9ecf404d00610fe79baa6644e97efc5eb8e9914d9c5c0953",
+   "verdict": "reject",
+   "verified": "2026-09-25"
+  },
+  "test289_err_test_no_e.rpgle": {
+   "codes": [
+    "RNF5056"
+   ],
+   "messages": [
+    {
+     "code": "RNF5056",
+     "line": 5,
+     "severity": 30,
+     "text": "Either the error indicator or the E operation extender must be specified for the TEST operation."
+    }
+   ],
+   "reason": "RNF5056: Either the error indicator or the E operation extender must be specified for the TEST operation.",
+   "reason_detail": "line 5: Either the error indicator or the E operation extender must be specified for the TEST operation. \u2014 `TEST d;`",
+   "rpgc": "reject",
+   "sha256": "664e335551c0aec5495708262f861fa2b888bf1c80bb7b04d6c57c58075beab6",
+   "verdict": "reject",
+   "verified": "2026-09-25"
+  },
   "test28_conditional.rpgle": {
    "codes": [],
    "rpgc": "accept",
@@ -3231,12 +2864,314 @@
    "verdict": "accept",
    "verified": "2026-09-24"
   },
+  "test290_err_test_d_on_date.rpgle": {
+   "codes": [
+    "RNF7523"
+   ],
+   "messages": [
+    {
+     "code": "RNF7523",
+     "line": 6,
+     "severity": 20,
+     "text": "Operation-Code extender D, T, or Z cannot be used with Result-Field entry D."
+    }
+   ],
+   "reason": "RNF7523: Operation-Code extender D, T, or Z cannot be used with Result-Field entry D.",
+   "reason_detail": "line 6: Operation-Code extender D, T, or Z cannot be used with Result-Field entry D. \u2014 `TEST(DE) d;`",
+   "rpgc": "reject",
+   "sha256": "722f8da8a959bb31190df6a555be1c42fccc3e892fd45f6f0652995669057ff7",
+   "verdict": "reject",
+   "verified": "2026-09-25"
+  },
+  "test291_err_two_statements_line.rpgle": {
+   "codes": [
+    "RNF5508"
+   ],
+   "messages": [
+    {
+     "code": "RNF5508",
+     "line": 6,
+     "severity": 30,
+     "text": "End of free-format statement is not blank."
+    }
+   ],
+   "reason": "RNF5508: End of free-format statement is not blank.",
+   "reason_detail": "line 6: End of free-format statement is not blank. \u2014 `a = 1;  b = 2;`",
+   "rpgc": "reject",
+   "sha256": "a86bb989b9d102ef0628131f3c084ec3d9aff8981b3025a6cc92def7b06377b6",
+   "verdict": "reject",
+   "verified": "2026-09-25"
+  },
+  "test292_err_write_program_described.rpgle": {
+   "codes": [
+    "RNF5191"
+   ],
+   "messages": [
+    {
+     "code": "RNF5191",
+     "line": 8,
+     "severity": 30,
+     "text": "The Result-Field is not a data structure when Factor 2 is a file name."
+    }
+   ],
+   "reason": "RNF5191: The Result-Field is not a data structure when Factor n is a file name.",
+   "reason_detail": "line 8: The Result-Field is not a data structure when Factor 2 is a file name. \u2014 `WRITE TESTFL158;`",
+   "rpgc": "reject",
+   "sha256": "d3627b8b40284cc7e859eb29f507727712a9724e2337a19c75bc23750a220f1d",
+   "verdict": "reject",
+   "verified": "2026-09-25"
+  },
+  "test293_err_ospec_no_type.rpgle": {
+   "codes": [
+    "RNF6005",
+    "RNF7026"
+   ],
+   "messages": [
+    {
+     "code": "RNF7026",
+     "line": 7,
+     "severity": 30,
+     "text": "An operand is not specified on EXCEPT operation but there is no EXCEPT without a name."
+    },
+    {
+     "code": "RNF6005",
+     "line": 10,
+     "severity": 20,
+     "text": "The Type entry is not H, D, T, or E; defaults to D."
+    }
+   ],
+   "reason": "RNF7026: An operand is not specified on EXCEPT operation but there is no EXCEPT without a name.",
+   "reason_detail": "line 7: An operand is not specified on EXCEPT operation but there is no EXCEPT without a name. \u2014 `EXCEPT;`",
+   "rpgc": "reject",
+   "sha256": "7692c08224c9add80d25b5493e26957c2f0189f2344ab464bf7a8834dd78b2ed",
+   "verdict": "reject",
+   "verified": "2026-09-25"
+  },
+  "test294_err_spec_order.rpgle": {
+   "codes": [
+    "RNF0257",
+    "RNF7023"
+   ],
+   "messages": [
+    {
+     "code": "RNF0257",
+     "line": 9,
+     "severity": 30,
+     "text": "Form-Type entry for main procedure not valid or out of sequence."
+    }
+   ],
+   "reason": "RNF0257: Form-Type entry for main procedure not valid or out of sequence.",
+   "reason_detail": "line 9: Form-Type entry for main procedure not valid or out of sequence. \u2014 `C                   RETURN`",
+   "rpgc": "reject",
+   "sha256": "b29d3bb5d2d9206a90142fb41da1ff41b4eb0ca1c62e8a1cb048d6411aff97bc",
+   "verdict": "reject",
+   "verified": "2026-09-25"
+  },
+  "test295_err_fspec_designation.rpgle": {
+   "codes": [
+    "RNF2093"
+   ],
+   "messages": [
+    {
+     "code": "RNF2093",
+     "line": 3,
+     "severity": 20,
+     "text": "Blank File-Designation entry is not valid with File-Type entry; defaults to F."
+    }
+   ],
+   "reason": "RNF2093: Blank File-Designation entry is not valid with File-Type entry; defaults to F.",
+   "reason_detail": "line 3: Blank File-Designation entry is not valid with File-Type entry; defaults to F. \u2014 `FTESTFL159 I    F   10        DISK`",
+   "rpgc": "reject",
+   "sha256": "3b6990f37525c5385b6d753144f4fb99995802c3fe0700f1832b62b921ba6813",
+   "verdict": "reject",
+   "verified": "2026-09-25"
+  },
+  "test296_err_move_date_too_small.rpgle": {
+   "codes": [
+    "RNF7512"
+   ],
+   "messages": [
+    {
+     "code": "RNF7512",
+     "line": 7,
+     "severity": 30,
+     "text": "The Result Field entry C6 is too small to contain a complete *ISO- Date."
+    }
+   ],
+   "reason": "RNF7512: The Result Field entry C6 is too small to contain a complete *ISO- Date.",
+   "reason_detail": "line 7: The Result Field entry C6 is too small to contain a complete *ISO- Date. \u2014 `C     *ISO          MOVEL     DFLD          C6`",
+   "rpgc": "reject",
+   "sha256": "cb5314a31200ae7291ab459d860c79b4ef6cfc0eb20ee1baa4996a0d1af702fe",
+   "verdict": "reject",
+   "verified": "2026-09-25"
+  },
+  "test297_err_like_qualified_sibling.rpgle": {
+   "codes": [
+    "RNF7030",
+    "RNF7503"
+   ],
+   "messages": [
+    {
+     "code": "RNF7030",
+     "line": 7,
+     "severity": 30,
+     "text": "The name or indicator PRICE is not defined."
+    },
+    {
+     "code": "RNF7030",
+     "line": 7,
+     "severity": 30,
+     "text": "The name or indicator UNITPRICE is not defined."
+    },
+    {
+     "code": "RNF7503",
+     "line": 9,
+     "severity": 30,
+     "text": "Expression contains an operand that is not defined."
+    },
+    {
+     "code": "RNF7503",
+     "line": 10,
+     "severity": 30,
+     "text": "Expression contains an operand that is not defined."
+    }
+   ],
+   "reason": "LIKE naming a sibling subfield without its DS qualifier",
+   "reason_detail": "line 7: `price LIKE(unitPrice);`",
+   "rpgc": "reject",
+   "sha256": "e7bb79336b0361a79ce8cfe6e82f9609241756ce6cd1404f3bc7612d7ed3e4d3",
+   "verdict": "reject",
+   "verified": "2026-09-25"
+  },
+  "test298_err_fixed_pos.rpgle": {
+   "codes": [
+    "RNF3555"
+   ],
+   "messages": [
+    {
+     "code": "RNF3555",
+     "line": 6,
+     "severity": 20,
+     "text": "The keyword is not allowed in fixed-form definitions. The keyword is ignored."
+    }
+   ],
+   "reason": "RNF3555: The keyword is not allowed in fixed-form definitions. The keyword is ignored.",
+   "reason_detail": "line 6: The keyword is not allowed in fixed-form definitions. The keyword is ignored. \u2014 `DID                             10I 0 POS(1)`",
+   "rpgc": "reject",
+   "sha256": "53f990ed2133a3e464d5b78a91b8b125e3071bcdcbd48963e866629429765a68",
+   "verdict": "reject",
+   "verified": "2026-09-25"
+  },
+  "test299_err_cab_no_factors.rpgle": {
+   "codes": [
+    "RNF5009",
+    "RNF5023"
+   ],
+   "messages": [
+    {
+     "code": "RNF5009",
+     "line": 4,
+     "severity": 30,
+     "text": "Factor 1 operand is required for specified operation."
+    },
+    {
+     "code": "RNF5023",
+     "line": 4,
+     "severity": 30,
+     "text": "Factor 2 operand is not specified for this operation."
+    }
+   ],
+   "reason": "RNF5009: Factor n operand is required for specified operation.",
+   "reason_detail": "line 4: Factor 1 operand is required for specified operation. \u2014 `C                   CAB                     DONE`",
+   "rpgc": "reject",
+   "sha256": "e35ea7c23a1df50076fdc1ab26d22c7e148eca4c1d2ecedf0cbabab573c71a1e",
+   "verdict": "reject",
+   "verified": "2026-09-25"
+  },
   "test29_dclsubf_parm.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "c0d8d8f5e1013c5314eb562b5ac7eccb25a2552369659c4c9d3287f501fa86c2",
    "verdict": "accept",
    "verified": "2026-09-24"
+  },
+  "test300_err_copy_not_free.rpgle": {
+   "codes": [
+    "RNF0257",
+    "RNF5001",
+    "RNF5014",
+    "RNF5375",
+    "RNF7030",
+    "RNF7503"
+   ],
+   "messages": [
+    {
+     "code": "RNF7030",
+     "line": 6,
+     "severity": 30,
+     "text": "The name or indicator FROMCOPY is not defined."
+    },
+    {
+     "code": "RNF7503",
+     "line": 6,
+     "severity": 30,
+     "text": "Expression contains an operand that is not defined."
+    }
+   ],
+   "reason": "Undefined name, cause not reported by IBM (RNF7030)",
+   "reason_detail": "line 6: The name or indicator FROMCOPY is not defined.",
+   "rpgc": "reject",
+   "sha256": "815e199756494192febdd5e9219437b8621cda29cecc9827606e2b30dffe7799",
+   "verdict": "reject",
+   "verified": "2026-09-25"
+  },
+  "test301_err_name_continuation.rpgle": {
+   "codes": [
+    "RNF0289",
+    "RNF0622",
+    "RNF0623",
+    "RNF3438",
+    "RNF7030",
+    "RNF7503"
+   ],
+   "messages": [
+    {
+     "code": "RNF0622",
+     "line": 5,
+     "severity": 20,
+     "text": "A qualified name is not allowed in this context."
+    },
+    {
+     "code": "RNF0623",
+     "line": 5,
+     "severity": 20,
+     "text": "The simple qualified name is not specified correctly."
+    },
+    {
+     "code": "RNF0289",
+     "line": 5,
+     "severity": 20,
+     "text": "Entry contains data that is not valid; only valid data is used."
+    },
+    {
+     "code": "RNF7030",
+     "line": 7,
+     "severity": 30,
+     "text": "The name or indicator CUSTOMERNUMBER is not defined."
+    },
+    {
+     "code": "RNF7503",
+     "line": 7,
+     "severity": 30,
+     "text": "Expression contains an operand that is not defined."
+    }
+   ],
+   "reason": "RNF0622: A qualified name is not allowed in this context.",
+   "reason_detail": "line 5: A qualified name is not allowed in this context. \u2014 `DcustomerNumb...  S`",
+   "rpgc": "reject",
+   "sha256": "562e6264e0a96abaad9b6afc4d3aeb52643d2a6fae23e01df8ff9d36735788ef",
+   "verdict": "reject",
+   "verified": "2026-09-25"
   },
   "test30_like.rpgle": {
    "codes": [],
@@ -3358,30 +3293,11 @@
    "verified": "2026-09-24"
   },
   "test47_test.rpgle": {
-   "codes": [
-    "RNF5056",
-    "RNF7523"
-   ],
-   "messages": [
-    {
-     "code": "RNF5056",
-     "line": 7,
-     "severity": 30,
-     "text": "Either the error indicator or the E operation extender must be specified for the TEST operation."
-    },
-    {
-     "code": "RNF7523",
-     "line": 7,
-     "severity": 20,
-     "text": "Operation-Code extender D, T, or Z cannot be used with Result-Field entry MYDATE."
-    }
-   ],
-   "reason": "RNF5056: Either the error indicator or the E operation extender must be specified for the TEST operation.",
-   "reason_detail": "line 7: Either the error indicator or the E operation extender must be specified for the TEST operation. \u2014 `TEST(D) myDate;`",
+   "codes": [],
    "rpgc": "accept",
-   "sha256": "7f5ba449e9ba1f0e9ba34acea6279734b88c3e49e2b9ffaaf62e91bd4ab0356b",
-   "verdict": "reject",
-   "verified": "2026-09-24"
+   "sha256": "c2bf976e4178605c8fa8f4dd18932e19a3ab0d705880b28e91de15e632bfb96b",
+   "verdict": "accept",
+   "verified": "2026-09-25"
   },
   "test48_nomain.rpgle": {
    "codes": [],
@@ -3423,9 +3339,9 @@
   "test53_datetime_bifs.rpgle": {
    "codes": [],
    "rpgc": "accept",
-   "sha256": "75e94dde666616a32d67798b42f0a7322671f6885aca5a154944e481261e5627",
+   "sha256": "908abcfb3eb63b60f9c885d6aa8c71aafbe73f7001b929579f1e98f8bc2095e6",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test54_memory_bifs.rpgle": {
    "codes": [],
@@ -3451,9 +3367,9 @@
   "test57_datfmt.rpgle": {
    "codes": [],
    "rpgc": "accept",
-   "sha256": "5017c1301409250b0b6c06ea5f896ff81d00fb352af6b9e001d8fd69efceebd3",
+   "sha256": "7b8fe5d1604643b5c91aabbac83b98fbd66cfe9576e3b53c50d492455b93c746",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test58_foreach_in.rpgle": {
    "codes": [],
@@ -3678,28 +3594,10 @@
    "verified": "2026-09-25"
   },
   "test78_exec_sql_proc.sqlrpgle": {
-   "codes": [
-    "RNF1520"
-   ],
-   "messages": [
-    {
-     "code": "RNF1520",
-     "line": 122,
-     "severity": 20,
-     "text": "The procedure cannot be defined with DFTACTGRP(*YES)."
-    },
-    {
-     "code": "RNF1520",
-     "line": 153,
-     "severity": 20,
-     "text": "The procedure cannot be defined with DFTACTGRP(*YES)."
-    }
-   ],
-   "reason": "RNF1520: The procedure cannot be defined with DFTACTGRP(*YES).",
-   "reason_detail": "line 122: The procedure cannot be defined with DFTACTGRP(*YES). \u2014 ``",
+   "codes": [],
    "rpgc": "accept",
-   "sha256": "fbddaec102a71ac24f13a7cb75744030526dad4fce4b3b57ca932050bbefd21c",
-   "verdict": "reject",
+   "sha256": "37bfd6d29c925a3eb20b52b66151c519a29e64bea7b4e172f45475b7951e94a8",
+   "verdict": "accept",
    "verified": "2026-09-25"
   },
   "test79_sql_core.sqlrpgle": {
@@ -3725,60 +3623,16 @@
   },
   "test82_sql_advanced.sqlrpgle": {
    "codes": [],
-   "messages": [
-    {
-     "code": "SQL0104",
-     "line": 47,
-     "severity": 30,
-     "text": "Position 23 Token <END-OF-STATEMENT> was not valid. Valid tokens: ON UNIQUE."
-    }
-   ],
-   "reason": "SQL0104: Position n Token <END-OF-STATEMENT> was not valid. Valid tokens: ON UNIQUE.",
-   "reason_detail": "line 47: Position 23 Token <END-OF-STATEMENT> was not valid. Valid tokens: ON UNIQUE. \u2014 `// SAVEPOINT`",
    "rpgc": "accept",
-   "sha256": "afc0c38327c96f4d23e6c0ff2a55f800b75b7e2df78a53ae35421707e8ddadc8",
-   "verdict": "reject",
+   "sha256": "404beb9281ad0b233a56297c39177ceba18cf40651feedf77719e450fddd878f",
+   "verdict": "accept",
    "verified": "2026-09-25"
   },
   "test83_sql_multirow.sqlrpgle": {
    "codes": [],
-   "messages": [
-    {
-     "code": "SQL0312",
-     "line": 40,
-     "severity": 30,
-     "text": "Position 11 Variable IDS not defined or not usable for reason code 2."
-    },
-    {
-     "code": "SQL0312",
-     "line": 40,
-     "severity": 30,
-     "text": "Position 17 Variable NAMES not defined or not usable for reason code 2."
-    },
-    {
-     "code": "SQL0312",
-     "line": 40,
-     "severity": 30,
-     "text": "Position 25 Variable SALARIES not defined or not usable for reason code 2."
-    },
-    {
-     "code": "SQL0104",
-     "line": 41,
-     "severity": 30,
-     "text": "Position 7 Token : was not valid. Valid tokens: READ FETCH UPDATE."
-    },
-    {
-     "code": "SQL5011",
-     "line": 58,
-     "severity": 30,
-     "text": "Position 9 Host structure array IDS not defined or not usable for reason code 1."
-    }
-   ],
-   "reason": "SQL0312: Position n Variable IDS not defined or not usable for reason code n.",
-   "reason_detail": "line 40: Position 11 Variable IDS not defined or not usable for reason code 2. \u2014 `EXEC SQL INSERT INTO mr83 (id, name, salary)`",
    "rpgc": "accept",
-   "sha256": "6c2e5d54a70c5c0bcf7d71cfea3a9b4ebc06084c5c767d4ee2a9f6e82d8ea323",
-   "verdict": "reject",
+   "sha256": "27e29239b863d9598a320310630101a4f207a749d36ac20a26921604f4566a73",
+   "verdict": "accept",
    "verified": "2026-09-25"
   },
   "test84_sql_connect.sqlrpgle": {
@@ -3874,42 +3728,18 @@
    "verified": "2026-09-24"
   },
   "test92_data_area_lda.rpgle": {
-   "codes": [
-    "RNF7091"
-   ],
-   "messages": [
-    {
-     "code": "RNF7091",
-     "line": 21,
-     "severity": 30,
-     "text": "The Factor 2 operand is a Local-Data Area for UNLOCK operation."
-    }
-   ],
-   "reason": "RNF7091: The Factor n operand is a Local-Data Area for UNLOCK operation.",
-   "reason_detail": "line 21: The Factor 2 operand is a Local-Data Area for UNLOCK operation. \u2014 `UNLOCK LdaData;`",
+   "codes": [],
    "rpgc": "accept",
-   "sha256": "50bbe23493c7ac367b4284cb9261a7819f2e68c911bacbcfd117bddfe6eea04d",
-   "verdict": "reject",
-   "verified": "2026-09-24"
+   "sha256": "e4baa78e3cf6d78366ae3f3df15222ccb4c3216a4521117cdd0796c11ad5e409",
+   "verdict": "accept",
+   "verified": "2026-09-25"
   },
   "test93_data_area_named.rpgle": {
-   "codes": [
-    "RNF7030"
-   ],
-   "messages": [
-    {
-     "code": "RNF7030",
-     "line": 3,
-     "severity": 30,
-     "text": "The name or indicator RPGCTEST93 is not defined."
-    }
-   ],
-   "reason": "Unquoted data-area name in DTAARA (IBM reads it as a variable holding the name)",
-   "reason_detail": "line 3: `DCL-S MyConfig CHAR(50) DTAARA(RPGCTEST93);`",
+   "codes": [],
    "rpgc": "accept",
-   "sha256": "a515397f1931dbc50589185416da8f9b1352e151aef95222390e959f0b0eea43",
-   "verdict": "reject",
-   "verified": "2026-09-24"
+   "sha256": "1b98230c97648c5aecf04a845f27a9d11a95e3c4dbed6594586ce9a7b86eb8bf",
+   "verdict": "accept",
+   "verified": "2026-09-25"
   },
   "test94_extender_h.rpgle": {
    "codes": [],
@@ -3926,61 +3756,25 @@
    "verified": "2026-09-25"
   },
   "test96_da_status401.rpgle": {
-   "codes": [
-    "RNF7030"
-   ],
-   "messages": [
-    {
-     "code": "RNF7030",
-     "line": 3,
-     "severity": 30,
-     "text": "The name or indicator NOSUCHDA96 is not defined."
-    }
-   ],
-   "reason": "Unquoted data-area name in DTAARA (IBM reads it as a variable holding the name)",
-   "reason_detail": "line 3: `DCL-S missing CHAR(10) DTAARA(NOSUCHDA96);`",
+   "codes": [],
    "rpgc": "accept",
-   "sha256": "d12f8e51bb7c2d07caecba822e3b18cfc20493b28904651240351f20ea54069e",
-   "verdict": "reject",
-   "verified": "2026-09-24"
+   "sha256": "ed57896ae612ec39ae89c4da4a4bc7156fbc6de38e1f90a17d9c6f0a3b41f281",
+   "verdict": "accept",
+   "verified": "2026-09-25"
   },
   "test97_da_status415.rpgle": {
-   "codes": [
-    "RNF7030"
-   ],
-   "messages": [
-    {
-     "code": "RNF7030",
-     "line": 4,
-     "severity": 30,
-     "text": "The name or indicator RPGCTEST97DA is not defined."
-    }
-   ],
-   "reason": "Unquoted data-area name in DTAARA (IBM reads it as a variable holding the name)",
-   "reason_detail": "line 4: `DCL-S da CHAR(10) DTAARA(RPGCTEST97DA);`",
+   "codes": [],
    "rpgc": "accept",
-   "sha256": "ed698e2b17a1e764cfc8c3e015922ebb4804026166b487b122dbe01cbee88e74",
-   "verdict": "reject",
-   "verified": "2026-09-24"
+   "sha256": "f2a788ab3fdda69b9204cc44c442c08beebd7c1ec594018e55bd5c2eeb0939a4",
+   "verdict": "accept",
+   "verified": "2026-09-25"
   },
   "test98_da_status413.rpgle": {
-   "codes": [
-    "RNF7030"
-   ],
-   "messages": [
-    {
-     "code": "RNF7030",
-     "line": 4,
-     "severity": 30,
-     "text": "The name or indicator RPGCTEST98DA is not defined."
-    }
-   ],
-   "reason": "Unquoted data-area name in DTAARA (IBM reads it as a variable holding the name)",
-   "reason_detail": "line 4: `DCL-S da CHAR(10) DTAARA(RPGCTEST98DA);`",
+   "codes": [],
    "rpgc": "accept",
-   "sha256": "dde775ea6423b4ab985b0e8437f379b4ce835d59522e0bc5ea6c63cbcabdd324",
-   "verdict": "reject",
-   "verified": "2026-09-24"
+   "sha256": "337f92a2b218a188f5f15334044d66769c088c51587bbb3781df76787a47f065",
+   "verdict": "accept",
+   "verified": "2026-09-25"
   },
   "test99_data_into.rpgle": {
    "codes": [],
@@ -4035,5 +3829,5 @@
    "verified": "2026-09-24"
   }
  },
- "generated": "2026-09-25T02:54:54+00:00"
+ "generated": "2026-09-25T06:07:33+00:00"
 }

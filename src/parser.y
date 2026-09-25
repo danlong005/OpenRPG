@@ -641,6 +641,17 @@ dcl_f_stmt:
         $$ = new rpg::DclF($2, "PRINTER");
         free($2);
     }
+    /* PRINTER(n): a program-described printer file with n-byte records, the
+       usual form for a printer file with no DDS of its own. Without the
+       length, the file is externally described, and a printer file created
+       without DDS has a record format of its own name, which RPG rejects
+       (IBM: RNF2121). */
+    | KW_DCL_F IDENTIFIER KW_PRINTER LPAREN INTEGER_LITERAL RPAREN SEMICOLON {
+        auto* n = new rpg::DclF($2, "PRINTER");
+        n->recordLen = $5;
+        free($2);
+        $$ = n;
+    }
     | KW_DCL_F IDENTIFIER KW_WORKSTN dclf_opts SEMICOLON {
         auto* n = new rpg::DclF($2, "WORKSTN");
         free($2);

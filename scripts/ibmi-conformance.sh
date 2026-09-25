@@ -207,6 +207,19 @@ while IFS= read -r f; do
         else
             out=$($SYS "CRTBNDRPG PGM($LIB/CONFTMP) SRCSTMF('$src') TGTCCSID(*JOB) INCDIR('$WORK') DFTACTGRP(*NO) ACTGRP(*NEW)" </dev/null 2>&1)
             rc=$?
+            # A program whose RPG is clean can still fail to BIND: one half
+            # of a multi-module test imports what the other half exports
+            # (test 49 imports test 48's ADD and sharedVal), and nothing
+            # here links the halves. The listing then reports no errors at
+            # all. Compile such a source as a module instead, which checks
+            # the RPG without the missing partner, and say so.
+            if [ $rc -ne 0 ] && echo "$out" | grep -E 'Error +\(20\)[ .]*: +0' >/dev/null \
+                   && echo "$out" | grep -E 'Severe Error \(30\+\)[ .]*: +0' >/dev/null; then
+                echo "@@@NOTE bind failed with a clean listing; compiled as a module (CRTRPGMOD)"
+                out=$($SYS "CRTRPGMOD MODULE($LIB/CONFTMP) SRCSTMF('$src') TGTCCSID(*JOB) INCDIR('$WORK')" </dev/null 2>&1)
+                rc=$?
+                $SYS "DLTMOD MODULE($LIB/CONFTMP)" </dev/null >/dev/null 2>&1
+            fi
         fi
         ;;
     esac

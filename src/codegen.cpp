@@ -1742,6 +1742,7 @@ void CodeGen::visit(DclS& node) {
         if (node.dim_type == 1 || node.dim_type == 2) {
             // DIM(*VAR:max) or DIM(*AUTO:max) — use std::vector
             out_ << "std::vector<" << typeToString(node.type, node.length) << "> " << node.name << ";\n";
+            varying_arrays_.insert(node.name);
             std::string init = arrayElementInit(node);
             if (!init.empty()) vector_fill_[node.name] = init;
             // Reserving capacity is a statement, not part of the
@@ -1784,6 +1785,18 @@ void CodeGen::visit(DclS& node) {
             else
                 out_ << "{}";
             out_ << ";\n";
+            // Shadow copy for RESET, as for a scalar with INZ. A CTDATA
+            // array's trailing CHAR elements are filled in main(), so its
+            // copy is taken there, after them.
+            if (!node.ctdata_elems.empty()) {
+                has_inz_.insert(node.name);
+                emitIndent();
+                out_ << "std::array<" << elemType << ", " << node.dim << "> _init_" << node.name << ";\n";
+                deferred_init_.push_back("_init_" + node.name + " = " + node.name + ";");
+            } else if (!init.empty()) {
+                emitIndent();
+                out_ << "const auto _init_" << node.name << " = " << node.name << ";\n";
+            }
         }
         return;
     }
@@ -3416,17 +3429,34 @@ void CodeGen::visit(CallStmt& node) {
     out_ << ");\n";
 }
 
+// RESET restores the value a variable started with: its INZ, or else its
+// type's default. A data structure starts as its struct's member
+// initializers, so assigning {} restores each subfield, in every element of
+// a DS array too. A varying-dimension array starts empty.
 void CodeGen::visit(ResetStmt& node) {
-    emitIndent();
-    if (has_inz_.count(node.var_name)) {
-        out_ << node.var_name << " = _init_" << node.var_name << ";\n";
-    } else {
-        // No INZ — reset to type default
-        auto it = var_types_.find(node.var_name);
-        if (it != var_types_.end()) {
-            out_ << node.var_name << " = " << fieldTypeDefault(it->second, var_lengths_[node.var_name]) << ";\n";
-        }
+    const std::string& name = node.var_name;
+    Identifier id(name);
+    std::string target = emitExpr(id);
+    if (ds_defs_.count(name) || likeds_params_.count(name)) {
+        emitIndent();
+        out_ << target << " = {};\n";
+        return;
     }
+    if (has_inz_.count(name)) {
+        emitIndent();
+        out_ << target << " = _init_" << name << ";\n";
+        return;
+    }
+    FieldAttrs a = attrsOf(id);
+    if (!a.known) {
+        report_semantic_error(node.line, "RESET: '" + name + "' is not a declared variable");
+        return;
+    }
+    std::string def = fieldTypeDefault(a.type, a.length);
+    emitIndent();
+    if (varying_arrays_.count(name)) out_ << target << ".clear();\n";
+    else if (array_vars_.count(name)) out_ << "for (auto& __e : " << target << ") __e = " << def << ";\n";
+    else out_ << target << " = " << def << ";\n";
 }
 
 // CLEAR sets a variable to its type's default -- blanks, zeros, *OFF --

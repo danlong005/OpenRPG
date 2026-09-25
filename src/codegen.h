@@ -247,6 +247,7 @@ private:
     std::string arrayElementInit(const rpg::DclS& node);
     int displayLength(Expression& e);
     std::map<std::string, std::string> vector_fill_; // varying array -> new-element value
+    std::set<std::string> varying_arrays_; // DIM(*VAR) / DIM(*AUTO), held as std::vector
     // Subfield name -> its DS, for a DS without QUALIFIED, whose subfields
     // are referenced by bare name in RPG.
     std::map<std::string, std::string> unqualified_subfields_;

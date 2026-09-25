@@ -59,6 +59,20 @@ one.id = 8;
 line = ClearRec(one);
 DSPLY line;
 
+// RESET restores what a whole array or data structure started with: an
+// array's INZ, or its type's default; each subfield's default
+nums(1) = 1;
+one.id = 2;
+many(1).code = 'GHI';
+RESET nums;
+RESET one;
+RESET many;
+line = %CHAR(nums(1)) + '|' + %CHAR(one.id) + '|' + many(1).code + '|';
+DSPLY line;
+one.code = 'JKL';
+line = ResetRec(one);
+DSPLY line;
+
 *INLR = *ON;
 
 DCL-PROC ClearRec;
@@ -66,5 +80,13 @@ DCL-PROC ClearRec;
     r LIKEDS(rec);
   END-PI;
   CLEAR r;
+  RETURN %CHAR(r.id) + '|' + r.code + '|';
+END-PROC;
+
+DCL-PROC ResetRec;
+  DCL-PI *N VARCHAR(52);
+    r LIKEDS(rec);
+  END-PI;
+  RESET r;
   RETURN %CHAR(r.id) + '|' + r.code + '|';
 END-PROC;

@@ -1192,6 +1192,9 @@ Found on the way, fixed separately: `CLEAR` generated nothing for a data
 structure, a DS array or a FLOAT, and invalid C++ (`ARR = 0;`) for a
 standalone array. It now clears every element and subfield, including through
 a `LIKEDS` parameter, and clears CHAR to blanks rather than to an empty string.
+`RESET` had the same gaps (and `RESET` of an array with `INZ` referred to a
+shadow copy that was never declared); it now restores whole arrays, CTDATA
+arrays, varying arrays and data structures to their starting values.
 
 **Still open (small):** whether rpgc should also *accept* `CONNECT TO :rdb USER
 :u USING :pw` so shop code carrying the IBM spelling compiles. Narrow — it only

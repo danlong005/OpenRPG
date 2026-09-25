@@ -7,7 +7,10 @@ DCL-S connStr VARCHAR(200);
 DCL-S key     VARCHAR(10);
 
 connStr = 'Driver={SQLite3};Database=/tmp/rpgc_test105.sqlite;';
+// OpenRPG connects by ODBC connection string; an IBM i job is already connected.
+/IF DEFINED(*OPENRPG)
 EXEC SQL CONNECT USING :connStr;
+/ENDIF
 
 EXEC SQL CREATE TABLE custfl105 (
   CUSTNO VARCHAR(10) PRIMARY KEY,
@@ -49,6 +52,8 @@ IF NOT %FOUND(CUSTFL105);
 ENDIF;
 
 EXEC SQL DROP TABLE custfl105;
+/IF DEFINED(*OPENRPG)
 EXEC SQL DISCONNECT;
+/ENDIF
 
 *INLR = *ON;

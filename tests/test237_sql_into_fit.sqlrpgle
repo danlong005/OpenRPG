@@ -15,7 +15,10 @@ DCL-DS row QUALIFIED;
 END-DS;
 
 connStr = 'Driver={SQLite3};Database=/tmp/rpgc_test237.sqlite;';
+// OpenRPG connects by ODBC connection string; an IBM i job is already connected.
+/IF DEFINED(*OPENRPG)
 EXEC SQL CONNECT USING :connStr;
+/ENDIF
 EXEC SQL DROP TABLE IF EXISTS fit237;
 EXEC SQL CREATE TABLE fit237 (id INTEGER PRIMARY KEY, name VARCHAR(20), amt REAL);
 EXEC SQL INSERT INTO fit237 VALUES(1, 'Bob', 12.345);

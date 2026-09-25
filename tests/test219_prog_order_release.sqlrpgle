@@ -45,9 +45,12 @@
      C     INZSR1        BEGSR
      C                   EVAL      CONN = 'Driver={SQLite3};' +
      C                             'Database=/tmp/rpgc_test219.sqlite;'
+     C* OpenRPG connects by ODBC connection string; an IBM i job is already connected.
+      /IF DEFINED(*OPENRPG)
      C/EXEC SQL
      C+ CONNECT USING :CONN
      C/END-EXEC
+      /ENDIF
      C/EXEC SQL
      C+ DROP TABLE IF EXISTS custfl219
      C/END-EXEC

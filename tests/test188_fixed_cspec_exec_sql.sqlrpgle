@@ -5,9 +5,12 @@
      DTMPDSP           S             52A
      C                   EVAL      conn = 'Driver={SQLite3};' +
      C                             'Database=/tmp/rpgc_test188.sqlite;'
+     C* OpenRPG connects by ODBC connection string; an IBM i job is already connected.
+      /IF DEFINED(*OPENRPG)
      C/EXEC SQL
      C+ CONNECT USING :conn
      C/END-EXEC
+      /ENDIF
      C/EXEC SQL
      C+ DROP TABLE IF EXISTS fx188
      C/END-EXEC

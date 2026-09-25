@@ -1156,6 +1156,23 @@ rewriting those tests to use `RPGC_DSN` would make them compile on IBM i but
 would stop testing the thing they exist to test. The 16 files are counted as a
 platform divergence permanently, not as work.
 
+**SUPERSEDED (2026-09-25): both compilers now accept the same files.** rpgc
+predefines the condition `*OPENRPG`, and the 18 tests wrap their `CONNECT
+USING`/`DISCONNECT` in `/IF DEFINED(*OPENRPG)`. rpgc still compiles and runs
+the connection-string path, so it is still tested. IBM i skips those lines and
+uses the job's own connection. Probed on PUB400 before changing anything:
+- `CRTSQLRPGI` ignores `/IF` by default and parses the SQL in both branches.
+  **`RPGPPOPT(*LVL2)` is required**: it runs the RPG preprocessor first.
+  `ibmi-conformance.sh` now passes it.
+- IBM accepts an unknown `*` condition as simply undefined, so `*OPENRPG` is
+  safe there.
+- A bare `DISCONNECT` fails too (`SQL0104`) and must be guarded as well.
+  `CONNECT RESET` is valid Db2 for i and stays unguarded.
+- A static statement against a missing table is only `SQL1103` severity 10, and
+  the program is still created. Tables need not exist to compile.
+
+The "reject" entries for these tests are gone from `tests/ibmi-expected.txt`.
+
 **Still open (small):** whether rpgc should also *accept* `CONNECT TO :rdb USER
 :u USING :pw` so shop code carrying the IBM spelling compiles. Narrow — it only
 affects source connecting to a *remote* database, since local access needs no

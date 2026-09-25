@@ -26,27 +26,5 @@ test11c_unmatched_if.rpgle     reject  syntax-error test
 test11d_bad_expr.rpgle         reject  syntax-error test
 test11e_unmatched_paren.rpgle  reject  syntax-error test
 
-# OpenRPG connects to its database with EXEC SQL CONNECT USING :var, which is
-# not Db2 for i syntax (SQL0199); on IBM i a job is already connected. These
-# tests were deliberately kept in that form (TODO.md, "SQL connection model").
-test77_exec_sql.sqlrpgle             reject  uses OpenRPG's EXEC SQL CONNECT USING
-test78_exec_sql_proc.sqlrpgle        reject  uses OpenRPG's EXEC SQL CONNECT USING
-test79_sql_core.sqlrpgle             reject  uses OpenRPG's EXEC SQL CONNECT USING
-test80_sql_cursors.sqlrpgle          reject  uses OpenRPG's EXEC SQL CONNECT USING
-test81_sql_dynamic.sqlrpgle          reject  uses OpenRPG's EXEC SQL CONNECT USING
-test82_sql_advanced.sqlrpgle         reject  uses OpenRPG's EXEC SQL CONNECT USING
-test83_sql_multirow.sqlrpgle         reject  uses OpenRPG's EXEC SQL CONNECT USING
-test84_sql_connect.sqlrpgle          reject  uses OpenRPG's EXEC SQL CONNECT USING
-test86.sqlrpgle                      reject  uses OpenRPG's EXEC SQL CONNECT USING
-test103_rla_chain.rpgle              reject  uses OpenRPG's EXEC SQL CONNECT USING
-test104_rla_read.rpgle               reject  uses OpenRPG's EXEC SQL CONNECT USING
-test105_rla_write_upd_del.rpgle      reject  uses OpenRPG's EXEC SQL CONNECT USING
-test106_rla_setll_reade.rpgle        reject  uses OpenRPG's EXEC SQL CONNECT USING
-test109_sql_indicator.sqlrpgle       reject  uses OpenRPG's EXEC SQL CONNECT USING
-test188_fixed_cspec_exec_sql.sqlrpgle  reject  uses OpenRPG's EXEC SQL CONNECT USING
-test219_prog_order_release.sqlrpgle  reject  uses OpenRPG's EXEC SQL CONNECT USING
-test237_sql_into_fit.sqlrpgle        reject  uses OpenRPG's EXEC SQL CONNECT USING
-test238_rla_field_fit.rpgle          reject  uses OpenRPG's EXEC SQL CONNECT USING
-
 # OpenRPG extensions: accepted by rpgc on purpose, rejected by IBM i.
 test61_no_free.rpgle                 reject  OpenRPG extension: free-form without **FREE; IBM i requires the directive

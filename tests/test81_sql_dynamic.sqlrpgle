@@ -9,7 +9,10 @@ DCL-S empName   VARCHAR(50);
 DCL-S empSal    PACKED(9:2);
 
 connStr = 'Driver={SQLite3};Database=/tmp/rpgc_test81.sqlite;';
+// OpenRPG connects by ODBC connection string; an IBM i job is already connected.
+/IF DEFINED(*OPENRPG)
 EXEC SQL CONNECT USING :connStr;
+/ENDIF
 
 // EXECUTE IMMEDIATE
 sqlStr = 'CREATE TABLE dyn81 (id INTEGER, name VARCHAR(50), salary DECIMAL(9,2))';
@@ -45,7 +48,9 @@ DSPLY %CHAR(empSal);
 // Cleanup
 sqlStr = 'DROP TABLE dyn81';
 EXEC SQL EXECUTE IMMEDIATE :sqlStr;
+/IF DEFINED(*OPENRPG)
 EXEC SQL DISCONNECT;
+/ENDIF
 
 *INLR = *ON;
 RETURN;

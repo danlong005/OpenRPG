@@ -182,7 +182,11 @@ while IFS= read -r f; do
         # SQL0104 "Token ,1 was not valid". *PERIOD pins the decimal point
         # regardless of job locale. DECMPT() is not a parameter of this
         # command -- the decimal point is an OPTION value.
-        out=$($SYS "CRTSQLRPGI OBJ($LIB/CONFTMP) SRCSTMF('$src') OBJTYPE(*PGM) COMMIT(*NONE) OPTION(*PERIOD)" </dev/null 2>&1)
+        # RPGPPOPT(*LVL2) is REQUIRED too. Without it the precompiler ignores
+        # /IF and parses the SQL in both branches, so the tests' OpenRPG-only
+        # CONNECT USING, guarded by /IF DEFINED(*OPENRPG), still fails SQL0199.
+        # *LVL2 runs the RPG preprocessor first (verified on PUB400 2026-09-25).
+        out=$($SYS "CRTSQLRPGI OBJ($LIB/CONFTMP) SRCSTMF('$src') OBJTYPE(*PGM) COMMIT(*NONE) OPTION(*PERIOD) RPGPPOPT(*LVL2)" </dev/null 2>&1)
         rc=$?
         ;;
       rpg)

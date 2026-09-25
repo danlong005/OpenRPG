@@ -10,7 +10,10 @@ DCL-S empId     INT(10);
 DCL-S count     INT(10);
 
 connStr = 'Driver={SQLite3};Database=/tmp/rpgc_test77.sqlite;';
+// OpenRPG connects by ODBC connection string; an IBM i job is already connected.
+/IF DEFINED(*OPENRPG)
 EXEC SQL CONNECT USING :connStr;
+/ENDIF
 
 EXEC SQL CREATE TABLE emp77 (
   id INTEGER PRIMARY KEY,
@@ -59,6 +62,8 @@ DSPLY %CHAR(count);
 
 EXEC SQL COMMIT;
 EXEC SQL DROP TABLE emp77;
+/IF DEFINED(*OPENRPG)
 EXEC SQL DISCONNECT;
+/ENDIF
 
 *INLR = *ON;

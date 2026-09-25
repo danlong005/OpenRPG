@@ -6,7 +6,10 @@ DCL-F CUSTFL104 DISK EXTDESC('CUSTFL104');
 DCL-S connStr VARCHAR(200);
 
 connStr = 'Driver={SQLite3};Database=/tmp/rpgc_test104.sqlite;';
+// OpenRPG connects by ODBC connection string; an IBM i job is already connected.
+/IF DEFINED(*OPENRPG)
 EXEC SQL CONNECT USING :connStr;
+/ENDIF
 
 EXEC SQL CREATE TABLE custfl104 (
   CUSTNO VARCHAR(10),
@@ -26,6 +29,8 @@ DOW NOT %EOF(CUSTFL104);
 ENDDO;
 
 EXEC SQL DROP TABLE custfl104;
+/IF DEFINED(*OPENRPG)
 EXEC SQL DISCONNECT;
+/ENDIF
 
 *INLR = *ON;

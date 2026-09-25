@@ -291,6 +291,7 @@ void expandMember(const std::vector<std::string>& lines, int depth, bool inFreeA
 
 static std::vector<std::string> expandCopyDirectives(const std::vector<std::string>& lines, int depth, bool& ok) {
     DirectiveState st;
+    st.defines.insert("*OPENRPG");   // predefined, as in lexer.l
     std::vector<std::string> out;
     expandMember(lines, depth, false, "", st, out, ok);
     return out;

@@ -10,7 +10,10 @@ DCL-S rowCount  INT(10);
 DCL-S empCount  INT(10);
 
 connStr = 'Driver={SQLite3};Database=/tmp/rpgc_test82.sqlite;';
+// OpenRPG connects by ODBC connection string; an IBM i job is already connected.
+/IF DEFINED(*OPENRPG)
 EXEC SQL CONNECT USING :connStr;
+/ENDIF
 
 EXEC SQL CREATE TABLE adv82 (
   id INTEGER PRIMARY KEY,
@@ -57,7 +60,9 @@ DSPLY ('After rollback count=' + %CHAR(empCount));
 
 EXEC SQL COMMIT;
 EXEC SQL DROP TABLE adv82;
+/IF DEFINED(*OPENRPG)
 EXEC SQL DISCONNECT;
+/ENDIF
 
 *INLR = *ON;
 RETURN;

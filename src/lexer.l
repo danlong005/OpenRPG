@@ -68,7 +68,10 @@ static int include_stack_ptr = 0;
 
 // Conditional compilation
 #include <set>
-static std::set<std::string> cond_defines;
+// *OPENRPG is predefined, as IBM's compiler predefines *ILERPG, so one source
+// can hold lines only rpgc should see (/IF DEFINED(*OPENRPG)). A /DEFINE name
+// can't start with '*', so user code can't collide with it.
+static std::set<std::string> cond_defines = {"*OPENRPG"};
 #define MAX_COND_DEPTH 20
 static bool cond_active[MAX_COND_DEPTH]; // is this level active?
 static bool cond_done[MAX_COND_DEPTH];   // has any branch been taken?

@@ -405,7 +405,7 @@ See the [User's Guide](docs/GUIDE.md#multi-module-programs) for details.
 - Date/time arithmetic with all format constants
 - MONITOR/ON-ERROR error handling, *PSSR, ON-EXIT
 - Multi-module support (NOMAIN, EXPORT, IMPORT, EXTPROC)
-- Conditional compilation (/IF, /DEFINE, /COPY)
+- Conditional compilation (/IF, /DEFINE, /COPY); rpgc predefines `*OPENRPG`, so `/IF DEFINED(*OPENRPG)` marks lines only rpgc compiles
 - Embedded SQL via ODBC (SQLite, PostgreSQL, MySQL, SQL Server, Db2)
 - Record-level access (READ, WRITE, CHAIN, UPDATE, DELETE, SETLL, SETGT) via ODBC, with PREFIX on DCL-F to rename a file's fields
 - DATA-INTO / DATA-GEN for JSON parsing and generation

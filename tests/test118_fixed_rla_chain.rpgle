@@ -1,7 +1,7 @@
-     HDFTACTGRP(*NO)
+     HDFTACTGRP(*NO) EXTBININT(*YES)
      FCUSTFL118 IF   E           K DISK
      F                                     EXTDESC('CUSTFL118')
-     DcustomerNumb...  S
+     DcustomerNumb...
      Der               S             10I 0
       /free
        EXEC SQL CREATE TABLE custfl118 (

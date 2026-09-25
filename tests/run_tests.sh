@@ -851,6 +851,12 @@ run_test "292" "Reject WRITE to a program-described file" "$TESTDIR/test292_err_
 run_test "293" "Reject an O-spec record with no type" "$TESTDIR/test293_err_ospec_no_type.rpgle" "error"
 run_test "294" "Reject specifications out of order" "$TESTDIR/test294_err_spec_order.rpgle" "error"
 run_test "295" "Reject a blank F-spec file designation" "$TESTDIR/test295_err_fspec_designation.rpgle" "error"
+run_test "296" "Reject MOVE of a date into too small a field" "$TESTDIR/test296_err_move_date_too_small.rpgle" "error"
+run_test "297" "Reject LIKE of an unqualified sibling" "$TESTDIR/test297_err_like_qualified_sibling.rpgle" "error"
+run_test "298" "Reject POS in a fixed-form definition" "$TESTDIR/test298_err_fixed_pos.rpgle" "error"
+run_test "299" "Reject CAB without its factors" "$TESTDIR/test299_err_cab_no_factors.rpgle" "error"
+run_test "300" "Reject a fixed-format copy member in free form" "$TESTDIR/test300_err_copy_not_free.rpgle" "error"
+run_test "301" "Reject entries beside a continued name" "$TESTDIR/test301_err_name_continuation.rpgle" "error"
 
 # ── Customer / drop-in tests ─────────────────────────────────────────────
 # Drop any .rpgle or .sqlrpgle file into tests/customer/ and it will be

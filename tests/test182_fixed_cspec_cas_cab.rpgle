@@ -13,7 +13,7 @@
      C     'not skipped' DSPLY
      C     skip          TAG
      C     'after cabeq' DSPLY
-     C                   CAB                     done
+     C                   GOTO      done
      C     'not reached' DSPLY
      C     done          TAG
      C     'after cab'   DSPLY

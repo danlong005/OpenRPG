@@ -82,6 +82,42 @@ static char* strdup_upper(const char* text) {
     return result;
 }
 
+// A copied member is read as fixed-format unless its own first line is
+// **FREE, whatever the including source is (as on IBM i). In a fixed-format
+// member, code sits in positions 8-80: position 7 holds only a directive's
+// '/' or a comment's '*', and 1-6 nothing. A member that is neither **FREE
+// nor laid out that way is misread by IBM i, which reports its lines as out
+// of sequence (RNF0257); this compiler reads it as free-form, so it says so
+// instead. Reported once per member, at the /COPY line.
+static void check_copy_member_format(const char* filename, int copy_line) {
+    FILE* f = fopen(filename, "r");
+    if (!f) return;
+    char buf[1024];
+    int n = 0;
+    bool first = true;
+    while (fgets(buf, sizeof buf, f)) {
+        n++;
+        std::string l(buf);
+        while (!l.empty() && (l.back() == '\n' || l.back() == '\r')) l.pop_back();
+        size_t i = l.find_first_not_of(" \t");
+        if (i == std::string::npos) continue;
+        if (first) {
+            first = false;
+            std::string u = l.substr(i, 6);
+            for (auto& c : u) c = (char)toupper((unsigned char)c);
+            if (i == 0 && u == "**FREE") break;
+        }
+        if (i < 6 || (i == 6 && l[i] != '/' && l[i] != '*')) {
+            report_semantic_error(copy_line, std::string("/COPY ") + filename + ": the member "
+                "has no **FREE on its first line, so it is fixed-format, and its line " +
+                std::to_string(n) + " starts before position 8. Add **FREE as its first line, "
+                "or keep its code in positions 8-80 (IBM: RNF0257)");
+            break;
+        }
+    }
+    fclose(f);
+}
+
 // Buffer stack for /COPY and /INCLUDE
 #define MAX_INCLUDE_DEPTH 10
 static YY_BUFFER_STATE include_stack[MAX_INCLUDE_DEPTH];
@@ -762,6 +798,7 @@ static void parse_ctlopt(const char* text) {
         if (!f) {
             fprintf(stderr, "Error: cannot open /COPY file '%s'\n", filename);
         } else {
+            check_copy_member_format(filename, yylineno);
             include_stack[include_stack_ptr++] = YY_CURRENT_BUFFER;
             yy_switch_to_buffer(yy_create_buffer(f, YY_BUF_SIZE));
         }
@@ -792,6 +829,7 @@ static void parse_ctlopt(const char* text) {
         if (!f) {
             fprintf(stderr, "Error: cannot open /INCLUDE file '%s'\n", filename);
         } else {
+            check_copy_member_format(filename, yylineno);
             include_stack[include_stack_ptr++] = YY_CURRENT_BUFFER;
             yy_switch_to_buffer(yy_create_buffer(f, YY_BUF_SIZE));
         }

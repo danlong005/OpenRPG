@@ -2,7 +2,7 @@
      Dinvoice          DS                  QUALIFIED
      DunitPrice                       9P 2
      Dqty                             5I 0
-     Dprice                                LIKE(unitPrice)
+     Dprice                                LIKE(invoice.unitPrice)
       /free
        invoice.unitPrice = 19.99;
        invoice.qty = 3;

@@ -793,6 +793,7 @@ public:
 // --- Data Structures ---
 
 struct DSField {
+    int line = 0;         // source line of the subfield, for diagnostics
     std::string name;
     RPGType type;
     int length;

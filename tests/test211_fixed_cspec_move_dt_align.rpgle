@@ -7,7 +7,6 @@
      HDATFMT(*ISO)
      DDFLD             S               D
      DC12              S             12A
-     DC6               S              6A
      DDISP10           S             10A
      DR                S             40A
      C     *ISO          MOVE      '1996-04-15'  DFLD
@@ -28,16 +27,8 @@
      C     *ISO          MOVE(P)   DFLD          C12
      C                   EVAL      R = '[' + C12 + ']'
      C     R             DSPLY
-     C*Result narrower: MOVEL keeps the leftmost 6 of the text,
-     C*MOVE the rightmost 6.
-     C                   EVAL      C6 = 'ZZZZZZ'
-     C     *ISO          MOVEL     DFLD          C6
-     C                   EVAL      R = '[' + C6 + ']'
-     C     R             DSPLY
-     C                   EVAL      C6 = 'ZZZZZZ'
-     C     *ISO          MOVE      DFLD          C6
-     C                   EVAL      R = '[' + C6 + ']'
-     C     R             DSPLY
+     C*A result narrower than the text is rejected when the program is
+     C*compiled (IBM: RNF7512); test 296 is that.
      C*Character wider than the format needs: same rule, other way.
      C                   EVAL      C12 = '1996-04-15XX'
      C     *ISO          MOVEL     C12           DFLD

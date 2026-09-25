@@ -129,6 +129,7 @@ static char* g_dclf_prefix = nullptr;
 static rpg::DSField* make_ds_field(const char* name, rpg::ParamDecl* type, rpg::DSField* kws) {
     auto* f = kws;
     f->name = name;
+    f->line = yylineno;
     if (type) {
         f->type = type->type;
         f->length = type->length;
@@ -489,7 +490,7 @@ static rpg::DclS* make_dcl_s(const char* name, rpg::ParamDecl* t, DclSKws* k) {
 %type <str_list> call_parm_list
 %type <stmt> monitor_stmt begsr_stmt exsr_stmt goto_stmt tag_stmt move_stmt call_stmt exec_sql_stmt xml_into_stmt
 %type <stmt> in_da_stmt out_da_stmt unlock_da_stmt data_into_stmt data_gen_stmt snd_msg_stmt except_stmt
-%type <sval> snd_msg_type da_name
+%type <sval> snd_msg_type da_name like_name
 %type <stmt> chain_stmt read_stmt readc_stmt reade_stmt readp_stmt readpe_stmt
 %type <stmt> write_stmt update_stmt delete_stmt setll_stmt setgt_stmt exfmt_stmt
 %type <expr> expression or_expr and_expr not_expr comparison_expr additive_expr multiplicative_expr power_expr unary_expr postfix_expr primary_expr eval_target
@@ -868,7 +869,7 @@ dcl_s_stmt:
     KW_DCL_S ident dcl_type dcl_kws SEMICOLON {
         $$ = make_dcl_s($2, $3, $4); free($2);
     }
-    | KW_DCL_S ident KW_LIKE LPAREN IDENTIFIER RPAREN dcl_kws SEMICOLON {
+    | KW_DCL_S ident KW_LIKE LPAREN like_name RPAREN dcl_kws SEMICOLON {
         auto* t = new rpg::ParamDecl{"", rpg::RPGType::INT10, 0, 0, 0, false};
         auto* n = make_dcl_s($2, t, $7);
         n->like_var = $5;
@@ -1918,10 +1919,10 @@ ds_field:
     | KW_DCL_SUBF IDENTIFIER KW_LIKEDS LPAREN IDENTIFIER RPAREN ds_kws SEMICOLON {
         $$ = make_ds_field($2, nullptr, $7); $$->likeds = $5; free($2); free($5);
     }
-    | IDENTIFIER KW_LIKE LPAREN IDENTIFIER RPAREN ds_kws SEMICOLON {
+    | IDENTIFIER KW_LIKE LPAREN like_name RPAREN ds_kws SEMICOLON {
         $$ = make_ds_field($1, nullptr, $6); $$->like_var = $4; free($1); free($4);
     }
-    | KW_DCL_SUBF IDENTIFIER KW_LIKE LPAREN IDENTIFIER RPAREN ds_kws SEMICOLON {
+    | KW_DCL_SUBF IDENTIFIER KW_LIKE LPAREN like_name RPAREN ds_kws SEMICOLON {
         $$ = make_ds_field($2, nullptr, $7); $$->like_var = $5; free($2); free($5);
     }
     ;
@@ -2256,6 +2257,17 @@ postfix_expr:
         delete $1;
         $$ = new rpg::ArrayAccess(qualified, std::unique_ptr<rpg::Expression>($5));
         free($3);
+    }
+    ;
+
+/* The field LIKE names: a plain name, or a subfield of a qualified data
+   structure, LIKE(ds.field). */
+like_name:
+    IDENTIFIER { $$ = $1; }
+    | IDENTIFIER DOT IDENTIFIER {
+        std::string n = std::string($1) + "." + $3;
+        free($1); free($3);
+        $$ = strdup(n.c_str());
     }
     ;
 

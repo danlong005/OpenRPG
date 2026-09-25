@@ -3,7 +3,7 @@
 DCL-DS invoice QUALIFIED;
   unitPrice PACKED(9:2);
   qty INT(5);
-  price LIKE(unitPrice);
+  price LIKE(invoice.unitPrice);
   lineTotals PACKED(10:2) DIM(3);
 END-DS;
 

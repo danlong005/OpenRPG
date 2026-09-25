@@ -28,3 +28,4 @@ test11e_unmatched_paren.rpgle  reject  syntax-error test
 
 # OpenRPG extensions: accepted by rpgc on purpose, rejected by IBM i.
 test61_no_free.rpgle                 reject  OpenRPG extension: free-form without **FREE; IBM i requires the directive
+test85_getenv.rpgle                  reject  OpenRPG extension: %GETENV has no IBM i equivalent (IBM: RNF0604, not a built-in)

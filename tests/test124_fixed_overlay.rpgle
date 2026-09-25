@@ -5,8 +5,8 @@
      Dstate                           2A   OVERLAY(fullAddr:21)
      Dzip                            10A   OVERLAY(fullAddr:23)
      Drecord           DS                  QUALIFIED
-     Did                             10I 0 POS(1)
-     Dname                           20A   POS(5)
+     Did                       1      4I 0
+     Dname                     5     24A
       /free
        address.city = 'Minneapolis';
        address.state = 'MN';

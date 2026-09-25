@@ -683,7 +683,16 @@ void feedCSpecLine(CSpecRunState& state, const std::string& line, int lineNo) {
                 std::string(isCas ? "subroutine name" : "label") + " in the Result field");
             return;
         }
-        if (cmp.empty()) {
+        if (cmp.empty() && isCab) {
+            // CAB always takes both factors, compared or not: IBM rejects a
+            // bare CAB (RNF5009, RNF5023). A branch with no condition is GOTO.
+            if (factor1.empty() || factor2.empty()) {
+                report_fixed_format_error(lineNo, "C-spec: CAB requires Factor 1 and Factor 2, "
+                    "even with no comparison mnemonic; branch unconditionally with GOTO "
+                    "(IBM: RNF5009, RNF5023)");
+                return;
+            }
+        } else if (cmp.empty()) {
             if (!factor1.empty() || !factor2.empty()) {
                 report_fixed_format_error(lineNo, "C-spec: " + opcodeName +
                     " has no comparison mnemonic, so Factor 1 and Factor 2 must be blank");

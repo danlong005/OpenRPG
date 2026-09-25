@@ -5,7 +5,6 @@
      HDATFMT(*ISO)
      DDFLD             S               D
      DC10              S             10A
-     DC6               S              6A
      DDISP10           S             10A
      DR                S             30A
      C     *ISO          MOVE      '1996-04-15'  DFLD
@@ -22,12 +21,6 @@
      C     *ISO          MOVE      C10           DFLD
      C                   EVAL      R = '[' + %char(%STATUS()) + ']'
      C     R             DSPLY
-     C*Six characters cannot hold the ten an *ISO date needs.
-     C                   EVAL      C6 = '960415'
-     C     *ISO          MOVE      C6            DFLD
-     C                   EVAL      R = '[' + %char(%STATUS()) + ']'
-     C     R             DSPLY
-     C     *ISO          MOVE      DFLD          DISP10
-     C                   EVAL      R = '[' + DISP10 + ']'
-     C     R             DSPLY
+     C*Six characters cannot hold the ten an *ISO date needs; IBM rejects
+     C*that when the program is compiled (RNF7510), not at run time.
      C                   RETURN

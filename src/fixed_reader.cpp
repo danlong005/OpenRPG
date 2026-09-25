@@ -153,6 +153,10 @@ void expandMember(const std::vector<std::string>& lines, int depth, bool inFreeA
         report_fixed_format_error(lineNo, depth == 0 ? msg : msg + " (in /COPY member '" + member + "')");
     };
     bool inFree = inFreeAtStart;
+    // A member is fixed-format unless its first line is **FREE, wherever it
+    // is copied (as on IBM i).
+    const bool memberFree = !lines.empty() && upper(trim(lines[0])) == "**FREE";
+    bool reportedLayout = false;
     const size_t levelsAtEntry = st.levels.size();
     size_t i = 0;
     for (; i < lines.size(); i++) {
@@ -240,15 +244,29 @@ void expandMember(const std::vector<std::string>& lines, int depth, bool inFreeA
         bool isCopy = startsWord(d, "/COPY");
         bool isInclude = !isCopy && startsWord(d, "/INCLUDE");
         if (!isCopy && !isInclude) {
-            // A copy member spliced into the including member's /FREE block
-            // is a free-format member in its own right: its "**FREE" line
-            // means nothing there, and its code may start in position 1,
-            // which the block's position-8 rule (RNF0257) would reject — a
-            // rule for the including member's layout, not the member's.
+            // A **FREE copy member spliced into the including member's /FREE
+            // block is a free-format member in its own right: its "**FREE"
+            // line means nothing there, and its code may start in position
+            // 1, which the block's position-8 rule (RNF0257) would reject —
+            // a rule for the including member's layout, not the member's.
             // Shift it to position 8; free-form text is column-insensitive.
+            // A member without **FREE is fixed-format, and IBM reads code
+            // before position 8 in it as out of sequence (RNF0257).
             if (inFree && depth > 0 && inFreeAtStart) {
-                if (i == 0 && upper(trim(line)) == "**FREE") { out.emplace_back(); continue; }
-                out.push_back(line.empty() ? line : "       " + line);
+                if (memberFree) {
+                    if (i == 0) { out.emplace_back(); continue; }
+                    out.push_back(line.empty() ? line : "       " + line);
+                    continue;
+                }
+                size_t indent = line.find_first_not_of(" \t");
+                if (!reportedLayout && indent != std::string::npos && indent < 7) {
+                    err(lineNo, "the member has no **FREE on its first line, so it is "
+                        "fixed-format, and this line starts before position 8. Add **FREE as "
+                        "its first line, or keep its code in positions 8-80 (IBM: RNF0257)");
+                    ok = false;
+                    reportedLayout = true;
+                }
+                out.push_back(indent != std::string::npos && indent < 7 ? std::string() : line);
                 continue;
             }
             out.push_back(line);
@@ -577,6 +595,15 @@ static void handleDSpecLine(Program* program, DSpecState& state,
     std::string rawName = extractCol(line, DSpec::Name);
     std::string name = state.pendingName + rawName;
     if (!name.empty() && name.size() >= 3 && name.substr(name.size() - 3) == "...") {
+        // A name continued with '...' stands alone on its line; the
+        // definition entries go on the line that completes it. IBM reads
+        // entries next to a continued name as a malformed qualified name
+        // (RNF0622, RNF0289).
+        if (line.size() > 21 && line.find_first_not_of(' ', 21) != std::string::npos) {
+            report_fixed_format_error(lineNo, "D-spec: the line continuing name '" + name +
+                "' may hold only the name; put the definition type, length and keywords on "
+                "the line that completes it (IBM: RNF0622)");
+        }
         state.pendingName = name.substr(0, name.size() - 3);
         return; // wait for the rest of the name on the next line
     }
@@ -662,11 +689,46 @@ static void handleDSpecLine(Program* program, DSpecState& state,
     // here, matching free-format VARCHAR(n)'s own lack of that distinction.
     if (type == RPGType::CHAR && kw.count("VARYING")) type = RPGType::VARCHAR;
 
+    // From/To positions (26-32, 33-39) place a subfield by byte: its size is
+    // to - from + 1 bytes, which fixes the digits of a binary or packed
+    // field (a 4-byte integer holds 10 digits, n packed bytes 2n-1).
+    std::string fromStr = extractCol(line, DSpec::FromPos);
+    int fromPos = 0;
+    if (!fromStr.empty()) {
+        fromPos = atoi(fromStr.c_str());
+        int bytes = toLen - fromPos + 1;
+        if (!state.currentDS) {
+            report_fixed_format_error(lineNo, "D-spec: a From position (26-32) places a data "
+                "structure subfield; " + upper(name) + " is not one");
+        } else if (bytes < 1) {
+            report_fixed_format_error(lineNo, "D-spec: the To position of " + upper(name) +
+                " is before its From position");
+        } else {
+            switch (type) {
+                case RPGType::PACKED: toLen = bytes * 2 - 1; break;
+                case RPGType::INT10: case RPGType::UNS:
+                    toLen = bytes == 1 ? 3 : bytes == 2 ? 5 : bytes == 4 ? 10 : bytes == 8 ? 20 : 0;
+                    if (!toLen) report_fixed_format_error(lineNo, "D-spec: an integer subfield "
+                        "is 1, 2, 4 or 8 bytes; " + upper(name) + " spans " + std::to_string(bytes));
+                    break;
+                case RPGType::BINDEC: toLen = bytes == 2 ? 4 : bytes == 4 ? 9 : 18; break;
+                default: toLen = bytes; break;
+            }
+        }
+    }
+    // POS is the free-form keyword for a subfield's start; fixed form uses
+    // the From position instead (RNF3555).
+    if (kw.count("POS")) {
+        report_fixed_format_error(lineNo, "D-spec: POS is not allowed in a fixed-form definition; "
+            "give the subfield's From and To positions in 26-32 and 33-39 (IBM: RNF3555)");
+    }
+
     int length  = isNumericType(type) ? 0 : toLen;
     int digits  = isNumericType(type) ? toLen : 0;
 
     if (state.currentDS) {
         DSField f;
+        f.line = lineNo;
         f.name = upper(name);
         f.type = type;
         f.length = length;
@@ -684,8 +746,7 @@ static void handleDSpecLine(Program* program, DSpecState& state,
                 if (!posStr.empty()) f.overlay_pos = atoi(posStr.c_str());
             }
         }
-        it = kw.find("POS");
-        if (it != kw.end() && !it->second.empty()) f.pos = atoi(it->second.c_str());
+        if (fromPos > 0) f.pos = fromPos;
         it = kw.find("LIKEDS");
         if (it != kw.end()) f.likeds = upper(it->second);
         it = kw.find("LIKE");

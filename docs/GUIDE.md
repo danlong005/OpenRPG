@@ -1350,7 +1350,8 @@ rpgc main.rpgle mathlib.o -o myapp # compiles main and links with module
 
 ## Environment Variables
 
-Read environment variables at runtime with `%GETENV`:
+Read environment variables at runtime with `%GETENV`. It is an OpenRPG
+extension: IBM i has no such built-in, so source using it compiles only here.
 
 ```rpgle
 DCL-S home VARCHAR(200);
@@ -2643,7 +2644,25 @@ block instead.
 Supported in the keyword tail: `VARYING{(2|4)}` (which produces a `VARCHAR` —
 free-format spells this `VARCHAR(n)` instead), `DIM(n)` on the data structure
 itself for an array of elements, and per-subfield `OVERLAY(field)`,
-`OVERLAY(field:pos)`, `POS(n)`, `LIKEDS(name)`, `LIKE(other)` and `DIM(n)`.
+`OVERLAY(field:pos)`, `LIKEDS(name)`, `LIKE(other)` and `DIM(n)`. `POS` is a
+free-form keyword and is rejected here (IBM: RNF3555): a fixed-form subfield
+gives its From and To positions in 26-32 and 33-39, and its size follows from
+them (a 4-byte `I` subfield holds 10 digits, `n` packed bytes `2n-1`):
+
+```rpgle
+     Drecord           DS                  QUALIFIED
+     Did                       1      4I 0
+     Dname                     5     24A
+```
+
+A name longer than the name positions continues with `...` on a line of its
+own, and the rest of the definition goes on the line that completes it (IBM:
+RNF0622):
+
+```rpgle
+     DcustomerNumb...
+     Der               S             10I 0
+```
 
 A subfield `DIM(n)` is an array *inside* the structure, and is subscripted with
 the `ds.field(index)` form:
@@ -2657,7 +2676,8 @@ the `ds.field(index)` form:
 ```
 
 A subfield `LIKE(other)` resolves against a field declared **earlier in the same
-data structure**. Combining `LIKE` and `DIM` on one subfield is not supported,
+data structure**. In a `QUALIFIED` data structure that sibling is named
+`LIKE(ds.other)`; alone, `other` is not defined there (IBM: RNF7030). Combining `LIKE` and `DIM` on one subfield is not supported,
 and a subfield `DIM` is fixed-size only — no `DIM(*VAR)`/`DIM(*AUTO)`.
 
 ### C-Spec — Calculations

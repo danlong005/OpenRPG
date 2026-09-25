@@ -43,6 +43,16 @@ real source through both compilers.
 - **A program-described file is written with `EXCEPT`** and `E` output
   records (positions 17-20: `E`, or `EADD` to add). An O-spec record needs a
   type (`RNF6005`), and `WRITE`/`UPDATE` of the file alone is `RNF5191`.
+- **A copy member is fixed-format unless its own first line is `**FREE`**,
+  whatever the including source is; code before position 8 in a fixed-format
+  member is out of sequence (`RNF0257`).
+- **Fixed-form definitions place subfields with From/To positions**; `POS` is
+  free-form only (`RNF3555`). A name continued with `...` stands alone on its
+  line (`RNF0622`).
+- **`CAB` takes Factor 1 and Factor 2** even with no comparison (`RNF5009`);
+  an unconditional branch is `GOTO`.
+- **A date or time moved to or from a character or numeric field needs room
+  for the whole format**: 10 characters for `*ISO` (`RNF7510`, `RNF7512`).
 - **`KEYED` is a free-form `DCL-F` keyword only.** In a fixed-format F-spec,
   keyed access is the Record-Address-Type entry: `K` in position 34.
 
@@ -133,6 +143,8 @@ format name replaced with the file name to move between the two.
   statement that is not another subroutine is rejected (`RNF5005`).
 - **A procedure interface is named** `*N` or the procedure's own name:
   `DCL-PI *N INT(10);`. `DCL-PI INT(10);` is rejected (`RNF3767`).
+- **In a `QUALIFIED` data structure, `LIKE` names a sibling as `ds.field`**
+  (`RNF7030` for `LIKE(field)`).
 - **`ds.field` needs a `QUALIFIED` data structure** (`RNF7030`), **`PREFIX`
   is not allowed on a program-described DS** (`RNF3529`), and **`INZ` may not
   be longer than its field** (`RNF3431`).
@@ -181,6 +193,10 @@ These are features, not bugs — but source using them is not portable:
   from the source; IBM requires the directive.
 - **Free-format DDS** for display files (OpenDSPF), where IBM accepts only
   column-based DDS.
+- **`%GETENV`**, which reads an environment variable; IBM i has no such
+  built-in (`RNF0604`).
+- **`EXEC SQL CONNECT USING`**, which connects by ODBC connection string;
+  an IBM i job is already connected to its database.
 """
 
 DEP    = {'RNF2120','RNF7030','RNF7503','RNF2121','RNF2109','RNF7080'}

@@ -2618,18 +2618,30 @@ void CodeGen::visit(DclDS& node) {
             out_ << "    " << f.likeds << "_t " << f.name << ";\n";
         } else if (!f.like_var.empty()) {
             // Per-subfield LIKE(other): resolve type/length from an earlier
-            // subfield in this DS, else an outer standalone field.
+            // subfield in this DS, else an outer standalone field. In a
+            // QUALIFIED DS the subfields are not names of their own, so a
+            // sibling is LIKE(ds.field); LIKE(field) alone is RNF7030.
+            std::string like = f.like_var;
+            size_t dot = like.find('.');
+            if (dot != std::string::npos && like.substr(0, dot) == node.name)
+                like = like.substr(dot + 1);
+            else if (dot == std::string::npos && node.qualified && ds_local_types.count(like) &&
+                     !var_types_.count(like))
+                report_semantic_error(f.line ? f.line : node.line, "LIKE(" + like + ") on subfield " + f.name +
+                    ": " + like + " is a subfield of the QUALIFIED data structure " + node.name +
+                    ", so it is not defined on its own; write LIKE(" + node.name + "." + like +
+                    ") (IBM: RNF7030)");
             RPGType rtype = f.type;
             int rlen = f.length;
-            auto lit = ds_local_types.find(f.like_var);
+            auto lit = ds_local_types.find(like);
             if (lit != ds_local_types.end()) {
                 rtype = lit->second.first;
                 rlen = lit->second.second;
             } else {
-                auto git = var_types_.find(f.like_var);
+                auto git = var_types_.find(like);
                 if (git != var_types_.end()) {
                     rtype = git->second;
-                    rlen = var_lengths_[f.like_var];
+                    rlen = var_lengths_[like];
                 }
             }
             out_ << "    " << typeToString(rtype, rlen) << " " << f.name << initFor(rtype, rlen)
@@ -2872,6 +2884,22 @@ std::string CodeGen::declaredDtFormat(const std::string& name, RPGType type) con
 static bool isMoveDt(RPGType t) {
     return t == RPGType::DATE || t == RPGType::TIME || t == RPGType::TIMESTAMP;
 }
+// Characters a date/time/timestamp takes in format f: its digits, plus a
+// separator between groups unless sep is '\0' (the *MDY0 form) -- the
+// compile-time twin of the runtime's rpg_dt_width.
+static int moveDtWidth(int kind, const std::string& f, char sep) {
+    if (kind == 1 && f == "*USA") return 8;          // hh:mm AM
+    int digits, seps;
+    if (kind == 2) { digits = 20; seps = 6; }         // yyyy-mm-dd-hh.mm.ss.mmmmmm
+    else if (kind == 1) { digits = 6; seps = 2; }     // hh.mm.ss
+    else if (f == "*JUL") { digits = 5; seps = 1; }
+    else if (f == "*LONGJUL") { digits = 7; seps = 1; }
+    else if (f == "*CYMD" || f == "*CMDY" || f == "*CDMY") { digits = 7; seps = 2; }
+    else if (f == "*ISO" || f == "*JIS" || f == "*USA" || f == "*EUR") { digits = 8; seps = 2; }
+    else { digits = 6; seps = 2; }                    // *MDY, *DMY, *YMD
+    return digits + (sep ? seps : 0);
+}
+
 static int moveDtKind(RPGType t) {
     return t == RPGType::DATE ? 0 : (t == RPGType::TIME ? 1 : 2);
 }
@@ -3084,6 +3112,15 @@ void CodeGen::visit(MoveStmt& node) {
                         "suffix is not a digit");
                     return;
                 }
+                // Too small for every digit of the format: IBM rejects the
+                // move when it compiles (RNF7512).
+                if (dstDigits < moveDtWidth(kind, fmtName, 0)) {
+                    report_semantic_error(node.line, op + ": the result field " + node.target +
+                        " is too small to contain a complete " + fmtName + " " +
+                        moveDtTypeName(st) + ", which has " +
+                        std::to_string(moveDtWidth(kind, fmtName, 0)) + " digits (IBM: RNF7512)");
+                    return;
+                }
                 const int dstDec = var_decimals_.count(node.target)
                                    ? var_decimals_.at(node.target) : 0;
                 emitIndent();
@@ -3098,6 +3135,14 @@ void CodeGen::visit(MoveStmt& node) {
                     report_semantic_error(node.line, op + ": result field '" + node.target +
                         "' has no known declared length, which " + op +
                         " needs to align against");
+                    return;
+                }
+                if (dstLen < moveDtWidth(kind, fmtName, sep)) {
+                    report_semantic_error(node.line, op + ": the result field " + node.target +
+                        " is too small to contain a complete " + fmtName + " " +
+                        moveDtTypeName(st) + ", which takes " +
+                        std::to_string(moveDtWidth(kind, fmtName, sep)) + " characters "
+                        "(IBM: RNF7512)");
                     return;
                 }
                 emitIndent();
@@ -3132,6 +3177,13 @@ void CodeGen::visit(MoveStmt& node) {
                     " needs to align against");
                 return;
             }
+            if (sd < moveDtWidth(kind, fmtName, 0)) {
+                report_semantic_error(node.line, op + ": factor 2 " + srcId->name + " is too "
+                    "small to contain a complete " + fmtName + " " + moveDtTypeName(tt) +
+                    ", which has " + std::to_string(moveDtWidth(kind, fmtName, 0)) +
+                    " digits (IBM: RNF7510)");
+                return;
+            }
             const int sdec = var_decimals_.count(srcId->name)
                              ? var_decimals_.at(srcId->name) : 0;
             text = "rpg_num_digits(" + emitExpr(*node.source) + ", " +
@@ -3143,6 +3195,13 @@ void CodeGen::visit(MoveStmt& node) {
             sep = 0;
         } else if (srcTyped && st == RPGType::CHAR) {
             const int sl = var_lengths_.count(srcId->name) ? var_lengths_.at(srcId->name) : 0;
+            if (sl > 0 && sl < moveDtWidth(kind, fmtName, sep)) {
+                report_semantic_error(node.line, op + ": factor 2 " + srcId->name + " is too "
+                    "small to contain a complete " + fmtName + " " + moveDtTypeName(tt) +
+                    ", which takes " + std::to_string(moveDtWidth(kind, fmtName, sep)) +
+                    " characters (IBM: RNF7510)");
+                return;
+            }
             text = sl > 0 ? ("rpg_fixed_len(" + emitExpr(*node.source) + ", " +
                              std::to_string(sl) + ")")
                           : emitExpr(*node.source);

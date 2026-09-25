@@ -1325,6 +1325,7 @@ void CodeGen::visit(DclProc& node) {
     auto saved_decimals = var_decimals_;
     auto saved_arrays   = array_vars_;
     auto saved_unqual   = unqualified_subfields_;
+    auto saved_likeds_params = likeds_params_;
 
     // Parameters are declared fields like any other. Registering them lets
     // EVAL fit a value assigned to one. A VALUE parameter is RPG's own
@@ -1334,6 +1335,7 @@ void CodeGen::visit(DclProc& node) {
     // declared shape, and is left alone. (*OMIT parameters are pointers
     // and LIKEDS ones whole structures; neither is a scalar to fit.)
     for (auto& p : node.interface.params) {
+        if (!p.likeds.empty()) likeds_params_[p.name] = p.likeds;
         if (p.omit || !p.likeds.empty()) continue;
         var_types_[p.name]    = p.type;
         var_lengths_[p.name]  = p.length;
@@ -1452,6 +1454,7 @@ void CodeGen::visit(DclProc& node) {
     var_decimals_ = std::move(saved_decimals);
     array_vars_   = std::move(saved_arrays);
     unqualified_subfields_ = std::move(saved_unqual);
+    likeds_params_ = std::move(saved_likeds_params);
     current_proc_parm_count_ = 0;
     has_nopass_params_ = false;
     current_proc_name_.clear();
@@ -3426,22 +3429,70 @@ void CodeGen::visit(ResetStmt& node) {
     }
 }
 
+// CLEAR sets a variable to its type's default -- blanks, zeros, *OFF --
+// whatever its INZ; RESET is the one that restores INZ. A whole array
+// clears every element, a data structure every subfield.
 void CodeGen::visit(ClearStmt& node) {
+    const std::string& name = node.var_name;
+    Identifier id(name);
+    std::string target = emitExpr(id);
+    auto dit = ds_defs_.find(name);
+    if (dit != ds_defs_.end()) {
+        const DclDS* layout = resolveDsDef(name);
+        if (layout) emitClearDs(target, name, *layout, dit->second->dim > 0, 0);
+        return;
+    }
+    auto lp = likeds_params_.find(name);
+    if (lp != likeds_params_.end()) {
+        if (const DclDS* layout = resolveDsDef(lp->second))
+            emitClearDs(target, lp->second, *layout, false, 0);
+        return;
+    }
+    FieldAttrs a = attrsOf(id);
+    if (!a.known) {
+        report_semantic_error(node.line, "CLEAR: '" + name + "' is not a declared variable");
+        return;
+    }
+    std::string def = fieldTypeDefault(a.type, a.length);
     emitIndent();
-    auto it = var_types_.find(node.var_name);
-    if (it != var_types_.end()) {
-        switch (it->second) {
-            case RPGType::INT10: out_ << node.var_name << " = 0;\n"; break;
-            case RPGType::PACKED:
-            case RPGType::ZONED: out_ << node.var_name << " = 0.0;\n"; break;
-            case RPGType::CHAR:
-            case RPGType::VARCHAR: out_ << node.var_name << " = \"\";\n"; break;
-            case RPGType::IND: out_ << node.var_name << " = false;\n"; break;
-            case RPGType::DATE: out_ << node.var_name << " = RpgDate{};\n"; break;
-            case RPGType::TIME: out_ << node.var_name << " = RpgTime{};\n"; break;
-            case RPGType::TIMESTAMP: out_ << node.var_name << " = RpgTimestamp{};\n"; break;
-            case RPGType::POINTER: out_ << node.var_name << " = nullptr;\n"; break;
+    if (array_vars_.count(name)) out_ << "for (auto& __e : " << target << ") __e = " << def << ";\n";
+    else out_ << target << " = " << def << ";\n";
+}
+
+// Clears each subfield of `target`, a DS laid out as `layout` and declared
+// as `decl`; `isArray` loops over the elements of a DS array first.
+void CodeGen::emitClearDs(const std::string& target, const std::string& decl,
+                          const DclDS& layout, bool isArray, int depth) {
+    std::string elem = target;
+    if (isArray) {
+        elem = "__c" + std::to_string(depth);
+        emitIndent();
+        out_ << "for (auto& " << elem << " : " << target << ") {\n";
+        indent_++;
+    }
+    for (const auto& f : layout.fields) {
+        if (!f.overlay_field.empty()) continue;   // a view onto a subfield cleared here
+        std::string ft = elem + "." + f.name;
+        if (!f.likeds.empty()) {
+            if (const DclDS* sub = resolveDsDef(f.likeds))
+                emitClearDs(ft, f.likeds, *sub, f.dim > 0, depth + 1);
+            continue;
         }
+        RPGType t = f.type;
+        int len = f.length;
+        if (!f.like_var.empty()) {
+            FieldAttrs a = attrsOfName(decl + "." + f.name);
+            if (a.known) { t = a.type; len = a.length; }
+        }
+        std::string def = fieldTypeDefault(t, len);
+        emitIndent();
+        if (f.dim > 0) out_ << "for (auto& __e : " << ft << ") __e = " << def << ";\n";
+        else out_ << ft << " = " << def << ";\n";
+    }
+    if (isArray) {
+        indent_--;
+        emitIndent();
+        out_ << "}\n";
     }
 }
 

@@ -1188,8 +1188,10 @@ and found real differences in the other 6:
   either. Those tests and `test146` are expected IBM rejections in
   `tests/ibmi-expected.txt`.
 
-Found on the way, not fixed: `CLEAR` on a DS array (`DCL-DS ... DIM(n)`)
-generates no code, so the array keeps its values.
+Found on the way, fixed separately: `CLEAR` generated nothing for a data
+structure, a DS array or a FLOAT, and invalid C++ (`ARR = 0;`) for a
+standalone array. It now clears every element and subfield, including through
+a `LIKEDS` parameter, and clears CHAR to blanks rather than to an empty string.
 
 **Still open (small):** whether rpgc should also *accept* `CONNECT TO :rdb USER
 :u USING :pw` so shop code carrying the IBM spelling compiles. Narrow — it only

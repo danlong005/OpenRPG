@@ -250,6 +250,8 @@ private:
     // Subfield name -> its DS, for a DS without QUALIFIED, whose subfields
     // are referenced by bare name in RPG.
     std::map<std::string, std::string> unqualified_subfields_;
+    // LIKEDS parameters of the procedure being emitted: name -> DS it is like
+    std::map<std::string, std::string> likeds_params_;
     void registerExtField(const std::string& fvar, const ExtField& f);
     const DclDS* dsOfExpr(const Expression& e) const;
     const DclDS* resolveDsDef(const std::string& name) const;
@@ -276,6 +278,8 @@ private:
     std::vector<HostVarWithInd> expandSqlIntoVarsWithInd(const std::vector<HostVarWithInd>& vars);
     std::vector<std::pair<std::string, std::string>> multiRowTargets(const std::vector<std::string>& vars);
     std::string expandDsArrayHostVars(const std::string& sql);
+    void emitClearDs(const std::string& target, const std::string& decl,
+                     const DclDS& layout, bool isArray, int depth);
     static std::string escapeSqlForCpp(const std::string& sql);
     static std::string sqlCommentText(const std::string& sql);
 

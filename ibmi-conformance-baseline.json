@@ -78,35 +78,11 @@
    "verified": "2026-09-24"
   },
   "test100_data_gen.rpgle": {
-   "codes": [
-    "RNF5454"
-   ],
-   "messages": [
-    {
-     "code": "RNF5454",
-     "line": 34,
-     "severity": 30,
-     "text": "The third operand of DATA-GEN must be %GEN."
-    },
-    {
-     "code": "RNF5454",
-     "line": 43,
-     "severity": 30,
-     "text": "The third operand of DATA-GEN must be %GEN."
-    },
-    {
-     "code": "RNF5454",
-     "line": 51,
-     "severity": 30,
-     "text": "The third operand of DATA-GEN must be %GEN."
-    }
-   ],
-   "reason": "RNF5454: The third operand of DATA-GEN must be %GEN.",
-   "reason_detail": "line 34: The third operand of DATA-GEN must be %GEN. \u2014 `DATA-GEN person %DATA(jsonOut : 'doc=string');`",
+   "codes": [],
    "rpgc": "accept",
-   "sha256": "a3ee3237260ea9c62479f26c997539736e994b06d72957c1ca082478f1dd4de2",
-   "verdict": "reject",
-   "verified": "2026-09-24"
+   "sha256": "23e92d600a5ebefc0fea433f674244725822908c1cb59251da304a97a5645d52",
+   "verdict": "accept",
+   "verified": "2026-09-25"
   },
   "test101_user.rpgle": {
    "codes": [
@@ -135,129 +111,64 @@
    "verified": "2026-09-24"
   },
   "test102_snd_msg.rpgle": {
-   "codes": [
-    "RNF0203",
-    "RNF5377",
-    "RNF7030"
-   ],
-   "messages": [
-    {
-     "code": "RNF0203",
-     "line": 15,
-     "severity": 30,
-     "text": "THE MESSAGE-TARGET OPERAND IS NOT VALID FOR THE SND-MSG OPERATION."
-    },
-    {
-     "code": "RNF5377",
-     "line": 15,
-     "severity": 20,
-     "text": "The end of the expression is expected."
-    },
-    {
-     "code": "RNF7030",
-     "line": 15,
-     "severity": 30,
-     "text": "The name or indicator TYPE is not defined."
-    }
-   ],
-   "reason": "RNF0203: THE MESSAGE-TARGET OPERAND IS NOT VALID FOR THE SND-MSG OPERATION.",
-   "reason_detail": "line 15: THE MESSAGE-TARGET OPERAND IS NOT VALID FOR THE SND-MSG OPERATION. \u2014 `SND-MSG TYPE(*INFO) 'Processing complete';`",
+   "codes": [],
    "rpgc": "accept",
-   "sha256": "500dd30e0965b578497a378dc6d01c1a8d37c958c3462db397930f73cee72ec8",
-   "verdict": "reject",
-   "verified": "2026-09-24"
+   "sha256": "ee8de0b6e53a2ef809abe1508019fd3b93aaf5346d84cf0d0e02662400dae711",
+   "verdict": "accept",
+   "verified": "2026-09-25"
   },
   "test103_rla_chain.rpgle": {
    "codes": [],
-   "messages": [
-    {
-     "code": "SQL0199",
-     "line": 10,
-     "severity": 30,
-     "text": "Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>."
-    },
-    {
-     "code": "SQL0104",
-     "line": 38,
-     "severity": 30,
-     "text": "Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>."
-    }
-   ],
-   "reason": "SQL0199: Position n Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>.",
-   "reason_detail": "line 10: Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>. \u2014 `EXEC SQL CONNECT USING :connStr;`",
    "rpgc": "accept",
-   "sha256": "3b400a169d351ad7f7d4a75eaf730bec544ebe4c9288c3861ca63bcef818647f",
-   "verdict": "reject",
-   "verified": "2026-09-24"
+   "sha256": "19d352058bb6799099e309392e86f4b8924aed8addbd35ee7cd80844f655f3c8",
+   "verdict": "accept",
+   "verified": "2026-09-25"
   },
   "test104_rla_read.rpgle": {
    "codes": [],
-   "messages": [
-    {
-     "code": "SQL0199",
-     "line": 9,
-     "severity": 30,
-     "text": "Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>."
-    },
-    {
-     "code": "SQL0104",
-     "line": 29,
-     "severity": 30,
-     "text": "Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>."
-    }
-   ],
-   "reason": "SQL0199: Position n Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>.",
-   "reason_detail": "line 9: Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>. \u2014 `EXEC SQL CONNECT USING :connStr;`",
    "rpgc": "accept",
-   "sha256": "95bd073a85b497e58d0c527e465dbd16c4cf3b9213375eb4c679e8a9c3ea2b08",
-   "verdict": "reject",
-   "verified": "2026-09-24"
+   "sha256": "b663cc483185173fb518bfd999a7c65ad4f12110ba810c2ac2b5892ce974048c",
+   "verdict": "accept",
+   "verified": "2026-09-25"
   },
   "test105_rla_write_upd_del.rpgle": {
-   "codes": [],
+   "codes": [
+    "RNF5063",
+    "RNF5198"
+   ],
    "messages": [
     {
-     "code": "SQL0199",
-     "line": 10,
+     "code": "RNF5063",
+     "line": 93,
      "severity": 30,
-     "text": "Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>."
+     "text": "Factor 2 operand must not be an externally described file for this operation."
     },
     {
-     "code": "SQL0104",
-     "line": 52,
+     "code": "RNF5063",
+     "line": 105,
      "severity": 30,
-     "text": "Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>."
+     "text": "Factor 2 operand must not be an externally described file for this operation."
+    },
+    {
+     "code": "RNF5198",
+     "line": 114,
+     "severity": 30,
+     "text": "File in Factor 2 is not allowed for UPDATE or DELETE operation."
     }
    ],
-   "reason": "SQL0199: Position n Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>.",
-   "reason_detail": "line 10: Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>. \u2014 `EXEC SQL CONNECT USING :connStr;`",
+   "reason": "RNF5063: Factor n operand must not be an externally described file for this operation.",
+   "reason_detail": "line 93: Factor 2 operand must not be an externally described file for this operation. \u2014 ``",
    "rpgc": "accept",
-   "sha256": "2cc21fd92d06de436f1cadcbf95f607dd41da02daff5b731eb4ed5589c7695b4",
+   "sha256": "3acbcb378da0c68d8b7969a6a92ec561766217adc9dd5ea78abcf8bdef3c6abf",
    "verdict": "reject",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test106_rla_setll_reade.rpgle": {
    "codes": [],
-   "messages": [
-    {
-     "code": "SQL0199",
-     "line": 10,
-     "severity": 30,
-     "text": "Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>."
-    },
-    {
-     "code": "SQL0104",
-     "line": 45,
-     "severity": 30,
-     "text": "Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>."
-    }
-   ],
-   "reason": "SQL0199: Position n Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>.",
-   "reason_detail": "line 10: Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>. \u2014 `EXEC SQL CONNECT USING :connStr;`",
    "rpgc": "accept",
-   "sha256": "386880f6ead8b6179180de64abf931089108ee54b94d1c58160b252662231592",
-   "verdict": "reject",
-   "verified": "2026-09-24"
+   "sha256": "d29cf378c46a2c5939b280b26184b0caf372e5d59f03c528bbbbdf5a688897b5",
+   "verdict": "accept",
+   "verified": "2026-09-25"
   },
   "test107_sql_conf.sqlrpgle": {
    "codes": [],
@@ -275,26 +186,10 @@
   },
   "test109_sql_indicator.sqlrpgle": {
    "codes": [],
-   "messages": [
-    {
-     "code": "SQL0199",
-     "line": 19,
-     "severity": 30,
-     "text": "Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>."
-    },
-    {
-     "code": "SQL0104",
-     "line": 77,
-     "severity": 30,
-     "text": "Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>."
-    }
-   ],
-   "reason": "SQL0199: Position n Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>.",
-   "reason_detail": "line 19: Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>. \u2014 `EXEC SQL CONNECT USING :connStr;`",
    "rpgc": "accept",
-   "sha256": "55d83a30ca573fee0de02924293ea6eae6a955d24b291ed9084ef19f3168da9c",
-   "verdict": "reject",
-   "verified": "2026-09-24"
+   "sha256": "afab1eb6313fd257282edca29632d28ca8bade868ea3af7dcccc639ebc52d61a",
+   "verdict": "accept",
+   "verified": "2026-09-25"
   },
   "test10_bifs_expanded.rpgle": {
    "codes": [],
@@ -337,74 +232,18 @@
    "verified": "2026-09-24"
   },
   "test113_data_gen_csv.rpgle": {
-   "codes": [
-    "RNF5377",
-    "RNF5454"
-   ],
-   "messages": [
-    {
-     "code": "RNF5454",
-     "line": 30,
-     "severity": 30,
-     "text": "The third operand of DATA-GEN must be %GEN."
-    },
-    {
-     "code": "RNF5377",
-     "line": 30,
-     "severity": 20,
-     "text": "The end of the expression is expected."
-    },
-    {
-     "code": "RNF5454",
-     "line": 37,
-     "severity": 30,
-     "text": "The third operand of DATA-GEN must be %GEN."
-    },
-    {
-     "code": "RNF5377",
-     "line": 37,
-     "severity": 20,
-     "text": "The end of the expression is expected."
-    },
-    {
-     "code": "RNF5454",
-     "line": 41,
-     "severity": 30,
-     "text": "The third operand of DATA-GEN must be %GEN."
-    }
-   ],
-   "reason": "RNF5454: The third operand of DATA-GEN must be %GEN.",
-   "reason_detail": "line 30: The third operand of DATA-GEN must be %GEN. \u2014 `DATA-GEN person %DATA(csvOut) %PARSER('CSV');`",
+   "codes": [],
    "rpgc": "accept",
-   "sha256": "26eba670bfabefadc7451bd4ffed8476722218a37e3e9e43e7a9261fc1ef06be",
-   "verdict": "reject",
-   "verified": "2026-09-24"
+   "sha256": "d48f01fc80d0e66921aacde3cdc2587f93055af5ec983ea8a2973edfe59ee540",
+   "verdict": "accept",
+   "verified": "2026-09-25"
   },
   "test114_data_into_json_parser.rpgle": {
-   "codes": [
-    "RNF5377",
-    "RNF5454"
-   ],
-   "messages": [
-    {
-     "code": "RNF5454",
-     "line": 30,
-     "severity": 30,
-     "text": "The third operand of DATA-GEN must be %GEN."
-    },
-    {
-     "code": "RNF5377",
-     "line": 30,
-     "severity": 20,
-     "text": "The end of the expression is expected."
-    }
-   ],
-   "reason": "RNF5454: The third operand of DATA-GEN must be %GEN.",
-   "reason_detail": "line 30: The third operand of DATA-GEN must be %GEN. \u2014 `DATA-GEN person %DATA(jsonOut) %PARSER('JSON');`",
+   "codes": [],
    "rpgc": "accept",
-   "sha256": "6c3d745a851b2deabaf285029bb0352ffcd5ec8016ca1c8dc6026ba5c0e4322a",
-   "verdict": "reject",
-   "verified": "2026-09-24"
+   "sha256": "59b4532bd40f844abb17d03893b1997d2557d4dbde90752e45bf8404303769f3",
+   "verdict": "accept",
+   "verified": "2026-09-25"
   },
   "test115_dump.rpgle": {
    "codes": [],
@@ -1716,23 +1555,11 @@
    "verified": "2026-09-24"
   },
   "test180_fixed_cspec_modern_opcodes.rpgle": {
-   "codes": [
-    "RNF0637"
-   ],
-   "messages": [
-    {
-     "code": "RNF0637",
-     "line": 9,
-     "severity": 30,
-     "text": "An operand was expected but was not found; specification is ignored."
-    }
-   ],
-   "reason": "RNF0637: An operand was expected but was not found; specification is ignored.",
-   "reason_detail": "line 9: An operand was expected but was not found; specification is ignored. \u2014 `C                             'case=any')`",
+   "codes": [],
    "rpgc": "accept",
-   "sha256": "2bd42956bebd8e2e0ddd75a5369d2969bcd80a7968fbcbbf1b478a9e89af0136",
-   "verdict": "reject",
-   "verified": "2026-09-24"
+   "sha256": "d8dd0d505b9ec76d7380a67074829081122293b6f5ce3393ffe07402c308caeb",
+   "verdict": "accept",
+   "verified": "2026-09-25"
   },
   "test181_fixed_cspec_err_on_exit.rpgle": {
    "codes": [
@@ -1871,20 +1698,10 @@
   },
   "test188_fixed_cspec_exec_sql.sqlrpgle": {
    "codes": [],
-   "messages": [
-    {
-     "code": "SQL0199",
-     "line": 9,
-     "severity": 30,
-     "text": "Position 17 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>."
-    }
-   ],
-   "reason": "SQL0199: Position n Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>.",
-   "reason_detail": "line 9: Position 17 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>. \u2014 `C+ CONNECT USING :conn`",
    "rpgc": "accept",
-   "sha256": "c892b582266917c7dc420ec83500df27792eba6471459ef9c7e10aa87656f4af",
-   "verdict": "reject",
-   "verified": "2026-09-24"
+   "sha256": "b3c7ddd7a21c8f2472ac9c0090ab49193a22ed1974da152606506ee315611fd2",
+   "verdict": "accept",
+   "verified": "2026-09-25"
   },
   "test189_fixed_cspec_err_endexec_orphan.sqlrpgle": {
    "codes": [
@@ -2358,21 +2175,41 @@
    "verified": "2026-09-24"
   },
   "test219_prog_order_release.sqlrpgle": {
-   "codes": [],
+   "codes": [
+    "RNF5063"
+   ],
    "messages": [
     {
-     "code": "SQL0199",
-     "line": 49,
+     "code": "RNF5063",
+     "line": 270,
      "severity": 30,
-     "text": "Position 17 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>."
+     "text": "Factor 2 operand must not be an externally described file for this operation."
+    },
+    {
+     "code": "RNF5063",
+     "line": 272,
+     "severity": 30,
+     "text": "Factor 2 operand must not be an externally described file for this operation."
+    },
+    {
+     "code": "RNF5063",
+     "line": 284,
+     "severity": 30,
+     "text": "Factor 2 operand must not be an externally described file for this operation."
+    },
+    {
+     "code": "RNF5063",
+     "line": 297,
+     "severity": 30,
+     "text": "Factor 2 operand must not be an externally described file for this operation."
     }
    ],
-   "reason": "SQL0199: Position n Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>.",
-   "reason_detail": "line 49: Position 17 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>. \u2014 `C+ CONNECT USING :CONN`",
+   "reason": "RNF5063: Factor n operand must not be an externally described file for this operation.",
+   "reason_detail": "line 270: Factor 2 operand must not be an externally described file for this operation. \u2014 ``",
    "rpgc": "accept",
-   "sha256": "619d11246a7e455965320983386c69e59c51c2d159fd05e402d0b790257591a8",
+   "sha256": "736afac6b0ba5d64ef2dfe370a1296dcbcc4d945dba18c66163386e1d19c2187",
    "verdict": "reject",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test21_parms.rpgle": {
    "codes": [],
@@ -2584,43 +2421,29 @@
   },
   "test237_sql_into_fit.sqlrpgle": {
    "codes": [],
-   "messages": [
-    {
-     "code": "SQL0199",
-     "line": 18,
-     "severity": 30,
-     "text": "Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>."
-    }
-   ],
-   "reason": "SQL0199: Position n Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>.",
-   "reason_detail": "line 18: Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>. \u2014 `EXEC SQL CONNECT USING :connStr;`",
    "rpgc": "accept",
-   "sha256": "745f15954892ee1b4e6c3bca6e8f5664d67813d92979040d283a52bb7c086da9",
-   "verdict": "reject",
-   "verified": "2026-09-24"
+   "sha256": "68d2ce6e27b52111783a9d087e14b57171239d2fcaddae036e86f3405d61add7",
+   "verdict": "accept",
+   "verified": "2026-09-25"
   },
   "test238_rla_field_fit.rpgle": {
-   "codes": [],
+   "codes": [
+    "RNF5063"
+   ],
    "messages": [
     {
-     "code": "SQL0199",
-     "line": 20,
+     "code": "RNF5063",
+     "line": 128,
      "severity": 30,
-     "text": "Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>."
-    },
-    {
-     "code": "SQL0104",
-     "line": 58,
-     "severity": 30,
-     "text": "Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>."
+     "text": "Factor 2 operand must not be an externally described file for this operation."
     }
    ],
-   "reason": "SQL0199: Position n Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>.",
-   "reason_detail": "line 20: Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>. \u2014 `EXEC SQL CONNECT USING :connStr;`",
+   "reason": "RNF5063: Factor n operand must not be an externally described file for this operation.",
+   "reason_detail": "line 128: Factor 2 operand must not be an externally described file for this operation. \u2014 ``",
    "rpgc": "accept",
-   "sha256": "7cfdcf655d3262b6d2980d5a532ef569fece5cc45410661c9520e65fffede8c0",
+   "sha256": "b3e558f2988d0ece6927112f1ce1a3630df5bf5505068e9b1171f5b5435d29fd",
    "verdict": "reject",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test239_numeric_overflow.rpgle": {
    "codes": [],
@@ -3219,12 +3042,187 @@
    "verdict": "reject",
    "verified": "2026-09-24"
   },
+  "test275_err_data_into_no_parser.rpgle": {
+   "codes": [
+    "RNF5449"
+   ],
+   "messages": [
+    {
+     "code": "RNF5449",
+     "line": 8,
+     "severity": 30,
+     "text": "The third operand of DATA-INTO must be %PARSER."
+    }
+   ],
+   "reason": "RNF5449: The third operand of DATA-INTO must be %PARSER.",
+   "reason_detail": "line 8: The third operand of DATA-INTO must be %PARSER. \u2014 `DATA-INTO person %DATA(json : 'case=any');`",
+   "rpgc": "reject",
+   "sha256": "1f340cb74d30ecdd69761df232801ecc87619604956e89d8581bcafffd425440",
+   "verdict": "reject",
+   "verified": "2026-09-25"
+  },
+  "test276_err_data_gen_no_gen.rpgle": {
+   "codes": [
+    "RNF5377",
+    "RNF5454"
+   ],
+   "messages": [
+    {
+     "code": "RNF5454",
+     "line": 9,
+     "severity": 30,
+     "text": "The third operand of DATA-GEN must be %GEN."
+    },
+    {
+     "code": "RNF5377",
+     "line": 9,
+     "severity": 20,
+     "text": "The end of the expression is expected."
+    }
+   ],
+   "reason": "RNF5454: The third operand of DATA-GEN must be %GEN.",
+   "reason_detail": "line 9: The third operand of DATA-GEN must be %GEN. \u2014 `DATA-GEN person %DATA(json) %PARSER('JSON');`",
+   "rpgc": "reject",
+   "sha256": "9ac828ef56fb6ce08a6952b9a0f0d8fa68e2d1ba9153146421fa653839fc36ca",
+   "verdict": "reject",
+   "verified": "2026-09-25"
+  },
+  "test277_err_snd_msg_type.rpgle": {
+   "codes": [
+    "RNF0203",
+    "RNF5377",
+    "RNF7030"
+   ],
+   "messages": [
+    {
+     "code": "RNF0203",
+     "line": 4,
+     "severity": 30,
+     "text": "THE MESSAGE-TARGET OPERAND IS NOT VALID FOR THE SND-MSG OPERATION."
+    },
+    {
+     "code": "RNF5377",
+     "line": 4,
+     "severity": 20,
+     "text": "The end of the expression is expected."
+    },
+    {
+     "code": "RNF7030",
+     "line": 4,
+     "severity": 30,
+     "text": "The name or indicator TYPE is not defined."
+    }
+   ],
+   "reason": "RNF0203: THE MESSAGE-TARGET OPERAND IS NOT VALID FOR THE SND-MSG OPERATION.",
+   "reason_detail": "line 4: THE MESSAGE-TARGET OPERAND IS NOT VALID FOR THE SND-MSG OPERATION. \u2014 `SND-MSG TYPE(*INFO) 'Processing complete';`",
+   "rpgc": "reject",
+   "sha256": "ff1b90ff4fa8360ae2dc5d215c91c217d45773506be6591573d0931071ffd65b",
+   "verdict": "reject",
+   "verified": "2026-09-25"
+  },
+  "test278_err_eval_extender.rpgle": {
+   "codes": [
+    "RNF5049"
+   ],
+   "messages": [
+    {
+     "code": "RNF5049",
+     "line": 5,
+     "severity": 20,
+     "text": "The Operation Extender is not valid for the specified Operation Code."
+    }
+   ],
+   "reason": "RNF5049: The Operation Extender is not valid for the specified Operation Code.",
+   "reason_detail": "line 5: The Operation Extender is not valid for the specified Operation Code. \u2014 `EVAL(E) x = x + 5;`",
+   "rpgc": "reject",
+   "sha256": "594517edb7a16be9d031639e9411fd58478d88a890c312f3b26c38a20efb558b",
+   "verdict": "reject",
+   "verified": "2026-09-25"
+  },
+  "test279_err_evalr_extender.rpgle": {
+   "codes": [
+    "RNF5049"
+   ],
+   "messages": [
+    {
+     "code": "RNF5049",
+     "line": 5,
+     "severity": 20,
+     "text": "The Operation Extender is not valid for the specified Operation Code."
+    }
+   ],
+   "reason": "RNF5049: The Operation Extender is not valid for the specified Operation Code.",
+   "reason_detail": "line 5: The Operation Extender is not valid for the specified Operation Code. \u2014 `EVALR(H) target = 'ABC';`",
+   "rpgc": "reject",
+   "sha256": "bb0d90a009789122abf54d5dd3ff9c537d15bebfb24ca9d166653ee1e77cd14d",
+   "verdict": "reject",
+   "verified": "2026-09-25"
+  },
   "test27_arrays.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "9bf92eae44ecc782097f600df8bf6daf24f49793292fc433ca5fcbbad9aeb30e",
    "verdict": "accept",
    "verified": "2026-09-24"
+  },
+  "test280_err_lookup_unsequenced.rpgle": {
+   "codes": [
+    "RNF0592"
+   ],
+   "messages": [
+    {
+     "code": "RNF0592",
+     "line": 9,
+     "severity": 20,
+     "text": "The second parameter NUMS for %LOOKUPxx must be a sequenced array."
+    }
+   ],
+   "reason": "RNF0592: The second parameter NUMS for %LOOKUPxx must be a sequenced array.",
+   "reason_detail": "line 9: The second parameter NUMS for %LOOKUPxx must be a sequenced array. \u2014 `idx = %LOOKUPGE(15 : nums);`",
+   "rpgc": "reject",
+   "sha256": "22ceac27a862ab17220d51dbba14b6e0331ebc8bc0e3422edf04c56f1a6cc89c",
+   "verdict": "reject",
+   "verified": "2026-09-25"
+  },
+  "test281_err_tlookup_not_table.rpgle": {
+   "codes": [
+    "RNF0597",
+    "RNF5343"
+   ],
+   "messages": [
+    {
+     "code": "RNF5343",
+     "line": 7,
+     "severity": 30,
+     "text": "Array CODES has too many omitted indexes."
+    },
+    {
+     "code": "RNF0597",
+     "line": 7,
+     "severity": 20,
+     "text": "The second parameter CODES for %TLOOKUPxx is not valid."
+    }
+   ],
+   "reason": "RNF5343: Array CODES has too many omitted indexes.",
+   "reason_detail": "line 7: Array CODES has too many omitted indexes. \u2014 `found = %TLOOKUP('LAX' : codes);`",
+   "rpgc": "reject",
+   "sha256": "48bbb955e272b59623629652161a321f5181816bc6656456b17bb47b4efd5f70",
+   "verdict": "reject",
+   "verified": "2026-09-25"
+  },
+  "test282_ctdata.rpgle": {
+   "codes": [],
+   "rpgc": "accept",
+   "sha256": "f51dc55c1b9eb1d481db91cd705efeae5529c596b72638d1e7a1819cfccc5e97",
+   "verdict": "accept",
+   "verified": "2026-09-25"
+  },
+  "test283_fixed_ctdata.rpgle": {
+   "codes": [],
+   "rpgc": "accept",
+   "sha256": "164ee9bf621a357589da2ea11365d4ce6093467b7429db85523011aa2f98ee39",
+   "verdict": "accept",
+   "verified": "2026-09-25"
   },
   "test28_conditional.rpgle": {
    "codes": [],
@@ -3416,29 +3414,11 @@
    "verified": "2026-09-24"
   },
   "test52_array_bifs.rpgle": {
-   "codes": [
-    "RNF0592"
-   ],
-   "messages": [
-    {
-     "code": "RNF0592",
-     "line": 21,
-     "severity": 20,
-     "text": "The second parameter NUMS for %LOOKUPxx must be a sequenced array."
-    },
-    {
-     "code": "RNF0592",
-     "line": 25,
-     "severity": 20,
-     "text": "The second parameter NUMS for %LOOKUPxx must be a sequenced array."
-    }
-   ],
-   "reason": "RNF0592: The second parameter NUMS for %LOOKUPxx must be a sequenced array.",
-   "reason_detail": "line 21: The second parameter NUMS for %LOOKUPxx must be a sequenced array. \u2014 `idx = %LOOKUPGE(25 : nums);`",
+   "codes": [],
    "rpgc": "accept",
-   "sha256": "cd395ca8ec66df15cb6a7cf9d409472851034af4916e5feca1ea1d11f349923d",
-   "verdict": "reject",
-   "verified": "2026-09-24"
+   "sha256": "d3b858f9c44233a790dd3f417637dce43a5b7ef3fe849c7198d828c9cf35045f",
+   "verdict": "accept",
+   "verified": "2026-09-25"
   },
   "test53_datetime_bifs.rpgle": {
    "codes": [],
@@ -3677,48 +3657,11 @@
    "verified": "2026-09-24"
   },
   "test75_tlookup_elem.rpgle": {
-   "codes": [
-    "RNF0597",
-    "RNF5343"
-   ],
-   "messages": [
-    {
-     "code": "RNF5343",
-     "line": 22,
-     "severity": 30,
-     "text": "Array CODES has too many omitted indexes."
-    },
-    {
-     "code": "RNF0597",
-     "line": 22,
-     "severity": 20,
-     "text": "The second parameter CODES for %TLOOKUPxx is not valid."
-    },
-    {
-     "code": "RNF5343",
-     "line": 28,
-     "severity": 30,
-     "text": "Array CODES has too many omitted indexes."
-    },
-    {
-     "code": "RNF0597",
-     "line": 28,
-     "severity": 20,
-     "text": "The second parameter CODES for %TLOOKUPxx is not valid."
-    },
-    {
-     "code": "RNF5343",
-     "line": 34,
-     "severity": 30,
-     "text": "Array CODES has too many omitted indexes."
-    }
-   ],
-   "reason": "RNF5343: Array CODES has too many omitted indexes.",
-   "reason_detail": "line 22: Array CODES has too many omitted indexes. \u2014 `found = %TLOOKUP('LAX': codes);`",
+   "codes": [],
    "rpgc": "accept",
-   "sha256": "e3b15d7d7ee3146127dd1ddf85a89c162bcb0ecfd31a252cfc4c610f44614feb",
-   "verdict": "reject",
-   "verified": "2026-09-24"
+   "sha256": "efcc239b0f3169e1740aee6389bddf5fba1c922d7f3660dc65a7b93f6a3d77e2",
+   "verdict": "accept",
+   "verified": "2026-09-25"
   },
   "test76_ds_dim_var.rpgle": {
    "codes": [],
@@ -3729,217 +3672,121 @@
   },
   "test77_exec_sql.sqlrpgle": {
    "codes": [],
-   "messages": [
-    {
-     "code": "SQL0199",
-     "line": 13,
-     "severity": 30,
-     "text": "Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>."
-    },
-    {
-     "code": "SQL0104",
-     "line": 62,
-     "severity": 30,
-     "text": "Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>."
-    }
-   ],
-   "reason": "SQL0199: Position n Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>.",
-   "reason_detail": "line 13: Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>. \u2014 `EXEC SQL CONNECT USING :connStr;`",
    "rpgc": "accept",
-   "sha256": "c519920f3774f9ff9564cd5f29d2d7746b03b9ee24ba99a494c9925292c38520",
-   "verdict": "reject",
-   "verified": "2026-09-24"
+   "sha256": "c81b9ca7e6616c80a5e1ae5764802a9347fdfd1606d6e1299e1e9210bc9a767b",
+   "verdict": "accept",
+   "verified": "2026-09-25"
   },
   "test78_exec_sql_proc.sqlrpgle": {
-   "codes": [],
+   "codes": [
+    "RNF1520"
+   ],
    "messages": [
     {
-     "code": "SQL0199",
-     "line": 12,
-     "severity": 30,
-     "text": "Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>."
+     "code": "RNF1520",
+     "line": 122,
+     "severity": 20,
+     "text": "The procedure cannot be defined with DFTACTGRP(*YES)."
     },
     {
-     "code": "SQL0104",
-     "line": 34,
-     "severity": 30,
-     "text": "Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>."
+     "code": "RNF1520",
+     "line": 153,
+     "severity": 20,
+     "text": "The procedure cannot be defined with DFTACTGRP(*YES)."
     }
    ],
-   "reason": "SQL0199: Position n Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>.",
-   "reason_detail": "line 12: Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>. \u2014 `EXEC SQL CONNECT USING :connStr;`",
+   "reason": "RNF1520: The procedure cannot be defined with DFTACTGRP(*YES).",
+   "reason_detail": "line 122: The procedure cannot be defined with DFTACTGRP(*YES). \u2014 ``",
    "rpgc": "accept",
-   "sha256": "ca1483b86c7a4a781691f6965d87a83d8befbddd03ade92b041c92a9bad4adc6",
+   "sha256": "fbddaec102a71ac24f13a7cb75744030526dad4fce4b3b57ca932050bbefd21c",
    "verdict": "reject",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test79_sql_core.sqlrpgle": {
    "codes": [],
-   "messages": [
-    {
-     "code": "SQL0199",
-     "line": 15,
-     "severity": 30,
-     "text": "Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>."
-    },
-    {
-     "code": "SQL0104",
-     "line": 75,
-     "severity": 30,
-     "text": "Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>."
-    }
-   ],
-   "reason": "SQL0199: Position n Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>.",
-   "reason_detail": "line 15: Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>. \u2014 `EXEC SQL CONNECT USING :connStr;`",
    "rpgc": "accept",
-   "sha256": "e92759545e90930e193a49c1a738be7214eab7cf28615aeab6b3de3057e0c3f9",
-   "verdict": "reject",
-   "verified": "2026-09-24"
+   "sha256": "3c4770b46045c8346c0412ba7295e7b125a0a0cbbb2a93ee4df8b4361ff0fc92",
+   "verdict": "accept",
+   "verified": "2026-09-25"
   },
   "test80_sql_cursors.sqlrpgle": {
    "codes": [],
-   "messages": [
-    {
-     "code": "SQL0199",
-     "line": 15,
-     "severity": 30,
-     "text": "Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>."
-    },
-    {
-     "code": "SQL0104",
-     "line": 77,
-     "severity": 30,
-     "text": "Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>."
-    }
-   ],
-   "reason": "SQL0199: Position n Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>.",
-   "reason_detail": "line 15: Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>. \u2014 `EXEC SQL CONNECT USING :connStr;`",
    "rpgc": "accept",
-   "sha256": "58c34f27f215a1173bb8e5570212a7cc8a734ae1d796582aaf35834fe3586f1c",
-   "verdict": "reject",
-   "verified": "2026-09-24"
+   "sha256": "2b139744c7ac31c18f899674d1bafdb045460292805a5c24e2e74e1ddfe6f805",
+   "verdict": "accept",
+   "verified": "2026-09-25"
   },
   "test81_sql_dynamic.sqlrpgle": {
    "codes": [],
-   "messages": [
-    {
-     "code": "SQL0199",
-     "line": 12,
-     "severity": 30,
-     "text": "Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>."
-    },
-    {
-     "code": "SQL0104",
-     "line": 48,
-     "severity": 30,
-     "text": "Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>."
-    }
-   ],
-   "reason": "SQL0199: Position n Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>.",
-   "reason_detail": "line 12: Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>. \u2014 `EXEC SQL CONNECT USING :connStr;`",
    "rpgc": "accept",
-   "sha256": "5a259c3d84a1c4a64b140316748bd8352373ba6f25275d68c309dae497f40dca",
-   "verdict": "reject",
-   "verified": "2026-09-24"
+   "sha256": "efeb80f04ab9eb2f7b91e3a19df43424e86231190f3d13ce649f805df4b9893f",
+   "verdict": "accept",
+   "verified": "2026-09-25"
   },
   "test82_sql_advanced.sqlrpgle": {
    "codes": [],
    "messages": [
     {
-     "code": "SQL0199",
-     "line": 13,
-     "severity": 30,
-     "text": "Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>."
-    },
-    {
      "code": "SQL0104",
-     "line": 45,
+     "line": 47,
      "severity": 30,
      "text": "Position 23 Token <END-OF-STATEMENT> was not valid. Valid tokens: ON UNIQUE."
-    },
-    {
-     "code": "SQL0104",
-     "line": 60,
-     "severity": 30,
-     "text": "Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>."
     }
    ],
-   "reason": "SQL0199: Position n Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>.",
-   "reason_detail": "line 13: Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>. \u2014 `EXEC SQL CONNECT USING :connStr;`",
+   "reason": "SQL0104: Position n Token <END-OF-STATEMENT> was not valid. Valid tokens: ON UNIQUE.",
+   "reason_detail": "line 47: Position 23 Token <END-OF-STATEMENT> was not valid. Valid tokens: ON UNIQUE. \u2014 `// SAVEPOINT`",
    "rpgc": "accept",
-   "sha256": "e271de1c012304441eae839579f1c59369bca018f63d46ecc3d9bd4b81f11f96",
+   "sha256": "afc0c38327c96f4d23e6c0ff2a55f800b75b7e2df78a53ae35421707e8ddadc8",
    "verdict": "reject",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test83_sql_multirow.sqlrpgle": {
    "codes": [],
    "messages": [
     {
-     "code": "SQL0199",
-     "line": 16,
-     "severity": 30,
-     "text": "Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>."
-    },
-    {
      "code": "SQL0312",
-     "line": 38,
+     "line": 40,
      "severity": 30,
      "text": "Position 11 Variable IDS not defined or not usable for reason code 2."
     },
     {
      "code": "SQL0312",
-     "line": 38,
+     "line": 40,
      "severity": 30,
      "text": "Position 17 Variable NAMES not defined or not usable for reason code 2."
     },
     {
      "code": "SQL0312",
-     "line": 38,
+     "line": 40,
      "severity": 30,
      "text": "Position 25 Variable SALARIES not defined or not usable for reason code 2."
     },
     {
      "code": "SQL0104",
-     "line": 39,
+     "line": 41,
      "severity": 30,
      "text": "Position 7 Token : was not valid. Valid tokens: READ FETCH UPDATE."
+    },
+    {
+     "code": "SQL5011",
+     "line": 58,
+     "severity": 30,
+     "text": "Position 9 Host structure array IDS not defined or not usable for reason code 1."
     }
    ],
-   "reason": "SQL0199: Position n Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>.",
-   "reason_detail": "line 16: Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>. \u2014 `EXEC SQL CONNECT USING :connStr;`",
+   "reason": "SQL0312: Position n Variable IDS not defined or not usable for reason code n.",
+   "reason_detail": "line 40: Position 11 Variable IDS not defined or not usable for reason code 2. \u2014 `EXEC SQL INSERT INTO mr83 (id, name, salary)`",
    "rpgc": "accept",
-   "sha256": "50fce72dd7a20cc0885f79ecbfc50ae0d6dc31f8ab57fa0d7c8eabc0cef18733",
+   "sha256": "6c2e5d54a70c5c0bcf7d71cfea3a9b4ebc06084c5c767d4ee2a9f6e82d8ea323",
    "verdict": "reject",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test84_sql_connect.sqlrpgle": {
    "codes": [],
-   "messages": [
-    {
-     "code": "SQL0199",
-     "line": 12,
-     "severity": 30,
-     "text": "Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>."
-    },
-    {
-     "code": "SQL0104",
-     "line": 23,
-     "severity": 30,
-     "text": "Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>."
-    },
-    {
-     "code": "SQL0199",
-     "line": 26,
-     "severity": 30,
-     "text": "Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>."
-    }
-   ],
-   "reason": "SQL0199: Position n Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>.",
-   "reason_detail": "line 12: Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>. \u2014 `EXEC SQL CONNECT USING :connStr;`",
    "rpgc": "accept",
-   "sha256": "e1fd86ab7f753317671b1deb14d3c2654dc843e47f058b5c405d71665f728f4c",
-   "verdict": "reject",
-   "verified": "2026-09-24"
+   "sha256": "9c97f7ccec9828f9f3d12508c17a9ac737ae6e1e0f5e176e17ad6d37e3d7d9dc",
+   "verdict": "accept",
+   "verified": "2026-09-25"
   },
   "test85_getenv.rpgle": {
    "codes": [
@@ -3986,26 +3833,10 @@
   },
   "test86.sqlrpgle": {
    "codes": [],
-   "messages": [
-    {
-     "code": "SQL0199",
-     "line": 17,
-     "severity": 30,
-     "text": "Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>."
-    },
-    {
-     "code": "SQL0104",
-     "line": 44,
-     "severity": 30,
-     "text": "Position 20 Token <END-OF-STATEMENT> was not valid. Valid tokens: : ALL CURRENT <IDENTIFIER>."
-    }
-   ],
-   "reason": "SQL0199: Position n Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>.",
-   "reason_detail": "line 17: Position 18 Keyword USING not expected. Valid tokens: <END-OF-STATEMENT>. \u2014 `exec sql connect using :connStr;`",
    "rpgc": "accept",
-   "sha256": "9c5ffdd5d336a7241e26a21cbcc467bc62f42aba73683610d559133de13dcc09",
-   "verdict": "reject",
-   "verified": "2026-09-24"
+   "sha256": "a523acad5a4b85c7196b1e1163349a4110e17937fbc869c9c0819eada710021a",
+   "verdict": "accept",
+   "verified": "2026-09-25"
   },
   "test87.rpgle": {
    "codes": [],
@@ -4081,67 +3912,18 @@
    "verified": "2026-09-24"
   },
   "test94_extender_h.rpgle": {
-   "codes": [
-    "RNF5049",
-    "RNF7416"
-   ],
-   "messages": [
-    {
-     "code": "RNF5049",
-     "line": 41,
-     "severity": 20,
-     "text": "The Operation Extender is not valid for the specified Operation Code."
-    },
-    {
-     "code": "RNF5049",
-     "line": 48,
-     "severity": 20,
-     "text": "The Operation Extender is not valid for the specified Operation Code."
-    },
-    {
-     "code": "RNF5049",
-     "line": 55,
-     "severity": 20,
-     "text": "The Operation Extender is not valid for the specified Operation Code."
-    },
-    {
-     "code": "RNF7416",
-     "line": 55,
-     "severity": 30,
-     "text": "The types of the right and left hand side do not match in the EVAL operation."
-    }
-   ],
-   "reason": "RNF5049: The Operation Extender is not valid for the specified Operation Code.",
-   "reason_detail": "line 41: The Operation Extender is not valid for the specified Operation Code. \u2014 `EVAL(P) padStr = 'HELLO';`",
+   "codes": [],
    "rpgc": "accept",
-   "sha256": "1be8d5bb4a14809c52d1a3fe06ab6c46de7c88456923eb8c747c9091bef8247a",
-   "verdict": "reject",
-   "verified": "2026-09-24"
+   "sha256": "3f3dc5057adb9b392e06148b6e7d33066e20db0c17bcf585a09ab504b4e0c1c9",
+   "verdict": "accept",
+   "verified": "2026-09-25"
   },
   "test95_extender_e.rpgle": {
-   "codes": [
-    "RNF5049"
-   ],
-   "messages": [
-    {
-     "code": "RNF5049",
-     "line": 19,
-     "severity": 20,
-     "text": "The Operation Extender is not valid for the specified Operation Code."
-    },
-    {
-     "code": "RNF5049",
-     "line": 27,
-     "severity": 20,
-     "text": "The Operation Extender is not valid for the specified Operation Code."
-    }
-   ],
-   "reason": "RNF5049: The Operation Extender is not valid for the specified Operation Code.",
-   "reason_detail": "line 19: The Operation Extender is not valid for the specified Operation Code. \u2014 `EVAL(E) x = x + 5;`",
+   "codes": [],
    "rpgc": "accept",
-   "sha256": "5d4a83915121b7d840de2edcba40f36b4b68563c2388393266b545a0c02803d5",
-   "verdict": "reject",
-   "verified": "2026-09-24"
+   "sha256": "b328a954218b9b389d972896f3bca305225382ab8de7b7b222a2db618c282b2d",
+   "verdict": "accept",
+   "verified": "2026-09-25"
   },
   "test96_da_status401.rpgle": {
    "codes": [
@@ -4201,35 +3983,11 @@
    "verified": "2026-09-24"
   },
   "test99_data_into.rpgle": {
-   "codes": [
-    "RNF5449"
-   ],
-   "messages": [
-    {
-     "code": "RNF5449",
-     "line": 32,
-     "severity": 30,
-     "text": "The third operand of DATA-INTO must be %PARSER."
-    },
-    {
-     "code": "RNF5449",
-     "line": 40,
-     "severity": 30,
-     "text": "The third operand of DATA-INTO must be %PARSER."
-    },
-    {
-     "code": "RNF5449",
-     "line": 49,
-     "severity": 30,
-     "text": "The third operand of DATA-INTO must be %PARSER."
-    }
-   ],
-   "reason": "RNF5449: The third operand of DATA-INTO must be %PARSER.",
-   "reason_detail": "line 32: The third operand of DATA-INTO must be %PARSER. \u2014 `DATA-INTO person %DATA(jsonData : 'doc=string case=any');`",
+   "codes": [],
    "rpgc": "accept",
-   "sha256": "11df35b88da2456ab88302f0fe9dd1f824fac95f6411e97dc13c6b0c98ee30cc",
-   "verdict": "reject",
-   "verified": "2026-09-24"
+   "sha256": "eda4d8b3210d38c0793647b423c39cb19ad23e7443a4fcc92835487a6300f506",
+   "verdict": "accept",
+   "verified": "2026-09-25"
   },
   "test_exfmt.rpgle": {
    "codes": [
@@ -4277,5 +4035,5 @@
    "verified": "2026-09-24"
   }
  },
- "generated": "2026-09-24T15:26:13+00:00"
+ "generated": "2026-09-25T02:54:54+00:00"
 }

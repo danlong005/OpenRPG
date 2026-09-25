@@ -1,6 +1,6 @@
 **FREE
 
-// Test 113: DATA-GEN with %PARSER('CSV')
+// Test 113: DATA-GEN with %GEN('CSV')
 
 DCL-DS person QUALIFIED;
   name VARCHAR(40);
@@ -16,7 +16,7 @@ DCL-DS item QUALIFIED;
   price PACKED(9:2);
 END-DS;
 DCL-S csvItem VARCHAR(300);
-// Test 3: Suppress header row with header=no
+// Test 3: Suppress the header row: header=no, an option of the CSV generator
 DCL-S csvNoHdr VARCHAR(300);
 
 // DSPLY shows at most 52 characters (IBM i RNF7016)
@@ -27,18 +27,18 @@ person.name = 'Alice';
 person.age  = 30;
 person.city = 'Boston';
 
-DATA-GEN person %DATA(csvOut) %PARSER('CSV');
+DATA-GEN person %DATA(csvOut) %GEN('CSV');
 dspLine = csvOut;
 DSPLY dspLine;
 
 item.label = 'Gadget, Pro';
 item.price = 9.99;
 
-DATA-GEN item %DATA(csvItem) %PARSER('CSV');
+DATA-GEN item %DATA(csvItem) %GEN('CSV');
 dspLine = csvItem;
 DSPLY dspLine;
 
-DATA-GEN person %DATA(csvNoHdr : 'header=no') %PARSER('CSV');
+DATA-GEN person %DATA(csvNoHdr) %GEN('CSV' : 'header=no');
 dspLine = csvNoHdr;
 DSPLY dspLine;
 

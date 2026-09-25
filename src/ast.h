@@ -721,7 +721,8 @@ public:
     std::string target;                          // target DS variable
     std::unique_ptr<Expression> data_source;     // source expression (%DATA first arg)
     std::unique_ptr<Expression> options;         // options string (%DATA second arg, optional)
-    std::unique_ptr<Expression> parser;          // %PARSER arg (optional, stubbed)
+    std::unique_ptr<Expression> parser;          // %PARSER name
+    std::unique_ptr<Expression> handler_options; // %PARSER options (optional)
     DataIntoStmt(std::string target, std::unique_ptr<Expression> data_source,
                  std::unique_ptr<Expression> options, std::unique_ptr<Expression> parser);
     void accept(ASTVisitor& visitor) override;
@@ -733,7 +734,8 @@ public:
     std::string source_ds;                       // source DS variable
     std::unique_ptr<Expression> output_var;      // output variable expression (%DATA first arg)
     std::unique_ptr<Expression> options;         // options string (%DATA second arg, optional)
-    std::unique_ptr<Expression> parser;          // %PARSER arg (optional, stubbed)
+    std::unique_ptr<Expression> parser;          // %GEN name
+    std::unique_ptr<Expression> handler_options; // %GEN options (optional)
     DataGenStmt(std::string source_ds, std::unique_ptr<Expression> output_var,
                 std::unique_ptr<Expression> options, std::unique_ptr<Expression> parser);
     void accept(ASTVisitor& visitor) override;

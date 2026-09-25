@@ -4561,6 +4561,15 @@ void CodeGen::emitXmlFieldAssignments(DclDS* ds, const std::string& target, cons
     }
 }
 
+std::string CodeGen::csvOptions(Expression* data_opts, Expression* handler_opts) {
+    std::string d = data_opts ? "std::string(" + emitExpr(*data_opts) + ")" : "";
+    std::string h = handler_opts ? "std::string(" + emitExpr(*handler_opts) + ")" : "";
+    if (d.empty() && h.empty()) return "\"\"";
+    if (h.empty()) return d;
+    if (d.empty()) return h;
+    return "(" + d + " + \" \" + " + h + ")";
+}
+
 void CodeGen::visit(DataIntoStmt& node) {
     auto it = ds_defs_.find(node.target);
     if (it == ds_defs_.end()) {
@@ -4570,7 +4579,7 @@ void CodeGen::visit(DataIntoStmt& node) {
     }
     DclDS* ds = it->second;
 
-    std::string opts_expr = node.options ? emitExpr(*node.options) : "\"\"";
+    std::string opts_expr = csvOptions(node.options.get(), node.handler_options.get());
     std::string data_expr = emitExpr(*node.data_source);
     bool is_array = (ds->dim > 0 || ds->dim_type != 0);
 
@@ -4726,7 +4735,7 @@ void CodeGen::visit(DataGenStmt& node) {
     }
     DclDS* ds = it->second;
 
-    std::string opts_expr = node.options ? emitExpr(*node.options) : "\"\"";
+    std::string opts_expr = csvOptions(node.options.get(), node.handler_options.get());
     std::string output_expr = emitExpr(*node.output_var);
     bool is_array = (ds->dim > 0 || ds->dim_type != 0);
 

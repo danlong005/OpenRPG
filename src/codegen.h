@@ -186,6 +186,9 @@ private:
     bool in_bare_subfield_ = false; // emitting a bare subfield name as DS.field
     void emitStatements(std::vector<std::unique_ptr<Statement>>& stmts);
     std::string emitExpr(Expression& expr);
+    // The %DATA options followed by the %PARSER/%GEN options, as one string
+    // the built-in handlers search for their settings.
+    std::string csvOptions(Expression* data_opts, Expression* handler_opts);
     std::string typeToString(RPGType type, int length = 0);
     int declaredDigits(const std::string& name) const;
     std::string declaredDtFormat(const std::string& name, RPGType type) const;

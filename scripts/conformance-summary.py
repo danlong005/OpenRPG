@@ -133,6 +133,12 @@ format name replaced with the file name to move between the two.
   be longer than its field** (`RNF3431`).
 - **`NOT` applies to indicators only** (`RNF7421`), and **`%DIV`/`%REM` by a
   literal zero** is a compile-time error (`RNF0552`).
+- **`DATA-INTO` names its parser and `DATA-GEN` its generator**: the third
+  operand is `%PARSER(...)` (`RNF5449`) or `%GEN(...)` (`RNF5454`). `%DATA`'s
+  options are IBM's, checked at compile time (`RNF0236`); the handler's own
+  options, such as CSV's `header=no`, go in `%PARSER`/`%GEN`.
+- **`SND-MSG` takes the message type directly**: `SND-MSG *INFO 'text';`.
+  `TYPE(*INFO)` is read as a variable named `TYPE` (`RNF0203`).
 
 ### Other limits worth knowing
 

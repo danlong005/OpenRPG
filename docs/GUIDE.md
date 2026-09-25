@@ -1582,8 +1582,10 @@ UNLOCK MyConfig;
 
 ## SND-MSG
 
-`SND-MSG` sends a message to the program message queue. In OpenRPG, `*INFO` and
-`*DIAG` messages are written to stderr. `*ESCAPE` raises a catchable exception.
+`SND-MSG` sends a message to the program message queue. The message type is one
+of `*INFO` (the default), `*DIAG`, `*COMP`, `*STATUS`, `*NOTIFY` or `*ESCAPE`. In
+OpenRPG every message is written to stderr, prefixed with its type, and
+`*ESCAPE` also raises a catchable exception.
 
 ### Syntax
 
@@ -1592,8 +1594,11 @@ SND-MSG *INFO 'Informational message';
 SND-MSG *DIAG 'Diagnostic detail';
 SND-MSG *ESCAPE 'Fatal error text';
 
-// TYPE() keyword form
-SND-MSG TYPE(*INFO) 'Processing complete';
+SND-MSG *COMP 'Processing complete';
+
+// %TARGET names the receiving call-stack entry. It is accepted and has no
+// effect here, since every message goes to stderr.
+SND-MSG *INFO 'Sent to the caller' %TARGET(*CALLER);
 
 // Bare form — defaults to *INFO
 SND-MSG 'Something happened';
@@ -1603,6 +1608,9 @@ DCL-S msg VARCHAR(100);
 msg = 'Row count: ' + %CHAR(rowCount);
 SND-MSG *DIAG msg;
 ```
+
+The type is written directly after `SND-MSG`. `SND-MSG TYPE(*INFO) 'text'` is
+rejected: IBM i reads `TYPE` as a variable name (RNF0203).
 
 ### Catching \*ESCAPE with MONITOR
 
@@ -1839,8 +1847,23 @@ EXEC SQL DISCONNECT;
 `DATA-INTO` parses structured data into a data structure.
 `DATA-GEN` serializes a data structure to structured data.
 
-The format is selected with the `%PARSER` BIF. Without `%PARSER`, JSON is the default.
-Use `%PARSER('CSV')` for comma-separated values.
+The third operand names the handler, as IBM i requires: `%PARSER` for
+`DATA-INTO` (RNF5449 without it) and `%GEN` for `DATA-GEN` (RNF5454). On IBM i
+the name is a program that parses or generates the document. OpenRPG has two
+built in: a name containing `CSV` selects comma-separated values, and any other
+name, such as `'JSON'`, selects JSON.
+
+```rpgle
+DATA-INTO ds %DATA(source : 'options') %PARSER('JSON' : 'parser options');
+DATA-GEN  ds %DATA(target : 'options') %GEN('JSON' : 'generator options');
+```
+
+`%DATA`'s options are IBM's, and a literal is checked when the program
+compiles (RNF0236). `DATA-INTO` takes `doc`, `case`, `trim`, `allowmissing`,
+`allowextra`, `path`, `ccsid` and `countprefix`. `DATA-GEN` takes `doc`,
+`countprefix`, `renameprefix`, `output` and `name`. Options for the handler
+itself, like the CSV handler's `header` and `delimiter`, go in the second
+operand of `%PARSER` or `%GEN`.
 
 ### DATA-INTO — Parse JSON
 
@@ -1854,7 +1877,7 @@ END-DS;
 DCL-S json VARCHAR(500);
 json = '{"name":"Alice","age":30,"city":"Boston"}';
 
-DATA-INTO person %DATA(json : 'doc=string case=any');
+DATA-INTO person %DATA(json : 'doc=string case=any') %PARSER('JSON');
 
 DSPLY person.name;              // Alice
 DSPLY %CHAR(person.age);        // 30
@@ -1886,7 +1909,7 @@ item.id    = 42;
 item.price = 19.99;
 item.label = 'Widget';
 
-DATA-GEN item %DATA(json : 'doc=string');
+DATA-GEN item %DATA(json : 'doc=string') %GEN('JSON');
 
 dspLine = json;
 DSPLY dspLine;   // {"id":42,"price":19.99,"label":"Widget"}
@@ -1904,7 +1927,7 @@ DCL-DS product QUALIFIED;
 END-DS;
 
 json = '{"id":99,"price":4.50,"qty":10}';
-DATA-INTO product %DATA(json : 'doc=string case=any');
+DATA-INTO product %DATA(json : 'doc=string case=any') %PARSER('JSON');
 
 DSPLY %CHAR(product.price);   // 4.50
 ```
@@ -1919,15 +1942,16 @@ DCL-DS msg QUALIFIED;
 END-DS;
 
 msg.text = 'Price < $10 & "sale"';
-DATA-GEN msg %DATA(json : 'doc=string');
+DATA-GEN msg %DATA(json : 'doc=string') %GEN('JSON');
 // {"text":"Price < $10 & \"sale\""}
 ```
 
 ---
 
-### CSV Format via %PARSER('CSV')
+### CSV Format via %PARSER('CSV') and %GEN('CSV')
 
-Use `%PARSER('CSV')` to parse or generate comma-separated values. The first row
+Use `%PARSER('CSV')` to parse and `%GEN('CSV')` to generate comma-separated
+values. The first row
 is treated as a header row mapping column names to DS field names.
 
 #### DATA-INTO — Parse CSV
@@ -1975,17 +1999,21 @@ DCL-S csv VARCHAR(300);
 person.name = 'Alice';
 person.age  = 30;
 
-DATA-GEN person %DATA(csv) %PARSER('CSV');
+DATA-GEN person %DATA(csv) %GEN('CSV');
 // csv = "NAME,AGE\nAlice,30"
 ```
 
 #### CSV Options
 
-| Option | Meaning |
-|--------|---------|
-| `case=any` | Case-insensitive header matching (DATA-INTO) |
-| `header=no` | Skip header row on input / omit header row on output |
-| `delimiter=<c>` | Use `<c>` as field delimiter instead of comma |
+| Option | Where | Meaning |
+|--------|-------|---------|
+| `case=any` | `%DATA` (DATA-INTO) | Case-insensitive header matching |
+| `header=no` | `%PARSER` / `%GEN` | Skip header row on input / omit header row on output |
+| `delimiter=<c>` | `%PARSER` / `%GEN` | Use `<c>` as field delimiter instead of comma |
+
+```rpgle
+DATA-GEN person %DATA(csv) %GEN('CSV' : 'header=no delimiter=;');
+```
 
 #### Hex String Literals (`X'...'`)
 

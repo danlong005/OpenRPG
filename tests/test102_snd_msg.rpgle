@@ -11,8 +11,8 @@ SND-MSG *INFO 'Starting process';
 msg = 'Diagnostic: value out of range';
 SND-MSG *DIAG msg;
 
-// TYPE(*INFO) keyword form
-SND-MSG TYPE(*INFO) 'Processing complete';
+// *COMP — completion message, sent to the caller
+SND-MSG *COMP 'Processing complete' %TARGET(*CALLER);
 
 // Plain form — defaults to *INFO
 SND-MSG 'Default info message';

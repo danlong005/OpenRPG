@@ -31,7 +31,7 @@ person.name = 'Bob';
 person.age = 25;
 person.city = 'Seattle';
 
-DATA-GEN person %DATA(jsonOut : 'doc=string');
+DATA-GEN person %DATA(jsonOut : 'doc=string') %GEN('JSON');
 
 dspLine = jsonOut;
 DSPLY dspLine;
@@ -40,7 +40,7 @@ item.id = 99;
 item.price = 4.50;
 item.active = 1;
 
-DATA-GEN item %DATA(jsonItem);
+DATA-GEN item %DATA(jsonItem) %GEN('JSON');
 
 dspLine = jsonItem;
 DSPLY dspLine;
@@ -48,7 +48,7 @@ DSPLY dspLine;
 msg.text = 'Hello "world"';
 msg.code = 42;
 
-DATA-GEN msg %DATA(jsonMsg);
+DATA-GEN msg %DATA(jsonMsg) %GEN('JSON');
 
 dspLine = jsonMsg;
 DSPLY dspLine;

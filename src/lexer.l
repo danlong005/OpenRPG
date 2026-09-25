@@ -506,6 +506,7 @@ static void parse_ctlopt(const char* text) {
 "%XML"              { return BIF_XML; }
 "%DATA"             { return BIF_DATA; }
 "%PARSER"           { return BIF_PARSER; }
+"%GEN"              { return BIF_GEN; }
 "*INZSR"            { yylval.sval = strdup("*INZSR"); return IDENTIFIER; }
 "*PSSR"             { yylval.sval = strdup("*PSSR"); return IDENTIFIER; }
 "*LDA"              { yylval.sval = strdup("*LDA"); return IDENTIFIER; }
@@ -514,6 +515,13 @@ static void parse_ctlopt(const char* text) {
 "*INFO"             { return KW_STAR_INFO; }
 "*DIAG"             { return KW_STAR_DIAG; }
 "*ESCAPE"           { return KW_STAR_ESCAPE; }
+"*COMP"             { return KW_STAR_COMP; }
+"*STATUS"           { return KW_STAR_STATUS; }
+"*NOTIFY"           { return KW_STAR_NOTIFY; }
+"*CALLER"           { return KW_STAR_CALLER; }
+"*SELF"             { return KW_STAR_SELF; }
+"*EXT"              { return KW_STAR_EXT; }
+"%TARGET"           { return BIF_TARGET; }
 "*INLR"             { yylval.ival = 0; return INDICATOR; }  /* LR: slot 0, see IndicatorExpr::LR */
 "*ON"               { return KW_ON; }
 "*OFF"              { return KW_OFF; }

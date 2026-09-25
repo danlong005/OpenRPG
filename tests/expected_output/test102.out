@@ -1,6 +1,6 @@
 INFO: Starting process
 DIAG: Diagnostic: value out of range
-INFO: Processing complete
+COMP: Processing complete
 INFO: Default info message
 ESCAPE: Something went wrong
 Caught escape message

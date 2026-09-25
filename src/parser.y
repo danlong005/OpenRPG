@@ -181,6 +181,75 @@ static rpg::FuncCall* make_func(const char* name, std::vector<rpg::Expression*>*
     }
     return new rpg::FuncCall(name, std::move(args));
 }
+// DATA-INTO / DATA-GEN from their %DATA(source [: options]) and
+// %PARSER / %GEN(name [: options]) argument lists. The handler's own options
+// are accepted and not used: the built-in handlers take theirs from %DATA.
+static rpg::Expression* take_arg(std::vector<rpg::Expression*>* v, size_t i) {
+    if (!v || i >= v->size()) return nullptr;
+    rpg::Expression* e = (*v)[i];
+    (*v)[i] = nullptr;
+    return e;
+}
+static void drop_args(std::vector<rpg::Expression*>* v) {
+    if (!v) return;
+    for (auto* e : *v) delete e;
+    delete v;
+}
+// The option names %DATA takes, which IBM i checks at compile time when the
+// options are a literal (RNF0236). They differ by statement. Options for the
+// parser or generator itself (the CSV handler's header, delimiter) go in the
+// second operand of %PARSER or %GEN, which is passed through unchecked.
+static const char* const DATA_INTO_OPTIONS[] = {
+    "doc", "case", "trim", "allowmissing", "allowextra", "path", "ccsid", "countprefix", nullptr};
+static const char* const DATA_GEN_OPTIONS[] = {
+    "doc", "countprefix", "renameprefix", "output", "name", nullptr};
+static void check_data_options(rpg::Expression* opts, const char* op, const char* const* valid) {
+    auto* lit = dynamic_cast<rpg::StringLiteral*>(opts);
+    if (!lit) return;
+    std::string text = lit->value;
+    size_t i = 0;
+    while (i < text.size()) {
+        while (i < text.size() && isspace((unsigned char)text[i])) i++;
+        size_t start = i;
+        while (i < text.size() && !isspace((unsigned char)text[i])) i++;
+        if (start == i) break;
+        std::string opt = text.substr(start, i - start);
+        std::string name = opt.substr(0, opt.find('='));
+        for (auto& c : name) c = tolower((unsigned char)c);
+        bool ok = false;
+        for (const char* const* v = valid; *v; v++) if (name == *v) ok = true;
+        if (!ok) {
+            std::string msg = std::string(op) + ": \"" + opt + "\" is not a %DATA option; "
+                "options for the parser or generator go in its own second operand, "
+                "e.g. %" + (std::string(op) == "DATA-GEN" ? "GEN" : "PARSER") +
+                "('CSV' : '" + opt + "') (IBM: RNF0236)";
+            yyerror(msg.c_str());
+        }
+    }
+}
+static rpg::Statement* makeDataInto(char* target, std::vector<rpg::Expression*>* data,
+                                    std::vector<rpg::Expression*>* handler) {
+    auto* s = new rpg::DataIntoStmt(target,
+        std::unique_ptr<rpg::Expression>(take_arg(data, 0)),
+        std::unique_ptr<rpg::Expression>(take_arg(data, 1)),
+        std::unique_ptr<rpg::Expression>(take_arg(handler, 0)));
+    s->handler_options.reset(take_arg(handler, 1));
+    check_data_options(s->options.get(), "DATA-INTO", DATA_INTO_OPTIONS);
+    drop_args(data); drop_args(handler); free(target);
+    return s;
+}
+static rpg::Statement* makeDataGen(char* source, std::vector<rpg::Expression*>* data,
+                                   std::vector<rpg::Expression*>* handler) {
+    auto* s = new rpg::DataGenStmt(source,
+        std::unique_ptr<rpg::Expression>(take_arg(data, 0)),
+        std::unique_ptr<rpg::Expression>(take_arg(data, 1)),
+        std::unique_ptr<rpg::Expression>(take_arg(handler, 0)));
+    s->handler_options.reset(take_arg(handler, 1));
+    check_data_options(s->options.get(), "DATA-GEN", DATA_GEN_OPTIONS);
+    drop_args(data); drop_args(handler); free(source);
+    return s;
+}
+
 // Length/digits/scale of the most recent pi_return_type (see that rule).
 static int g_ret_len = 0, g_ret_digits = 0, g_ret_dec = 0;
 
@@ -321,7 +390,7 @@ static rpg::DclS* make_dcl_s(const char* name, rpg::ParamDecl* t, DclSKws* k) {
 %token BIF_PASSED BIF_OMITTED
 %token BIF_BITAND BIF_BITNOT BIF_BITOR BIF_BITXOR
 %token BIF_SCANR BIF_EDITFLT BIF_UNSH BIF_PARMNUM BIF_GETENV BIF_XML
-%token BIF_DATA BIF_PARSER
+%token BIF_DATA BIF_PARSER BIF_GEN
 %token KW_ALL
 %token KW_UNS KW_FLOAT_TYPE KW_BINDEC KW_UCS2 KW_GRAPH KW_OBJECT KW_JAVA
 %token KW_OVERLAY KW_POS KW_PREFIX KW_DATFMT KW_TIMFMT KW_EXTNAME KW_PSDS KW_SDS
@@ -334,6 +403,7 @@ static rpg::DclS* make_dcl_s(const char* name, rpg::ParamDecl* t, DclSKws* k) {
 %token KW_DIM_VAR KW_DIM_AUTO
 %token KW_FOR_EACH KW_IN KW_XML_INTO KW_DATA_INTO KW_DATA_GEN KW_SND_MSG
 %token KW_STAR_INFO KW_STAR_DIAG KW_STAR_ESCAPE KW_TYPE
+%token KW_STAR_COMP KW_STAR_STATUS KW_STAR_NOTIFY KW_STAR_CALLER KW_STAR_SELF KW_STAR_EXT BIF_TARGET
 %token KW_STAR_ALLOC KW_STAR_KEEP
 %token KW_READ KW_READC KW_READE KW_READP KW_READPE KW_CHAIN KW_WRITE KW_UPDATE KW_DELETE KW_SETLL KW_SETGT KW_EXFMT
 %token <sval> KW_READ_EXT KW_READE_EXT KW_READP_EXT KW_READPE_EXT KW_CHAIN_EXT
@@ -355,6 +425,7 @@ static rpg::DclS* make_dcl_s(const char* name, rpg::ParamDecl* t, DclSKws* k) {
 %type <str_list> call_parm_list
 %type <stmt> monitor_stmt begsr_stmt exsr_stmt goto_stmt tag_stmt move_stmt call_stmt exec_sql_stmt xml_into_stmt
 %type <stmt> in_da_stmt out_da_stmt unlock_da_stmt data_into_stmt data_gen_stmt snd_msg_stmt
+%type <sval> snd_msg_type
 %type <stmt> chain_stmt read_stmt readc_stmt reade_stmt readp_stmt readpe_stmt
 %type <stmt> write_stmt update_stmt delete_stmt setll_stmt setgt_stmt exfmt_stmt
 %type <expr> expression or_expr and_expr not_expr comparison_expr additive_expr multiplicative_expr power_expr unary_expr postfix_expr primary_expr eval_target
@@ -918,88 +989,78 @@ xml_into_stmt:
     }
     ;
 
+/* DATA-INTO and DATA-GEN name their parser or generator, as IBM i requires:
+   DATA-INTO needs %PARSER as its third operand (RNF5449), DATA-GEN needs %GEN
+   (RNF5454). Each takes a name and optional options, %PARSER('JSON' : 'x').
+   The built-in JSON and CSV handlers stand in for the named program: a name
+   containing CSV selects CSV, any other selects JSON. */
 data_into_stmt:
-    KW_DATA_INTO ident BIF_DATA LPAREN expression COLON expression RPAREN BIF_PARSER LPAREN expression RPAREN SEMICOLON {
-        $$ = new rpg::DataIntoStmt(std::string($2),
-            std::unique_ptr<rpg::Expression>($5),
-            std::unique_ptr<rpg::Expression>($7),
-            std::unique_ptr<rpg::Expression>($11));
-        free($2);
+    KW_DATA_INTO ident BIF_DATA LPAREN arg_list RPAREN BIF_PARSER LPAREN arg_list RPAREN SEMICOLON {
+        $$ = makeDataInto($2, $5, $9);
     }
-    | KW_DATA_INTO ident BIF_DATA LPAREN expression COLON expression RPAREN SEMICOLON {
-        $$ = new rpg::DataIntoStmt(std::string($2),
-            std::unique_ptr<rpg::Expression>($5),
-            std::unique_ptr<rpg::Expression>($7),
-            nullptr);
-        free($2);
+    | KW_DATA_INTO ident BIF_DATA LPAREN arg_list RPAREN SEMICOLON {
+        yyerror("DATA-INTO: the third operand must be %PARSER, e.g. %PARSER('JSON') (IBM: RNF5449)");
+        $$ = makeDataInto($2, $5, nullptr);
     }
-    | KW_DATA_INTO ident BIF_DATA LPAREN expression RPAREN BIF_PARSER LPAREN expression RPAREN SEMICOLON {
-        $$ = new rpg::DataIntoStmt(std::string($2),
-            std::unique_ptr<rpg::Expression>($5),
-            nullptr,
-            std::unique_ptr<rpg::Expression>($9));
-        free($2);
-    }
-    | KW_DATA_INTO ident BIF_DATA LPAREN expression RPAREN SEMICOLON {
-        $$ = new rpg::DataIntoStmt(std::string($2),
-            std::unique_ptr<rpg::Expression>($5),
-            nullptr, nullptr);
-        free($2);
+    | KW_DATA_INTO ident BIF_DATA LPAREN arg_list RPAREN BIF_GEN LPAREN arg_list RPAREN SEMICOLON {
+        yyerror("DATA-INTO: the third operand must be %PARSER, not %GEN (IBM: RNF5449)");
+        $$ = makeDataInto($2, $5, $9);
     }
     ;
 
 data_gen_stmt:
-    KW_DATA_GEN ident BIF_DATA LPAREN expression COLON expression RPAREN BIF_PARSER LPAREN expression RPAREN SEMICOLON {
-        $$ = new rpg::DataGenStmt(std::string($2),
-            std::unique_ptr<rpg::Expression>($5),
-            std::unique_ptr<rpg::Expression>($7),
-            std::unique_ptr<rpg::Expression>($11));
-        free($2);
+    KW_DATA_GEN ident BIF_DATA LPAREN arg_list RPAREN BIF_GEN LPAREN arg_list RPAREN SEMICOLON {
+        $$ = makeDataGen($2, $5, $9);
     }
-    | KW_DATA_GEN ident BIF_DATA LPAREN expression COLON expression RPAREN SEMICOLON {
-        $$ = new rpg::DataGenStmt(std::string($2),
-            std::unique_ptr<rpg::Expression>($5),
-            std::unique_ptr<rpg::Expression>($7),
-            nullptr);
-        free($2);
+    | KW_DATA_GEN ident BIF_DATA LPAREN arg_list RPAREN SEMICOLON {
+        yyerror("DATA-GEN: the third operand must be %GEN, e.g. %GEN('JSON') (IBM: RNF5454)");
+        $$ = makeDataGen($2, $5, nullptr);
     }
-    | KW_DATA_GEN ident BIF_DATA LPAREN expression RPAREN BIF_PARSER LPAREN expression RPAREN SEMICOLON {
-        $$ = new rpg::DataGenStmt(std::string($2),
-            std::unique_ptr<rpg::Expression>($5),
-            nullptr,
-            std::unique_ptr<rpg::Expression>($9));
-        free($2);
-    }
-    | KW_DATA_GEN ident BIF_DATA LPAREN expression RPAREN SEMICOLON {
-        $$ = new rpg::DataGenStmt(std::string($2),
-            std::unique_ptr<rpg::Expression>($5),
-            nullptr, nullptr);
-        free($2);
+    | KW_DATA_GEN ident BIF_DATA LPAREN arg_list RPAREN BIF_PARSER LPAREN arg_list RPAREN SEMICOLON {
+        yyerror("DATA-GEN: the third operand must be %GEN, not %PARSER (IBM: RNF5454)");
+        $$ = makeDataGen($2, $5, $9);
     }
     ;
 
+/* SND-MSG {type} message {%TARGET(target {: offset})}. The type is one of
+   IBM's six; with none, *INFO. TYPE(*INFO) is not IBM's syntax: IBM reads
+   TYPE as a variable name (RNF0203/RNF7030). */
 snd_msg_stmt:
-    KW_SND_MSG KW_STAR_ESCAPE expression SEMICOLON {
-        $$ = new rpg::SndMsgStmt("ESCAPE", std::unique_ptr<rpg::Expression>($3));
+    KW_SND_MSG snd_msg_type expression snd_msg_target SEMICOLON {
+        $$ = new rpg::SndMsgStmt($2, std::unique_ptr<rpg::Expression>($3));
+        free($2);
     }
-    | KW_SND_MSG KW_STAR_INFO expression SEMICOLON {
-        $$ = new rpg::SndMsgStmt("INFO", std::unique_ptr<rpg::Expression>($3));
-    }
-    | KW_SND_MSG KW_STAR_DIAG expression SEMICOLON {
-        $$ = new rpg::SndMsgStmt("DIAG", std::unique_ptr<rpg::Expression>($3));
-    }
-    | KW_SND_MSG KW_TYPE LPAREN KW_STAR_ESCAPE RPAREN expression SEMICOLON {
-        $$ = new rpg::SndMsgStmt("ESCAPE", std::unique_ptr<rpg::Expression>($6));
-    }
-    | KW_SND_MSG KW_TYPE LPAREN KW_STAR_INFO RPAREN expression SEMICOLON {
-        $$ = new rpg::SndMsgStmt("INFO", std::unique_ptr<rpg::Expression>($6));
-    }
-    | KW_SND_MSG KW_TYPE LPAREN KW_STAR_DIAG RPAREN expression SEMICOLON {
-        $$ = new rpg::SndMsgStmt("DIAG", std::unique_ptr<rpg::Expression>($6));
-    }
-    | KW_SND_MSG expression SEMICOLON {
+    | KW_SND_MSG expression snd_msg_target SEMICOLON {
         $$ = new rpg::SndMsgStmt("INFO", std::unique_ptr<rpg::Expression>($2));
     }
+    | KW_SND_MSG KW_TYPE LPAREN snd_msg_type RPAREN expression SEMICOLON {
+        yyerror("SND-MSG: write the message type directly, e.g. SND-MSG *INFO 'text'; "
+                "TYPE(...) is not SND-MSG syntax (IBM: RNF0203)");
+        $$ = new rpg::SndMsgStmt($4, std::unique_ptr<rpg::Expression>($6));
+        free($4);
+    }
+    ;
+
+snd_msg_type:
+    KW_STAR_INFO     { $$ = strdup("INFO"); }
+    | KW_STAR_DIAG   { $$ = strdup("DIAG"); }
+    | KW_STAR_ESCAPE { $$ = strdup("ESCAPE"); }
+    | KW_STAR_COMP   { $$ = strdup("COMP"); }
+    | KW_STAR_STATUS { $$ = strdup("STATUS"); }
+    | KW_STAR_NOTIFY { $$ = strdup("NOTIFY"); }
+    ;
+
+/* %TARGET names a call-stack entry or the external message queue. Here every
+   message goes to stderr, so the target is accepted and has no effect. */
+snd_msg_target:
+    /* empty */ %empty
+    | BIF_TARGET LPAREN snd_target_entry RPAREN
+    | BIF_TARGET LPAREN snd_target_entry COLON expression RPAREN { delete $5; }
+    ;
+
+snd_target_entry:
+    KW_STAR_CALLER | KW_STAR_SELF | KW_STAR_EXT
+    | expression { delete $1; }
     ;
 
 in_da_stmt:

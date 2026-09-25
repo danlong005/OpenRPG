@@ -29,7 +29,7 @@ DCL-S jsonPartial VARCHAR(200);
 // Test 1: Basic DATA-INTO with case=any
 jsonData = '{"name":"Alice","age":30,"city":"Boston"}';
 
-DATA-INTO person %DATA(jsonData : 'doc=string case=any');
+DATA-INTO person %DATA(jsonData : 'doc=string case=any') %PARSER('JSON');
 
 DSPLY ('Name: ' + person.name);
 DSPLY ('Age: ' + %CHAR(person.age));
@@ -37,7 +37,7 @@ DSPLY ('City: ' + person.city);
 
 jsonProduct = '{"id":42,"price":19.99,"qty":100,"label":"Widget"}';
 
-DATA-INTO product %DATA(jsonProduct : 'case=any');
+DATA-INTO product %DATA(jsonProduct : 'case=any') %PARSER('JSON');
 
 DSPLY ('ID: ' + %CHAR(product.id));
 DSPLY ('Price: ' + %CHAR(product.price));
@@ -46,7 +46,7 @@ DSPLY ('Label: ' + product.label);
 
 jsonPartial = '{"x":7}';
 
-DATA-INTO partial %DATA(jsonPartial : 'case=any');
+DATA-INTO partial %DATA(jsonPartial : 'case=any') %PARSER('JSON');
 
 DSPLY ('X: ' + %CHAR(partial.x));
 DSPLY ('Y: ' + %CHAR(partial.y));

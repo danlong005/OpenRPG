@@ -475,11 +475,11 @@ run_test "111" "%ELEM(*ALLOC)/%ELEM(*KEEP)" "$TESTDIR/test111_elem_alloc.rpgle" 
 # 112: DATA-INTO with %PARSER('CSV')
 run_test "112" "DATA-INTO CSV parsing" "$TESTDIR/test112_data_into_csv.rpgle" "run"
 
-# 113: DATA-GEN with %PARSER('CSV')
+# 113: DATA-GEN with %GEN('CSV')
 run_test "113" "DATA-GEN CSV generation" "$TESTDIR/test113_data_gen_csv.rpgle" "run"
 
-# 114: DATA-INTO / DATA-GEN with explicit %PARSER('JSON')
-run_test "114" "DATA-INTO/GEN %PARSER('JSON')" "$TESTDIR/test114_data_into_json_parser.rpgle" "run"
+# 114: DATA-INTO with %PARSER('JSON'), DATA-GEN with %GEN('JSON')
+run_test "114" "DATA-INTO %PARSER / DATA-GEN %GEN" "$TESTDIR/test114_data_into_json_parser.rpgle" "run"
 
 # 115: DUMP opcode
 run_test "115" "DUMP opcode" "$TESTDIR/test115_dump.rpgle" "run"
@@ -830,6 +830,9 @@ run_test "271" "Reject END-PR after an OVERLOAD prototype" "$TESTDIR/test271_err
 run_test "272" "Reject an OVERLOAD candidate with another return type" "$TESTDIR/test272_err_overload_return.rpgle" "error"
 run_test "273" "Reject a call that fits two OVERLOAD candidates" "$TESTDIR/test273_err_overload_ambiguous.rpgle" "error"
 run_test "274" "Reject a call that fits no OVERLOAD candidate" "$TESTDIR/test274_err_overload_no_match.rpgle" "error"
+run_test "275" "Reject DATA-INTO without %PARSER" "$TESTDIR/test275_err_data_into_no_parser.rpgle" "error"
+run_test "276" "Reject DATA-GEN without %GEN" "$TESTDIR/test276_err_data_gen_no_gen.rpgle" "error"
+run_test "277" "Reject SND-MSG TYPE(...)" "$TESTDIR/test277_err_snd_msg_type.rpgle" "error"
 
 # ── Customer / drop-in tests ─────────────────────────────────────────────
 # Drop any .rpgle or .sqlrpgle file into tests/customer/ and it will be

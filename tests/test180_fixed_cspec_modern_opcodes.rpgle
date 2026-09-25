@@ -6,7 +6,7 @@
      Dage                            10I 0
      C                   EVAL      js = '{"name":"Alice","age":30}'
      C                   DATA-INTO person %DATA(js :
-     C                             'case=any')
+     C                             'case=any') %PARSER('JSON')
      C                   EVAL      r = 'Name: ' + person.name
      C     r             DSPLY
      C                   EVAL      r = 'Age: ' + %CHAR(person.age)

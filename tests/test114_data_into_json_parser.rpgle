@@ -1,6 +1,6 @@
 **FREE
 
-// Test 114: DATA-INTO / DATA-GEN with explicit %PARSER('JSON')
+// Test 114: DATA-INTO with %PARSER('JSON'), DATA-GEN with %GEN('JSON')
 // Behavior must be identical to omitting %PARSER entirely.
 
 DCL-DS person QUALIFIED;
@@ -27,7 +27,7 @@ person.name = 'Eve';
 person.age  = 35;
 person.city = 'Denver';
 
-DATA-GEN person %DATA(jsonOut) %PARSER('JSON');
+DATA-GEN person %DATA(jsonOut) %GEN('JSON');
 
 dspLine = jsonOut;
 DSPLY dspLine;

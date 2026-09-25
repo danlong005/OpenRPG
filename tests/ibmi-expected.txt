@@ -29,3 +29,11 @@ test11e_unmatched_paren.rpgle  reject  syntax-error test
 # OpenRPG extensions: accepted by rpgc on purpose, rejected by IBM i.
 test61_no_free.rpgle                 reject  OpenRPG extension: free-form without **FREE; IBM i requires the directive
 test85_getenv.rpgle                  reject  OpenRPG extension: %GETENV has no IBM i equivalent (IBM: RNF0604, not a built-in)
+
+# rpgc names the database FILE on WRITE/UPDATE/DELETE; IBM i requires the
+# record FORMAT name (RNF5063). Deliberately not compatible: TODO.md,
+# "Record formats -- a platform divergence".
+test105_rla_write_upd_del.rpgle          reject  database record formats: rpgc uses the file name (RNF5063)
+test146_fixed_cspec_write_upd_del.rpgle  reject  database record formats: rpgc uses the file name (RNF5063)
+test219_prog_order_release.sqlrpgle      reject  database record formats: rpgc uses the file name (RNF5063)
+test238_rla_field_fit.rpgle              reject  database record formats: rpgc uses the file name (RNF5063)

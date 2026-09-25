@@ -1184,7 +1184,9 @@ and found real differences in the other 6:
   VALUES(:ds)`. rpgc now supports both. One array per column with a trailing
   `FOR :n ROWS` still works and is still tested, under `/IF DEFINED(*OPENRPG)`.
 - `test105`, `test219`, `test238`: `RNF5063`, the database record-format
-  divergence below. Not changed.
+  divergence below. Not changed, by decision (2026-09-25): no `/IF` workaround
+  either. Those tests and `test146` are expected IBM rejections in
+  `tests/ibmi-expected.txt`.
 
 Found on the way, not fixed: `CLEAR` on a DS array (`DCL-DS ... DIM(n)`)
 generates no code, so the array keeps its values.

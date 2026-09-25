@@ -5,77 +5,77 @@
    "rpgc": "accept",
    "sha256": "3bc3409889a69747f23075f7be45069c595f6566fee395215726d8f2ceff606e",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "NETPAY.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "4055a6e736b924d355f47397847c9ede7090d7085a68a968e78801e22c9c0ec5",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test01_hello.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "e69f4962b809737e82c97fc7589d93e577e3cd2d2fbe65d067a5bd7e552cd56a",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test02_arithmetic.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "dea2d9696497d3f2fa6335d30f6b128928abd4dafaaede7e1631d941fe770a84",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test03_types.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "ce99cf73d6a6cd4122cbe33312eed617b06713715c95f7374d649ef2f908e208",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test04_bifs.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "3b352119f3f24331af9eb6e72349a86162fc674e0e7fc656773a08fa417d5f96",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test05_if.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "39e42a6fbd7a65b717182fd82984ca5443fbc94bb14ccad3515d134d333326bb",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test06_loops.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "bc0c9b494a3e2261549da8be3214e5485892cad03c38efd91f3a9241d3337bc9",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test07_select.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "839d605c26c2714f47aa25c1a35d95f911115b4d0c2b6794ad1c1557c32bb78a",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test08_procedures.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "111d5b993b81db6dac435f2aad1e3c0ee1484a6c697c2ddecbd97bd26ea68879",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test09_datastructs.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "c25152dda4ecb254ed1d46f1ca58d612a041cda802f0303a89b5bfe8a98441fa",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test100_data_gen.rpgle": {
    "codes": [],
@@ -156,14 +156,14 @@
    "rpgc": "accept",
    "sha256": "fa2cc66b3a2f43f4eae8034cc05e62644c8c2b2aa3e189d243db0d3db6f776d2",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test108_rla_conf.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "ccf95e9c64b02ef869930971867c96c1bfda66c617845b78c8a6bb6bd88cf41e",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test109_sql_indicator.sqlrpgle": {
    "codes": [],
@@ -177,14 +177,14 @@
    "rpgc": "accept",
    "sha256": "aa22cf06f5cdf111b140ef3dfbf028f0e3bf07b2e9a08dc3fb2e37628493296d",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test110_overload.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "05e1aba8ba2f4d96d29eaba2cf6ea1b7b5c01d785ed84dc4bad9b91bf3b0751f",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test111_elem_alloc.rpgle": {
    "codes": [],
@@ -198,7 +198,7 @@
    "rpgc": "accept",
    "sha256": "d2c210af59ae16b9e6fab7c6e8d213c9a77a27e41b10b745b4c20fbbcb9c80cd",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test113_data_gen_csv.rpgle": {
    "codes": [],
@@ -219,21 +219,21 @@
    "rpgc": "accept",
    "sha256": "b479efb6137e93ea6f91fa7a524423a16eb4e6c400a0f27f2cba4c11b62b6dfa",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test116_fixed_hd.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "2d908398eeaa538d2f7c781bfae2937bb7cd6b579a1f1cf9e821d464a2e5d6b7",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test117_fixed_free_hello.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "35b853e51274958bed474d8a0c0e728d324ddae1d28bc12b29987b84e836f5a1",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test118_fixed_rla_chain.rpgle": {
    "codes": [],
@@ -259,7 +259,7 @@
    "rpgc": "reject",
    "sha256": "46abf9772d40eeb107065fe8df59f0de89be0ba77eb7f3d589a3f5fec5428851",
    "verdict": "reject",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test11_errors.rpgle": {
    "codes": [
@@ -291,7 +291,7 @@
    "rpgc": "reject",
    "sha256": "7721bdebfdd52044066ba9e77efdf2aeb7445139538a8928a2376404a9f1fbe3",
    "verdict": "reject",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test11a_missing_semi.rpgle": {
    "codes": [
@@ -317,7 +317,7 @@
    "rpgc": "reject",
    "sha256": "315fd9bbe849d83f4dc38ed81766f1afce9819fa5cb9196e82d12abf49c1784a",
    "verdict": "reject",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test11b_bad_type.rpgle": {
    "codes": [
@@ -350,7 +350,7 @@
    "rpgc": "reject",
    "sha256": "a7a4945668f14e5bf2f9bec7d4f151438098962a938bc20f90940e5fa6408a69",
    "verdict": "reject",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test11c_unmatched_if.rpgle": {
    "codes": [
@@ -369,7 +369,7 @@
    "rpgc": "reject",
    "sha256": "a243aeddb42a64dfd19e6aca1c4936d3718e001fb6e609a8b9de92943c66a4af",
    "verdict": "reject",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test11d_bad_expr.rpgle": {
    "codes": [
@@ -388,7 +388,7 @@
    "rpgc": "reject",
    "sha256": "8dbe463c9db90411c389719d1024309bf5c1a4e74ae64f516e8dd7e881bdda84",
    "verdict": "reject",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test11e_unmatched_paren.rpgle": {
    "codes": [
@@ -407,35 +407,35 @@
    "rpgc": "reject",
    "sha256": "797df5768ad5bbcb75ee26c683b2248e16afe84272ffeb5f7e7849d1f49f14f5",
    "verdict": "reject",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test120_fixed_varchar.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "3b0dbd8d4466705ba85ccd1ff838228301ab08051f04a309b8453a68413956e5",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test121_fixed_varchar_subfield.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "33def5c1c7fe7c63448e29c93e2d1fb17333d00db6de326541a7fd4dc85370cd",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test122_fixed_rla_chain_varchar.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "2829fa57ed58f51c3817434b0754c9dc45575fb7e6338bc8beec51bac31436bf",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test123_fixed_ds_dim.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "ec18b308b77ca6dfd049d2557254bceb8e824f8b1f3679d7071fd651e4dab564",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test124_fixed_overlay.rpgle": {
    "codes": [],
@@ -449,77 +449,77 @@
    "rpgc": "accept",
    "sha256": "9abea2db289705bdb16399cfd089785b13fec97de4b10ae749d42311e4bfc13a",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test126_fixed_cspec_dow_dou.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "a67061c6f8d18020270a5a46638ae17b8d9fe9b9f51c3f9e1236edf208cd091f",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test127_fixed_cspec_for.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "4429b10c1355a2d15b7fdf08cf8e17d6e0c1b991c56dc7d5bebd0190d357975b",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test128_fixed_cspec_select.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "f9e888dfc9eeaad1477a3357751234bebb451923e4832377ac85bed5aa004538",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test129_fixed_cspec_subr.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "f864263af59efbc51b5ab64489d2264756a760b35e95ca4b1938d0cbf4d1a954",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test12_monitor.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "8d44e83f4c1f1dc67bd2712c11050f9163713824833dc1e72ffb5b6d03817602",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test130_fixed_cspec_eval_callp.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "21794190e7496ece89a2873c94af60156f9a32f5e0017db2396fb5386afb6532",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test131_fixed_cspec_clear_sorta.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "7abeee696d63e461c16a15aafb2a0ecb3516266f43907b00f87e07aa5b462327",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test132_fixed_cspec_monitor.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "c4c508b2501ae4a222eeab0f473444f346209c6778daa3b7525a7145117ee22d",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test133_fixed_cspec_continuation.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "83ab1cbf31a2da7af598d8a2db9e2b2bdcad71eabb45b79b4773dd634852908a",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test134_fixed_cspec_mixed_free.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "e8161c77a816606668da50422ffd66ba200ffbf62f9feaf46434ed2fe5426bf6",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test135_fixed_cspec_err_ctllevel.rpgle": {
    "codes": [
@@ -545,7 +545,7 @@
    "rpgc": "reject",
    "sha256": "db9c24a7c4ca57664bce758284eb3461521e73163fd41e56c72b53fffa1d05d9",
    "verdict": "reject",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test136_fixed_cspec_err_indicator.rpgle": {
    "codes": [
@@ -571,7 +571,7 @@
    "rpgc": "reject",
    "sha256": "147e675730302f37c7707edf0f1b8813a0590ed3a450f301b95ffe36c809c443",
    "verdict": "reject",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test137_fixed_cspec_err_deferred.rpgle": {
    "codes": [
@@ -597,7 +597,7 @@
    "rpgc": "reject",
    "sha256": "97bba98ef7cc94dc57f4e1ded12546a0b0efa3a282c941abafcda82b42d8f303",
    "verdict": "reject",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test138_fixed_cspec_err_legacy.rpgle": {
    "codes": [
@@ -616,82 +616,42 @@
    "rpgc": "reject",
    "sha256": "97eff20ba211ba41cca87af43a78344ee4e23b27bde0fa3d4004cb3b2c1b20e7",
    "verdict": "reject",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test139_fixed_copy_dspec.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "0405bee3ed21585fcb52d07fa51f6640a36d5c25d8153e77659655a847e28ef2",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test13_subroutines.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "4e544ab89f84b6a274fc7e979e0e19f7ff0a4f8f1874284a3a8fb7a9d12fc4a4",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test140_fixed_copy_cspec.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "a059378740b7ee8fe5fd8106642d2c370dbc8649853c778fa82ec38e5fa605de",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test141_fixed_copy_nested.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "1152b26455ccb0fa5cf5a007f2ab25bcf8d50b781f211c37190b78f73bf38427",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test142_fixed_copy_in_free.rpgle": {
-   "codes": [
-    "RNF0257",
-    "RNF0289",
-    "RNF4005",
-    "RNF4020",
-    "RNF4026",
-    "RNF4027",
-    "RNF4029",
-    "RNF4073",
-    "RNF4278",
-    "RNF7030",
-    "RNF7503"
-   ],
-   "messages": [
-    {
-     "code": "RNF7030",
-     "line": 5,
-     "severity": 30,
-     "text": "The name or indicator SHARED_VAL is not defined."
-    },
-    {
-     "code": "RNF7503",
-     "line": 5,
-     "severity": 30,
-     "text": "Expression contains an operand that is not defined."
-    },
-    {
-     "code": "RNF7030",
-     "line": 6,
-     "severity": 30,
-     "text": "The name or indicator SHARED_MSG is not defined."
-    },
-    {
-     "code": "RNF7503",
-     "line": 6,
-     "severity": 30,
-     "text": "Expression contains an operand that is not defined."
-    }
-   ],
-   "reason": "Undefined name, cause not reported by IBM (RNF7030)",
-   "reason_detail": "line 5: The name or indicator SHARED_VAL is not defined.",
+   "codes": [],
    "rpgc": "accept",
    "sha256": "81af51af8cfa1604fb9a9217b45acee6cf93f5a3f7cae80e64b06105d5691c88",
-   "verdict": "reject",
-   "verified": "2026-09-24"
+   "verdict": "accept",
+   "verified": "2026-09-25"
   },
   "test143_fixed_copy_err_missing.rpgle": {
    "codes": [
@@ -710,21 +670,21 @@
    "rpgc": "reject",
    "sha256": "2812bb9654834cfd0f0a5093a3fcdf7db35c8989c9680ba310bb8f208d30cf28",
    "verdict": "reject",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test144_fixed_cspec_chain.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "94dfa622c07e8bab8b5da6ac6452147a7e4a6245424e43e048304e1c22378f8e",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test145_fixed_cspec_read.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "6b2b7a822013d1117b32d1c0357a4ec5781ba58c100276c4928830ca9a6f7a58",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test146_fixed_cspec_write_upd_del.rpgle": {
    "codes": [
@@ -756,49 +716,49 @@
    "rpgc": "accept",
    "sha256": "862e08e19961fda38aaaf1137623736decc8add8201524b17a86faaf731d2340",
    "verdict": "reject",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test147_fixed_cspec_setll_reade.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "d35384f96419ffc12be71bb63e5963eaea1dc88c5da19a4301860fca767bbe04",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test148_fixed_cspec_goto_tag.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "10dd6290c218babd31ec422da6ad4612049591dedd09e7d7b571f569456ba128",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test149_fixed_cspec_goto_in_begsr.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "6430806a8d6623a1e26509fbf5bc0e261e70a941b0ee930a261dd394c0b0cd26",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test14_indicators.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "c5db3881b1dd2dcea8c99fef4bf3d355281a19d7d4404f30dfb68c2434f732c4",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test150_fixed_cspec_arith.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "8b4c330ff8d3de2def89e31b9df32a55ee69a8d455379ad6a5fa61259a6f5b92",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test151_fixed_cspec_zadd_zsub.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "9316c2df41c299133649a17425e1aeca403a1950c0fdace0ab1fdb3bd5679196",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test152_fixed_cspec_err_goto_in_free.rpgle": {
    "codes": [
@@ -831,7 +791,7 @@
    "rpgc": "reject",
    "sha256": "642734e28c2f983443f0d5043430c2c36fdd23cf556f94a8461dc647734f987b",
    "verdict": "reject",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test153_fixed_cspec_err_call_deferred.rpgle": {
    "codes": [
@@ -857,7 +817,7 @@
    "rpgc": "reject",
    "sha256": "39f3f66ef12dac1288d5f95505cf571966ceb5240d427f8685b3486ee6d93ec6",
    "verdict": "reject",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test154_fixed_ispec_single.rpgle": {
    "codes": [],
@@ -899,14 +859,14 @@
    "rpgc": "reject",
    "sha256": "5ca2591ccb80dd941dca6936d90796f822214eb4ce8509515c598725fa10328a",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test15_dou.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "6753abba7a2acf88ebc3a3ed9771ca931a9e185b5caf36501945e016a05856a0",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test160_fixed_ispec_err_matching.rpgle": {
    "codes": [
@@ -925,14 +885,14 @@
    "rpgc": "reject",
    "sha256": "adeebb4dae0f0df950fd1f0274355096d01191830467f1648c0176cc82137164",
    "verdict": "reject",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test161_fixed_subf_dim.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "bcc0c136f71311b59774a9a24d4ed05cede70ae67c84525f4d75d6ee062a17fc",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test162_fixed_subf_like.rpgle": {
    "codes": [],
@@ -953,7 +913,7 @@
    "rpgc": "accept",
    "sha256": "3c9bf1fd2919bfea62dbfd75528f595be1a71cf6e669f50fbb386fbf50bcce5e",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test165_fixed_cspec_err_cond_block.rpgle": {
    "codes": [
@@ -972,7 +932,7 @@
    "rpgc": "reject",
    "sha256": "37e33281e40a1e46f30f37693e3f03c6d81a886637b2abd0917545d0c4ac9a76",
    "verdict": "reject",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test166_fixed_cspec_err_cond_ind_name.rpgle": {
    "codes": [
@@ -991,14 +951,14 @@
    "rpgc": "reject",
    "sha256": "6248f8273c18190ee16d7143f33ce3a00f3482bb947fd07ec7923864d7f7ee7d",
    "verdict": "reject",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test167_fixed_cspec_cond_anor.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "49aa1111c4dec3d87b7b17acba1a417600d40e1d2779687604f6eac29fe05e29",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test168_fixed_cspec_err_anor_orphan.rpgle": {
    "codes": [
@@ -1024,7 +984,7 @@
    "rpgc": "reject",
    "sha256": "b8ffde7ea0864d4d51055e3711578c3588867f440f7b9ac26c7e12aba2b5c328",
    "verdict": "reject",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test169_fixed_cspec_err_anor_dangling.rpgle": {
    "codes": [
@@ -1044,68 +1004,21 @@
    "rpgc": "reject",
    "sha256": "c621a864fc11032ce039e117ffb58547a70bbb3b60d5c72579b2856ac63244df",
    "verdict": "reject",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test16_copy.rpgle": {
-   "codes": [
-    "RNF0257",
-    "RNF0289",
-    "RNF0724",
-    "RNF4005",
-    "RNF4020",
-    "RNF4026",
-    "RNF4027",
-    "RNF4029",
-    "RNF4073",
-    "RNF4278",
-    "RNF7030",
-    "RNF7503"
-   ],
-   "messages": [
-    {
-     "code": "RNF0724",
-     "line": 3,
-     "severity": 30,
-     "text": "The statement type is out of sequence for the main procedure."
-    },
-    {
-     "code": "RNF7030",
-     "line": 4,
-     "severity": 30,
-     "text": "The name or indicator LOCAL_VAL is not defined."
-    },
-    {
-     "code": "RNF7030",
-     "line": 4,
-     "severity": 30,
-     "text": "The name or indicator SHARED_VAL is not defined."
-    },
-    {
-     "code": "RNF7503",
-     "line": 4,
-     "severity": 30,
-     "text": "Expression contains an operand that is not defined."
-    },
-    {
-     "code": "RNF7030",
-     "line": 5,
-     "severity": 30,
-     "text": "The name or indicator SHARED_MSG is not defined."
-    }
-   ],
-   "reason": "RNF0724: The statement type is out of sequence for the main procedure.",
-   "reason_detail": "line 3: The statement type is out of sequence for the main procedure. \u2014 `DCL-S local_val INT(10);`",
+   "codes": [],
    "rpgc": "accept",
    "sha256": "3dd7c3bed7f22da604406adee0ec8f16e65a8b825ba697808408a98754321298",
-   "verdict": "reject",
-   "verified": "2026-09-24"
+   "verdict": "accept",
+   "verified": "2026-09-25"
   },
   "test170_fixed_cspec_move.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "8767993ae135d4ad65cb6ee0e8b5637488063e3a1dacd15a8f15eeac542f1754",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test171_fixed_cspec_err_move_date_time.rpgle": {
    "codes": [
@@ -1124,7 +1037,7 @@
    "rpgc": "reject",
    "sha256": "3a4a6eebc28aac1704e050d9a62b079487be2a089bb8bfa33b95050d6bebd560",
    "verdict": "reject",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test172_fixed_cspec_err_move_datefmt.rpgle": {
    "codes": [
@@ -1143,7 +1056,7 @@
    "rpgc": "reject",
    "sha256": "94b3a1466416324b92e7c1d7600c9d5891ad56ce9733a48914c0e8174c6b7096",
    "verdict": "reject",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test173_move_err_free_format.rpgle": {
    "codes": [
@@ -1170,21 +1083,21 @@
    "rpgc": "reject",
    "sha256": "24c83539ab5410f66c6a376954b60a7ef12d8498e19481a3db803bf7731ff6d0",
    "verdict": "reject",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test174_call_callee_module.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "6d7d65a572a02d0ac93a46756d92d6ceef738941d080ebf1611296b33af097b2",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test175_fixed_cspec_call_parm.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "a94b47088a9b9d73c273cdfeba989d606f61d213f6e0304d65fb2515fb237aff",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test176_fixed_cspec_err_plist.rpgle": {
    "codes": [
@@ -1203,14 +1116,14 @@
    "rpgc": "reject",
    "sha256": "d6991892865c865ce2b6734b61860f3d146ed838f5cc94389f456eed91f5c7df",
    "verdict": "reject",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test177_fixed_cspec_err_call_dynamic.rpgle": {
    "codes": [],
    "rpgc": "reject",
    "sha256": "088d02fc47f0d59c513743f65fc81b76291c574d61bd098e02f38f380f3edeef",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test178_fixed_cspec_err_parm_orphan.rpgle": {
    "codes": [
@@ -1229,7 +1142,7 @@
    "rpgc": "reject",
    "sha256": "d2fc5f80c38cd8c66d038cd193abb1f1a9b109b108e8a4c29b968924cda59cba",
    "verdict": "reject",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test179_call_err_free_format.rpgle": {
    "codes": [
@@ -1256,14 +1169,14 @@
    "rpgc": "reject",
    "sha256": "05a9f25f7b8b3c4c344a8a6cb6514c2920ae57edf9f661f28f466d4a64956d82",
    "verdict": "reject",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test17_constants.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "65a012b7988260f7e31d91d341c64616c218f8c543de3de169b555e279dbfb4f",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test180_fixed_cspec_modern_opcodes.rpgle": {
    "codes": [],
@@ -1289,7 +1202,7 @@
    "rpgc": "reject",
    "sha256": "ec872959b63ec82f31f1c85a49d06a5782add5597ac905ef0e01aba26b8e1b07",
    "verdict": "reject",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test182_fixed_cspec_cas_cab.rpgle": {
    "codes": [],
@@ -1315,7 +1228,7 @@
    "rpgc": "reject",
    "sha256": "43b1a9c8a98dbe7b03f920a0f35b645e9f462856093f25bed90196e3c7fa15fe",
    "verdict": "reject",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test184_fixed_cspec_err_cas_unclosed.rpgle": {
    "codes": [
@@ -1334,7 +1247,7 @@
    "rpgc": "reject",
    "sha256": "9b3c1abc9254548e6e9f2c8c429992a9894f77d9b3be6b6882b47302228b3273",
    "verdict": "reject",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test185_fixed_cspec_err_cas_mnemonic.rpgle": {
    "codes": [
@@ -1360,14 +1273,14 @@
    "rpgc": "reject",
    "sha256": "75b5c78267ef068e039c207a5735cfa18e035dcf942d68430a96720cf3598878",
    "verdict": "reject",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test186_fixed_cspec_comp.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "c6f7cdab4fba8549d2423deb8942750b5ee36e3d74d1345d56d0b1933f662d37",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test187_fixed_cspec_err_comp_noind.rpgle": {
    "codes": [
@@ -1386,7 +1299,7 @@
    "rpgc": "reject",
    "sha256": "ae716889b7b5923887cefca504c5d0a17c9b2b1b31921c1f65e90521c2cdd4c5",
    "verdict": "reject",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test188_fixed_cspec_exec_sql.sqlrpgle": {
    "codes": [],
@@ -1412,7 +1325,7 @@
    "rpgc": "reject",
    "sha256": "ff79b75cebd0788998cc12694de4199ddda11a920fe1a59b224900eaa87868c8",
    "verdict": "reject",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test18_datetime.rpgle": {
    "codes": [],
@@ -1436,28 +1349,28 @@
    "rpgc": "reject",
    "sha256": "2c31e2e9e5f72973eea1e6510e2a1c7a8de599f260e092940f56426f7570e1db",
    "verdict": "reject",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test191_fixed_cspec_move_num.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "63eb363f81ce89d1f92e2d65749405991aafdf25077614bdc7aebcd5f29c3b69",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test192_fixed_cspec_move_char_to_num.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "b41e03d0872e5bafd7466dbe3db057b897a7cfa7b5d4016d24d055ee55c28071",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test193_fixed_cspec_move_num_to_char.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "b43fae4223739360ee5ba0516f24bca488f78f76affa54dcbe1739f97d6ea753",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test194_fixed_cspec_err_move_float.rpgle": {
    "codes": [
@@ -1476,35 +1389,35 @@
    "rpgc": "reject",
    "sha256": "36ad26f3c1cf4470af79a3e3640fd2221f1da7a804e2bf6e430b259b765b9881",
    "verdict": "reject",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test195_fixed_cspec_err_move_declit.rpgle": {
    "codes": [],
    "rpgc": "reject",
    "sha256": "66830b57074811f28f4a2735aa3e8db7a0cd05a4c9d9d77dafef5086cb4aee78",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test196_fixed_cspec_move_data_exc.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "e1a6707759d25a2b827976aa49a83ef2c7343c778673b1e8995209eeb8253120",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test197_fixed_cspec_plist.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "c4ae0cb004e9246b1e593ec11c8dcd9ee2852e5706c6646248f6fd0d4b1ac63a",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test198_fixed_cspec_parm_f1f2.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "3d6b0218cae5898a14d21c14ab5e0611f03e33226bacf251b55517b3d6a5c017",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test199_fixed_cspec_err_entry_nomain.rpgle": {
    "codes": [
@@ -1530,14 +1443,14 @@
    "rpgc": "reject",
    "sha256": "d02cb0ea24f191941a57ed5c9eee9fc219a04281f27eb7e7eba6119ebfc0cdf6",
    "verdict": "reject",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test19_math_bifs.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "d9df54d6e38e543da85caa31022b2132d1e6eaf4dda57fd5e7257181004e2361",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test200_fixed_cspec_err_plist_undef.rpgle": {
    "codes": [
@@ -1563,7 +1476,7 @@
    "rpgc": "reject",
    "sha256": "4a8ee859dff4ede5fe6695dfebf7cdf2bfbaf4a54b0bc1699b4a1687d026bd58",
    "verdict": "reject",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test201_fixed_cspec_err_plist_dup.rpgle": {
    "codes": [
@@ -1582,7 +1495,7 @@
    "rpgc": "reject",
    "sha256": "d9e8fd0568a7c693d08b35b4ddc536b5307cde65a135c52b92f6ccdc859dfc6c",
    "verdict": "reject",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test202_fixed_cspec_err_parm_literal.rpgle": {
    "codes": [
@@ -1601,21 +1514,21 @@
    "rpgc": "reject",
    "sha256": "04d21ba19bd64bd3c97f6e412e8e8a9e3d4a456063738af0c622506ee2852a68",
    "verdict": "reject",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test204_fixed_cspec_entry_caller.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "5b11f9ffe91f9b37a414b644d8653a02cec5982330bcc81275cac2c5bf586f1b",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test205_fixed_cspec_err_entry_f2.rpgle": {
    "codes": [],
    "rpgc": "reject",
    "sha256": "76b9a3d383657ffb81fa287f791c6e1d19c40ba8efbf2af45a459eb1277027dd",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test206_fixed_cspec_err_entry_undecl.rpgle": {
    "codes": [
@@ -1634,7 +1547,7 @@
    "rpgc": "reject",
    "sha256": "586372cd24dea87785cc3bebc1976f054965e2d0d8414d0442a023c1d23b2fee",
    "verdict": "reject",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test207_fixed_cspec_err_call_entry.rpgle": {
    "codes": [
@@ -1653,14 +1566,14 @@
    "rpgc": "reject",
    "sha256": "a3e586b6d884d76da3a71548e03981608a82dd02f1a6cbe11e6a30a0a478275d",
    "verdict": "reject",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test208_fixed_cspec_move_date.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "5cbc11758f380b30daeda764ab9bf4dc88529c5ee8efff1f1052a2e4f71c0271",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test209_fixed_cspec_move_dt_nosep.rpgle": {
    "codes": [],
@@ -1674,14 +1587,14 @@
    "rpgc": "accept",
    "sha256": "ce873e966ff68ad6abfab2172245bb3df3a8e8a42de9d30ea1b7d89e23701279",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test210_fixed_cspec_move_timestamp.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "f870041c376ef99e9336ffba6e6cb5f422ba0f80ce58a774ae0658aaf16e630d",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test211_fixed_cspec_move_dt_align.rpgle": {
    "codes": [],
@@ -1702,7 +1615,7 @@
    "rpgc": "reject",
    "sha256": "19fde2022bc67f52f98bcb9a547bedd01f4175a3fd898e54d903ba873d364368",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test214_fixed_cspec_err_move_usa_num.rpgle": {
    "codes": [
@@ -1721,7 +1634,7 @@
    "rpgc": "reject",
    "sha256": "67491bf13b7788f380abdb758e1feea70451f02378cdc3b5dbad07efa0eb118b",
    "verdict": "reject",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test215_prog_ar_aging.rpgle": {
    "codes": [
@@ -1746,14 +1659,14 @@
    "rpgc": "accept",
    "sha256": "f127a4bbf6e7699f9ab0bda0599fa510a8e14fd7154d892885615395b9a4b778",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test218_prog_payroll.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "f1866e1efb7b246a413c6d3089e3534251e15f7f8e1f2c17d7e737ca7d4abf98",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test219_prog_order_release.sqlrpgle": {
    "codes": [
@@ -1797,14 +1710,14 @@
    "rpgc": "accept",
    "sha256": "fa8a0f4f9091aa62c027afa54ff8695ddadcbb5e7bc660420690ee4194a95673",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test220_overlay_alias.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "6ca9e6950f0057c4a83c83c4cdf731296d04d04f0fb23eff5f2ce29da0f1a108",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test221_ospec_decimals.rpgle": {
    "codes": [],
@@ -1818,56 +1731,56 @@
    "rpgc": "accept",
    "sha256": "5820a237cb6459987012201ae88de4d94251afa62c4055af817010a98bee4526",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test223_editc_decimals.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "493b657b249a7298915294e1bae73a8292da679cbbaf7700bcf1bbfb46572eb2",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test224_fixed_dspec_inz.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "0d306d73030cea17cd95554115530a14b2dcd6efd3ba9b81dd529a5032c399c4",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test225_decimal_division.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "671f7cd68a77185b42771bb7eb8f8a46937fd2fd8d9793e8dd5ad4430a64917e",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test226_err_subfield_inz.rpgle": {
    "codes": [],
    "rpgc": "reject",
    "sha256": "e1c1e374387f7041babfcb568ca429880c6515dfdaa7a3331d0db6db1db012ef",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test227_proc_globals.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "70d2b9e22731ea15a3347b815840a8a951bdb8d1ef02ab75b8229a2bb9de2791",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test228_exsr_order.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "de6d78bdf7f84ba40bc4c19da234fff3ac400cfc8623d2b103efe7d0c97ef351",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test229_char_compare.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "e800db609f23a244697db4e5cb1787b03ab26a2c2d2a0c121a8c50138b53cc8a",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test22_status_error.rpgle": {
    "codes": [],
@@ -1881,21 +1794,21 @@
    "rpgc": "accept",
    "sha256": "c53ef2f57a7a7558345f9893f3f81d110827218d5809cf688f82c929d013a69f",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test231_assign_fit.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "1a51204ac5e40ff56a985a1de23492299c228ce6cabce1e1271c6a5d0db6fd0a",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test232_fixed_conditionals.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "7e9a58f1610541ecb80342f0fa6b83fc6005bff27d0d55086352806e9e4a07af",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test233_err_stray_endif.rpgle": {
    "codes": [
@@ -1914,7 +1827,7 @@
    "rpgc": "reject",
    "sha256": "35a4d30f787100cb42bc76146078fd284b219767941ab2db1623c78d75fa7215",
    "verdict": "reject",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test234_err_copy_open_if.rpgle": {
    "codes": [
@@ -1934,21 +1847,21 @@
    "rpgc": "reject",
    "sha256": "b8652c5c335d6d12de1445c544a8974e630ceb2fefdffaa8d27f745bf43b9b59",
    "verdict": "reject",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test235_copy_eof.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "d91638d834c7b246fcfd15f7924215f87febf0e0e3f45f112cbdd56cbc6025a4",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test236_assign_fit_paths.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "c9eaaeaf00500881e490d8be1e665ac9a8a943d240a38a61d5d0e5d203a4c9c6",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test237_sql_into_fit.sqlrpgle": {
    "codes": [],
@@ -1981,7 +1894,7 @@
    "rpgc": "accept",
    "sha256": "85fea203811af7c372a69bdc75eed79fbd3cf0cc3fa11488f07809ad24e86415",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test23_reset_clear.rpgle": {
    "codes": [],
@@ -1995,7 +1908,7 @@
    "rpgc": "accept",
    "sha256": "279c9aa99433fcbf49450236dd4f28d78d424fac215f0836f217a326fab6ff77",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test241_err_eval_t.rpgle": {
    "codes": [
@@ -2014,42 +1927,42 @@
    "rpgc": "reject",
    "sha256": "bdd0b25465777ab248ab3783745716ebe1694bc1cacf3117bfb608f955dc547d",
    "verdict": "reject",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test242_hex_nul.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "4b8ded7659f2e4c8c1f5f55ac7493ce2961bcefda27463877d74d7a752cb3ae9",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test243_array_init.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "2b15058d78c907a1020ba77ef2129f349c8c6c26cf6f3322fad2d9e52ccd6b3f",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test244_pi_star_n.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "e7bc9b2705883b71a63ed85929e73b8318dde4d1de5b89f25df4461c07635408",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test245_bare_call.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "291c51c23c0e984856da21e7e3c17a273b2c8c0a532f8e3054aba6967898dd44",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test246_const_params.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "1923c6012b3a5c0bcb62396082d5e1a45437e6a29e13cc0fc568ec65426bf003",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test247_err_const_assign.rpgle": {
    "codes": [
@@ -2068,63 +1981,63 @@
    "rpgc": "reject",
    "sha256": "adef7ff44111f0d75d11e3044873ce73fc25530e14d0f922b7b1e0ad5faed2bb",
    "verdict": "reject",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test248_proc_no_pi.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "1cf7537d122a8b0cdfbe8cca516bb9df0543c135054a567560f01f4dbed9ddee",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test249_ds_subfield_types.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "5041dbe6a85933b8a0d881ee64373916417e39eae4f92eac17e46cdc363b6426",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test24_max_min.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "375db5d58ebb471adbf702aeabd3ae2fd74d9c99b6a9915449cee5a1cecdae6c",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test250_dcl_s_keywords.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "ddf86b69188859f65971d950d81ad6d4a04dccbe9cbcde0dc004a66afe229e37",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test251_ds_template.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "7b90144264613994066afc6c2ad6d40a04f7daa2022867e63ea6205b6c20b235",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test252_nested_target.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "23c643605fd12d5a2a7fbe48f8add07b6cebf69b998ad5397882fb04bf7de87c",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test253_unqualified_subfields.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "078dab2c8fd6388395b2321d06abbb713635c10348718e681df0b9efd8742e27",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test254_fixed_unqualified_ds.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "e0408f7f4194ce02534db3d37f22059885cd7e295216685a1b1438faf51a4bfd",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test255_err_div_zero_literal.rpgle": {
    "codes": [
@@ -2143,7 +2056,7 @@
    "rpgc": "reject",
    "sha256": "61c0a93867c7e915f3609f5fbb89318134aaf7a3b5d73523295a95f55494b255",
    "verdict": "reject",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test256_err_inz_too_long.rpgle": {
    "codes": [
@@ -2162,7 +2075,7 @@
    "rpgc": "reject",
    "sha256": "1dac3a4ab0f3a5fbf07ba10726f480ba74045911f01f8b940f90f101552308ce",
    "verdict": "reject",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test257_err_unqualified_dot.rpgle": {
    "codes": [
@@ -2188,7 +2101,7 @@
    "rpgc": "reject",
    "sha256": "e2ca63333014daac703d157ebdf9815cb3de6d3e0740e71be79dd3e70a5c06cb",
    "verdict": "reject",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test258_err_not_numeric.rpgle": {
    "codes": [
@@ -2207,14 +2120,14 @@
    "rpgc": "reject",
    "sha256": "3de5e5924ce404656ac53f78ea2f3ad7cace208318cbd200dfdcdb49cc31aecd",
    "verdict": "reject",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test259_not_precedence.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "e9d02657ff6a11ae0f1771c5afdec3a86ec51e5038437f72d38f7b991e3b5211",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test25_dclf.rpgle": {
    "codes": [],
@@ -2254,7 +2167,7 @@
    "rpgc": "reject",
    "sha256": "77bb47acafcd2129adc85026a94a6ff2c247094bd6566990a7eebc9155a9189b",
    "verdict": "reject",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test261_err_decl_after_calc_proc.rpgle": {
    "codes": [
@@ -2287,7 +2200,7 @@
    "rpgc": "reject",
    "sha256": "8e6a8e8dcc3f6bd86bb5c83b5635e5f0106bd84a20f2388cdd31f26f02b895b0",
    "verdict": "reject",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test262_err_dsply_unparen.rpgle": {
    "codes": [
@@ -2306,7 +2219,7 @@
    "rpgc": "reject",
    "sha256": "706a70c9927ffdbd2cedc11114b59269bb24e401f04a3840185793e4e9370ab0",
    "verdict": "reject",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test263_err_dsply_too_long.rpgle": {
    "codes": [
@@ -2325,7 +2238,7 @@
    "rpgc": "reject",
    "sha256": "d4b202001227d4e17e291dec5604e1db0af9125d8037aab02ed539cb04e306e3",
    "verdict": "reject",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test264_err_pi_no_name.rpgle": {
    "codes": [
@@ -2372,7 +2285,7 @@
    "rpgc": "reject",
    "sha256": "2c5201fcd5d554b8781503e3b7cb8e77fdc43ade22de0c645af50fb345a1f27d",
    "verdict": "reject",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test265_err_pi_wrong_name.rpgle": {
    "codes": [
@@ -2391,7 +2304,7 @@
    "rpgc": "reject",
    "sha256": "ee1a241486cea9af0370657a1292bfd2a9d2ed7a3836e97680f9a36c3963a03f",
    "verdict": "reject",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test266_err_calc_after_subroutine.rpgle": {
    "codes": [
@@ -2422,35 +2335,35 @@
    "rpgc": "reject",
    "sha256": "f3deb70b114430e0cf3662260c8b7b14c67d2d9e8b0f3d60f01b0436b69c0e9b",
    "verdict": "reject",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test267_compound_assign.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "1cd148fb099d20aa48a9929d9f2268e05d8afae12358858a53bb14a0df1b541f",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test268_inlr_indicator.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "1bdf3795c36552aa573b648e7a0ff35610283f399ccb79cafe27d9dbbb60bf15",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test269_fixed_inlr.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "b8107cd1d5e4cd52bbd2659f253e5a0499960717869584c104f1da9f44d43570",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test26_pointers.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "55bf583c884f7386079c773172eeb20ce75f70be11d2ee98f337c9e9f5b2f60d",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test270_err_enum_no_value.rpgle": {
    "codes": [
@@ -2476,7 +2389,7 @@
    "rpgc": "reject",
    "sha256": "578cfff25fe2e9d53e2c188121181aa8f186dc0a95b28807a8e757bfb93a98fd",
    "verdict": "reject",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test271_err_overload_end_pr.rpgle": {
    "codes": [
@@ -2495,7 +2408,7 @@
    "rpgc": "reject",
    "sha256": "dab7afc68545a2c0ff9bfd75bc1ce8875bd0b18ff0c0d967918576ba78b02e93",
    "verdict": "reject",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test272_err_overload_return.rpgle": {
    "codes": [
@@ -2514,7 +2427,7 @@
    "rpgc": "reject",
    "sha256": "1fbd09f65d7ba24de5392ff47ac4d6189e76f28ff927ae6f7488f00dc0f51f6d",
    "verdict": "reject",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test273_err_overload_ambiguous.rpgle": {
    "codes": [
@@ -2533,7 +2446,7 @@
    "rpgc": "reject",
    "sha256": "06a99c8846eb0a3d812d3c0526dba550481a68474edbb9066af321d3722e1e3a",
    "verdict": "reject",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test274_err_overload_no_match.rpgle": {
    "codes": [
@@ -2552,7 +2465,7 @@
    "rpgc": "reject",
    "sha256": "bdc4919f8f1608b77baaab9c267e1c1bc4bda5aeccaf39461fe74e26c6e6e0d5",
    "verdict": "reject",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test275_err_data_into_no_parser.rpgle": {
    "codes": [
@@ -2675,7 +2588,7 @@
    "rpgc": "accept",
    "sha256": "9bf92eae44ecc782097f600df8bf6daf24f49793292fc433ca5fcbbad9aeb30e",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test280_err_lookup_unsequenced.rpgle": {
    "codes": [
@@ -2862,7 +2775,7 @@
    "rpgc": "accept",
    "sha256": "b04766e1d48767826d2c6f17c4469bd0a5ebbee5c2de9562e0dcee6aeb09f840",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test290_err_test_d_on_date.rpgle": {
    "codes": [
@@ -3093,7 +3006,7 @@
    "rpgc": "accept",
    "sha256": "c0d8d8f5e1013c5314eb562b5ac7eccb25a2552369659c4c9d3287f501fa86c2",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test300_err_copy_not_free.rpgle": {
    "codes": [
@@ -3178,119 +3091,119 @@
    "rpgc": "accept",
    "sha256": "612d5f93d921210592e53659e1ae9e5cbf5db1caad8538c35d1549be6c2ddec1",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test31_lookup_sorta.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "31f06f993dbc233f2761378f3d6694c65b34086f517bf9bcbb3879b0222cfa29",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test32_editc_editw.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "e17539897306e1f9d011c2aa0bbf094fa1abae6d3f1a8b40a090a54aa897f763",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test33_replace.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "f613dd01a2544d8d24a39d2866359af2b6fc419d4178dcd857fc0e5b15c11017",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test34_check.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "413835c0968f4fa00934ec5ec906cb6d162fcc2fadd72a5492e948dfab6f7707",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test35_evalcorr.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "7d0f54e468aaad79ec11d44e455c44c1533d181da1c48a287c46e2efdfc36e43",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test36_ds_params.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "69bb27ee43ad6fe00f229eb385a63512f048b83dff5ec3ed21d7fad9d0bd324f",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test37_inzsr.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "3f1ff9a60d08f1bf66616052f8a02d761f4aad3f28217e7521d66570ed559c49",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test38_ctlopt.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "370d0e2cd118e11b714e87201178720a95e2dd114e782effd00ae8ebee933b7a",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test39_figconst.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "596f4c6905a7267bfbf88d229a6bb61c5c89097d91ca4c0416bb2e93cf3a9a52",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test40_evalr_leavesr.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "a8e22ead3de7e93244c7f96da6d3b4d1c1178254cc6d0a3c724d221fe846224c",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test41_string_bifs.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "6b40af2cd9c5c7fe44595892e1789b320d927dee32773b890c929b8cb474d7de",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test42_onexit.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "7126373e9444295f059d855968d2797e8cab584ba6501bef4c1260c78eedaf63",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test43_static.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "ac8cfa8cdbebd7c511f4904528f82f7a049597cc975dd99b1abbfb3ca659009e",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test44_alloc.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "b72d62d505c531cd113c0581cc338dcad9c14f6465f90d8f9e8704286ebcd29e",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test45_array_bifs.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "7287e294abddd32ea09ae64299a1e29b454c12bea069ed6d568b9149dc408da2",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test46_options.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "833c7693b7cb014d179cff8a2035dfd06a8087df1ca73d49a12b0702229dd650",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test47_test.rpgle": {
    "codes": [],
@@ -3304,30 +3217,28 @@
    "rpgc": "accept",
    "sha256": "06ca83fb0da851a7b1363e04d7fa12ba7ab74e4e3927c9b347811b4bafe3de0c",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test49_extproc.rpgle": {
    "codes": [],
-   "messages": [],
-   "reason": "Rejected with no diagnostic (return code only)",
    "rpgc": "accept",
    "sha256": "33f359a25f50675a989d53d1344af4fb04276ae17e958a7d588f7bc6482d7be0",
-   "verdict": "reject",
-   "verified": "2026-09-24"
+   "verdict": "accept",
+   "verified": "2026-09-25"
   },
   "test50_numeric_bifs.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "70c343b87859333125d8dec4b23a06ead4e8f2018fc43c3af7ee7462c9603fb5",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test51_string_bifs.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "527b20557d7ed206f77dcc56c120710fa99acb202bb6834dcaa556609f31dc21",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test52_array_bifs.rpgle": {
    "codes": [],
@@ -3348,21 +3259,21 @@
    "rpgc": "accept",
    "sha256": "7f855977083ce66d6e0306e3bc1e0804137ec68f9e37cb5bce6eb347a4b85276",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test55_figconst.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "987c9ebf8a331725e0aaa475c7082b0da069b58e2787d30e5eb39403bf36888e",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test56_ctlopt_main.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "1515003fdaa76871103448180ea379d577777efabda1eb3652a117c516c42397",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test57_datfmt.rpgle": {
    "codes": [],
@@ -3376,21 +3287,21 @@
    "rpgc": "accept",
    "sha256": "9b3f34fc3176ef3e5574cc05a1aab3f21df1e6642633a51c9a37e82886e4dae6",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test59_passed_omitted.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "dabbe2e33be75b93e6ff0a41f1f0b6deb03f808029cb0f8cc2b23b9102df43f9",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test60_datatypes.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "179a80c6fa2d4883fbb8899fb42ffcd7220306d332bf3ab0cb4a1f7fc6ac960f",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test61_no_free.rpgle": {
    "codes": [
@@ -3434,14 +3345,14 @@
    "rpgc": "accept",
    "sha256": "bd62e8c7bffabf3c235221618bb6c8c6762e73a342ce726ff9611c1203997567",
    "verdict": "reject",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test62_overlay_pos.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "65d619400064711da997c50a8cd58bd3bdb8011a49b2ca902813cb08bcfab519",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test63_prefix.rpgle": {
    "codes": [
@@ -3486,91 +3397,91 @@
    "rpgc": "reject",
    "sha256": "211d66c42202181bc91b9a79190ac1da6151c3aea77e3533acce21019718ee59",
    "verdict": "reject",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test64_omit.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "463698f29ca50dffe983a55fbc04fb0699a3e2c51ce12b3aabd6ccdca1633344",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test65_actgrp.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "3c49958da23f1e1fb8d26f9533089ffdb8dc1ed7a7b4ce80aadb85451591c890",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test66_pssr.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "33a0271f05a3f4d28a4518c0576f6af919a180c615740ef862f4839caa326f67",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test67_pssr_error.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "9d25ff9946e9ad68aa93e1da25174039c215a7acae5bbb94c80b35739a4cca22",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test68_bitwise_power.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "800e9cbb33812c7209b35a1c3b978c627d9ef99d173731df02fe397ef2db1f73",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test68_no_pssr.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "59a45d9682dd6ae4ff61659f5bdb9908b0d844464c69abede4586685fbd6838b",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test69_scanr.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "79ba4a130a1af140551bf3a2aeb6794d7d7ffca932c97dc50268576b6d00990f",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test70_editflt_unsh.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "942cd5a0307abbbb6d1a2b6ec32395b1ce4aee85faf31943880a2ac81f84bb0d",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test71_enum_boolean.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "fd77caf85bd8ada5b4bf866c52c03a2a2b96d6cdfed79b1cf0f8d63eab757837",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test72_dim_var.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "5c045a8dd9dc5b005292635bb516c259130aae7c4badc53a43e0d473202fe01b",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test73_date_formats.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "3e4eef7f355abe9ee440fcb5580c4ea4986e1794a4e72e951ea75a52c74800e7",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test74_concat.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "8dfbfe1eb27df5e7a034ea574661a52763da2b1a7be309348326548ce3496406",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test75_tlookup_elem.rpgle": {
    "codes": [],
@@ -3584,7 +3495,7 @@
    "rpgc": "accept",
    "sha256": "4dbcbd43a6fe8dfc0628070409d7e8d67983f4feb25eb303829175a26ee9f52d",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test77_exec_sql.sqlrpgle": {
    "codes": [],
@@ -3683,7 +3594,7 @@
    "rpgc": "accept",
    "sha256": "38344cd9f2335b7a6dce4dc174036ae5a2cf862ed01e3346b570359f9743cd48",
    "verdict": "reject",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test86.sqlrpgle": {
    "codes": [],
@@ -3697,35 +3608,35 @@
    "rpgc": "accept",
    "sha256": "bf964fc0fcaecd13eda649e4ec21a4fcb003cdc52b9022e7ebc00dda5920d06c",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test88.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "d07789d864a291c4a8cdd6e5329b0dd6492a0136472bf2b6c04bf8307c4fe54d",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test89.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "a69fc66f056c4433621572b59320010e2f7ea7a9df063becd2a790bf9fd8adfc",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test90_psds_basic.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "160ec2c8deaec73b4a7f75d36579080726bc704904ea96ab7697056358a9e10c",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test91_psds_monitor.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "e0feb90d876d264577f9a0400efb532d79b304575c84c6d19ab4c36bdb21f86d",
    "verdict": "accept",
-   "verified": "2026-09-24"
+   "verified": "2026-09-25"
   },
   "test92_data_area_lda.rpgle": {
    "codes": [],
@@ -3784,50 +3695,12 @@
    "verified": "2026-09-25"
   },
   "test_exfmt.rpgle": {
-   "codes": [
-    "RNF2120",
-    "RNF7030",
-    "RNF7503"
-   ],
-   "messages": [
-    {
-     "code": "RNF2120",
-     "line": 8,
-     "severity": 40,
-     "text": "External descriptions for file CUSTMENU not found; file is ignored."
-    },
-    {
-     "code": "RNF7030",
-     "line": 13,
-     "severity": 30,
-     "text": "The name or indicator MAINMENU is not defined."
-    },
-    {
-     "code": "RNF7503",
-     "line": 13,
-     "severity": 30,
-     "text": "Expression contains an operand that is not defined."
-    },
-    {
-     "code": "RNF7503",
-     "line": 15,
-     "severity": 30,
-     "text": "Expression contains an operand that is not defined."
-    },
-    {
-     "code": "RNF7030",
-     "line": 15,
-     "severity": 30,
-     "text": "The name or indicator *IN03 is not defined."
-    }
-   ],
-   "reason": "RNF2120: External descriptions for file CUSTMENU not found; file is ignored.",
-   "reason_detail": "line 8: External descriptions for file CUSTMENU not found; file is ignored. \u2014 `DCL-F CUSTMENU WORKSTN;`",
+   "codes": [],
    "rpgc": "accept",
    "sha256": "bf315e65a7cf38809265a94af86a30a1ede38890e32e8a45940891ab3f4f5be0",
-   "verdict": "reject",
-   "verified": "2026-09-24"
+   "verdict": "accept",
+   "verified": "2026-09-25"
   }
  },
- "generated": "2026-09-25T06:07:33+00:00"
+ "generated": "2026-09-25T06:16:20+00:00"
 }

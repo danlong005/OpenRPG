@@ -1326,6 +1326,7 @@ void CodeGen::visit(DclProc& node) {
     auto saved_arrays   = array_vars_;
     auto saved_unqual   = unqualified_subfields_;
     auto saved_likeds_params = likeds_params_;
+    auto saved_proc_params = proc_params_;
 
     // Parameters are declared fields like any other. Registering them lets
     // EVAL fit a value assigned to one. A VALUE parameter is RPG's own
@@ -1335,6 +1336,7 @@ void CodeGen::visit(DclProc& node) {
     // declared shape, and is left alone. (*OMIT parameters are pointers
     // and LIKEDS ones whole structures; neither is a scalar to fit.)
     for (auto& p : node.interface.params) {
+        proc_params_.insert(p.name);
         if (!p.likeds.empty()) likeds_params_[p.name] = p.likeds;
         if (p.omit || !p.likeds.empty()) continue;
         var_types_[p.name]    = p.type;
@@ -1455,6 +1457,7 @@ void CodeGen::visit(DclProc& node) {
     array_vars_   = std::move(saved_arrays);
     unqualified_subfields_ = std::move(saved_unqual);
     likeds_params_ = std::move(saved_likeds_params);
+    proc_params_ = std::move(saved_proc_params);
     current_proc_parm_count_ = 0;
     has_nopass_params_ = false;
     current_proc_name_.clear();
@@ -3432,12 +3435,18 @@ void CodeGen::visit(CallStmt& node) {
 // RESET restores the value a variable started with: its INZ, or else its
 // type's default. A data structure starts as its struct's member
 // initializers, so assigning {} restores each subfield, in every element of
-// a DS array too. A varying-dimension array starts empty.
+// a DS array too. A varying-dimension array starts empty. A parameter has
+// no starting value of its own -- it is the caller's -- so IBM refuses it.
 void CodeGen::visit(ResetStmt& node) {
     const std::string& name = node.var_name;
+    if (proc_params_.count(name) || entry_params_.count(name)) {
+        report_semantic_error(node.line, "RESET is not allowed for a parameter: '" + name +
+            "' holds the caller's value and has no initial value of its own (IBM: RNF7544)");
+        return;
+    }
     Identifier id(name);
     std::string target = emitExpr(id);
-    if (ds_defs_.count(name) || likeds_params_.count(name)) {
+    if (ds_defs_.count(name)) {
         emitIndent();
         out_ << target << " = {};\n";
         return;

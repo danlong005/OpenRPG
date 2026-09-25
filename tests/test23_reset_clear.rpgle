@@ -69,9 +69,6 @@ RESET one;
 RESET many;
 line = %CHAR(nums(1)) + '|' + %CHAR(one.id) + '|' + many(1).code + '|';
 DSPLY line;
-one.code = 'JKL';
-line = ResetRec(one);
-DSPLY line;
 
 *INLR = *ON;
 
@@ -80,13 +77,5 @@ DCL-PROC ClearRec;
     r LIKEDS(rec);
   END-PI;
   CLEAR r;
-  RETURN %CHAR(r.id) + '|' + r.code + '|';
-END-PROC;
-
-DCL-PROC ResetRec;
-  DCL-PI *N VARCHAR(52);
-    r LIKEDS(rec);
-  END-PI;
-  RESET r;
   RETURN %CHAR(r.id) + '|' + r.code + '|';
 END-PROC;

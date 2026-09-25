@@ -1,4 +1,5 @@
 **FREE
+CTL-OPT DFTACTGRP(*NO);
 
 // Test 78: Embedded SQL in procedures
 

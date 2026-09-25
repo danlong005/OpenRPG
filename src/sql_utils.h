@@ -27,6 +27,12 @@ std::string stripSelectInto(const std::string& sql, std::vector<std::string>& in
 // Classify the SQL statement kind based on leading keyword
 SqlStmtKind classifySqlStmt(const std::string& sql);
 
+// Db2 for i requires "SAVEPOINT name [UNIQUE] ON ROLLBACK RETAIN CURSORS
+// [ON ROLLBACK RETAIN LOCKS]"; SQLite and PostgreSQL accept only
+// "SAVEPOINT name". Returns the portable form, or sql unchanged when it
+// is not a SAVEPOINT statement.
+std::string portableSavepoint(const std::string& sql);
+
 // Extract cursor name from DECLARE/OPEN/FETCH/CLOSE statements
 // e.g. "DECLARE C1 CURSOR FOR SELECT ..." → "C1"
 std::string extractCursorName(const std::string& sql);

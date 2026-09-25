@@ -466,6 +466,33 @@ bool parseFetchForRows(const std::string& sql, std::string& rows_var) {
 
 bool parseInsertForRows(const std::string& sql, std::string& rows_var, std::string& stripped_sql) {
     std::string upper = toUpper(sql);
+
+    // Db2 for i's blocked INSERT: "INSERT INTO t (cols) :n ROWS VALUES(...)",
+    // with a host variable or integer before ROWS. IBM i rejects the trailing
+    // FOR form below (SQL0104).
+    for (size_t r = upper.find("ROWS"); r != std::string::npos; r = upper.find("ROWS", r + 4)) {
+        if (r > 0 && isIdentChar(upper[r - 1])) continue;
+        size_t v = r + 4;
+        if (v < upper.size() && isIdentChar(upper[v])) continue;
+        while (v < upper.size() && std::isspace(static_cast<unsigned char>(upper[v]))) v++;
+        if (upper.compare(v, 6, "VALUES") != 0) continue;
+        size_t e = r;
+        while (e > 0 && std::isspace(static_cast<unsigned char>(upper[e - 1]))) e--;
+        size_t s = e;
+        while (s > 0 && isIdentChar(upper[s - 1])) s--;
+        if (s == e) continue;
+        bool literal = std::isdigit(static_cast<unsigned char>(upper[s])) != 0;
+        if (literal) {
+            rows_var = upper.substr(s, e - s);
+        } else {
+            if (s == 0 || upper[s - 1] != ':') continue;
+            rows_var = upper.substr(s, e - s);
+            s--;
+        }
+        stripped_sql = sql.substr(0, s) + sql.substr(v);
+        return true;
+    }
+
     // Look for "FOR :var ROWS" at the end of the statement
     // Search backwards for "ROWS"
     auto rows_pos = upper.rfind("ROWS");
@@ -498,6 +525,20 @@ bool parseInsertForRows(const std::string& sql, std::string& rows_var, std::stri
         stripped_sql.pop_back();
     }
     return true;
+}
+
+std::string portableSavepoint(const std::string& sql) {
+    std::string upper = toUpper(sql);
+    size_t i = 0;
+    while (i < upper.size() && std::isspace(static_cast<unsigned char>(upper[i]))) i++;
+    if (upper.compare(i, 9, "SAVEPOINT") != 0) return sql;
+    size_t j = i + 9;
+    if (j < upper.size() && isIdentChar(upper[j])) return sql;   // e.g. SAVEPOINTS
+    while (j < upper.size() && std::isspace(static_cast<unsigned char>(upper[j]))) j++;
+    size_t name_start = j;
+    while (j < upper.size() && isIdentChar(upper[j])) j++;
+    if (j == name_start) return sql;
+    return "SAVEPOINT " + sql.substr(name_start, j - name_start);
 }
 
 SqlStmtKind classifySqlStmt(const std::string& sql) {

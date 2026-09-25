@@ -1173,6 +1173,22 @@ uses the job's own connection. Probed on PUB400 before changing anything:
 
 The "reject" entries for these tests are gone from `tests/ibmi-expected.txt`.
 
+With `SQL0199` gone, the first IBM i run (36088083268) accepted 12 of the 18
+and found real differences in the other 6:
+- `test78`: procedures need `CTL-OPT DFTACTGRP(*NO)` (`RNF1520`). Test fixed.
+- `test82`: Db2 for i requires `SAVEPOINT sp1 ON ROLLBACK RETAIN CURSORS`.
+  rpgc now accepts it and sends the portable `SAVEPOINT sp1`
+  (`portableSavepoint()` in `sql_utils`).
+- `test83`: IBM i moves multiple rows only through a host structure array (a
+  DS array), and spells the blocked INSERT `INSERT INTO t (cols) :n ROWS
+  VALUES(:ds)`. rpgc now supports both. One array per column with a trailing
+  `FOR :n ROWS` still works and is still tested, under `/IF DEFINED(*OPENRPG)`.
+- `test105`, `test219`, `test238`: `RNF5063`, the database record-format
+  divergence below. Not changed.
+
+Found on the way, not fixed: `CLEAR` on a DS array (`DCL-DS ... DIM(n)`)
+generates no code, so the array keeps its values.
+
 **Still open (small):** whether rpgc should also *accept* `CONNECT TO :rdb USER
 :u USING :pw` so shop code carrying the IBM spelling compiles. Narrow — it only
 affects source connecting to a *remote* database, since local access needs no

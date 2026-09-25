@@ -229,6 +229,49 @@ std::vector<HostVarWithInd> CodeGen::expandSqlIntoVarsWithInd(const std::vector<
     return expanded;
 }
 
+// Host variables of a multi-row FETCH or INSERT (FOR :n ROWS), as pairs of
+// (declared name, row __ri's element). A plain array binds arr[__ri]. A DS
+// array -- Db2 for i's host structure array, the only form IBM accepts --
+// binds each subfield of ds[__ri] in order.
+std::vector<std::pair<std::string, std::string>> CodeGen::multiRowTargets(const std::vector<std::string>& vars) {
+    std::vector<std::pair<std::string, std::string>> targets;
+    for (auto& v : vars) {
+        auto dit = ds_defs_.find(v);
+        if (dit != ds_defs_.end() && dit->second->dim > 0) {
+            for (auto& f : dit->second->fields)
+                targets.push_back({v + "." + f.name, v + "[__ri]." + f.name});
+        } else {
+            targets.push_back({v, v + "[__ri]"});
+        }
+    }
+    return targets;
+}
+
+// A DS array host variable stands for one column per subfield, so it needs
+// that many parameter markers: ":emp" becomes ":emp, :emp, :emp" before
+// replaceHostVarsWithMarkers(). Binding order comes from multiRowTargets().
+std::string CodeGen::expandDsArrayHostVars(const std::string& sql) {
+    std::string out;
+    size_t i = 0;
+    while (i < sql.size()) {
+        if (sql[i] != ':') { out += sql[i++]; continue; }
+        size_t j = i + 1;
+        while (j < sql.size() && (std::isalnum(static_cast<unsigned char>(sql[j])) || sql[j] == '_')) j++;
+        std::string name = sql.substr(i + 1, j - i - 1);
+        std::string upper = name;
+        for (auto& c : upper) c = static_cast<char>(std::toupper(static_cast<unsigned char>(c)));
+        auto dit = ds_defs_.find(upper);
+        if (dit != ds_defs_.end() && dit->second->dim > 0 && !dit->second->fields.empty()) {
+            for (size_t f = 0; f < dit->second->fields.size(); f++)
+                out += (f ? ", :" : ":") + name;
+        } else {
+            out += sql.substr(i, j - i);
+        }
+        i = j;
+    }
+    return out;
+}
+
 void CodeGen::visit(ExecSqlStmt& node) {
     uses_sql_ = true;
     emitIndent();
@@ -311,10 +354,13 @@ void CodeGen::visit(ExecSqlStmt& node) {
         }
         case SqlStmtKind::FETCH: {
             std::string cursor_name = extractCursorName(node.sql_text);
-            std::vector<HostVarWithInd> into_hvwi = expandSqlIntoVarsWithInd(extractFetchIntoWithInd(node.sql_text));
+            std::vector<HostVarWithInd> raw_into = extractFetchIntoWithInd(node.sql_text);
+            std::vector<HostVarWithInd> into_hvwi = expandSqlIntoVarsWithInd(raw_into);
             // For multi-row FETCH, fall back to plain var names (indicators not supported with FOR :n ROWS)
             std::vector<std::string> into_vars;
             for (auto& h : into_hvwi) into_vars.push_back(h.var);
+            std::vector<std::string> raw_vars;
+            for (auto& h : raw_into) raw_vars.push_back(h.var);
             std::string rows_var;
             bool multi_row = parseFetchForRows(node.sql_text, rows_var);
 
@@ -330,17 +376,17 @@ void CodeGen::visit(ExecSqlStmt& node) {
                 out_ << "for (int __ri = 0; __ri < " << rows_var << "; __ri++) {\n";
                 indent_++;
 
-                for (size_t i = 0; i < into_vars.size(); i++) {
+                auto targets = multiRowTargets(raw_vars);
+                for (size_t i = 0; i < targets.size(); i++) {
                     emitIndent();
                     out_ << "char __sql_strbuf_" << (i+1) << "[4096] = {};\n";
                 }
-                for (size_t i = 0; i < into_vars.size(); i++) {
-                    // Bind to array element: VAR[__ri]
+                for (size_t i = 0; i < targets.size(); i++) {
                     emitIndent();
                     out_ << "SQLLEN __sql_ind_" << (i+1) << " = 0;\n";
                     emitIndent();
                     out_ << "__sql_env.bindCol(__cstmt, " << (i+1) << ", "
-                         << into_vars[i] << "[__ri], __sql_strbuf_" << (i+1)
+                         << targets[i].second << ", __sql_strbuf_" << (i+1)
                          << ", sizeof(__sql_strbuf_" << (i+1) << "), __sql_ind_" << (i+1) << ");\n";
                 }
                 emitIndent();
@@ -349,11 +395,11 @@ void CodeGen::visit(ExecSqlStmt& node) {
                 out_ << "__sql_env.updateStmtDiag(__cstmt, __frc);\n";
                 emitIndent();
                 out_ << "if (__frc != SQL_SUCCESS && __frc != SQL_SUCCESS_WITH_INFO) break;\n";
-                for (size_t i = 0; i < into_vars.size(); i++) {
+                for (size_t i = 0; i < targets.size(); i++) {
                     emitIndent();
-                    out_ << "RpgSqlEnv::copyStrBuf(" << into_vars[i]
-                         << "[__ri], __sql_strbuf_" << (i+1) << ", __frc);\n";
-                    emitSqlIntoRefit(into_vars[i], into_vars[i] + "[__ri]");
+                    out_ << "RpgSqlEnv::copyStrBuf(" << targets[i].second
+                         << ", __sql_strbuf_" << (i+1) << ", __frc);\n";
+                    emitSqlIntoRefit(targets[i].first, targets[i].second);
                 }
 
                 indent_--;
@@ -560,11 +606,11 @@ void CodeGen::visit(ExecSqlStmt& node) {
             // Check for multi-row INSERT (FOR :n ROWS)
             std::string rows_var, stripped_sql;
             bool multi_row = parseInsertForRows(node.sql_text, rows_var, stripped_sql);
-            std::string sql_text = multi_row ? stripped_sql : node.sql_text;
+            std::string sql_text = multi_row ? stripped_sql : portableSavepoint(node.sql_text);
 
             // General case: prepare + bind params + execute (INSERT/UPDATE/DELETE/other)
             std::vector<HostVarWithInd> host_hvwi = extractHostVarsWithInd(sql_text);
-            std::string parameterized = replaceHostVarsWithMarkers(sql_text);
+            std::string parameterized = replaceHostVarsWithMarkers(multi_row ? expandDsArrayHostVars(sql_text) : sql_text);
 
             if (host_hvwi.empty() && !multi_row) {
                 // Simple execution, no host variables
@@ -584,10 +630,13 @@ void CodeGen::visit(ExecSqlStmt& node) {
                 indent_++;
                 emitIndent();
                 out_ << "__sql_env.clearParamBufs();\n";
-                for (size_t i = 0; i < host_hvwi.size(); i++) {
+                std::vector<std::string> host_vars;
+                for (auto& h : host_hvwi) host_vars.push_back(h.var);
+                auto targets = multiRowTargets(host_vars);
+                for (size_t i = 0; i < targets.size(); i++) {
                     emitIndent();
                     out_ << "__sql_env.bindParam(__hstmt, " << (i+1) << ", "
-                         << host_hvwi[i].var << "[__ri]);\n";
+                         << targets[i].second << ");\n";
                 }
                 emitIndent();
                 out_ << "SQLRETURN __erc = SQLExecute(__hstmt);\n";

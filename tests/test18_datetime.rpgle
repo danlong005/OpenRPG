@@ -12,7 +12,7 @@ result = %CHAR(myDate);
 DSPLY result;
 
 // Set time using %TIME BIF
-myTime = %TIME('14:30:00');
+myTime = %TIME('14.30.00');
 result = %CHAR(myTime);
 DSPLY result;
 

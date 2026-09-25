@@ -1,7 +1,7 @@
 **FREE
 // Test 98: Data area status 413 - cannot write to data area
 // (Test runner creates a read-only file with chmod 444 before running this)
-DCL-S da CHAR(10) DTAARA(RPGCTEST98DA);
+DCL-S da CHAR(10) DTAARA('RPGCT98DA');
 
 da = 'TEST DATA ';
 OUT da;

@@ -693,9 +693,11 @@ DSPLY %CHAR(%SQRT(144));    // 12
 ### Date/Time Functions
 
 ```rpgle
-DCL-S today DATE INZ(%DATE);
-DCL-S now TIME INZ(%TIME);
-DCL-S ts TIMESTAMP INZ(%TIMESTAMP);
+// INZ(*SYS): the date/time the program starts. An initial value is fixed
+// at compile time, so INZ(%DATE) is not allowed (IBM: RNF0314).
+DCL-S today DATE INZ(*SYS);
+DCL-S now TIME INZ(*SYS);
+DCL-S ts TIMESTAMP INZ(*SYS);
 DCL-S future DATE;
 
 future = today + %DAYS(30);
@@ -704,6 +706,47 @@ DSPLY %CHAR(future);
 DCL-S daysBetween INT(10);
 daysBetween = %DIFF(future : today : *DAYS);
 DSPLY %CHAR(daysBetween);  // 30
+```
+
+`%DATE`, `%TIME` and `%TIMESTAMP` convert a character or numeric value read in
+a format: `*ISO` (the default, whatever the program's `DATFMT`), `*USA`,
+`*EUR`, `*JIS`, `*MDY`, `*DMY`, `*YMD`, `*JUL`, `*LONGJUL`, `*CYMD`, `*CMDY`,
+`*CDMY`, and for times `*HMS`. A separator can follow the format (`*MDY-`), or
+`0` for none (`*ISO0`); numbers never have separators. A value that is not a
+valid date or time is status 112. A *ISO time is written `hh.mm.ss`.
+
+```rpgle
+DCL-S due DATE;
+DCL-S start TIME;
+due = %DATE('01/15/24' : *MDY);
+due = %DATE(20240115 : *ISO);
+start = %TIME('14.30.00');
+due = %DATE(ts);                  // the date part of a timestamp
+```
+
+Typed literals are written with their type letter: `D'2024-01-15'`,
+`T'14.30.00'`, `Z'2024-01-15-14.30.00.000000'`, all in *ISO format.
+
+```rpgle
+IF due > D'2024-01-01';
+  DSPLY 'After New Year';
+ENDIF;
+```
+
+### TEST — Check a Date or Time
+
+`TEST(E)` checks the value of a date, time or timestamp field; `TEST(DE)`,
+`TEST(TE)` and `TEST(ZE)` check a character or numeric field as one, in the
+format given or the program's `DATFMT` (else `*ISO`). `%ERROR` is on when the
+value is not valid. In free form the `E` is required (IBM: RNF5056), and D, T
+and Z apply only to character and numeric fields (RNF7523).
+
+```rpgle
+DCL-S entered CHAR(10) INZ('02/30/2024');
+TEST(DE) *USA entered;
+IF %ERROR;
+  DSPLY 'Not a date';
+ENDIF;
 ```
 
 ---
@@ -1367,30 +1410,29 @@ DSPLY %CHAR(%ELEM(tags));    // 3
 
 ### %ELEM(\*ALLOC) and %ELEM(\*KEEP)
 
-Control the underlying buffer capacity separately from the active element count:
+`%ELEM(array : *ALLOC)` is the number of elements allocated, as distinct from
+the number in use. A `DIM(*VAR)` array is allocated to its maximum, so on IBM
+i and here it reports the `DIM` maximum. Neither the allocation nor the count
+can be set above that maximum (IBM: RNF7563).
+
+`%ELEM(array : *KEEP) = n` changes the element count like `%ELEM(array) = n`,
+leaving the allocation as it is:
 
 ```rpgle
-DCL-S nums INT(10) DIM(*VAR: 10);
+DCL-S nums INT(10) DIM(*VAR: 100);
 
-// Expand allocation beyond the declared max
-%ELEM(nums : *ALLOC) = 50;
-DSPLY %CHAR(%ELEM(nums : *ALLOC));   // 50 — capacity
-DSPLY %CHAR(%ELEM(nums));            // 0  — active size unchanged
+DSPLY %CHAR(%ELEM(nums : *ALLOC));   // 100 — allocated
+DSPLY %CHAR(%ELEM(nums));            // 0   — in use
 
-// Populate 5 elements
 %ELEM(nums) = 5;
 FOR i = 1 TO 5;
   nums(i) = i * 10;
 ENDFOR;
 
-// Shrink active count without releasing the buffer
 %ELEM(nums : *KEEP) = 3;
-DSPLY %CHAR(%ELEM(nums));            // 3  — active size
-DSPLY %CHAR(%ELEM(nums : *ALLOC));   // 50 — capacity still intact
+DSPLY %CHAR(%ELEM(nums));            // 3
+DSPLY %CHAR(%ELEM(nums : *ALLOC));   // 100
 ```
-
-Use `*KEEP` when you want to reuse the same buffer across iterations without
-repeated reallocations.
 
 ### Arrays of Data Structures
 
@@ -1568,15 +1610,25 @@ stored in `$TMPDIR` (typically `/tmp`).
 
 ### Declare a Data Area Variable
 
-Add `DTAARA` to a `DCL-S` or `DCL-DS`:
+Add `DTAARA` to a `DCL-S`. The data area's name is quoted, as on IBM i:
 
 ```rpgle
 // *LDA — the Local Data Area (one per job/process)
 DCL-S LdaData CHAR(256) DTAARA(*LDA);
 
-// Named data area
-DCL-S Config CHAR(100) DTAARA(APPCONFIG);
+// Named data area: a name of at most 10 characters (IBM: RNF0653)
+DCL-S Config CHAR(100) DTAARA('APPCONFIG');
+
+// Unquoted, DTAARA names a variable that holds the data area's name,
+// which may include a library: 'MYLIB/APPCONFIG'
+DCL-S daName CHAR(21) INZ('APPCONFIG');
+DCL-S Config2 CHAR(100) DTAARA(daName);
+
+// DTAARA alone uses the field's own name: data area SETTINGS
+DCL-S Settings CHAR(100) DTAARA;
 ```
+
+`DTAARA` on a data structure (`DCL-DS ... DTAARA`) is not supported yet.
 
 ### IN — Read from Data Area
 
@@ -1584,6 +1636,9 @@ DCL-S Config CHAR(100) DTAARA(APPCONFIG);
 IN LdaData;
 DSPLY %TRIM(LdaData);
 ```
+
+`IN *LOCK name` reads and locks, as on IBM i. `IN *DTAARA` reads every data
+area the program defines.
 
 ### OUT — Write to Data Area
 
@@ -1594,13 +1649,17 @@ OUT LdaData;
 
 ### UNLOCK — Release the Lock
 
-`IN` acquires an exclusive lock on the data area. `UNLOCK` releases it when you
-are done reading so other programs can access it:
+`IN *LOCK` acquires an exclusive lock on a named data area. `UNLOCK` releases
+it when you are done so other programs can access it; `UNLOCK *DTAARA`
+releases every one. The local, group and program-initialization data areas
+(`*LDA`, `*GDA`, `*PDA`) are never locked, and IBM i rejects `UNLOCK` of them
+(RNF7091). In OpenRPG, data areas are files and are never locked, so `*LOCK`
+and `UNLOCK` are accepted and have no effect.
 
 ```rpgle
-IN LdaData;
-// ... use LdaData ...
-UNLOCK LdaData;
+IN *LOCK Config;
+// ... use Config ...
+UNLOCK Config;
 ```
 
 ### Round-Trip Example
@@ -1615,19 +1674,18 @@ LdaData = '';      // clear local copy
 IN LdaData;        // read back from storage
 
 DSPLY %TRIM(LdaData);   // HELLO DATA AREA
-UNLOCK LdaData;
 ```
 
 ### Named Data Areas
 
 ```rpgle
-DCL-S MyConfig CHAR(50) DTAARA(RPGCONFIG);
+DCL-S MyConfig CHAR(50) DTAARA('RPGCONFIG');
 
 MyConfig = 'VERSION=2.0';
 OUT MyConfig;
 
 MyConfig = '';
-IN MyConfig;
+IN *LOCK MyConfig;
 DSPLY %SUBST(MyConfig: 1: 11);   // VERSION=2.0
 UNLOCK MyConfig;
 ```

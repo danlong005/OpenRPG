@@ -107,7 +107,9 @@ for p in glob.glob(os.path.join(tests, '*.rpgle')):
 da = {}
 for p in glob.glob(os.path.join(tests, '*.rpgle')) + glob.glob(os.path.join(tests, '*.sqlrpgle')):
     txt = open(p, encoding='utf-8', errors='replace').read()
-    for m in re.finditer(r'DCL-S\s+\w+\s+CHAR\((\d+)\)\s+DTAARA\((\w+)\)', txt, re.I):
+    # DTAARA('NAME') names the data area; unquoted, DTAARA(x) is a variable
+    # holding the name, so there is nothing to create for it here.
+    for m in re.finditer(r"DCL-S\s+\w+\s+CHAR\((\d+)\)\s+DTAARA\('(\w+)'\)", txt, re.I):
         ln_, nm = int(m.group(1)), m.group(2).upper()
         if nm.startswith('*'): continue
         da[nm] = max(da.get(nm, 0), ln_)

@@ -1,12 +1,12 @@
 **FREE
 DCL-S statusCode INT(10);
-DCL-S errFlag INT(10);
+DCL-S errFlag IND;
 
 // %STATUS returns last error status (0 = no error)
 statusCode = %STATUS();
 DSPLY %CHAR(statusCode);
 
-// %ERROR returns whether last operation had an error (0=false, 1=true)
+// %ERROR is an indicator: whether the last operation had an error
 errFlag = %ERROR();
 DSPLY %CHAR(errFlag);
 

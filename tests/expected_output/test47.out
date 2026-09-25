@@ -1,2 +1,7 @@
-Date valid
+Date field valid
+2024-03-15 is an *ISO date
+2024-02-30 is not a date
+03/15/2024 is a *USA date
+240315 is a *YMD date
+24.00.01 is not a time
 Test done

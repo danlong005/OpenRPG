@@ -37,6 +37,8 @@ struct DclSKws {
     bool ctdata = false;    // CTDATA
     int perrcd = 1;         // PERRCD(n)
     std::string based, dtaara, datfmt, timfmt;
+    std::string dtaara_var; // DTAARA(var)
+    bool dtaara_self = false; // bare DTAARA
 };
 }
 
@@ -274,6 +276,39 @@ static void check_extenders(const char* op, const char* ext, const char* allowed
     }
 }
 
+// D'...', T'...' and Z'...' are %DATE / %TIME / %TIMESTAMP of the text in
+// *ISO format, so an impossible value is caught the same way.
+static rpg::Expression* typed_literal(const char* bif, char* text, const char* fmt) {
+    auto* args = new std::vector<rpg::Expression*>();
+    args->push_back(new rpg::StringLiteral(text));
+    args->push_back(new rpg::Identifier(fmt));
+    free(text);
+    return make_bif(bif, args);
+}
+
+static rpg::Statement* make_test(char* ext, char* fmt, char* field) {
+    std::string e = ext;
+    for (auto& c : e) c = toupper((unsigned char)c);
+    if (e.find('E') == std::string::npos)
+        yyerror("TEST: in free form the E extender is required, e.g. TEST(DE); check %ERROR "
+                "afterwards (IBM: RNF5056)");
+    char type = 0;
+    for (char c : e) {
+        if (c == 'D' || c == 'T' || c == 'Z') type = c;
+        else if (c != 'E') yyerror(("TEST(" + e + "): the extenders are E and one of D, T "
+                                    "or Z (IBM: RNF5049)").c_str());
+    }
+    auto* t = new rpg::TestStmt(type, field);
+    if (fmt) {
+        if (!type) yyerror("TEST: a format operand needs the D, T or Z extender");
+        t->format = fmt;
+        free(fmt);
+    }
+    free(ext);
+    free(field);
+    return t;
+}
+
 // Length/digits/scale of the most recent pi_return_type (see that rule).
 static int g_ret_len = 0, g_ret_digits = 0, g_ret_dec = 0;
 
@@ -358,7 +393,8 @@ static rpg::DclS* make_dcl_s(const char* name, rpg::ParamDecl* t, DclSKws* k) {
     n->is_export   = (k->flags & 4) != 0;
     n->is_import   = (k->flags & 8) != 0;
     n->based_ptr   = k->based;
-    n->dtaara_name = k->dtaara;
+    n->dtaara_name = k->dtaara_self ? std::string(name) : k->dtaara;
+    n->dtaara_var  = k->dtaara_var;
     n->datfmt      = k->datfmt;
     n->timfmt      = k->timfmt;
     delete t;
@@ -429,6 +465,7 @@ static rpg::DclS* make_dcl_s(const char* name, rpg::ParamDecl* t, DclSKws* k) {
 %token KW_DIM_VAR KW_DIM_AUTO
 %token KW_FOR_EACH KW_IN KW_XML_INTO KW_DATA_INTO KW_DATA_GEN KW_SND_MSG
 %token KW_STAR_INFO KW_STAR_DIAG KW_STAR_ESCAPE KW_TYPE
+%token KW_STAR_LOCK KW_STAR_DTAARA KW_STAR_SYS
 %token KW_STAR_COMP KW_STAR_STATUS KW_STAR_NOTIFY KW_STAR_CALLER KW_STAR_SELF KW_STAR_EXT BIF_TARGET
 %token KW_STAR_ALLOC KW_STAR_KEEP
 %token KW_READ KW_READC KW_READE KW_READP KW_READPE KW_CHAIN KW_WRITE KW_UPDATE KW_DELETE KW_SETLL KW_SETGT KW_EXFMT
@@ -437,7 +474,7 @@ static rpg::DclS* make_dcl_s(const char* name, rpg::ParamDecl* t, DclSKws* k) {
 %token <sval> IDENTIFIER
 %token <ival> INTEGER_LITERAL
 %token <fval> FLOAT_LITERAL
-%token <sval> STRING_LITERAL
+%token <sval> STRING_LITERAL DATE_LITERAL TIME_LITERAL TIMESTAMP_LITERAL
 
 %token SEMICOLON EQUALS LPAREN RPAREN COLON
 %token <ival> COMPOUND_ASSIGN   /* += -= *= /= **= : 0..4 */
@@ -451,7 +488,7 @@ static rpg::DclS* make_dcl_s(const char* name, rpg::ParamDecl* t, DclSKws* k) {
 %type <str_list> call_parm_list
 %type <stmt> monitor_stmt begsr_stmt exsr_stmt goto_stmt tag_stmt move_stmt call_stmt exec_sql_stmt xml_into_stmt
 %type <stmt> in_da_stmt out_da_stmt unlock_da_stmt data_into_stmt data_gen_stmt snd_msg_stmt
-%type <sval> snd_msg_type
+%type <sval> snd_msg_type da_name
 %type <stmt> chain_stmt read_stmt readc_stmt reade_stmt readp_stmt readpe_stmt
 %type <stmt> write_stmt update_stmt delete_stmt setll_stmt setgt_stmt exfmt_stmt
 %type <expr> expression or_expr and_expr not_expr comparison_expr additive_expr multiplicative_expr power_expr unary_expr postfix_expr primary_expr eval_target
@@ -880,7 +917,28 @@ dcl_kws:
     | dcl_kws KW_CTDATA   { $$ = $1; $$->ctdata = true; }
     | dcl_kws KW_PERRCD LPAREN INTEGER_LITERAL RPAREN { $$ = $1; $$->perrcd = $4; }
     | dcl_kws KW_BASED LPAREN IDENTIFIER RPAREN  { $$ = $1; $$->based = $4; free($4); }
-    | dcl_kws KW_DTAARA LPAREN IDENTIFIER RPAREN { $$ = $1; $$->dtaara = $4; free($4); }
+    /* DTAARA('NAME') names the data area; DTAARA(*LDA) and friends are the
+       special ones; DTAARA(var), unquoted, names a variable holding the name,
+       as on IBM i; bare DTAARA uses the field's own name. */
+    | dcl_kws KW_DTAARA LPAREN IDENTIFIER RPAREN {
+        $$ = $1;
+        if ($4[0] == '*') $$->dtaara = $4; else $$->dtaara_var = $4;
+        free($4);
+    }
+    | dcl_kws KW_DTAARA LPAREN STRING_LITERAL RPAREN {
+        $$ = $1;
+        std::string n = $4;
+        for (auto& c : n) c = toupper((unsigned char)c);
+        size_t slash = n.find('/');
+        std::string obj = slash == std::string::npos ? n : n.substr(slash + 1);
+        std::string lib = slash == std::string::npos ? "" : n.substr(0, slash);
+        if (obj.size() > 10 || lib.size() > 10)
+            yyerror(("DTAARA('" + n + "'): an IBM i object or library name is at most 10 "
+                     "characters (IBM: RNF0653)").c_str());
+        $$->dtaara = n;
+        free($4);
+    }
+    | dcl_kws KW_DTAARA { $$ = $1; $$->dtaara_self = true; }
     | dcl_kws KW_DATFMT LPAREN IDENTIFIER RPAREN { $$ = $1; $$->datfmt = $4; free($4); }
     | dcl_kws KW_TIMFMT LPAREN IDENTIFIER RPAREN { $$ = $1; $$->timfmt = $4; free($4); }
     ;
@@ -1087,25 +1145,38 @@ snd_target_entry:
     | expression { delete $1; }
     ;
 
+/* IN {*LOCK} name, OUT {*LOCK} name, UNLOCK name. The name may be *DTAARA,
+   every data area the program defines. *LOCK is accepted; data areas here are
+   files with no record locks, so it has no effect. */
 in_da_stmt:
-    KW_IN IDENTIFIER SEMICOLON {
-        $$ = new rpg::DataInStmt($2);
-        free($2);
+    KW_IN da_lock_opt da_name SEMICOLON {
+        $$ = new rpg::DataInStmt($3);
+        free($3);
     }
     ;
 
 out_da_stmt:
-    KW_OUT IDENTIFIER SEMICOLON {
-        $$ = new rpg::DataOutStmt($2);
-        free($2);
+    KW_OUT da_lock_opt da_name SEMICOLON {
+        $$ = new rpg::DataOutStmt($3);
+        free($3);
     }
     ;
 
 unlock_da_stmt:
-    KW_UNLOCK IDENTIFIER SEMICOLON {
+    KW_UNLOCK da_name SEMICOLON {
         $$ = new rpg::DataUnlockStmt($2);
         free($2);
     }
+    ;
+
+da_lock_opt:
+    %empty
+    | KW_STAR_LOCK
+    ;
+
+da_name:
+    IDENTIFIER { $$ = $1; }
+    | KW_STAR_DTAARA { $$ = strdup("*DTAARA"); }
     ;
 
 evalr_stmt:
@@ -1661,12 +1732,19 @@ dealloc_stmt:
     ;
 
 /* TEST */
+/* TEST{(E {D|T|Z})} {format} field. In free form the error extender E is
+   required (RNF5056). D, T or Z tests a character or numeric field as a
+   date, time or timestamp in the format given, or the default; without one,
+   the field is itself a date, time or timestamp and its value is tested. */
 test_stmt:
     KW_TEST LPAREN ident RPAREN ident SEMICOLON {
-        char type = toupper($3[0]);
-        $$ = new rpg::TestStmt(type, std::string($5));
-        free($3);
-        free($5);
+        $$ = make_test($3, nullptr, $5);
+    }
+    | KW_TEST LPAREN ident RPAREN IDENTIFIER ident SEMICOLON {
+        $$ = make_test($3, $5, $6);
+    }
+    | KW_TEST ident SEMICOLON {
+        $$ = make_test(strdup(""), nullptr, $2);
     }
     ;
 
@@ -2337,6 +2415,9 @@ primary_expr:
     /* A built-in with no arguments may drop its parentheses, as on IBM i:
        IF %ERROR; n = %STATUS; IF %FOUND; */
     | BIF_STATUS { $$ = make_bif("STATUS", new std::vector<rpg::Expression*>()); }
+    | BIF_DATE      { $$ = make_bif("DATE",      new std::vector<rpg::Expression*>()); }
+    | BIF_TIME      { $$ = make_bif("TIME",      new std::vector<rpg::Expression*>()); }
+    | BIF_TIMESTAMP { $$ = make_bif("TIMESTAMP", new std::vector<rpg::Expression*>()); }
     | BIF_ERROR  { $$ = make_bif("ERROR",  new std::vector<rpg::Expression*>()); }
     | BIF_FOUND  { $$ = make_bif("FOUND",  new std::vector<rpg::Expression*>()); }
     | BIF_EOF    { $$ = make_bif("EOF",    new std::vector<rpg::Expression*>()); }
@@ -2630,10 +2711,14 @@ primary_expr:
         $$ = new rpg::IndicatorExpr($1);
     }
     | KW_ON {
-        $$ = new rpg::IntLiteral(1);  // *ON → true
+        auto* v = new rpg::IntLiteral(1);  // *ON → true
+        v->indicator = true;
+        $$ = v;
     }
     | KW_OFF {
-        $$ = new rpg::IntLiteral(0);  // *OFF → false
+        auto* v = new rpg::IntLiteral(0);  // *OFF → false
+        v->indicator = true;
+        $$ = v;
     }
     | KW_NULL {
         $$ = new rpg::Identifier("nullptr");
@@ -2641,12 +2726,19 @@ primary_expr:
     | KW_OMIT {
         $$ = new rpg::Identifier("nullptr");
     }
+    /* A typed literal is its BIF with the literal's format: *ISO */
+    | DATE_LITERAL      { $$ = typed_literal("DATE", $1, "*ISO"); }
+    | TIME_LITERAL      { $$ = typed_literal("TIME", $1, "*ISO"); }
+    | TIMESTAMP_LITERAL { $$ = typed_literal("TIMESTAMP", $1, "*ISO"); }
     | KW_USER {
         $$ = new rpg::Identifier("RPG_USER");
         if (g_program) g_program->uses_user_const = true;
     }
     | KW_BLANKS {
         $$ = new rpg::Identifier("RPG_BLANKS");
+    }
+    | KW_STAR_SYS {
+        $$ = new rpg::Identifier("RPG_SYS");   // INZ(*SYS): the current date/time
     }
     | KW_ZEROS {
         $$ = new rpg::Identifier("RPG_ZEROS");

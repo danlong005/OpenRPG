@@ -192,7 +192,11 @@ private:
     // Checks the array a %LOOKUPxx / %TLOOKUPxx searches (see codegen.cpp).
     void checkLookupArray(BIFCall& node);
     std::string ctdataElement(const DclS& node, const std::string& text);
-    std::map<std::string, int> array_sort_;  // array -> 1 ASCEND, -1 DESCEND, 0 neither
+    std::string formatArg(Expression& e);
+    bool isTextOrNumber(const Expression& e) const;
+    std::map<std::string, int> array_sort_;
+    std::map<std::string, int> array_dim_;
+    std::map<std::string, std::string> dtaara_name_vars_; // field -> variable in DTAARA(var)   // array -> DIM (the maximum, for *VAR/*AUTO)  // array -> 1 ASCEND, -1 DESCEND, 0 neither
     std::string typeToString(RPGType type, int length = 0);
     int declaredDigits(const std::string& name) const;
     std::string declaredDtFormat(const std::string& name, RPGType type) const;
@@ -219,6 +223,10 @@ private:
     enum class ArgCat { Unknown, Numeric, Char, Date, Time, Timestamp, Ind, Pointer, DS, Omit };
     static ArgCat typeCategory(RPGType t);
     ArgCat argCategory(const Expression& e) const;
+    void checkAssignTypes(const Expression& target, const Expression& value, int line);
+    static bool isSpecialDataArea(const std::string& da);
+    std::vector<std::pair<std::string, std::string>> dataAreasOf(const std::string& name,
+                                                                  bool lockable_only);
     enum class Fit { No, Yes, Maybe };   // Maybe: an argument's type is unknown
     Fit candidateFit(const ProcInterface& sig, const std::vector<std::unique_ptr<Expression>>& args) const;
     std::string resolveOverload(const FuncCall& call);

@@ -1624,7 +1624,14 @@ void CodeGen::visit(DclS& node) {
     if (node.inz_value) has_inz_.insert(node.name);
     if (node.dim > 0) array_vars_.insert(node.name);
     if (node.dim > 0) array_sort_[node.name] = node.sort_order;
-    if (!node.dtaara_name.empty()) dtaara_vars_[node.name] = node.dtaara_name;
+    if (node.dim > 0) array_dim_[node.name] = node.dim;
+    // dtaara_vars_ holds the C++ expression for the data area's name.
+    if (!node.dtaara_var.empty()) {
+        dtaara_vars_[node.name] = "rpg_trim(" + node.dtaara_var + ")";
+        dtaara_name_vars_[node.name] = node.dtaara_var;
+    }
+    else if (!node.dtaara_name.empty())
+        dtaara_vars_[node.name] = "std::string(\"" + node.dtaara_name + "\")";
 
     // TEMPLATE: skip emission (type definition only, no variable)
     if (node.is_template) return;
@@ -1767,14 +1774,22 @@ void CodeGen::visit(DclS& node) {
         case RPGType::IND:
             out_ << "bool " << node.name << " = false;\n";
             break;
+        // INZ on a date, time or timestamp: a typed literal (INZ(D'...')), or
+        // INZ(*SYS) for the moment the program starts. It was ignored.
         case RPGType::DATE:
-            out_ << "RpgDate " << node.name << ";\n";
+            out_ << "RpgDate " << node.name;
+            if (node.inz_value) out_ << " = RpgDate(" << emitInzValue(node) << ")";
+            out_ << ";\n";
             break;
         case RPGType::TIME:
-            out_ << "RpgTime " << node.name << ";\n";
+            out_ << "RpgTime " << node.name;
+            if (node.inz_value) out_ << " = RpgTime(" << emitInzValue(node) << ")";
+            out_ << ";\n";
             break;
         case RPGType::TIMESTAMP:
-            out_ << "RpgTimestamp " << node.name << ";\n";
+            out_ << "RpgTimestamp " << node.name;
+            if (node.inz_value) out_ << " = RpgTimestamp(" << emitInzValue(node) << ")";
+            out_ << ";\n";
             break;
         case RPGType::POINTER:
             out_ << "void* " << node.name << " = nullptr;\n";
@@ -1995,6 +2010,17 @@ std::string CodeGen::emitInzValue(const rpg::DclS& node) {
             report_semantic_error(node.line, "Length of initial value '" + sl->value +
                 "' exceeds length of field " + node.name + " (IBM: RNF3431)");
     }
+    // An initial value is fixed when the program is compiled; %DATE, %TIME
+    // and %TIMESTAMP of the current moment are not (RNF0314). INZ(*SYS) is
+    // the form that gives the date or time the program starts.
+    if (auto* bif = dynamic_cast<const rpg::BIFCall*>(node.inz_value.get())) {
+        if ((bif->name == "DATE" || bif->name == "TIME" || bif->name == "TIMESTAMP") &&
+            bif->args.empty())
+            report_semantic_error(node.line, "Built-in function %" + bif->name + " does not "
+                "have a value known at compile time; initialize " + node.name +
+                " with INZ(*SYS) for the current " + (bif->name == "DATE" ? "date" :
+                bif->name == "TIME" ? "time" : "timestamp") + " (IBM: RNF0314)");
+    }
     if (auto* id = dynamic_cast<const rpg::Identifier*>(node.inz_value.get())) {
         std::string v = figConstValue(id->name, node.type, node.name);
         if (!v.empty()) return v;
@@ -2035,8 +2061,13 @@ std::string CodeGen::figConstValueLen(const std::string& name, RPGType type, int
         if (type == RPGType::PACKED || type == RPGType::ZONED) return "0.0";
         return "0";
     } else if (name == "RPG_USER") {
-        uses_psds_ = true;
-        return "rpg_psds_field_str(91)";
+        return "rpg_user_profile()";
+    } else if (name == "RPG_SYS") {
+        // INZ(*SYS): the date, time or timestamp when the program starts
+        if (type == RPGType::DATE) return "rpg_current_date()";
+        if (type == RPGType::TIME) return "rpg_current_time()";
+        if (type == RPGType::TIMESTAMP) return "rpg_current_timestamp()";
+        return "";
     } else if (name == "RPG_HIVAL") {
         if (type == RPGType::INT10) return "INT_MAX";
         if (type == RPGType::PACKED || type == RPGType::ZONED) return "DBL_MAX";
@@ -2049,9 +2080,61 @@ std::string CodeGen::figConstValueLen(const std::string& name, RPGType type, int
     return "";
 }
 
+// IBM i's type families for assignment: numeric, character-like (CHAR,
+// VARCHAR, IND and a data structure, which assign to one another), date,
+// time, timestamp and pointer. A value of one family cannot be assigned to
+// a target of another (RNF7416). Where codegen cannot tell a type, nothing
+// is reported.
+void CodeGen::checkAssignTypes(const Expression& target, const Expression& value, int line) {
+    auto family = [](ArgCat c) {
+        if (c == ArgCat::Ind || c == ArgCat::DS) return ArgCat::Char;
+        return c;
+    };
+    ArgCat t = family(argCategory(target)), v = family(argCategory(value));
+    if (t == ArgCat::Unknown || v == ArgCat::Unknown || t == ArgCat::Omit || v == ArgCat::Omit) return;
+    if (t == v) return;
+    auto name = [](ArgCat c) -> std::string {
+        switch (c) {
+            case ArgCat::Numeric: return "numeric";
+            case ArgCat::Char: return "character";
+            case ArgCat::Date: return "date";
+            case ArgCat::Time: return "time";
+            case ArgCat::Timestamp: return "timestamp";
+            case ArgCat::Pointer: return "pointer";
+            default: return "other";
+        }
+    };
+    std::string hint;
+    if (t == ArgCat::Char) hint = "; convert it with %CHAR";
+    else if (t == ArgCat::Numeric && v == ArgCat::Char) hint = "; convert it with %DEC or %INT";
+    else if (t == ArgCat::Date) hint = "; convert it with %DATE";
+    else if (t == ArgCat::Time) hint = "; convert it with %TIME";
+    else if (t == ArgCat::Timestamp) hint = "; convert it with %TIMESTAMP";
+    report_semantic_error(line, "The types of the right and left hand side do not match: a " +
+        name(v) + " value cannot be assigned to a " + name(t) + " target" + hint +
+        " (IBM: RNF7416)");
+}
+
 void CodeGen::visit(EvalStmt& node) {
+    checkAssignTypes(*node.target, *node.value, node.line > 0 ? node.line : cur_stmt_line_);
+    if (auto* uid = dynamic_cast<Identifier*>(node.value.get()); uid && uid->name == "RPG_USER")
+        report_semantic_error(node.line > 0 ? node.line : cur_stmt_line_,
+            "*USER is only valid as an initial value, INZ(*USER); declare a CHAR(10) field "
+            "with INZ(*USER) and use that (IBM: RNF7416)");
     // Check for %ELEM(array) = n (resize varying array)
     auto* lhs_bif = dynamic_cast<BIFCall*>(node.target.get());
+    // A varying array's element count, allocated or current, cannot exceed
+    // the maximum in its DIM(*VAR : max); a constant that does is RNF7563.
+    if (lhs_bif && lhs_bif->name == "ELEM" && !lhs_bif->args.empty()) {
+        auto* arr = dynamic_cast<rpg::Identifier*>(lhs_bif->args[0].get());
+        auto* lit = dynamic_cast<rpg::IntLiteral*>(node.value.get());
+        auto dim = arr ? array_dim_.find(arr->name) : array_dim_.end();
+        if (lit && dim != array_dim_.end() && lit->value > dim->second)
+            report_semantic_error(node.line > 0 ? node.line : cur_stmt_line_,
+                "%ELEM(" + arr->name + ") cannot be set to " + std::to_string(lit->value) +
+                ": the array holds at most " + std::to_string(dim->second) +
+                " elements, the maximum in its DIM (IBM: RNF7563)");
+    }
     if (lhs_bif && lhs_bif->name == "ELEM" && !lhs_bif->args.empty()) {
         emitIndent();
         std::string arr = emitExpr(*lhs_bif->args[0]);
@@ -3313,8 +3396,12 @@ void CodeGen::visit(IndicatorExpr& node) {
 }
 
 void CodeGen::visit(Identifier& node) {
-    // *USER figurative constant
+    // *USER figurative constant. IBM i allows it only as an initial value,
+    // INZ(*USER), which emitInzValue handles; in an expression it is a type
+    // mismatch (RNF7416, or RNF7421 as an operand).
     if (node.name == "RPG_USER") {
+        report_semantic_error(cur_stmt_line_, "*USER is only valid as an initial value, "
+            "INZ(*USER); declare a CHAR(10) field with INZ(*USER) and use that (IBM: RNF7416)");
         uses_psds_ = true;
         expr_ << "rpg_psds_field_str(91)";
         return;
@@ -3525,7 +3612,8 @@ CodeGen::ArgCat CodeGen::typeCategory(RPGType t) {
 
 // The type family of an argument, as far as codegen can tell.
 CodeGen::ArgCat CodeGen::argCategory(const Expression& e) const {
-    if (dynamic_cast<const IntLiteral*>(&e) || dynamic_cast<const FloatLiteral*>(&e)) return ArgCat::Numeric;
+    if (auto* il = dynamic_cast<const IntLiteral*>(&e)) return il->indicator ? ArgCat::Ind : ArgCat::Numeric;
+    if (dynamic_cast<const FloatLiteral*>(&e)) return ArgCat::Numeric;
     if (dynamic_cast<const StringLiteral*>(&e)) return ArgCat::Char;
     if (dynamic_cast<const IndicatorExpr*>(&e) || dynamic_cast<const NotExpr*>(&e) ||
         dynamic_cast<const InExpr*>(&e)) return ArgCat::Ind;
@@ -3551,9 +3639,14 @@ CodeGen::ArgCat CodeGen::argCategory(const Expression& e) const {
             "LOWER", "XLATE", "SCANRPL", "REPLACE", "EDITC", "EDITW", "STR", "EDITFLT"};
         static const std::set<std::string> num = {"INT", "INTH", "DEC", "DECH", "FLOAT", "UNS", "UNSH",
             "LEN", "SCAN", "SCANR", "CHECK", "CHECKR", "ELEM", "ABS", "DIV", "REM", "SIZE", "DIFF",
-            "SUBDT", "LOOKUP", "TLOOKUP", "STATUS", "PARMS", "SQRT", "MAX", "MIN"};
+            "SUBDT", "LOOKUP", "LOOKUPLT", "LOOKUPLE", "LOOKUPGT", "LOOKUPGE", "STATUS", "PARMS",
+            "SQRT"};
         if (chr.count(bif->name)) return ArgCat::Char;
         if (num.count(bif->name)) return ArgCat::Numeric;
+        if (bif->name.rfind("TLOOKUP", 0) == 0) return ArgCat::Ind;
+        // %MAX and %MIN return their operands' type
+        if ((bif->name == "MAX" || bif->name == "MIN") && !bif->args.empty())
+            return argCategory(*bif->args[0]);
         if (bif->name == "DATE") return ArgCat::Date;
         if (bif->name == "TIME") return ArgCat::Time;
         if (bif->name == "TIMESTAMP") return ArgCat::Timestamp;
@@ -3566,6 +3659,9 @@ CodeGen::ArgCat CodeGen::argCategory(const Expression& e) const {
     }
     if (auto* id = dynamic_cast<const Identifier*>(&e)) {
         if (id->name == "nullptr") return ArgCat::Omit;   // *OMIT and *NULL
+        if (id->name == "RPG_BLANKS") return ArgCat::Char;
+        if (id->name == "RPG_ZEROS" || id->name == "RPG_HIVAL" || id->name == "RPG_LOVAL")
+            return ArgCat::Unknown;   // fit any type
         if (ds_defs_.count(id->name)) return ArgCat::DS;
         auto c = const_cats_.find(id->name);
         if (c != const_cats_.end()) return c->second;
@@ -3889,24 +3985,39 @@ void CodeGen::visit(BIFCall& node) {
         if (node.args.empty()) {
             expr_ << "rpg_current_date()";
         } else {
+            // %DATE(value {: format}): a character or numeric value in a
+            // format, or another date/time type
             expr_ << "rpg_make_date(";
             node.args[0]->accept(*this);
+            if (node.args.size() > 1) expr_ << ", " << formatArg(*node.args[1]);
+            else if (isTextOrNumber(*node.args[0]))
+                expr_ << ", std::string(\"*ISO\")";
             expr_ << ")";
         }
     } else if (node.name == "TIME") {
         if (node.args.empty()) {
             expr_ << "rpg_current_time()";
         } else {
+            // %TIME(value {: format}): a character or numeric value in a
+            // format, or another date/time type
             expr_ << "rpg_make_time(";
             node.args[0]->accept(*this);
+            if (node.args.size() > 1) expr_ << ", " << formatArg(*node.args[1]);
+            else if (isTextOrNumber(*node.args[0]))
+                expr_ << ", std::string(\"*ISO\")";
             expr_ << ")";
         }
     } else if (node.name == "TIMESTAMP") {
         if (node.args.empty()) {
             expr_ << "rpg_current_timestamp()";
         } else {
+            // %TIMESTAMP(value {: format}): a character or numeric value in a
+            // format, or another date/time type
             expr_ << "rpg_make_timestamp(";
             node.args[0]->accept(*this);
+            if (node.args.size() > 1) expr_ << ", " << formatArg(*node.args[1]);
+            else if (isTextOrNumber(*node.args[0]))
+                expr_ << ", std::string(\"*ISO\")";
             expr_ << ")";
         }
     } else if (node.name == "DIFF") {
@@ -4357,6 +4468,7 @@ void CodeGen::visit(BIFCall& node) {
 }
 
 void CodeGen::visit(EvalRStmt& node) {
+    checkAssignTypes(*node.target, *node.value, node.line > 0 ? node.line : cur_stmt_line_);
     // Right-adjust: pad left with spaces
     emitIndent();
     std::string target = emitExpr(*node.target);
@@ -4622,6 +4734,23 @@ std::string CodeGen::ctdataElement(const DclS& node, const std::string& text) {
     }
     while (digits.size() > 1 && digits[0] == '0' && digits[1] != '.') digits.erase(0, 1);
     return (neg ? "-" : "") + digits;
+}
+
+// Whether an expression is character or numeric: the input %DATE, %TIME and
+// %TIMESTAMP read in a format. Without one, IBM i reads it as *ISO, whatever
+// the program's DATFMT or TIMFMT (checked on PUB400: under DATFMT(*USA),
+// %DATE('03/15/2024') is status 112 and %DATE('2024-03-15') is accepted). A
+// value whose type is unknown is left to the one-argument runtime form.
+bool CodeGen::isTextOrNumber(const Expression& e) const {
+    ArgCat c = argCategory(e);
+    return c == ArgCat::Char || c == ArgCat::Numeric;
+}
+
+// A date/time format operand (*ISO, *MDY/, ...) as a C++ string literal.
+std::string CodeGen::formatArg(Expression& e) {
+    if (auto* id = dynamic_cast<Identifier*>(&e); id && !id->name.empty() && id->name[0] == '*')
+        return "std::string(\"" + id->name + "\")";
+    return emitExpr(e);
 }
 
 std::string CodeGen::csvOptions(Expression* data_opts, Expression* handler_opts) {
@@ -4972,30 +5101,67 @@ void CodeGen::emitCsvFieldGeneration(DclDS* ds, const std::string& source,
     }
 }
 
+// Whether a data-area name expression (see dtaara_vars_) is *LDA, *GDA or *PDA.
+bool CodeGen::isSpecialDataArea(const std::string& da) {
+    return da == "std::string(\"*LDA\")" || da == "std::string(\"*GDA\")" ||
+           da == "std::string(\"*PDA\")";
+}
+
+// The data areas an IN, OUT or UNLOCK names: the one given, or with *DTAARA
+// every data area the program defines. UNLOCK *DTAARA leaves out the local,
+// group and program-initialization data areas, which are never locked.
+std::vector<std::pair<std::string, std::string>> CodeGen::dataAreasOf(const std::string& name,
+                                                                     bool lockable_only) {
+    std::vector<std::pair<std::string, std::string>> out;
+    // DTAARA(x) unquoted names a variable holding the data area's name; a
+    // name that is not a variable was most likely meant as the data area.
+    for (auto& [field, var] : dtaara_name_vars_) {
+        if ((name == "*DTAARA" || name == field) && !var_types_.count(var)) {
+            report_semantic_error(cur_stmt_line_, "The name " + var + " in DTAARA(" + var +
+                ") of " + field + " is not defined: unquoted, it names a variable holding "
+                "the data area's name. Quote the data area's own name, DTAARA('" + var +
+                "') (IBM: RNF7030)");
+            dtaara_name_vars_.erase(field);
+            break;
+        }
+    }
+    if (name == "*DTAARA") {
+        for (auto& [var, da] : dtaara_vars_)
+            if (!lockable_only || !isSpecialDataArea(da))
+                out.push_back({var, da});
+    } else {
+        auto it = dtaara_vars_.find(name);
+        if (it != dtaara_vars_.end()) out.push_back(*it);
+    }
+    return out;
+}
+
 void CodeGen::visit(DataInStmt& node) {
-    auto it = dtaara_vars_.find(node.var_name);
-    if (it != dtaara_vars_.end()) {
+    for (auto& [var, da] : dataAreasOf(node.var_name, false)) {
         int len = 0;
-        auto lit = var_lengths_.find(node.var_name);
+        auto lit = var_lengths_.find(var);
         if (lit != var_lengths_.end()) len = lit->second;
         emitIndent();
-        out_ << node.var_name << " = rpg_da_read(\"" << it->second << "\", " << len << ");\n";
+        out_ << var << " = rpg_da_read(" << da << ", " << len << ");\n";
     }
 }
 
 void CodeGen::visit(DataOutStmt& node) {
-    auto it = dtaara_vars_.find(node.var_name);
-    if (it != dtaara_vars_.end()) {
+    for (auto& [var, da] : dataAreasOf(node.var_name, false)) {
         emitIndent();
-        out_ << "rpg_da_write(\"" << it->second << "\", " << node.var_name << ");\n";
+        out_ << "rpg_da_write(" << da << ", " << var << ");\n";
     }
 }
 
 void CodeGen::visit(DataUnlockStmt& node) {
     auto it = dtaara_vars_.find(node.var_name);
-    if (it != dtaara_vars_.end()) {
+    if (it != dtaara_vars_.end() && isSpecialDataArea(it->second))
+        report_semantic_error(node.line > 0 ? node.line : cur_stmt_line_,
+            "UNLOCK " + node.var_name + ": the local, group and program-initialization data "
+            "areas are never locked, so they cannot be unlocked (IBM: RNF7091)");
+    for (auto& [var, da] : dataAreasOf(node.var_name, true)) {
         emitIndent();
-        out_ << "rpg_da_unlock(\"" << it->second << "\");\n";
+        out_ << "rpg_da_unlock(" << da << ");\n";
     }
 }
 
@@ -5030,13 +5196,35 @@ void CodeGen::visit(DeallocStmt& node) {
 }
 
 void CodeGen::visit(TestStmt& node) {
+    int line = node.line > 0 ? node.line : cur_stmt_line_;
+    Identifier field(node.var_name);
+    ArgCat cat = argCategory(field);
+    bool dt = cat == ArgCat::Date || cat == ArgCat::Time || cat == ArgCat::Timestamp;
     emitIndent();
-    out_ << "rpg_error_flag() = !rpg_test_";
-    switch (node.type) {
-        case 'D': out_ << "date"; break;
-        case 'T': out_ << "time"; break;
-        case 'Z': out_ << "timestamp"; break;
+    if (node.type) {
+        // TEST(D/T/Z): the field is character or numeric text to check
+        if (dt) {
+            report_semantic_error(line, std::string("TEST(") + node.type + "): " + node.var_name +
+                " is already a date, time or timestamp; the D, T and Z extenders test a "
+                "character or numeric field. Use TEST(E) " + node.var_name + " (IBM: RNF7523)");
+            return;
+        }
+        int kind = node.type == 'D' ? 0 : node.type == 'T' ? 1 : 2;
+        std::string fmt = node.format;
+        if (fmt.empty()) fmt = kind == 0 ? (datfmt_.empty() ? "*ISO" : datfmt_)
+                             : kind == 1 ? (timfmt_.empty() ? "*ISO" : timfmt_) : "*ISO";
+        out_ << "rpg_error_flag() = !rpg_test_value(" << node.var_name << ", " << kind
+             << ", std::string(\"" << fmt << "\"));\n";
+        return;
     }
+    if (cat != ArgCat::Unknown && !dt) {
+        report_semantic_error(line, "TEST(E) " + node.var_name + ": a character or numeric "
+            "field is tested with the D, T or Z extender, e.g. TEST(DE) *ISO " + node.var_name +
+            " (IBM: RNF7524)");
+        return;
+    }
+    out_ << "rpg_error_flag() = !rpg_test_";
+    out_ << (cat == ArgCat::Time ? "time" : cat == ArgCat::Timestamp ? "timestamp" : "date");
     out_ << "(" << node.var_name << ");\n";
 }
 

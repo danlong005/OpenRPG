@@ -518,6 +518,14 @@ static void parse_ctlopt(const char* text) {
 "%DATA"             { return BIF_DATA; }
 "%PARSER"           { return BIF_PARSER; }
 "%GEN"              { return BIF_GEN; }
+ /* Date and time formats, with an optional separator suffix (*MDY/, *ISO0),
+    as the operand of %DATE, %TIME, %TIMESTAMP, %CHAR, TEST and DATFMT. */
+"*"(ISO|USA|EUR|JIS|MDY|DMY|YMD|JUL|LONGJUL|CYMD|CMDY|CDMY|HMS)[-/.,&0]?/[^A-Za-z0-9_#$@] {
+    std::string v = yytext;
+    for (auto& c : v) c = (char)toupper((unsigned char)c);
+    yylval.sval = strdup(v.c_str());
+    return IDENTIFIER;
+}
 "*INZSR"            { yylval.sval = strdup("*INZSR"); return IDENTIFIER; }
 "*PSSR"             { yylval.sval = strdup("*PSSR"); return IDENTIFIER; }
 "*LDA"              { yylval.sval = strdup("*LDA"); return IDENTIFIER; }
@@ -527,6 +535,9 @@ static void parse_ctlopt(const char* text) {
 "*DIAG"             { return KW_STAR_DIAG; }
 "*ESCAPE"           { return KW_STAR_ESCAPE; }
 "*COMP"             { return KW_STAR_COMP; }
+"*LOCK"             { return KW_STAR_LOCK; }
+"*SYS"              { return KW_STAR_SYS; }
+"*DTAARA"           { return KW_STAR_DTAARA; }
 "*STATUS"           { return KW_STAR_STATUS; }
 "*NOTIFY"           { return KW_STAR_NOTIFY; }
 "*CALLER"           { return KW_STAR_CALLER; }
@@ -787,6 +798,10 @@ static void parse_ctlopt(const char* text) {
 }
 
 [Xx]'[0-9A-Fa-f]*'  { yylval.sval = process_hex_string(yytext); return STRING_LITERAL; }
+ /* Typed literals: D'2024-01-15', T'10.30.00', Z'2024-01-15-10.30.00.000000' */
+[Dd]'[^'\n]*'       { yylval.sval = strndup(yytext + 2, yyleng - 3); return DATE_LITERAL; }
+[Tt]'[^'\n]*'       { yylval.sval = strndup(yytext + 2, yyleng - 3); return TIME_LITERAL; }
+[Zz]'[^'\n]*'       { yylval.sval = strndup(yytext + 2, yyleng - 3); return TIMESTAMP_LITERAL; }
 '([^']|'')*'        { yylval.sval = process_rpg_string(yytext); return STRING_LITERAL; }
 
 [a-zA-Z_][a-zA-Z0-9_]* {

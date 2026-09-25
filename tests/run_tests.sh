@@ -417,29 +417,29 @@ run_test "96" "DA Status 401 (not found)" "$TESTDIR/test96_da_status401.rpgle" "
 
 # 97: status 415 — file exists but no read permission
 # Skip when running as root (chmod 000 has no effect) or on Windows (chmod is a no-op on NTFS)
-printf '%-10s' 'TESTDATA' > "$_DA_DIR/RPGCTEST97DA"
-chmod 000 "$_DA_DIR/RPGCTEST97DA"
-if [ -r "$_DA_DIR/RPGCTEST97DA" ]; then
+printf '%-10s' 'TESTDATA' > "$_DA_DIR/RPGCT97DA"
+chmod 000 "$_DA_DIR/RPGCT97DA"
+if [ -r "$_DA_DIR/RPGCT97DA" ]; then
     printf "Test %s: %-35s " "97" "DA Status 415 (cannot read)"
     echo -e "${YELLOW}SKIP${NC} (cannot restrict permissions in this environment)"
     PASS=$((PASS + 1))
 else
     run_test "97" "DA Status 415 (cannot read)" "$TESTDIR/test97_da_status415.rpgle" "run"
 fi
-chmod 644 "$_DA_DIR/RPGCTEST97DA" 2>/dev/null; rm -f "$_DA_DIR/RPGCTEST97DA"
+chmod 644 "$_DA_DIR/RPGCT97DA" 2>/dev/null; rm -f "$_DA_DIR/RPGCT97DA"
 
 # 98: status 413 — file exists but no write permission
 # Skip when running as root (chmod 444 has no effect) or on Windows
-printf '%-10s' 'TESTDATA' > "$_DA_DIR/RPGCTEST98DA"
-chmod 444 "$_DA_DIR/RPGCTEST98DA"
-if [ -w "$_DA_DIR/RPGCTEST98DA" ]; then
+printf '%-10s' 'TESTDATA' > "$_DA_DIR/RPGCT98DA"
+chmod 444 "$_DA_DIR/RPGCT98DA"
+if [ -w "$_DA_DIR/RPGCT98DA" ]; then
     printf "Test %s: %-35s " "98" "DA Status 413 (cannot write)"
     echo -e "${YELLOW}SKIP${NC} (cannot restrict permissions in this environment)"
     PASS=$((PASS + 1))
 else
     run_test "98" "DA Status 413 (cannot write)" "$TESTDIR/test98_da_status413.rpgle" "run"
 fi
-chmod 644 "$_DA_DIR/RPGCTEST98DA" 2>/dev/null; rm -f "$_DA_DIR/RPGCTEST98DA"
+chmod 644 "$_DA_DIR/RPGCT98DA" 2>/dev/null; rm -f "$_DA_DIR/RPGCT98DA"
 
 # 99: DATA-INTO — parse JSON into DS
 run_test "99" "DATA-INTO JSON parsing" "$TESTDIR/test99_data_into.rpgle" "run"
@@ -839,6 +839,13 @@ run_test "280" "Reject %LOOKUPGE on an unordered array" "$TESTDIR/test280_err_lo
 run_test "281" "Reject %TLOOKUP on a non-table" "$TESTDIR/test281_err_tlookup_not_table.rpgle" "error"
 run_test "282" "CTDATA compile-time arrays" "$TESTDIR/test282_ctdata.rpgle" "run"
 run_test "283" "Fixed-format CTDATA, bare ** sections" "$TESTDIR/test283_fixed_ctdata.rpgle" "run"
+run_test "284" "Reject %ELEM above the DIM maximum" "$TESTDIR/test284_err_elem_over_max.rpgle" "error"
+run_test "285" "Reject *USER in an expression" "$TESTDIR/test285_err_user_expression.rpgle" "error"
+run_test "286" "Reject a character value in a numeric field" "$TESTDIR/test286_err_assign_type.rpgle" "error"
+run_test "287" "Reject UNLOCK of the local data area" "$TESTDIR/test287_err_unlock_lda.rpgle" "error"
+run_test "288" "Reject a data area name over 10 characters" "$TESTDIR/test288_err_dtaara_name_length.rpgle" "error"
+run_test "289" "Reject TEST without (E)" "$TESTDIR/test289_err_test_no_e.rpgle" "error"
+run_test "290" "Reject TEST(D) on a date field" "$TESTDIR/test290_err_test_d_on_date.rpgle" "error"
 
 # ── Customer / drop-in tests ─────────────────────────────────────────────
 # Drop any .rpgle or .sqlrpgle file into tests/customer/ and it will be

@@ -6,8 +6,8 @@ DCL-S diff INT(10);
 DCL-S hr INT(10);
 DCL-S mn INT(10);
 
-t1 = %TIME('14:30:00');
-t2 = %TIME('10:15:00');
+t1 = %TIME('14.30.00');
+t2 = %TIME('10.15.00');
 
 // %DIFF with *HOURS
 diff = %DIFF(t1 : t2 : *HOURS);

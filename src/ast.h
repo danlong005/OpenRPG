@@ -39,6 +39,7 @@ public:
 class IntLiteral : public Expression {
 public:
     int value;
+    bool indicator = false;  // *ON / *OFF: an indicator value, not a number
     explicit IntLiteral(int value);
     void accept(ASTVisitor& visitor) override;
 };
@@ -356,7 +357,8 @@ public:
     std::string timfmt;  // per-field TIMFMT
     std::string nullind; // NULLIND(field)
     std::string java_class; // OBJECT(*JAVA:'class')
-    std::string dtaara_name; // DTAARA(*LDA), DTAARA(MYDA), etc.
+    std::string dtaara_name; // DTAARA(*LDA), DTAARA('MYDA'), or the field's name for DTAARA
+    std::string dtaara_var;  // DTAARA(var): the variable holding the data area's name
     std::unique_ptr<Expression> inz_value;
     DclS(std::string name, RPGType type, int length, int digits = 0, int decimals = 0,
          bool is_const = false, std::unique_ptr<Expression> inz_value = nullptr, int dim = 0);
@@ -667,8 +669,9 @@ public:
 // TEST statement (validate date/time)
 class TestStmt : public Statement {
 public:
-    char type; // 'D', 'T', 'Z' for date, time, timestamp
+    char type; // 'D', 'T', 'Z': test a character/numeric field as one; 0: the field's own value
     std::string var_name;
+    std::string format;  // *ISO, *MDY/, ...; empty for the default
     TestStmt(char type, std::string name);
     void accept(ASTVisitor& visitor) override;
 };

@@ -11,7 +11,7 @@
      DCHR_TIME         S              6A
      DDISP10           S             10A
      DR                S             30A
-     C                   EVAL      TIMEFLD = %time('14:23:10')
+     C                   EVAL      TIMEFLD = %time('14.23.10')
      C**MDY0: a 6-character mmddyy date with no separators.
      C                   EVAL      CHR_DATEA = '041596'
      C     *MDY0         MOVE      CHR_DATEA     DATEFLD

@@ -18,5 +18,5 @@ ELSE;
   DSPLY 'LDA ROUNDTRIP FAIL';
 ENDIF;
 
-UNLOCK LdaData;
+// No UNLOCK: the local data area is never locked (IBM: RNF7091)
 *INLR = *ON;

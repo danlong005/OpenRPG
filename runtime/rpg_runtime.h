@@ -667,19 +667,25 @@ inline std::string rpg_basename_prog(const char* path) {
     return s;
 }
 
+// The current user profile, as *USER and PSDS positions 91-100 give it: the
+// login name, upper-cased as IBM i profile names are, at most 10 characters.
+// Read directly rather than from the PSDS, because INZ(*USER) on a global
+// field is evaluated before main() fills the PSDS in.
+inline std::string rpg_user_profile() {
+    const char* u = std::getenv("USER");
+    if (!u) u = std::getenv("USERNAME");
+    std::string s = u ? u : "UNKNOWN";
+    for (auto& c : s) c = (char)toupper((unsigned char)c);
+    if (s.size() > 10) s.resize(10);
+    return s;
+}
+
 inline void rpg_psds_init(const char* argv0) {
     auto& p = rpg_psds();
     p.proc_name = rpg_basename_prog(argv0);
     p.program_name = p.proc_name;
     p.routine_name = p.proc_name;
-    const char* u = std::getenv("USER");
-    if (!u) u = std::getenv("USERNAME");
-    if (u) {
-        p.user_profile = std::string(u);
-        if (p.user_profile.size() > 10) p.user_profile.resize(10);
-    } else {
-        p.user_profile = "UNKNOWN   ";
-    }
+    p.user_profile = rpg_user_profile();
     char buf[32];
     std::snprintf(buf, sizeof(buf), "%08d", rpg_get_pid());
     p.job_number = buf;
@@ -738,6 +744,11 @@ inline std::filesystem::path rpg_da_dir() {
 inline std::string rpg_da_path(const std::string& name) {
     std::string upper = name;
     for (auto& c : upper) c = (char)toupper((unsigned char)c);
+    // A name held in a variable may be qualified, LIB/NAME, and padded with
+    // blanks; data areas here live in one directory, so only NAME matters.
+    auto slash = upper.rfind('/');
+    if (slash != std::string::npos) upper = upper.substr(slash + 1);
+    while (!upper.empty() && upper.back() == ' ') upper.pop_back();
     if (!upper.empty() && upper[0] == '*') upper = upper.substr(1);
     return (rpg_da_dir() / upper).string();
 }
@@ -832,6 +843,20 @@ struct RpgTimestamp {
     RpgTimestamp(const std::string& v) : value(v) {}
 };
 
+// Dates, times and timestamps compare in time order. Their internal values
+// are fixed-width ISO text, which sorts the same way.
+#define RPG_DT_COMPARE(T) \
+    inline bool operator==(const T& a, const T& b) { return a.value == b.value; } \
+    inline bool operator!=(const T& a, const T& b) { return a.value != b.value; } \
+    inline bool operator<(const T& a, const T& b)  { return a.value <  b.value; } \
+    inline bool operator<=(const T& a, const T& b) { return a.value <= b.value; } \
+    inline bool operator>(const T& a, const T& b)  { return a.value >  b.value; } \
+    inline bool operator>=(const T& a, const T& b) { return a.value >= b.value; }
+RPG_DT_COMPARE(RpgDate)
+RPG_DT_COMPARE(RpgTime)
+RPG_DT_COMPARE(RpgTimestamp)
+#undef RPG_DT_COMPARE
+
 struct RpgDuration {
     int amount;
     char unit; // 'D'=days, 'M'=months, 'Y'=years
@@ -839,7 +864,12 @@ struct RpgDuration {
 
 // rpg_to_char overloads for date/time types
 inline std::string rpg_to_char(const RpgDate& d) { return d.value; }
-inline std::string rpg_to_char(const RpgTime& t) { return t.value; }
+// A time is held as hh:mm:ss; its default character form is *ISO, hh.mm.ss.
+inline std::string rpg_to_char(const RpgTime& t) {
+    std::string v = t.value;
+    for (auto& c : v) if (c == ':') c = '.';
+    return v;
+}
 inline std::string rpg_to_char(const RpgTimestamp& ts) { return ts.value; }
 
 
@@ -1013,11 +1043,6 @@ inline std::string rpg_to_char(const RpgTime& t, const std::string& fmt) {
     return rpg_format_time_fmt(t.value, fmt);
 }
 
-// %DATE with format
-inline RpgDate rpg_make_date(const std::string& s, const std::string& fmt) {
-    return RpgDate(rpg_parse_date_fmt(s, fmt));
-}
-
 // %DATE
 inline RpgDate rpg_make_date(const std::string& s) { return RpgDate(s); }
 inline RpgDate rpg_current_date() {
@@ -1155,13 +1180,6 @@ inline bool rpg_test_date(const RpgDate& d) {
     }
 }
 
-inline bool rpg_test_time(const RpgTime&) {
-    return true; // simplified
-}
-
-inline bool rpg_test_timestamp(const RpgTimestamp&) {
-    return true; // simplified
-}
 
 // --- %DECH: round to specified decimal places ---
 inline double rpg_dech(double val, int decimals) {
@@ -1788,7 +1806,8 @@ inline std::string rpg_dt_from_digits(const std::string& g, int kind, const std:
     if (kind == 2) {
         int y = rpg_dt_num(g,0,4), mo = rpg_dt_num(g,4,2), d = rpg_dt_num(g,6,2);
         int h = rpg_dt_num(g,8,2), mi = rpg_dt_num(g,10,2), s = rpg_dt_num(g,12,2);
-        if (!rpg_dt_valid_ymd(y, mo, d) || h > 24 || mi > 59 || s > 59) {
+        if (!rpg_dt_valid_ymd(y, mo, d) || h > 24 || mi > 59 || s > 59 ||
+            (h == 24 && (mi != 0 || s != 0))) {
             rpg_status_code() = 112; rpg_error_flag() = true; return std::string();
         }
         snprintf(buf, sizeof(buf), "%04d-%02d-%02d-%02d.%02d.%02d.%s",
@@ -1797,7 +1816,9 @@ inline std::string rpg_dt_from_digits(const std::string& g, int kind, const std:
     }
     if (kind == 1) {
         int h = rpg_dt_num(g,0,2), mi = rpg_dt_num(g,2,2), s = rpg_dt_num(g,4,2);
-        if (h > 24 || mi > 59 || s > 59) {
+        // 24.00.00 is midnight at the end of the day; any later 24.xx.xx
+        // is not a time
+        if (h > 24 || mi > 59 || s > 59 || (h == 24 && (mi != 0 || s != 0))) {
             rpg_status_code() = 112; rpg_error_flag() = true; return std::string();
         }
         snprintf(buf, sizeof(buf), "%02d:%02d:%02d", h, mi, s);
@@ -1896,6 +1917,113 @@ inline std::string rpg_dt_parse(const std::string& t, int kind,
         g += t.substr(static_cast<size_t>(take));
     }
     return rpg_dt_from_digits(g, kind, f);
+}
+
+// --- %DATE / %TIME / %TIMESTAMP with a format, and TEST(D/T/Z) ---
+// A format may carry its separator as a suffix: *MDY/ or *MDY-, and a
+// trailing 0 (*MDY0, *ISO0) for none. Without one, the format's default.
+inline void rpg_dt_split_fmt(int kind, const std::string& spec, std::string& f, char& sep) {
+    f = spec;
+    for (auto& c : f) c = (char)toupper((unsigned char)c);
+    if (f.empty()) f = "*ISO";
+    char last = f.back();
+    bool known = false;
+    for (const char* n : {"*ISO", "*USA", "*EUR", "*JIS", "*MDY", "*DMY", "*YMD", "*JUL",
+                          "*LONGJUL", "*CYMD", "*CMDY", "*CDMY", "*HMS"})
+        if (f == n) known = true;
+    if (!known && std::string("/-.,&0:").find(last) != std::string::npos) {
+        f.pop_back();
+        sep = last == '0' ? '\0' : last;
+        return;
+    }
+    sep = rpg_dt_default_sep(kind, f);
+}
+
+// Character text in format spec -> the internal value, or "" (status 112)
+// when it is not a valid date, time or timestamp in that format. Trailing
+// blanks are ignored; otherwise the text must be exactly the format's width.
+inline std::string rpg_dt_text_value(const std::string& text, int kind, const std::string& spec) {
+    std::string f; char sep;
+    rpg_dt_split_fmt(kind, spec, f, sep);
+    std::string t = text;
+    while (!t.empty() && t.back() == ' ') t.pop_back();
+    if (kind == 2 && sep == '-') sep = '-';          // timestamp: per-position separators
+    if (static_cast<int>(t.size()) != rpg_dt_width(kind, f, sep)) {
+        rpg_status_code() = 112; rpg_error_flag() = true; return std::string();
+    }
+    return rpg_dt_parse(t, kind, f, sep);
+}
+
+// A number in format spec -> the internal value. Numbers carry no
+// separators: 20240115 in *ISO, 11524 (011524) in *MDY.
+inline std::string rpg_dt_number_value(long long v, int kind, const std::string& spec) {
+    std::string f; char sep;
+    rpg_dt_split_fmt(kind, spec, f, sep);
+    if (v < 0) { rpg_status_code() = 112; rpg_error_flag() = true; return std::string(); }
+    std::string g = std::to_string(v);
+    int w = rpg_dt_digit_width(kind, f);
+    if (static_cast<int>(g.size()) > w) { rpg_status_code() = 112; rpg_error_flag() = true; return std::string(); }
+    g = std::string(static_cast<size_t>(w) - g.size(), '0') + g;
+    return rpg_dt_from_digits(g, kind, f);
+}
+
+inline std::string rpg_dt_value(const std::string& text, int kind, const std::string& spec) {
+    return rpg_dt_text_value(text, kind, spec);
+}
+inline std::string rpg_dt_value(const char* text, int kind, const std::string& spec) {
+    return rpg_dt_text_value(text, kind, spec);
+}
+template <typename N, typename = std::enable_if_t<std::is_arithmetic_v<N>>>
+inline std::string rpg_dt_value(N v, int kind, const std::string& spec) {
+    return rpg_dt_number_value(static_cast<long long>(v), kind, spec);
+}
+
+// %DATE(value : format) and friends: an invalid value is status 112.
+template <typename V>
+inline RpgDate rpg_make_date(const V& v, const std::string& spec) {
+    std::string iso = rpg_dt_value(v, 0, spec);
+    if (iso.empty()) rpg_raise(112, "Date, time or timestamp value is not valid");
+    return RpgDate(iso);
+}
+template <typename V>
+inline RpgTime rpg_make_time(const V& v, const std::string& spec) {
+    std::string iso = rpg_dt_value(v, 1, spec);
+    if (iso.empty()) rpg_raise(112, "Date, time or timestamp value is not valid");
+    return RpgTime(iso);
+}
+template <typename V>
+inline RpgTimestamp rpg_make_timestamp(const V& v, const std::string& spec) {
+    std::string iso = rpg_dt_value(v, 2, spec);
+    if (iso.empty()) rpg_raise(112, "Date, time or timestamp value is not valid");
+    return RpgTimestamp(iso);
+}
+// The date or time part of a timestamp
+inline RpgDate rpg_make_date(const RpgTimestamp& z) { return RpgDate(z.value.substr(0, 10)); }
+inline RpgDate rpg_make_date(const RpgDate& d) { return d; }
+inline RpgTime rpg_make_time(const RpgTimestamp& z) {
+    std::string t = z.value.substr(11, 8);
+    for (auto& c : t) if (c == '.') c = ':';
+    return RpgTime(t);
+}
+inline RpgTime rpg_make_time(const RpgTime& t) { return t; }
+
+// TEST(E) on a time or timestamp field: whether its value is valid.
+inline bool rpg_test_time(const RpgTime& t) {
+    std::string g;
+    for (char c : t.value) if (c >= '0' && c <= '9') g += c;
+    return g.size() == 6 && !rpg_dt_from_digits(g, 1, "*ISO").empty();
+}
+inline bool rpg_test_timestamp(const RpgTimestamp& z) {
+    std::string g;
+    for (char c : z.value) if (c >= '0' && c <= '9') g += c;
+    return g.size() == 20 && !rpg_dt_from_digits(g, 2, "*ISO").empty();
+}
+
+// TEST(D/T/Z) {format} field: whether a character or numeric field holds a
+// valid date, time or timestamp in that format.
+template <typename V>
+inline bool rpg_test_value(const V& v, int kind, const std::string& spec) {
+    return !rpg_dt_value(v, kind, spec).empty();
 }
 
 // --- The moves themselves ---

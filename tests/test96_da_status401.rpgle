@@ -1,6 +1,6 @@
 **FREE
 // Test 96: Data area status 401 - data area not found
-DCL-S missing CHAR(10) DTAARA(NOSUCHDA96);
+DCL-S missing CHAR(10) DTAARA('NOSUCHDA96');
 
 IN missing;
 IF %STATUS() = 401;

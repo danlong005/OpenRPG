@@ -15,7 +15,7 @@ DSPLY dateStr;
 // Format with ISO (default internal)
 DSPLY %CHAR(myDate);
 
-myTime = %TIME('14:30:00');
+myTime = %TIME('14.30.00');
 DSPLY %CHAR(myTime);
 
 *INLR = *ON;

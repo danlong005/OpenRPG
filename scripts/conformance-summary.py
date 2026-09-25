@@ -147,6 +147,17 @@ format name replaced with the file name to move between the two.
   table**, an array named `TAB...` (`RNF0597`), which is filled from
   compile-time data and never indexed (`RNF0752`); its LT/LE/GT/GE forms need
   a sequenced table too (`RNF0507`).
+- **An assignment's value is of the target's type family** (`RNF7416`):
+  numeric, character (with indicators and data structures), date, time,
+  timestamp. `*USER` is only an initial value, `INZ(*USER)`.
+- **`TEST` needs `(E)` in free form** (`RNF5056`), and `D`/`T`/`Z` test only
+  a character or numeric field (`RNF7523`).
+- **A data area's name is quoted**: `DTAARA('NAME')`, at most 10 characters
+  (`RNF0653`). Unquoted, `DTAARA(x)` names a variable holding the name. The
+  local data area cannot be unlocked (`RNF7091`).
+- **`%DATE`, `%TIME` and `%TIMESTAMP` read `*ISO` by default**, whatever the
+  program's `DATFMT`; an *ISO time is `hh.mm.ss`, so `%TIME('14:30:00')` is
+  status 112 at run time.
 
 ### Other limits worth knowing
 

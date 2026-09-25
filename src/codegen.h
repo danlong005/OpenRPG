@@ -189,6 +189,10 @@ private:
     // The %DATA options followed by the %PARSER/%GEN options, as one string
     // the built-in handlers search for their settings.
     std::string csvOptions(Expression* data_opts, Expression* handler_opts);
+    // Checks the array a %LOOKUPxx / %TLOOKUPxx searches (see codegen.cpp).
+    void checkLookupArray(BIFCall& node);
+    std::string ctdataElement(const DclS& node, const std::string& text);
+    std::map<std::string, int> array_sort_;  // array -> 1 ASCEND, -1 DESCEND, 0 neither
     std::string typeToString(RPGType type, int length = 0);
     int declaredDigits(const std::string& name) const;
     std::string declaredDtFormat(const std::string& name, RPGType type) const;

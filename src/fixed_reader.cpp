@@ -704,6 +704,11 @@ static void handleDSpecLine(Program* program, DSpecState& state,
         if (it != kw.end()) n->datfmt = upper(it->second);
         it = kw.find("TIMFMT");
         if (it != kw.end()) n->timfmt = upper(it->second);
+        if (kw.count("ASCEND")) n->sort_order = 1;
+        if (kw.count("DESCEND")) n->sort_order = -1;
+        if (kw.count("CTDATA")) n->ctdata = true;
+        it = kw.find("PERRCD");
+        if (it != kw.end() && !it->second.empty()) n->perrcd = atoi(it->second.c_str());
         program->statements.emplace_back(n);
     }
 }

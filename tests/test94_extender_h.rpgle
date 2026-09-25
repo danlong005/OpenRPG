@@ -1,20 +1,14 @@
 **FREE
-// Test 94: Operation extenders (H), (R), (P), (N) and EVALR(H)
+// Test 94: Operation extenders on EVAL and EVALR
+// EVAL takes (H), (M) and (R); EVALR takes (M) and (R). Only (H) rounds:
+// (M) and (R) choose the precision rules for intermediate results. Other
+// extenders are rejected, as on IBM i (RNF5049); tests 278-279 cover that.
 DCL-S a PACKED(7:1) INZ(7.0);
 DCL-S b PACKED(7:0) INZ(2);
 DCL-S result INT(10);
-
-// (R): same rounding semantics as (H)
 DCL-S result2 INT(10);
-// (MH): multiple extenders including H
 DCL-S result3 INT(10);
-// (P): pad extender — no-op, verify parse and basic assignment
-DCL-S padStr CHAR(10) INZ('          ');
-// (N): no-lock extender — no-op outside file ops, verify parse
-DCL-S nval INT(10) INZ(1);
-// EVALR(H): round numeric, then right-adjust into char field
-DCL-S rTarget CHAR(10) INZ('          ');
-DCL-S rNum PACKED(7:1) INZ(3.7);
+DCL-S rTarget CHAR(10) INZ(*BLANKS);
 
 // (H): half-adjust rounds 3.5 to 4
 EVAL(H) result = a / b;
@@ -24,13 +18,15 @@ ELSE;
   DSPLY 'EXTENDER H FAIL';
 ENDIF;
 
+// (R): result-decimal-position precision; the 3.5 is truncated to 3
 EVAL(R) result2 = a / b;
-IF result2 = 4;
+IF result2 = 3;
   DSPLY 'EXTENDER R OK';
 ELSE;
   DSPLY 'EXTENDER R FAIL';
 ENDIF;
 
+// (MH): extenders combine; H still rounds
 EVAL(MH) result3 = a / b;
 IF result3 = 4;
   DSPLY 'COMBO MH OK';
@@ -38,26 +34,12 @@ ELSE;
   DSPLY 'COMBO MH FAIL';
 ENDIF;
 
-EVAL(P) padStr = 'HELLO';
-IF %TRIM(padStr) = 'HELLO';
-  DSPLY 'EXTENDER P OK';
+// EVALR(M): right-adjusts the value in the character target
+EVALR(M) rTarget = 'ABC';
+IF rTarget = '       ABC';
+  DSPLY 'EVALR M OK';
 ELSE;
-  DSPLY 'EXTENDER P FAIL';
-ENDIF;
-
-EVAL(N) nval = nval + 1;
-IF nval = 2;
-  DSPLY 'EXTENDER N OK';
-ELSE;
-  DSPLY 'EXTENDER N FAIL';
-ENDIF;
-
-EVALR(H) rTarget = rNum;
-// round(3.7)=4, right-adjusted in 10 chars -> last char is '4'
-IF %SUBST(rTarget:10:1) = '4';
-  DSPLY 'EVALR H OK';
-ELSE;
-  DSPLY 'EVALR H FAIL';
+  DSPLY 'EVALR M FAIL';
 ENDIF;
 
 *INLR = *ON;

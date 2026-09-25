@@ -34,6 +34,8 @@ struct DclSKws {
     int dim = 0;
     int dim_type = 0;       // 0 fixed, 1 *VAR, 2 *AUTO
     int sort = 0;           // 1 ASCEND, -1 DESCEND
+    bool ctdata = false;    // CTDATA
+    int perrcd = 1;         // PERRCD(n)
     std::string based, dtaara, datfmt, timfmt;
 };
 }
@@ -250,6 +252,28 @@ static rpg::Statement* makeDataGen(char* source, std::vector<rpg::Expression*>* 
     return s;
 }
 
+// The operation extenders IBM i allows on each free-form opcode: EVAL takes
+// H, M and R, EVALR M and R, and CALLP E, M and R. Anything else is RNF5049.
+// (T) is internal to EVAL -- see eval_stmt -- and allowed only there, from
+// the fixed-format transpiler.
+static void check_extenders(const char* op, const char* ext, const char* allowed) {
+    for (const char* c = ext; *c; c++) {
+        if (*c == 'T' && strcmp(op, "EVAL") == 0 && g_allow_fixed_only_stmts) continue;
+        if (!strchr(allowed, *c)) {
+            std::string msg = std::string(op) + "(" + ext + "): the operation extender " + *c +
+                " is not valid for " + op + ", which takes ";
+            std::string list;
+            for (const char* a = allowed; *a; a++) {
+                if (!list.empty()) list += a[1] ? ", " : " and ";
+                list += *a;
+            }
+            msg += list + " (IBM: RNF5049)";
+            yyerror(msg.c_str());
+            return;
+        }
+    }
+}
+
 // Length/digits/scale of the most recent pi_return_type (see that rule).
 static int g_ret_len = 0, g_ret_digits = 0, g_ret_dec = 0;
 
@@ -327,6 +351,8 @@ static rpg::DclS* make_dcl_s(const char* name, rpg::ParamDecl* t, DclSKws* k) {
                             std::unique_ptr<rpg::Expression>(k->inz), k->dim);
     n->dim_type    = k->dim_type;
     n->sort_order  = k->sort;
+    n->ctdata      = k->ctdata;
+    n->perrcd      = k->perrcd;
     n->is_static   = (k->flags & 1) != 0;
     n->is_template = (k->flags & 2) != 0;
     n->is_export   = (k->flags & 4) != 0;
@@ -395,7 +421,7 @@ static rpg::DclS* make_dcl_s(const char* name, rpg::ParamDecl* t, DclSKws* k) {
 %token KW_UNS KW_FLOAT_TYPE KW_BINDEC KW_UCS2 KW_GRAPH KW_OBJECT KW_JAVA
 %token KW_OVERLAY KW_POS KW_PREFIX KW_DATFMT KW_TIMFMT KW_EXTNAME KW_PSDS KW_SDS
 %token KW_DTAARA KW_OUT KW_UNLOCK
-%token KW_RTNPARM KW_OPDESC KW_ASCEND KW_DESCEND KW_NULLIND
+%token KW_RTNPARM KW_OPDESC KW_ASCEND KW_DESCEND KW_NULLIND KW_CTDATA KW_PERRCD
 %token KW_VARSIZE KW_STRING_OPT KW_TRIM_OPT
 %token KW_DCL_ENUM KW_END_ENUM
 %token <sval> EXEC_SQL_TEXT
@@ -851,6 +877,8 @@ dcl_kws:
     }
     | dcl_kws KW_ASCEND   { $$ = $1; $$->sort = 1; }
     | dcl_kws KW_DESCEND  { $$ = $1; $$->sort = -1; }
+    | dcl_kws KW_CTDATA   { $$ = $1; $$->ctdata = true; }
+    | dcl_kws KW_PERRCD LPAREN INTEGER_LITERAL RPAREN { $$ = $1; $$->perrcd = $4; }
     | dcl_kws KW_BASED LPAREN IDENTIFIER RPAREN  { $$ = $1; $$->based = $4; free($4); }
     | dcl_kws KW_DTAARA LPAREN IDENTIFIER RPAREN { $$ = $1; $$->dtaara = $4; free($4); }
     | dcl_kws KW_DATFMT LPAREN IDENTIFIER RPAREN { $$ = $1; $$->datfmt = $4; free($4); }
@@ -929,9 +957,7 @@ eval_stmt:
                                std::unique_ptr<rpg::Expression>(compound_value($2, $3, $4)));
     }
     | KW_EVAL_EXT eval_target COMPOUND_ASSIGN expression SEMICOLON {
-        if (strchr($1, 'T') && !g_allow_fixed_only_stmts) {
-            yyerror("EVAL(T) is not a valid operation extender");
-        }
+        check_extenders("EVAL", $1, "HMR");
         auto* s = new rpg::EvalStmt(std::unique_ptr<rpg::Expression>($2),
                                     std::unique_ptr<rpg::Expression>(compound_value($2, $3, $4)));
         s->extenders = $1; free($1);
@@ -954,9 +980,7 @@ eval_stmt:
            ADD/SUB/MULT/DIV/Z-ADD/Z-SUB becomes with it, so the result
            drops excess high-order digits as those opcodes do instead of
            raising status 103 as EVAL does. It is not an RPG extender. */
-        if (strchr($1, 'T') && !g_allow_fixed_only_stmts) {
-            yyerror("EVAL(T) is not a valid operation extender");
-        }
+        check_extenders("EVAL", $1, "HMR");
         auto* s = new rpg::EvalStmt(
             std::unique_ptr<rpg::Expression>($2),
             std::unique_ptr<rpg::Expression>($4)
@@ -1092,6 +1116,7 @@ evalr_stmt:
         );
     }
     | KW_EVALR_EXT eval_target EQUALS expression SEMICOLON {
+        check_extenders("EVALR", $1, "MR");
         auto* s = new rpg::EvalRStmt(
             std::unique_ptr<rpg::Expression>($2),
             std::unique_ptr<rpg::Expression>($4)
@@ -1106,6 +1131,7 @@ callp_stmt:
         $$ = new rpg::CallpStmt(std::unique_ptr<rpg::Expression>($2), "");
     }
     | KW_CALLP_EXT expression SEMICOLON {
+        check_extenders("CALLP", $1, "EMR");
         $$ = new rpg::CallpStmt(std::unique_ptr<rpg::Expression>($2), $1);
         free($1);
     }
@@ -2308,6 +2334,13 @@ primary_expr:
     | BIF_MIN LPAREN arg_list RPAREN {
         $$ = make_bif("MIN", $3);
     }
+    /* A built-in with no arguments may drop its parentheses, as on IBM i:
+       IF %ERROR; n = %STATUS; IF %FOUND; */
+    | BIF_STATUS { $$ = make_bif("STATUS", new std::vector<rpg::Expression*>()); }
+    | BIF_ERROR  { $$ = make_bif("ERROR",  new std::vector<rpg::Expression*>()); }
+    | BIF_FOUND  { $$ = make_bif("FOUND",  new std::vector<rpg::Expression*>()); }
+    | BIF_EOF    { $$ = make_bif("EOF",    new std::vector<rpg::Expression*>()); }
+    | BIF_PARMS  { $$ = make_bif("PARMS",  new std::vector<rpg::Expression*>()); }
     | BIF_STATUS LPAREN RPAREN {
         auto* empty = new std::vector<rpg::Expression*>();
         $$ = make_bif("STATUS", empty);

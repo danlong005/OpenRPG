@@ -139,6 +139,14 @@ format name replaced with the file name to move between the two.
   options, such as CSV's `header=no`, go in `%PARSER`/`%GEN`.
 - **`SND-MSG` takes the message type directly**: `SND-MSG *INFO 'text';`.
   `TYPE(*INFO)` is read as a variable named `TYPE` (`RNF0203`).
+- **Operation extenders are per opcode** (`RNF5049`): `EVAL` takes `H`, `M`
+  and `R`; `EVALR` `M` and `R`; `CALLP` `E`, `M` and `R`. `(R)` does not
+  round, only `(H)` does.
+- **`%LOOKUPLT/LE/GT/GE` need an `ASCEND` or `DESCEND` array** (`RNF0592`)
+  and find the nearest element, not the first match. **`%TLOOKUP` searches a
+  table**, an array named `TAB...` (`RNF0597`), which is filled from
+  compile-time data and never indexed (`RNF0752`); its LT/LE/GT/GE forms need
+  a sequenced table too (`RNF0507`).
 
 ### Other limits worth knowing
 

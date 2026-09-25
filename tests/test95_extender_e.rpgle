@@ -1,34 +1,32 @@
 **FREE
-// Test 95: Operation extender (E) - error extender syntax
-// Tests that CALLP(E) and EVAL(E) parse correctly and run
-// (E) clears %ERROR before the call; normal calls leave %ERROR false)
+// Test 95: Operation extender (E) on CALLP
+// CALLP(E) traps an error in the call: %ERROR is set and %STATUS holds the
+// status, and the program carries on. EVAL takes no (E) on IBM i (RNF5049);
+// test 278 is that form.
 
 DCL-PR addOne INT(10);
   pVal INT(10) VALUE;
 END-PR;
+DCL-PR divide INT(10);
+  num INT(10) VALUE;
+  den INT(10) VALUE;
+END-PR;
 
-DCL-S result INT(10);
-
-// EVAL(E): assign expression, should not halt on normal operation
-DCL-S x INT(10) INZ(10);
-
-// CALLP(E) on a successful procedure: %ERROR should be false after
+// A call that succeeds leaves %ERROR off
 CALLP(E) addOne(5);
-// (we just verify parse and execution; return value discarded)
-
-EVAL(E) x = x + 5;
-IF x = 15;
-  DSPLY 'EVAL E OK';
-ELSE;
-  DSPLY 'EVAL E FAIL';
-ENDIF;
-
-// CALLP(E) captures result in a variable via EVAL(E)
-EVAL(E) result = addOne(7);
-IF result = 8;
+IF NOT %ERROR;
   DSPLY 'CALLP E OK';
 ELSE;
   DSPLY 'CALLP E FAIL';
+ENDIF;
+
+// A call that fails is trapped. The division by zero (102) happens inside
+// the procedure, so the caller sees 202, "called procedure failed".
+CALLP(E) divide(1 : 0);
+IF %ERROR;
+  DSPLY ('CALLP E caught ' + %CHAR(%STATUS));
+ELSE;
+  DSPLY 'CALLP E missed';
 ENDIF;
 
 *INLR = *ON;
@@ -38,4 +36,12 @@ DCL-PROC addOne;
     pVal INT(10) VALUE;
   END-PI;
   RETURN pVal + 1;
+END-PROC;
+
+DCL-PROC divide;
+  DCL-PI divide INT(10);
+    num INT(10) VALUE;
+    den INT(10) VALUE;
+  END-PI;
+  RETURN num / den;
 END-PROC;

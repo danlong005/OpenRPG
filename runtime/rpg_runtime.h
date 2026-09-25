@@ -174,12 +174,39 @@ inline std::array<T, N> rpg_filled_array(const T& v) {
 }
 
 // %LOOKUP - find element in array, returns 1-based index (0 if not found)
-template<typename T, std::size_t N>
-inline int rpg_lookup(const T& val, const std::array<T, N>& arr) {
-    for (std::size_t i = 0; i < N; i++) {
-        if (rpg_eq(arr[i], val)) return static_cast<int>(i + 1);
+// --- %LOOKUPxx: 1-based index of the element found, 0 if none ---
+// mode 'E' finds an equal element. The others find the element nearest the
+// search value, as IBM i does: 'L' the greatest element below it (LT), 'G'
+// the least element above it (GT), and 'l' / 'g' an equal element if there
+// is one, else as 'L' / 'G' (LE, GE). On an array in ASCEND or DESCEND order,
+// which IBM requires for those four, that is the element next to where the
+// value would sort. Ties go to the lowest index. start and count limit the
+// search to count elements from start; count < 0 means to the end.
+template<typename V, typename T>
+inline int rpg_lookup_in(const V& val, const T* arr, std::size_t n, char mode,
+                         int start, int count) {
+    std::size_t lo = start > 1 ? static_cast<std::size_t>(start - 1) : 0;
+    std::size_t hi = n;
+    if (count >= 0 && lo + static_cast<std::size_t>(count) < hi) hi = lo + count;
+    int best = 0;
+    for (std::size_t i = lo; i < hi; i++) {
+        if (mode != 'L' && mode != 'G' && rpg_eq(arr[i], val)) return static_cast<int>(i + 1);
     }
-    return 0;
+    if (mode == 'E') return 0;
+    bool below = (mode == 'L' || mode == 'l');
+    for (std::size_t i = lo; i < hi; i++) {
+        bool side = below ? rpg_lt(arr[i], val) : rpg_gt(arr[i], val);
+        if (!side) continue;
+        if (best == 0) { best = static_cast<int>(i + 1); continue; }
+        const T& b = arr[best - 1];
+        if (below ? rpg_gt(arr[i], b) : rpg_lt(arr[i], b)) best = static_cast<int>(i + 1);
+    }
+    return best;
+}
+
+template<typename V, typename T, std::size_t N>
+inline int rpg_lookup(const V& val, const std::array<T, N>& arr, int start = 1, int count = -1) {
+    return rpg_lookup_in(val, arr.data(), N, 'E', start, count);
 }
 
 // %CHECK - find first char in base NOT in comparator (1-based, 0 if all found)
@@ -1258,37 +1285,25 @@ inline RpgRange<T> rpg_range(T low, T high) {
     return RpgRange<T>{low, high};
 }
 
-// --- %LOOKUPxx: array search variants (1-based, 0 if not found) ---
-template<typename T, std::size_t N>
-inline int rpg_lookup_lt(const T& val, const std::array<T, N>& arr) {
-    for (std::size_t i = 0; i < N; i++) {
-        if (rpg_lt(arr[i], val)) return static_cast<int>(i + 1);
-    }
-    return 0;
+// --- %LOOKUPLT/LE/GT/GE: see rpg_lookup_in ---
+template<typename V, typename T, std::size_t N>
+inline int rpg_lookup_lt(const V& val, const std::array<T, N>& arr, int start = 1, int count = -1) {
+    return rpg_lookup_in(val, arr.data(), N, 'L', start, count);
 }
 
-template<typename T, std::size_t N>
-inline int rpg_lookup_gt(const T& val, const std::array<T, N>& arr) {
-    for (std::size_t i = 0; i < N; i++) {
-        if (rpg_gt(arr[i], val)) return static_cast<int>(i + 1);
-    }
-    return 0;
+template<typename V, typename T, std::size_t N>
+inline int rpg_lookup_le(const V& val, const std::array<T, N>& arr, int start = 1, int count = -1) {
+    return rpg_lookup_in(val, arr.data(), N, 'l', start, count);
 }
 
-template<typename T, std::size_t N>
-inline int rpg_lookup_le(const T& val, const std::array<T, N>& arr) {
-    for (std::size_t i = 0; i < N; i++) {
-        if (rpg_le(arr[i], val)) return static_cast<int>(i + 1);
-    }
-    return 0;
+template<typename V, typename T, std::size_t N>
+inline int rpg_lookup_gt(const V& val, const std::array<T, N>& arr, int start = 1, int count = -1) {
+    return rpg_lookup_in(val, arr.data(), N, 'G', start, count);
 }
 
-template<typename T, std::size_t N>
-inline int rpg_lookup_ge(const T& val, const std::array<T, N>& arr) {
-    for (std::size_t i = 0; i < N; i++) {
-        if (rpg_ge(arr[i], val)) return static_cast<int>(i + 1);
-    }
-    return 0;
+template<typename V, typename T, std::size_t N>
+inline int rpg_lookup_ge(const V& val, const std::array<T, N>& arr, int start = 1, int count = -1) {
+    return rpg_lookup_in(val, arr.data(), N, 'g', start, count);
 }
 
 // --- %TLOOKUP: table lookup (returns bool, optionally sets alt table element) ---

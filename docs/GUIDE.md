@@ -486,6 +486,73 @@ FOR-EACH name IN names;
 ENDFOR;
 ```
 
+### Searching an Array: %LOOKUP
+
+`%LOOKUP(value : array {: start {: count}})` returns the index of the first
+element equal to `value`, or 0. `start` and `count` limit the search.
+
+`%LOOKUPLT`, `%LOOKUPLE`, `%LOOKUPGT` and `%LOOKUPGE` find the element
+*nearest* the value: the greatest element below it (LT), the least above it
+(GT), or an equal element if there is one (LE, GE). They rely on the array's
+order, so the array must be declared `ASCEND` or `DESCEND` (IBM: RNF0592):
+
+```rpgle
+DCL-S limits INT(10) DIM(5) ASCEND;   // 10, 20, 30, 40, 50
+idx = %LOOKUPLT(25 : limits);         // 2: 20 is the nearest below 25
+idx = %LOOKUPGE(25 : limits);         // 3: 30 is the nearest at or above
+```
+
+### Compile-Time Data (CTDATA)
+
+An array declared `CTDATA` takes its values from compile-time data at the end
+of the source, after the program's last line. A section starts with
+`**CTDATA name` in position 1; each record holds `PERRCD(n)` elements (one if
+`PERRCD` is left out), each as wide as the element. A number is written as its
+digits, with the decimal point implied by the declaration:
+
+```rpgle
+**FREE
+DCL-S months CHAR(3) DIM(12) CTDATA PERRCD(6);
+DCL-S rates PACKED(5:2) DIM(3) CTDATA;
+
+DSPLY months(2);          // FEB
+DSPLY %CHAR(rates(1));    // 1.25
+*INLR = *ON;
+**CTDATA months
+JANFEBMARAPRMAYJUN
+JULAUGSEPOCTNOVDEC
+**CTDATA rates
+00125
+01000
+99999
+```
+
+In fixed format a section may also start with just `**`; unnamed sections load
+the `CTDATA` arrays in the order they are declared.
+
+### Tables and %TLOOKUP
+
+A *table* is an array whose name begins with `TAB`. It is filled from
+compile-time data and searched with `%TLOOKUP(value : table)`, which returns
+`*ON` when an element matches. A table is never indexed (IBM: RNF0752), and
+`%TLOOKUP` accepts only a table (RNF0597); use `%LOOKUP` for any other array.
+`%TLOOKUPLT`, `LE`, `GT` and `GE` need the table in `ASCEND` or `DESCEND`
+order (RNF0507).
+
+```rpgle
+DCL-S tabCodes CHAR(3) DIM(4) ASCEND CTDATA;
+
+IF %TLOOKUP('LAX' : tabCodes);
+  DSPLY 'LAX is a known code';
+ENDIF;
+*INLR = *ON;
+**CTDATA tabCodes
+DFW
+LAX
+NYC
+ORD
+```
+
 ---
 
 ## Control Flow
@@ -1347,7 +1414,14 @@ DSPLY employee(1).name;
 ## Operation Extenders
 
 Operation extenders modify the behavior of `EVAL`, `EVALR`, and `CALLP`. They are
-written in parentheses after the opcode.
+written in parentheses after the opcode. Each opcode takes its own set, and any
+other extender is rejected, as on IBM i (RNF5049):
+
+| Opcode | Extenders |
+|--------|-----------|
+| `EVAL` | `H`, `M`, `R` |
+| `EVALR` | `M`, `R` |
+| `CALLP` | `E`, `M`, `R` |
 
 ### (H) — Half-Adjust (Round)
 
@@ -1362,18 +1436,23 @@ EVAL(H) result = a / b;   // 7.0 / 2 = 3.5, rounds to 4
 DSPLY %CHAR(result);       // 4
 ```
 
-### (R) — Round
+### (M) and (R) — Precision Rules
 
-Synonym for `(H)`:
+`(M)` and `(R)` choose the precision rules for intermediate results in the
+expression: `(M)` the default "maximum digits" rules, `(R)` the "result
+decimal position" rules. Neither rounds; only `(H)` does:
 
 ```rpgle
-EVAL(R) result = a / b;
+EVAL(R) result = a / b;   // 7.0 / 2 = 3.5, truncated to 3
+EVAL(MH) result = a / b;  // combined with H: rounds to 4
 ```
 
 ### (E) — Error Capture
 
-Prevents a runtime error from halting the program. After the operation, check
-`%ERROR` to see if it failed:
+On `CALLP`, prevents an error in the call from halting the program. After the
+call, check `%ERROR` to see if it failed; `%STATUS` holds the status, 202 when
+the error happened inside the called procedure. `EVAL` takes no `(E)`; put the
+statement in a `MONITOR` group instead:
 
 ```rpgle
 CALLP(E) riskProc(arg);
@@ -1381,47 +1460,25 @@ IF %ERROR;
   DSPLY ('Call failed: ' + %CHAR(%STATUS));
 ENDIF;
 
-EVAL(E) x = someCalc();
-IF %ERROR;
+MONITOR;
+  x = someCalc();
+ON-ERROR;
   DSPLY 'Calc error';
-ENDIF;
-```
-
-### (M) — Move (multiple extenders)
-
-Extenders can be combined — e.g., `EVAL(MH)` means move with half-adjust:
-
-```rpgle
-EVAL(MH) result = a / b;
-```
-
-### (P) — Pad
-
-For string assignments, pads the target with blanks. For numeric, same as no
-extender. Primarily a compatibility keyword; accepted and parsed:
-
-```rpgle
-EVAL(P) padStr = 'HELLO';
-```
-
-### (N) — No Lock
-
-Accepted on file operations and `EVAL`; treated as a no-op outside record-level
-access. Useful when porting code that uses `(N)` on READ/CHAIN:
-
-```rpgle
-EVAL(N) x = x + 1;
+ENDMON;
 ```
 
 ### EVALR with Extenders
 
-`EVALR` right-adjusts the result into the target. Extenders work the same way:
+`EVALR` right-adjusts a character value into the target. It takes `(M)` and
+`(R)`; there is nothing to round, so `(H)` is rejected:
 
 ```rpgle
 DCL-S target CHAR(10);
-DCL-S n PACKED(7:1) INZ(3.7);
-EVALR(H) target = n;   // rounds to 4, right-justified in 10 chars
+EVALR(M) target = 'ABC';   // '       ABC'
 ```
+
+`(P)` and `(N)` are not `EVAL` extenders; `(N)` belongs to file operations
+such as `CHAIN(N)`.
 
 ---
 

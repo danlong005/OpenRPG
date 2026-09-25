@@ -149,6 +149,12 @@ static void parse_ctlopt(const char* text) {
 
 %%
 
+^"**CTDATA".*       {
+    /* Compile-time data starts here and runs to the end of the source. It
+       is not RPG: main.cpp reads it from the source text (see ctdata in
+       main.cpp), so the scanner stops. */
+    yyterminate();
+}
 "**FREE"            {
     /* **FREE is a FILE-level format declaration, not a statement. A /COPY
        member is its own source file and declares its own format, exactly as
@@ -368,6 +374,8 @@ static void parse_ctlopt(const char* text) {
 "RTNPARM"           { return KW_RTNPARM; }
 "OPDESC"            { return KW_OPDESC; }
 "ASCEND"            { return KW_ASCEND; }
+"CTDATA"            { return KW_CTDATA; }
+"PERRCD"            { return KW_PERRCD; }
 "DESCEND"           { return KW_DESCEND; }
 "NULLIND"           { return KW_NULLIND; }
 "*VAR"              { return KW_DIM_VAR; }

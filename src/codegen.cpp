@@ -1623,6 +1623,7 @@ void CodeGen::visit(DclS& node) {
     if (!node.timfmt.empty()) var_timfmt_[node.name] = node.timfmt;
     if (node.inz_value) has_inz_.insert(node.name);
     if (node.dim > 0) array_vars_.insert(node.name);
+    if (node.dim > 0) array_sort_[node.name] = node.sort_order;
     if (!node.dtaara_name.empty()) dtaara_vars_[node.name] = node.dtaara_name;
 
     // TEMPLATE: skip emission (type definition only, no variable)
@@ -1704,7 +1705,21 @@ void CodeGen::visit(DclS& node) {
             // INZ on an array initializes every element; it used to be
             // dropped here, and INZ with DIM was a syntax error besides.
             std::string init = arrayElementInit(node);
-            if (!init.empty())
+            if (!node.ctdata_elems.empty()) {
+                // CTDATA: the elements the **CTDATA section gave, in order;
+                // any it did not reach start as usual (blank or zero).
+                out_ << " = {";
+                for (size_t i = 0; i < node.ctdata_elems.size(); i++) {
+                    if (i > 0) out_ << ", ";
+                    out_ << ctdataElement(node, node.ctdata_elems[i]);
+                }
+                out_ << "}";
+                if ((int)node.ctdata_elems.size() < node.dim &&
+                    (node.type == RPGType::CHAR))
+                    deferred_init_.push_back("for (size_t __i = " + std::to_string(node.ctdata_elems.size()) +
+                        "; __i < " + node.name + ".size(); __i++) " + node.name +
+                        "[__i] = std::string(" + std::to_string(node.length) + ", ' ');");
+            } else if (!init.empty())
                 out_ << " = rpg_filled_array<" << elemType << ", " << node.dim << ">("
                      << "static_cast<" << elemType << ">(" << init << "))";
             else
@@ -2106,8 +2121,9 @@ void CodeGen::visit(EvalStmt& node) {
         }
     }
 
-    bool half_adj = node.extenders.find('H') != std::string::npos
-                 || node.extenders.find('R') != std::string::npos;
+    // (M) and (R) choose IBM's precision rules for intermediate results; only
+    // (H) rounds the result.
+    bool half_adj = node.extenders.find('H') != std::string::npos;
     bool error_ext = node.extenders.find('E') != std::string::npos;
 
     std::string rhs = emitExpr(*node.value);
@@ -2641,6 +2657,16 @@ void CodeGen::visit(ArrayAccess& node) {
     size_t dot = node.name.find('.');
     if (dot != std::string::npos && node.name.find('.', dot + 1) == std::string::npos)
         checkQualifiedRef(node.name.substr(0, dot), node.name.substr(dot + 1));
+    // A table -- an array whose name begins with TAB -- is not indexed: its
+    // name stands for the element %TLOOKUP last found (RNF0752).
+    if (array_sort_.count(node.name)) {
+        std::string up = node.name;
+        for (auto& c : up) c = toupper((unsigned char)c);
+        if (up.rfind("TAB", 0) == 0)
+            report_semantic_error(cur_stmt_line_, "The name of table " + node.name +
+                " begins with TAB, so an index is not allowed; fill a table from "
+                "compile-time data (CTDATA), and search it with %TLOOKUP (IBM: RNF0752)");
+    }
     expr_ << node.name << "[";
     node.index->accept(*this);
     expr_ << " - 1]";  // RPG arrays are 1-based
@@ -3661,6 +3687,7 @@ void CodeGen::visit(FuncCall& node) {
 }
 
 void CodeGen::visit(BIFCall& node) {
+    checkLookupArray(node);
     if (node.name == "CHAR") {
         // Check if arg is a date/time variable and DATFMT/TIMFMT is set
         FieldAttrs aa = attrsOf(*node.args[0]);
@@ -3992,12 +4019,16 @@ void CodeGen::visit(BIFCall& node) {
         expr_ << ", ";
         node.args[1]->accept(*this);
         expr_ << ")";
-    } else if (node.name == "LOOKUP") {
-        // %LOOKUP(arg : array) → 1-based index, 0 if not found
-        expr_ << "rpg_lookup(";
-        node.args[0]->accept(*this);
-        expr_ << ", ";
-        node.args[1]->accept(*this);
+    } else if (node.name == "LOOKUP" || node.name == "LOOKUPLT" || node.name == "LOOKUPLE" ||
+               node.name == "LOOKUPGT" || node.name == "LOOKUPGE") {
+        // %LOOKUPxx(arg : array {: start {: count}}) → 1-based index, 0 if not found
+        std::string fn = node.name == "LOOKUP" ? "rpg_lookup" : "rpg_lookup_" +
+            std::string(1, (char)tolower(node.name[6])) + (char)tolower(node.name[7]);
+        expr_ << fn << "(";
+        for (size_t i = 0; i < node.args.size() && i < 4; i++) {
+            if (i > 0) expr_ << ", ";
+            node.args[i]->accept(*this);
+        }
         expr_ << ")";
     } else if (node.name == "ALLOC") {
         expr_ << "std::malloc(";
@@ -4107,30 +4138,6 @@ void CodeGen::visit(BIFCall& node) {
         expr_ << ")";
     } else if (node.name == "RANGE") {
         expr_ << "rpg_range(";
-        node.args[0]->accept(*this);
-        expr_ << ", ";
-        node.args[1]->accept(*this);
-        expr_ << ")";
-    } else if (node.name == "LOOKUPLT") {
-        expr_ << "rpg_lookup_lt(";
-        node.args[0]->accept(*this);
-        expr_ << ", ";
-        node.args[1]->accept(*this);
-        expr_ << ")";
-    } else if (node.name == "LOOKUPGE") {
-        expr_ << "rpg_lookup_ge(";
-        node.args[0]->accept(*this);
-        expr_ << ", ";
-        node.args[1]->accept(*this);
-        expr_ << ")";
-    } else if (node.name == "LOOKUPLE") {
-        expr_ << "rpg_lookup_le(";
-        node.args[0]->accept(*this);
-        expr_ << ", ";
-        node.args[1]->accept(*this);
-        expr_ << ")";
-    } else if (node.name == "LOOKUPGT") {
-        expr_ << "rpg_lookup_gt(";
         node.args[0]->accept(*this);
         expr_ << ", ";
         node.args[1]->accept(*this);
@@ -4559,6 +4566,62 @@ void CodeGen::emitXmlFieldAssignments(DclDS* ds, const std::string& target, cons
                 break;
         }
     }
+}
+
+// IBM i's rules for the array a %LOOKUPxx or %TLOOKUPxx searches. %TLOOKUP
+// searches a table, an array whose name begins with TAB (RNF0597). The
+// LT/LE/GT/GE forms find the nearest element by the array's order, so the
+// array must be declared ASCEND or DESCEND: RNF0592 for %LOOKUPxx, RNF0507
+// for %TLOOKUPxx. Only a plain array name is checked; a subfield or a name
+// declared elsewhere is left alone.
+void CodeGen::checkLookupArray(BIFCall& node) {
+    bool lookup = node.name.rfind("LOOKUP", 0) == 0 || node.name.rfind("TLOOKUP", 0) == 0;
+    if (!lookup || node.args.size() < 2) return;
+    auto* id = dynamic_cast<Identifier*>(node.args[1].get());
+    if (!id) return;
+    auto it = array_sort_.find(id->name);
+    if (it == array_sort_.end()) return;
+    bool table = node.name[0] == 'T';
+    std::string bif = "%" + node.name;
+    int line = cur_stmt_line_;
+    if (table) {
+        std::string up = id->name;
+        for (auto& c : up) c = toupper((unsigned char)c);
+        if (up.rfind("TAB", 0) != 0) {
+            report_semantic_error(line, bif + ": " + id->name + " is not a table; %TLOOKUP "
+                "searches an array whose name begins with TAB, and %LOOKUP searches any "
+                "array (IBM: RNF0597)");
+            return;
+        }
+    }
+    std::string kind = node.name.substr(table ? 7 : 6);
+    if (!kind.empty() && it->second == 0) {
+        report_semantic_error(line, bif + ": " + id->name + " must be declared ASCEND or "
+            "DESCEND; the " + kind + " search relies on the array's order (IBM: " +
+            (table ? "RNF0507" : "RNF0592") + ")");
+    }
+}
+
+// One compile-time data element as a C++ value. Character elements are the
+// text as written, element-wide. Numbers are written as their digits with the
+// decimal point implied by the declaration, an optional sign before or after
+// them: "00125" in a PACKED(5:2) array is 1.25.
+std::string CodeGen::ctdataElement(const DclS& node, const std::string& text) {
+    if (node.type == RPGType::CHAR || node.type == RPGType::VARCHAR)
+        return "std::string(\"" + cppEscape(text) + "\")";
+    bool neg = false;
+    std::string digits;
+    for (char c : text) {
+        if (c == '-') neg = true;
+        else if (isdigit((unsigned char)c)) digits += c;
+    }
+    if (digits.empty()) digits = "0";
+    if (node.decimals > 0) {
+        while ((int)digits.size() <= node.decimals) digits.insert(0, "0");
+        digits.insert(digits.size() - node.decimals, ".");
+    }
+    while (digits.size() > 1 && digits[0] == '0' && digits[1] != '.') digits.erase(0, 1);
+    return (neg ? "-" : "") + digits;
 }
 
 std::string CodeGen::csvOptions(Expression* data_opts, Expression* handler_opts) {

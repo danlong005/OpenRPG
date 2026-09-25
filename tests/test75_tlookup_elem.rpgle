@@ -1,37 +1,29 @@
 **FREE
-DCL-S codes CHAR(3) DIM(4);
-DCL-S names VARCHAR(20) DIM(4);
+// %TLOOKUP searches a table: an array whose name begins with TAB (IBM:
+// RNF0597). %TLOOKUPLT/LE/GT/GE also need it in ASCEND or DESCEND order
+// (RNF0507). A table is not indexed (RNF0752); it is filled from
+// compile-time data, the **CTDATA section at the end.
+DCL-S tabCodes CHAR(3) DIM(4) ASCEND CTDATA;
 DCL-S found IND;
 DCL-S count INT(10);
 
 // %ELEM on varying array
 DCL-S dynArr INT(10) DIM(*VAR:50);
 
-// Set up paired tables
-codes(1) = 'NYC';
-codes(2) = 'LAX';
-codes(3) = 'ORD';
-codes(4) = 'DFW';
-
-names(1) = 'New York';
-names(2) = 'Los Angeles';
-names(3) = 'Chicago';
-names(4) = 'Dallas';
-
 // %TLOOKUP - found
-found = %TLOOKUP('LAX': codes);
+found = %TLOOKUP('LAX': tabCodes);
 IF found;
   DSPLY 'Found LAX';
 ENDIF;
 
 // %TLOOKUP - not found
-found = %TLOOKUP('SFO': codes);
+found = %TLOOKUP('SFO': tabCodes);
 IF NOT found;
   DSPLY 'SFO not found';
 ENDIF;
 
 // %TLOOKUPGE
-found = %TLOOKUPGE('LAX': codes);
+found = %TLOOKUPGE('LAX': tabCodes);
 IF found;
   DSPLY 'Found >= LAX';
 ENDIF;
@@ -51,3 +43,8 @@ count = %ELEM(dynArr);
 DSPLY %CHAR(count);  // 5
 
 *INLR = *ON;
+**CTDATA tabCodes
+DFW
+LAX
+NYC
+ORD

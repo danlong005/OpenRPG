@@ -404,8 +404,8 @@ run_test "92" "Data Area *LDA round-trip" "$TESTDIR/test92_data_area_lda.rpgle" 
 run_test "93" "Data Area named" "$TESTDIR/test93_data_area_named.rpgle" "run"
 
 # Tests 94-95: Operation Extenders
-run_test "94" "Extender (H) Half-Adjust" "$TESTDIR/test94_extender_h.rpgle" "run"
-run_test "95" "Extender (E) Error" "$TESTDIR/test95_extender_e.rpgle" "run"
+run_test "94" "Extenders on EVAL and EVALR" "$TESTDIR/test94_extender_h.rpgle" "run"
+run_test "95" "Extender (E) on CALLP" "$TESTDIR/test95_extender_e.rpgle" "run"
 
 # Tests 96-98: Data Area %STATUS codes
 _DA_DIR="$HOME/.rpgc/da"
@@ -833,6 +833,12 @@ run_test "274" "Reject a call that fits no OVERLOAD candidate" "$TESTDIR/test274
 run_test "275" "Reject DATA-INTO without %PARSER" "$TESTDIR/test275_err_data_into_no_parser.rpgle" "error"
 run_test "276" "Reject DATA-GEN without %GEN" "$TESTDIR/test276_err_data_gen_no_gen.rpgle" "error"
 run_test "277" "Reject SND-MSG TYPE(...)" "$TESTDIR/test277_err_snd_msg_type.rpgle" "error"
+run_test "278" "Reject EVAL(E)" "$TESTDIR/test278_err_eval_extender.rpgle" "error"
+run_test "279" "Reject EVALR(H)" "$TESTDIR/test279_err_evalr_extender.rpgle" "error"
+run_test "280" "Reject %LOOKUPGE on an unordered array" "$TESTDIR/test280_err_lookup_unsequenced.rpgle" "error"
+run_test "281" "Reject %TLOOKUP on a non-table" "$TESTDIR/test281_err_tlookup_not_table.rpgle" "error"
+run_test "282" "CTDATA compile-time arrays" "$TESTDIR/test282_ctdata.rpgle" "run"
+run_test "283" "Fixed-format CTDATA, bare ** sections" "$TESTDIR/test283_fixed_ctdata.rpgle" "run"
 
 # ── Customer / drop-in tests ─────────────────────────────────────────────
 # Drop any .rpgle or .sqlrpgle file into tests/customer/ and it will be

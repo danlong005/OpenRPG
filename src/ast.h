@@ -349,6 +349,9 @@ public:
     int dim_type = 0;  // 0=fixed, 1=*VAR, 2=*AUTO
     std::string like_var; // LIKE(varname)
     int sort_order = 0;  // 0=none, 1=ASCEND, -1=DESCEND
+    bool ctdata = false; // CTDATA: elements come from a **CTDATA section
+    int perrcd = 1;      // PERRCD(n): elements per compile-time data record
+    std::vector<std::string> ctdata_elems; // raw element text, filled by main
     std::string datfmt;  // per-field DATFMT
     std::string timfmt;  // per-field TIMFMT
     std::string nullind; // NULLIND(field)

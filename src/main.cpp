@@ -5,6 +5,7 @@
 #include <fstream>
 #include <iostream>
 #include <sstream>
+#include <set>
 #include <string>
 #include <sys/stat.h>
 #include <cstdlib>
@@ -212,6 +213,100 @@ static bool looksLikeFixedFormat(const std::string& src_text) {
 // the caller-supplied lists queryExternalDescs()/queryDspfDescs() expect.
 // DclF only ever appears at program top level in this compiler's grammar
 // (both frontends), so a non-recursive scan of program->statements suffices.
+// --- Compile-time data (CTDATA) ---------------------------------------
+// Compile-time data follows the program's last line. Each section opens with
+// a line starting "**CTDATA name" in position 1, or in fixed format "**"
+// followed by a blank, and holds the records for one CTDATA array: PERRCD
+// elements per record, each as wide as the element (digits for a number).
+// A named section loads the array it names; an unnamed one loads the next
+// CTDATA array in declaration order, as on IBM i. "**" sections for other
+// uses (**FTRANS, **ALTSEQ) are skipped.
+struct CtdataSection {
+    std::string name;                 // upper-cased; empty for a bare "**"
+    std::vector<std::string> records;
+};
+
+static std::string upperStr(std::string v) {
+    for (auto& c : v) c = (char)toupper((unsigned char)c);
+    return v;
+}
+
+// Offset in src of the first compile-time data line, or npos.
+static size_t ctdataStart(const std::string& src, bool fixed) {
+    size_t pos = 0;
+    while (pos < src.size()) {
+        size_t eol = src.find('\n', pos);
+        std::string line = src.substr(pos, eol == std::string::npos ? std::string::npos : eol - pos);
+        std::string up = upperStr(line);
+        if (up.rfind("**CTDATA", 0) == 0) return pos;
+        if (fixed && up.rfind("**", 0) == 0 && up.rfind("**FREE", 0) != 0 &&
+            (up.size() == 2 || up[2] == ' ' || up[2] == '\r'))
+            return pos;
+        if (eol == std::string::npos) break;
+        pos = eol + 1;
+    }
+    return std::string::npos;
+}
+
+static std::vector<CtdataSection> parseCtdata(const std::string& data) {
+    std::vector<CtdataSection> sections;
+    bool skipping = false;
+    std::istringstream in(data);
+    std::string line;
+    while (std::getline(in, line)) {
+        if (!line.empty() && line.back() == '\r') line.pop_back();
+        if (line.rfind("**", 0) == 0) {
+            std::string up = upperStr(line);
+            skipping = false;
+            CtdataSection sec;
+            if (up.rfind("**CTDATA", 0) == 0) {
+                std::istringstream w(up.substr(8));
+                w >> sec.name;
+            } else if (up.size() > 2 && up[2] != ' ') {
+                skipping = true;      // **FTRANS, **ALTSEQ
+                continue;
+            }
+            sections.push_back(sec);
+            continue;
+        }
+        if (!skipping && !sections.empty()) sections.back().records.push_back(line);
+    }
+    return sections;
+}
+
+// Hands each CTDATA array its elements: PERRCD per record, element-wide.
+static void attachCtdata(rpg::Program* program, const std::vector<CtdataSection>& sections) {
+    std::vector<rpg::DclS*> arrays;
+    for (auto& st : program->statements)
+        if (auto* d = dynamic_cast<rpg::DclS*>(st.get()))
+            if (d->ctdata) arrays.push_back(d);
+    size_t next = 0;
+    std::set<rpg::DclS*> loaded;
+    for (auto& sec : sections) {
+        rpg::DclS* target = nullptr;
+        if (!sec.name.empty()) {
+            for (auto* d : arrays) if (upperStr(d->name) == sec.name) target = d;
+        } else {
+            while (next < arrays.size() && loaded.count(arrays[next])) next++;
+            if (next < arrays.size()) target = arrays[next++];
+        }
+        if (!target || loaded.count(target)) continue;
+        loaded.insert(target);
+        bool numeric = target->type != rpg::RPGType::CHAR && target->type != rpg::RPGType::VARCHAR;
+        int width = numeric ? target->digits : target->length;
+        if (width <= 0) continue;
+        int per = target->perrcd > 0 ? target->perrcd : 1;
+        for (auto& rec : sec.records) {
+            for (int i = 0; i < per && (int)target->ctdata_elems.size() < target->dim; i++) {
+                size_t at = (size_t)i * width;
+                std::string elem = at < rec.size() ? rec.substr(at, width) : "";
+                elem.resize(width, ' ');
+                target->ctdata_elems.push_back(elem);
+            }
+        }
+    }
+}
+
 static void collectDclFLists(rpg::Program* program,
                               std::vector<std::pair<std::string, std::string>>& diskFiles,
                               std::vector<std::string>& workstnNames) {
@@ -459,8 +554,14 @@ int main(int argc, char* argv[]) {
     rpg::Program* program = nullptr;
     int errors = 0;
 
+    // Compile-time data is not RPG. The fixed-format reader is handed the
+    // source without it; the free-format scanner stops at **CTDATA itself.
+    std::vector<CtdataSection> ctdata;
+    size_t ctdata_at = ctdataStart(src_text, is_fixed);
+    if (ctdata_at != std::string::npos) ctdata = parseCtdata(src_text.substr(ctdata_at));
+
     if (is_fixed) {
-        program = rpg::fixed::parseFixedFormat(src_text, input_file);
+        program = rpg::fixed::parseFixedFormat(src_text.substr(0, ctdata_at), input_file);
         errors = get_parse_error_count();
     } else {
         yyin = fopen(input_file, "r");
@@ -478,6 +579,8 @@ int main(int argc, char* argv[]) {
         delete program;
         return 1;
     }
+
+    attachCtdata(program, ctdata);
 
     // Preemptive EXTDESC pass: query DB schema (or read cache)
     std::vector<std::pair<std::string, std::string>> diskFiles;

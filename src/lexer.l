@@ -859,9 +859,10 @@ static void parse_ctlopt(const char* text) {
 
 [Xx]'[0-9A-Fa-f]*'  { yylval.sval = process_hex_string(yytext); return STRING_LITERAL; }
  /* Typed literals: D'2024-01-15', T'10.30.00', Z'2024-01-15-10.30.00.000000' */
-[Dd]'[^'\n]*'       { yylval.sval = strndup(yytext + 2, yyleng - 3); return DATE_LITERAL; }
-[Tt]'[^'\n]*'       { yylval.sval = strndup(yytext + 2, yyleng - 3); return TIME_LITERAL; }
-[Zz]'[^'\n]*'       { yylval.sval = strndup(yytext + 2, yyleng - 3); return TIMESTAMP_LITERAL; }
+ /* (std::string rather than strndup, which Windows' C library lacks) */
+[Dd]'[^'\n]*'       { yylval.sval = strdup(std::string(yytext + 2, yyleng - 3).c_str()); return DATE_LITERAL; }
+[Tt]'[^'\n]*'       { yylval.sval = strdup(std::string(yytext + 2, yyleng - 3).c_str()); return TIME_LITERAL; }
+[Zz]'[^'\n]*'       { yylval.sval = strdup(std::string(yytext + 2, yyleng - 3).c_str()); return TIMESTAMP_LITERAL; }
 '([^']|'')*'        { yylval.sval = process_rpg_string(yytext); return STRING_LITERAL; }
 
 [a-zA-Z_][a-zA-Z0-9_]* {

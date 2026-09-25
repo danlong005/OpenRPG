@@ -93,6 +93,7 @@ public:
     void visit(MoveStmt& node) override;
     void visit(CallStmt& node) override;
     void visit(SortAStmt& node) override;
+    void visit(ExceptStmt& node) override;
     void visit(ResetStmt& node) override;
     void visit(ClearStmt& node) override;
     void visit(DumpStmt& node) override;
@@ -172,7 +173,8 @@ private:
     // over Program::statements (fixed_reader.cpp constructs these AST
     // nodes directly — no free-form equivalent exists to bridge through).
     std::map<std::string, std::vector<IRecordFormat*>> flat_input_formats_;
-    std::map<std::string, ORecordFormat*> flat_output_formats_;
+    std::map<std::string, std::vector<ORecordFormat*>> flat_output_formats_;
+    void emitOutputRecord(const std::string& file, ORecordFormat& fmt, const char* op);
     std::map<std::string, int> flat_record_len_; // resolved record length, keyed by file name
     std::string conf_dsn_;    // from rpgc.conf, for auto-connect
 

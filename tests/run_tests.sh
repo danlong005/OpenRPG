@@ -846,6 +846,11 @@ run_test "287" "Reject UNLOCK of the local data area" "$TESTDIR/test287_err_unlo
 run_test "288" "Reject a data area name over 10 characters" "$TESTDIR/test288_err_dtaara_name_length.rpgle" "error"
 run_test "289" "Reject TEST without (E)" "$TESTDIR/test289_err_test_no_e.rpgle" "error"
 run_test "290" "Reject TEST(D) on a date field" "$TESTDIR/test290_err_test_d_on_date.rpgle" "error"
+run_test "291" "Reject two statements on one line" "$TESTDIR/test291_err_two_statements_line.rpgle" "error"
+run_test "292" "Reject WRITE to a program-described file" "$TESTDIR/test292_err_write_program_described.rpgle" "error"
+run_test "293" "Reject an O-spec record with no type" "$TESTDIR/test293_err_ospec_no_type.rpgle" "error"
+run_test "294" "Reject specifications out of order" "$TESTDIR/test294_err_spec_order.rpgle" "error"
+run_test "295" "Reject a blank F-spec file designation" "$TESTDIR/test295_err_fspec_designation.rpgle" "error"
 
 # ── Customer / drop-in tests ─────────────────────────────────────────────
 # Drop any .rpgle or .sqlrpgle file into tests/customer/ and it will be

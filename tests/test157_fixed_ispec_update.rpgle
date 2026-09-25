@@ -4,14 +4,16 @@
      I                             A    1   20  NOTE
       /free
        NOTE = 'original';
-       WRITE TESTFL157;
+       EXCEPT NEWNOTE;
       /end-free
      C                   READ      TESTFL157
       /free
        NOTE = 'updated!';
       /end-free
-     C                   UPDATE    TESTFL157
+     C                   EXCEPT    CHGNOTE
      C     'done'        DSPLY
      C                   RETURN
-     OTESTFL157 D
+     OTESTFL157 EADD         NEWNOTE
+     O                       NOTE                20
+     OTESTFL157 E            CHGNOTE
      O                       NOTE                20

@@ -15,13 +15,21 @@
      I                             A   25   30  UOM
       /free
        // build the extract the C-specs then read back
-       itemno = 'WIDGET';  amount = 1250.00;  rate = 1.375;  uom = 'EACH  ';
-       WRITE TESTFL221;
-       itemno = 'BOLT  ';  amount = 0.05;     rate = 0.001;  uom = 'BOX   ';
-       WRITE TESTFL221;
-       itemno = 'MAXVAL';  amount = 99999999.99; rate = 9999.999;
+       itemno = 'WIDGET';
+       amount = 1250.00;
+       rate = 1.375;
+       uom = 'EACH  ';
+       EXCEPT;
+       itemno = 'BOLT  ';
+       amount = 0.05;
+       rate = 0.001;
+       uom = 'BOX   ';
+       EXCEPT;
+       itemno = 'MAXVAL';
+       amount = 99999999.99;
+       rate = 9999.999;
        uom = 'CS    ';
-       WRITE TESTFL221;
+       EXCEPT;
       /end-free
      C*READ EACH RECORD BACK AND PROVE THE VALUE SURVIVED
      C                   READ      TESTFL221
@@ -35,7 +43,7 @@
      C                   ENDDO
      C                   RETURN
      O*THE WRITE SIDE OF THE ROUND TRIP
-     OTESTFL221
+     OTESTFL221 EADD
      O                       ITEMNO               6
      O                       AMOUNT              17
      O                       RATE                24

@@ -10,7 +10,7 @@
      H* CENTS, AS INTERFACE FILES CONVENTIONALLY DO.
      H*-----------------------------------------------------------------
      HDFTACTGRP(*NO)
-     FTESTFL216 U FA F   48        DISK
+     FTESTFL216 UF A F   48        DISK
      D* BATCH ACCUMULATORS
      DDRTOT            S             11P 0
      DCRTOT            S             11P 0
@@ -48,46 +48,76 @@
      I                             A   26   48  DESCR
      C* BUILD THE INTERFACE FILE THIS RUN WILL EDIT.
       /free
-       RECTYP = 'H';  BATNO = 'B00100';
-       ACCTNO = '';  DRCR = ' ';
-       AMTCTS = 250000;  DESCR = 'APRIL ACCRUALS';
-       WRITE TESTFL216;
-       RECTYP = 'D';  BATNO = 'B00100';
-       ACCTNO = '400100';  DRCR = 'D';
-       AMTCTS = 150000;  DESCR = 'RENT EXPENSE';
-       WRITE TESTFL216;
-       RECTYP = 'D';  BATNO = 'B00100';
-       ACCTNO = '400200';  DRCR = 'D';
-       AMTCTS = 100000;  DESCR = 'UTILITIES';
-       WRITE TESTFL216;
-       RECTYP = 'D';  BATNO = 'B00100';
-       ACCTNO = '300100';  DRCR = 'C';
-       AMTCTS = 250000;  DESCR = 'ACCRUED LIABILITY';
-       WRITE TESTFL216;
-       RECTYP = 'H';  BATNO = 'B00200';
-       ACCTNO = '';  DRCR = ' ';
-       AMTCTS = 100000;  DESCR = 'MISC ADJUSTMENTS';
-       WRITE TESTFL216;
-       RECTYP = 'D';  BATNO = 'B00200';
-       ACCTNO = '400100';  DRCR = 'D';
-       AMTCTS = 60000;  DESCR = 'RENT TRUE-UP';
-       WRITE TESTFL216;
-       RECTYP = 'D';  BATNO = 'B00200';
-       ACCTNO = '300100';  DRCR = 'C';
-       AMTCTS = 55000;  DESCR = 'ACCRUAL RELIEF';
-       WRITE TESTFL216;
-       RECTYP = 'H';  BATNO = 'B00300';
-       ACCTNO = '';  DRCR = ' ';
-       AMTCTS = 0;  DESCR = 'ZERO CONTROL BATCH';
-       WRITE TESTFL216;
-       RECTYP = 'D';  BATNO = 'B00300';
-       ACCTNO = '500100';  DRCR = 'D';
-       AMTCTS = 12500;  DESCR = 'SUSPENSE';
-       WRITE TESTFL216;
-       RECTYP = 'D';  BATNO = 'B00300';
-       ACCTNO = '300100';  DRCR = 'C';
-       AMTCTS = 12500;  DESCR = 'SUSPENSE OFFSET';
-       WRITE TESTFL216;
+       RECTYP = 'H';
+       BATNO = 'B00100';
+       ACCTNO = '';
+       DRCR = ' ';
+       AMTCTS = 250000;
+       DESCR = 'APRIL ACCRUALS';
+       EXCEPT;
+       RECTYP = 'D';
+       BATNO = 'B00100';
+       ACCTNO = '400100';
+       DRCR = 'D';
+       AMTCTS = 150000;
+       DESCR = 'RENT EXPENSE';
+       EXCEPT;
+       RECTYP = 'D';
+       BATNO = 'B00100';
+       ACCTNO = '400200';
+       DRCR = 'D';
+       AMTCTS = 100000;
+       DESCR = 'UTILITIES';
+       EXCEPT;
+       RECTYP = 'D';
+       BATNO = 'B00100';
+       ACCTNO = '300100';
+       DRCR = 'C';
+       AMTCTS = 250000;
+       DESCR = 'ACCRUED LIABILITY';
+       EXCEPT;
+       RECTYP = 'H';
+       BATNO = 'B00200';
+       ACCTNO = '';
+       DRCR = ' ';
+       AMTCTS = 100000;
+       DESCR = 'MISC ADJUSTMENTS';
+       EXCEPT;
+       RECTYP = 'D';
+       BATNO = 'B00200';
+       ACCTNO = '400100';
+       DRCR = 'D';
+       AMTCTS = 60000;
+       DESCR = 'RENT TRUE-UP';
+       EXCEPT;
+       RECTYP = 'D';
+       BATNO = 'B00200';
+       ACCTNO = '300100';
+       DRCR = 'C';
+       AMTCTS = 55000;
+       DESCR = 'ACCRUAL RELIEF';
+       EXCEPT;
+       RECTYP = 'H';
+       BATNO = 'B00300';
+       ACCTNO = '';
+       DRCR = ' ';
+       AMTCTS = 0;
+       DESCR = 'ZERO CONTROL BATCH';
+       EXCEPT;
+       RECTYP = 'D';
+       BATNO = 'B00300';
+       ACCTNO = '500100';
+       DRCR = 'D';
+       AMTCTS = 12500;
+       DESCR = 'SUSPENSE';
+       EXCEPT;
+       RECTYP = 'D';
+       BATNO = 'B00300';
+       ACCTNO = '300100';
+       DRCR = 'C';
+       AMTCTS = 12500;
+       DESCR = 'SUSPENSE OFFSET';
+       EXCEPT;
       /end-free
      C*-----------------------------------------------------------------
      C* MAIN LINE
@@ -104,14 +134,6 @@
      C                   EXSR      EDTSR
      C                   EXSR      SUMSR
      C                   RETURN
-     O* ONE PHYSICAL LAYOUT SERVES BOTH RECORD TYPES
-     OTESTFL216
-     O                       RECTYP               1
-     O                       BATNO                7
-     O                       ACCTNO              13
-     O                       DRCR                14
-     O                       AMTCTS              25
-     O                       DESCR               48
      C*-----------------------------------------------------------------
      C* INZSR1  -  CLEAR ACCUMULATORS AND NAME THE ACCOUNT CLASSES
      C*-----------------------------------------------------------------
@@ -268,3 +290,11 @@
      C                             %CHAR(ERRCNT)
      C     RPTLIN        DSPLY
      C                   ENDSR
+     O* ONE PHYSICAL LAYOUT SERVES BOTH RECORD TYPES
+     OTESTFL216 EADD
+     O                       RECTYP               1
+     O                       BATNO                7
+     O                       ACCTNO              13
+     O                       DRCR                14
+     O                       AMTCTS              25
+     O                       DESCR               48

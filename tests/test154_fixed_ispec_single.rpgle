@@ -7,13 +7,13 @@
       /free
        NAME = 'Alice';
        AGE = 30;
-       WRITE TESTFL154;
+       EXCEPT;
        NAME = 'Bob';
        AGE = 25;
-       WRITE TESTFL154;
+       EXCEPT;
        NAME = 'Carol';
        AGE = 40;
-       WRITE TESTFL154;
+       EXCEPT;
       /end-free
      C                   READ      TESTFL154
      C                   DOW       NOT %EOF(TESTFL154)
@@ -24,6 +24,6 @@
      C                   READ      TESTFL154
      C                   ENDDO
      C                   RETURN
-     OTESTFL154 D
+     OTESTFL154 EADD
      O                       NAME                20
      O                       AGE                 25

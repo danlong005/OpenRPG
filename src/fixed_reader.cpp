@@ -456,7 +456,35 @@ static void handleFSpecLine(Program* program, PendingFSpec& pending,
             "'; must be F (program-described) or E (externally described) (IBM: RNF2006)");
     }
 
+    // Position 18, File-Designation, is required for an input or update
+    // file: F (full procedural) for one read by operation codes (RNF2093,
+    // which IBM reports as "defaults to F"). Position 19 is blank or E
+    // (RNF2004), position 20 blank or A for record addition.
+    std::string desig = upper(extractCol(line, FSpec::FileDesig));
+    if ((fileType == "I" || fileType == "U" || fileType == "C") && desig.empty()) {
+        report_fixed_format_error(lineNo,
+            "F-spec: File-Designation in position 18 is blank; an input or update file needs "
+            "one, F for a file read with operation codes (IBM: RNF2093)");
+    }
+    std::string eofFlag = upper(extractCol(line, FSpec::EofFlag));
+    if (!eofFlag.empty() && eofFlag != "E") {
+        report_fixed_format_error(lineNo,
+            "F-spec: the End-of-File entry in position 19 is '" + eofFlag + "'; it must be "
+            "blank or E (IBM: RNF2004)");
+    }
+    std::string addFlag = upper(extractCol(line, FSpec::AddFlag));
+    if (!addFlag.empty() && addFlag != "A") {
+        report_fixed_format_error(lineNo,
+            "F-spec: the File-Addition entry in position 20 is '" + addFlag + "'; it must be "
+            "blank or A");
+    }
+
     pending.dclf = new DclF(upper(name), usage);
+    // The file type, as free-form DCL-F spells it with USAGE: EXCEPT uses it
+    // to tell an update file's rewrite from an output file's add.
+    if (fileType == "U") pending.dclf->usages = "*UPDATE";
+    else if (fileType == "O") pending.dclf->usages = "*OUTPUT";
+    else if (fileType == "I") pending.dclf->usages = "*INPUT";
     // Record-Address-Type (position 34): 'K' means the file is accessed by key.
     // This is the fixed-format spelling of what free-form DCL-F calls KEYED.
     std::string rat = upper(extractCol(line, FSpec::RecAddrType));
@@ -880,13 +908,6 @@ static void handleISpecLine(Program* program, ISpecState& state,
 // --- O-spec (program-described DISK files only) --------------------------
 struct OSpecState {
     ORecordFormat* currentFormat = nullptr;
-    // Only one O-spec record format per file is supported — codegen keeps
-    // a single ORecordFormat* per file name (real DDS disambiguates
-    // multiple O-spec formats for one file via record-type/EXCEPT names,
-    // both deferred; see TODO.md). Tracks every file name a record line
-    // has already been seen for, across the whole O-spec, so a second one
-    // is rejected loudly instead of silently overwriting the first.
-    std::set<std::string> seenFiles;
 };
 
 // True if all three conditioning-indicator slots on this line are blank.
@@ -898,29 +919,34 @@ static void handleOSpecLine(Program* program, OSpecState& state,
                              const std::string& line, int lineNo) {
     std::string fileName = extractCol(line, OSpec::FileName);
     if (!fileName.empty()) {
-        // Position 17 (SC09-2508 p.572): D (detail) is the ordinary record type
-        // and matches what this compiler emits, so accept it. H (heading),
-        // T (total) and E (exception) need RPG-cycle timing that is not
-        // implemented. IBM *requires* a value here (RNF6005 when blank), so
-        // rejecting every non-blank entry left no mutually acceptable form.
+        // Position 17 (SC09-2508 p.572) is the record type, and IBM
+        // requires one (RNF6005 when blank). E (exception) records are
+        // written by EXCEPT, which is how a program without the RPG cycle
+        // writes a program-described file. H, D and T records are written
+        // by the cycle at heading, detail and total time, which this
+        // compiler does not implement.
         std::string recType = upper(extractCol(line, OSpec::RecType));
-        if (!recType.empty() && recType != "D") {
+        if (recType.empty()) {
             report_fixed_format_error(lineNo,
-                "O-spec: record type '" + recType + "' (position 17) needs RPG-cycle timing "
-                "this compiler doesn't implement; only 'D' (detail) is supported. See TODO.md");
+                "O-spec: the record type in position 17 is required; use E for an exception "
+                "record written by EXCEPT (IBM: RNF6005)");
             return;
         }
-        if (!extractCol(line, OSpec::AddDel).empty()) {
-            report_fixed_format_error(lineNo, "O-spec: record addition/deletion (positions 18-20) is not supported");
+        if (recType != "E") {
+            report_fixed_format_error(lineNo,
+                "O-spec: record type '" + recType + "' (position 17) is written by the RPG "
+                "cycle, which this compiler does not implement; use an E (exception) record "
+                "and write it with EXCEPT. See TODO.md");
+            return;
+        }
+        std::string addDel = upper(extractCol(line, OSpec::AddDel));
+        if (!addDel.empty() && addDel != "ADD") {
+            report_fixed_format_error(lineNo, "O-spec: positions 18-20 may hold ADD; DEL is not supported");
             return;
         }
         if (!oCondBlank(line, OSpec::Cond1, OSpec::Cond2, OSpec::Cond3)) {
             report_fixed_format_error(lineNo,
                 "O-spec: conditioning indicators (positions 21-29) are not yet supported — see TODO.md");
-            return;
-        }
-        if (!extractCol(line, OSpec::ExceptName).empty()) {
-            report_fixed_format_error(lineNo, "O-spec: EXCEPT name (positions 30-39) is not supported — see TODO.md");
             return;
         }
         if (!extractCol(line, OSpec::SpaceSkip).empty()) {
@@ -930,15 +956,11 @@ static void handleOSpecLine(Program* program, OSpecState& state,
             return;
         }
         std::string upperFileName = upper(fileName);
-        if (!state.seenFiles.insert(upperFileName).second) {
-            report_fixed_format_error(lineNo,
-                "O-spec: only one record format per file is supported (real DDS disambiguates "
-                "multiple O-spec formats for one file via record-type/EXCEPT names, both "
-                "deferred — see TODO.md)");
-            return;
-        }
         auto* orf = new ORecordFormat(upperFileName);
         orf->line = lineNo;
+        orf->recType = 'E';
+        orf->add = addDel == "ADD";
+        orf->exceptName = upper(extractCol(line, OSpec::ExceptName));
         program->statements.emplace_back(orf);
         state.currentFormat = orf;
         return;
@@ -1028,6 +1050,8 @@ Program* parseFixedFormat(const std::string& src_text, const std::string& filena
     OSpecState oState;
 
     bool inFreeBlock = false;
+    int specRank = 0;          // highest of H,F,D,I,C,O (0-5) seen so far
+    std::string lastOutOfOrder; // spec type of the out-of-order run being reported
     std::string freeBlockText;
     int freeBlockStartLine = 0;
 
@@ -1096,6 +1120,13 @@ Program* parseFixedFormat(const std::string& src_text, const std::string& filena
             // landed after the block's statements, so the file's declaration
             // followed calculations it actually precedes.
             if (pendingF.dclf) finalizeFSpec(program, pendingF);
+            // A /FREE block holds calculations, so it stands where C-specs do.
+            if (specRank > 4)
+                report_fixed_format_error(lineNo, "A /FREE block of calculations is out of "
+                    "sequence after O specifications: specifications come in the order H, F, D, "
+                    "I, C, O (IBM: RNF0257)");
+            else
+                specRank = 4;
             inFreeBlock = true;
             freeBlockStartLine = lineNo + 1;
             continue;
@@ -1131,6 +1162,31 @@ Program* parseFixedFormat(const std::string& src_text, const std::string& filena
         if (specType != "C" && inCSpecRun) flushCRun();
         if (specType != "I") iState.currentFormat = nullptr;
         if (specType != "O") oState.currentFormat = nullptr;
+
+        // Specifications come in the order H, F, D, I, C, O (SC09-2508);
+        // one out of that order is RNF0257. Comments and /FREE blocks (which
+        // are calculations, placed like C-specs) are handled above. IBM
+        // reports every line of an out-of-order run; one message per run
+        // says the same.
+        {
+            static const std::string order = "HFDICO";
+            size_t rank = order.find(specType);
+            if (rank != std::string::npos) {
+                if ((int)rank < specRank) {
+                    if (specType != lastOutOfOrder) {
+                        std::string prev(1, order[specRank]);
+                        report_fixed_format_error(lineNo, "The " + specType + " specification is "
+                            "out of sequence: specifications come in the order H, F, D, I, C, O, "
+                            "and this one follows the " + prev + " specifications "
+                            "(IBM: RNF0257)");
+                    }
+                    lastOutOfOrder = specType;
+                } else {
+                    specRank = (int)rank;
+                    lastOutOfOrder.clear();
+                }
+            }
+        }
 
         if (specType == "H") {
             hSpecTail += " " + extractCol(line, HSpec::KeywordTail);

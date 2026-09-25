@@ -137,13 +137,13 @@ namespace OSpec {
     // Record identification and control entries (one line per record type):
     inline constexpr ColSpec FileName    {"FileName",    7,  16, "SC09-2508 p.570: positions 7-16"};
     inline constexpr ColSpec LogicalRel  {"LogicalRel",  16, 18, "SC09-2508 p.572: positions 16-18, AND/OR continuation (must be blank — not supported)"};
-    inline constexpr ColSpec RecType     {"RecType",     17, 17, "SC09-2508 p.572: position 17 (must be blank — H/T/E cycle/exception record types not supported)"};
-    inline constexpr ColSpec AddDel      {"AddDel",      18, 20, "SC09-2508 p.572-573: positions 18-20 (must be blank — ADD/DEL/release not supported)"};
+    inline constexpr ColSpec RecType     {"RecType",     17, 17, "SC09-2508 p.572: position 17 (E, an exception record written by EXCEPT; H/D/T need the RPG cycle)"};
+    inline constexpr ColSpec AddDel      {"AddDel",      18, 20, "SC09-2508 p.572-573: positions 18-20 (ADD, or blank; DEL/release not supported)"};
     // Three conditioning-indicator slots (N-flag + 2-digit indicator each):
     inline constexpr ColSpec Cond1       {"Cond1",       21, 23, "SC09-2508 p.573: positions 21-23"};
     inline constexpr ColSpec Cond2       {"Cond2",       24, 26, "SC09-2508 p.573: positions 24-26"};
     inline constexpr ColSpec Cond3       {"Cond3",       27, 29, "SC09-2508 p.573: positions 27-29"};
-    inline constexpr ColSpec ExceptName  {"ExceptName",  30, 39, "SC09-2508 p.573: positions 30-39 (must be blank — EXCEPT mechanism not supported)"};
+    inline constexpr ColSpec ExceptName  {"ExceptName",  30, 39, "SC09-2508 p.573: positions 30-39 (the EXCEPT name, or blank)"};
     inline constexpr ColSpec SpaceSkip   {"SpaceSkip",   40, 51, "SC09-2508 p.574: positions 40-51 (must be blank — printer spacing/skip not supported, no printer runtime exists)"};
     // Field description and control entries (one line per field/constant):
     inline constexpr ColSpec FCond1      {"FCond1",      21, 23, "SC09-2508 p.575: positions 21-23"};

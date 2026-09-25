@@ -122,6 +122,8 @@ CallStmt::CallStmt(std::string program, std::vector<std::string> parms)
     : program(std::move(program)), parms(std::move(parms)) {}
 void CallStmt::accept(ASTVisitor& visitor) { visitor.visit(*this); }
 
+ExceptStmt::ExceptStmt(std::string n) : name(std::move(n)) {}
+void ExceptStmt::accept(ASTVisitor& visitor) { visitor.visit(*this); }
 SortAStmt::SortAStmt(std::string name) : array_name(std::move(name)) {}
 void SortAStmt::accept(ASTVisitor& visitor) { visitor.visit(*this); }
 

@@ -57,6 +57,7 @@ struct DclSKws {
 extern int yylex();
 extern int yylineno;
 extern char* yytext;
+extern int g_semi_line;   // lexer.l: line of the last semicolon
 void yyerror(const char* s);
 
 // Flex's in-memory scan-buffer API — not declared by any generated
@@ -465,7 +466,7 @@ static rpg::DclS* make_dcl_s(const char* name, rpg::ParamDecl* t, DclSKws* k) {
 %token KW_DIM_VAR KW_DIM_AUTO
 %token KW_FOR_EACH KW_IN KW_XML_INTO KW_DATA_INTO KW_DATA_GEN KW_SND_MSG
 %token KW_STAR_INFO KW_STAR_DIAG KW_STAR_ESCAPE KW_TYPE
-%token KW_STAR_LOCK KW_STAR_DTAARA KW_STAR_SYS
+%token KW_STAR_LOCK KW_STAR_DTAARA KW_STAR_SYS KW_EXCEPT
 %token KW_STAR_COMP KW_STAR_STATUS KW_STAR_NOTIFY KW_STAR_CALLER KW_STAR_SELF KW_STAR_EXT BIF_TARGET
 %token KW_STAR_ALLOC KW_STAR_KEEP
 %token KW_READ KW_READC KW_READE KW_READP KW_READPE KW_CHAIN KW_WRITE KW_UPDATE KW_DELETE KW_SETLL KW_SETGT KW_EXFMT
@@ -487,7 +488,7 @@ static rpg::DclS* make_dcl_s(const char* name, rpg::ParamDecl* t, DclSKws* k) {
 %type <stmt> dcl_proc_stmt dcl_pr_stmt dcl_ds_stmt dcl_enum_stmt
 %type <str_list> call_parm_list
 %type <stmt> monitor_stmt begsr_stmt exsr_stmt goto_stmt tag_stmt move_stmt call_stmt exec_sql_stmt xml_into_stmt
-%type <stmt> in_da_stmt out_da_stmt unlock_da_stmt data_into_stmt data_gen_stmt snd_msg_stmt
+%type <stmt> in_da_stmt out_da_stmt unlock_da_stmt data_into_stmt data_gen_stmt snd_msg_stmt except_stmt
 %type <sval> snd_msg_type da_name
 %type <stmt> chain_stmt read_stmt readc_stmt reade_stmt readp_stmt readpe_stmt
 %type <stmt> write_stmt update_stmt delete_stmt setll_stmt setgt_stmt exfmt_stmt
@@ -598,6 +599,7 @@ statement:
     | data_into_stmt { $$ = $1; SET_LINE($$); }
     | data_gen_stmt  { $$ = $1; SET_LINE($$); }
     | snd_msg_stmt   { $$ = $1; SET_LINE($$); }
+    | except_stmt    { $$ = $1; SET_LINE($$); }
     | in_da_stmt    { $$ = $1; SET_LINE($$); }
     | out_da_stmt   { $$ = $1; SET_LINE($$); }
     | unlock_da_stmt { $$ = $1; SET_LINE($$); }
@@ -778,6 +780,15 @@ readpe_stmt:
         delete $2;
         $$ = new rpg::ReadpeStmt(std::move(keys), $3, $1);
         free($1); free($3);
+    }
+    ;
+
+/* EXCEPT {name}: write the exception output records (O-spec type E). */
+except_stmt:
+    KW_EXCEPT SEMICOLON { $$ = new rpg::ExceptStmt(""); }
+    | KW_EXCEPT IDENTIFIER SEMICOLON {
+        $$ = new rpg::ExceptStmt($2);
+        free($2);
     }
     ;
 
@@ -2823,6 +2834,7 @@ parse_free_block(const std::string& text, int start_line) {
 
     g_program = new rpg::Program();
     yylineno = start_line;
+    g_semi_line = -1;
     YY_BUFFER_STATE buf = yy_scan_string(text.c_str());
     yy_switch_to_buffer(buf);
     // Deliberately NOT resetting g_error_count here (unlike

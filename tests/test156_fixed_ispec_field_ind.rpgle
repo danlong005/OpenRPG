@@ -4,11 +4,11 @@
      I                             S    1   10 0AMT                 010203
       /free
        AMT = 50;
-       WRITE TESTFL156;
+       EXCEPT;
        AMT = -50;
-       WRITE TESTFL156;
+       EXCEPT;
        AMT = 0;
-       WRITE TESTFL156;
+       EXCEPT;
       /end-free
      C                   READ      TESTFL156
      C                   DOW       NOT %EOF(TESTFL156)
@@ -24,5 +24,5 @@
      C                   READ      TESTFL156
      C                   ENDDO
      C                   RETURN
-     OTESTFL156 D
+     OTESTFL156 EADD
      O                       AMT                 10

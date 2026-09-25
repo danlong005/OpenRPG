@@ -10,7 +10,7 @@
      HDFTACTGRP(*NO)
      HDATFMT(*ISO)
      F* OPEN ITEM EXTRACT - PROGRAM DESCRIBED, 32 BYTE RECORDS
-     FTESTFL215 U FA F   32        DISK
+     FTESTFL215 UF A F   32        DISK
      D* AGING BUCKET ACCUMULATORS AND THEIR HEADINGS
      DBUCKET           S             11P 2 DIM(4)
      DBKTCNT           S              5P 0 DIM(4)
@@ -44,36 +44,56 @@
      I                             S   22   32 0INVCTS              202122
      C* BUILD THE EXTRACT THIS RUN WILL READ BACK.
       /free
-       CUSNO = 'C001';  INVNO = 'INV1001';
-       INVDTE = 20260615;  INVCTS = 125000;
-       WRITE TESTFL215;
-       CUSNO = 'C001';  INVNO = 'INV1002';
-       INVDTE = 20260520;  INVCTS = 34050;
-       WRITE TESTFL215;
-       CUSNO = 'C001';  INVNO = 'INV1003';
-       INVDTE = 20260301;  INVCTS = 98075;
-       WRITE TESTFL215;
-       CUSNO = 'C002';  INVNO = 'INV2001';
-       INVDTE = 20260628;  INVCTS = 7525;
-       WRITE TESTFL215;
-       CUSNO = 'C002';  INVNO = 'INV2002';
-       INVDTE = 20260415;  INVCTS = 150000;
-       WRITE TESTFL215;
-       CUSNO = 'C002';  INVNO = 'INV2003';
-       INVDTE = 20260630;  INVCTS = -9999;
-       WRITE TESTFL215;
-       CUSNO = 'C003';  INVNO = 'INV3001';
-       INVDTE = 20260210;  INVCTS = 22500;
-       WRITE TESTFL215;
-       CUSNO = 'C003';  INVNO = 'INV3002';
-       INVDTE = 20260601;  INVCTS = 6000;
-       WRITE TESTFL215;
-       CUSNO = 'C003';  INVNO = 'INV3003';
-       INVDTE = 20260505;  INVCTS = 41010;
-       WRITE TESTFL215;
-       CUSNO = 'C003';  INVNO = 'INV3004';
-       INVDTE = 20260325;  INVCTS = 187500;
-       WRITE TESTFL215;
+       CUSNO = 'C001';
+       INVNO = 'INV1001';
+       INVDTE = 20260615;
+       INVCTS = 125000;
+       EXCEPT;
+       CUSNO = 'C001';
+       INVNO = 'INV1002';
+       INVDTE = 20260520;
+       INVCTS = 34050;
+       EXCEPT;
+       CUSNO = 'C001';
+       INVNO = 'INV1003';
+       INVDTE = 20260301;
+       INVCTS = 98075;
+       EXCEPT;
+       CUSNO = 'C002';
+       INVNO = 'INV2001';
+       INVDTE = 20260628;
+       INVCTS = 7525;
+       EXCEPT;
+       CUSNO = 'C002';
+       INVNO = 'INV2002';
+       INVDTE = 20260415;
+       INVCTS = 150000;
+       EXCEPT;
+       CUSNO = 'C002';
+       INVNO = 'INV2003';
+       INVDTE = 20260630;
+       INVCTS = -9999;
+       EXCEPT;
+       CUSNO = 'C003';
+       INVNO = 'INV3001';
+       INVDTE = 20260210;
+       INVCTS = 22500;
+       EXCEPT;
+       CUSNO = 'C003';
+       INVNO = 'INV3002';
+       INVDTE = 20260601;
+       INVCTS = 6000;
+       EXCEPT;
+       CUSNO = 'C003';
+       INVNO = 'INV3003';
+       INVDTE = 20260505;
+       INVCTS = 41010;
+       EXCEPT;
+       CUSNO = 'C003';
+       INVNO = 'INV3004';
+       INVDTE = 20260325;
+       INVCTS = 187500;
+       EXCEPT;
       /end-free
      C*-----------------------------------------------------------------
      C* MAIN LINE
@@ -202,8 +222,8 @@
      C                   EVAL      RPTLIN = 'GRAND TOTAL  ' + %EDITC(GRDTOT:'1')
      C     RPTLIN        DSPLY
      C                   ENDSR
-     O* EXTRACT RECORD IMAGE USED BY THE SEEDING WRITE ABOVE
-     OTESTFL215
+     O* EXTRACT RECORD IMAGE, ADDED BY THE SEEDING EXCEPTS ABOVE
+     OTESTFL215 EADD
      O                       CUSNO                6
      O                       INVNO               13
      O                       INVDTE              21

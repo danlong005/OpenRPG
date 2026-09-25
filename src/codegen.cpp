@@ -730,7 +730,7 @@ void CodeGen::visit(Program& node) {
             uses_flatfile_ = true;
         }
         if (auto* orf = dynamic_cast<ORecordFormat*>(stmt.get())) {
-            flat_output_formats_[orf->fileName] = orf;
+            flat_output_formats_[orf->fileName].push_back(orf);
             uses_flatfile_ = true;
         }
         // Also check inside procedures
@@ -5770,6 +5770,89 @@ void CodeGen::visit(ChainStmt& node) {
     indent_--; emitIndent(); out_ << "}\n";
 }
 
+// One exception (E) output record, built from its O-spec field list and
+// written with the flat-file operation op: writeRecord to add a record,
+// updateLast to rewrite the one last read. Each field/constant's start
+// position is inferred as (previous field's end position + 1) on the same
+// record -- i.e. O-spec fields must be listed in increasing, contiguous
+// end-position order (a documented simplification: real DDS infers width
+// from the field's own prior declared length, which would need
+// cross-referencing D-spec/I-spec declarations at O-spec parse time; this
+// compiler infers it from the gap between successive end positions).
+void CodeGen::emitOutputRecord(const std::string& file, ORecordFormat& fmt, const char* op) {
+    int recLen = flat_record_len_.count(file) ? flat_record_len_[file] : 1;
+        emitIndent(); out_ << "{\n"; indent_++;
+        emitIndent(); out_ << "std::string __rec(" << recLen << ", ' ');\n";
+        int prevEnd = 0;
+        for (auto& f : fmt.fields) {
+            int width = f.endPos - prevEnd;
+            if (width < 1) width = 1;
+            std::string valueExpr;
+            if (!f.fieldName.empty()) {
+                // The O-spec entry carries no scale of its own, so the
+                // field's declaration supplies it. Writing everything at
+                // zero decimals while the I-spec reads at the declared
+                // scale made a write/read round-trip through the same
+                // file divide the value by 10^decimals.
+                int fdec = var_decimals_.count(f.fieldName)
+                           ? var_decimals_[f.fieldName] : 0;
+                if (f.editCode != '\0') {
+                    valueExpr = "rpg_editc(" + f.fieldName + ", \"" + std::string(1, f.editCode) +
+                                "\", " + std::to_string(fdec) + ")";
+                } else if (var_types_.count(f.fieldName) && typeToString(var_types_[f.fieldName]) == "std::string") {
+                    valueExpr = f.fieldName;
+                } else {
+                    valueExpr = "rpg_flatfile_format_numeric(static_cast<double>(" + f.fieldName +
+                                 "), " + std::to_string(width) + ", " + std::to_string(fdec) + ")";
+                }
+            } else {
+                valueExpr = "std::string(\"" + cppEscape(f.constant) + "\")";
+            }
+            emitIndent();
+            out_ << "{ std::string __v = " << valueExpr << "; "
+                 << "if ((int)__v.size() > " << width << ") __v.resize(" << width << "); "
+                 << "else if ((int)__v.size() < " << width << ") __v.resize(" << width << ", ' '); "
+                 << "__rec.replace(" << prevEnd << ", " << width << ", __v); }\n";
+            prevEnd = f.endPos;
+        }
+        emitIndent(); out_ << file << "_ff." << op << "(__rec);\n";
+        for (auto& f : fmt.fields) {
+            if (f.blankAfter && !f.fieldName.empty()) {
+                emitIndent();
+                if (var_types_.count(f.fieldName) && typeToString(var_types_[f.fieldName]) == "std::string") {
+                    out_ << f.fieldName << ".assign(" << f.fieldName << ".size(), ' ');\n";
+                } else {
+                    out_ << f.fieldName << " = 0;\n";
+                }
+            }
+        }
+        indent_--; emitIndent(); out_ << "}\n";
+}
+
+// EXCEPT {name}: every E output record with that EXCEPT name (or, with none,
+// every unnamed one), in the order the O-specs list them. A record with ADD
+// adds; otherwise an update file's record rewrites the one last read, and an
+// output file's adds.
+void CodeGen::visit(ExceptStmt& node) {
+    std::string want = node.name;
+    for (auto& c : want) c = toupper((unsigned char)c);
+    bool any = false;
+    for (auto& [file, fmts] : flat_output_formats_) {
+        DclF* df = file_defs_.count(file) ? file_defs_[file] : nullptr;
+        bool update = df && df->usages.find("*UPDATE") != std::string::npos;
+        for (auto* fmt : fmts) {
+            if (fmt->exceptName != want) continue;
+            any = true;
+            emitOutputRecord(file, *fmt, fmt->add || !update ? "writeRecord" : "updateLast");
+        }
+    }
+    if (!any)
+        report_semantic_error(node.line > 0 ? node.line : cur_stmt_line_,
+            "EXCEPT" + (want.empty() ? std::string() : " " + want) + ": no exception (E) output "
+            "record " + (want.empty() ? std::string("without an EXCEPT name") :
+            "named " + want) + " in the O-specs");
+}
+
 void CodeGen::visit(WriteStmt& node) {
     // Check if this is a WRITE to a WORKSTN (display file) record format
     {
@@ -5814,66 +5897,16 @@ void CodeGen::visit(WriteStmt& node) {
         }
     }
 
-    // Program-described (O-spec) WRITE. Each field/constant's start
-    // position is inferred as (previous field's end position + 1) on the
-    // same record — i.e. O-spec fields must be listed in increasing,
-    // contiguous end-position order (a documented simplification: real
-    // DDS infers width from the field's own prior declared length, which
-    // would need cross-referencing D-spec/I-spec declarations at O-spec
-    // parse time; this compiler infers it from the gap between
-    // successive end positions instead).
-    {
-        auto fout = flat_output_formats_.find(node.filename);
-        if (fout != flat_output_formats_.end()) {
-            int recLen = flat_record_len_.count(node.filename) ? flat_record_len_[node.filename] : 1;
-            emitIndent(); out_ << "{\n"; indent_++;
-            emitIndent(); out_ << "std::string __rec(" << recLen << ", ' ');\n";
-            int prevEnd = 0;
-            for (auto& f : fout->second->fields) {
-                int width = f.endPos - prevEnd;
-                if (width < 1) width = 1;
-                std::string valueExpr;
-                if (!f.fieldName.empty()) {
-                    // The O-spec entry carries no scale of its own, so the
-                    // field's declaration supplies it. Writing everything at
-                    // zero decimals while the I-spec reads at the declared
-                    // scale made a write/read round-trip through the same
-                    // file divide the value by 10^decimals.
-                    int fdec = var_decimals_.count(f.fieldName)
-                               ? var_decimals_[f.fieldName] : 0;
-                    if (f.editCode != '\0') {
-                        valueExpr = "rpg_editc(" + f.fieldName + ", \"" + std::string(1, f.editCode) +
-                                    "\", " + std::to_string(fdec) + ")";
-                    } else if (var_types_.count(f.fieldName) && typeToString(var_types_[f.fieldName]) == "std::string") {
-                        valueExpr = f.fieldName;
-                    } else {
-                        valueExpr = "rpg_flatfile_format_numeric(static_cast<double>(" + f.fieldName +
-                                     "), " + std::to_string(width) + ", " + std::to_string(fdec) + ")";
-                    }
-                } else {
-                    valueExpr = "std::string(\"" + cppEscape(f.constant) + "\")";
-                }
-                emitIndent();
-                out_ << "{ std::string __v = " << valueExpr << "; "
-                     << "if ((int)__v.size() > " << width << ") __v.resize(" << width << "); "
-                     << "else if ((int)__v.size() < " << width << ") __v.resize(" << width << ", ' '); "
-                     << "__rec.replace(" << prevEnd << ", " << width << ", __v); }\n";
-                prevEnd = f.endPos;
-            }
-            emitIndent(); out_ << node.filename << "_ff.writeRecord(__rec);\n";
-            for (auto& f : fout->second->fields) {
-                if (f.blankAfter && !f.fieldName.empty()) {
-                    emitIndent();
-                    if (var_types_.count(f.fieldName) && typeToString(var_types_[f.fieldName]) == "std::string") {
-                        out_ << f.fieldName << ".assign(" << f.fieldName << ".size(), ' ');\n";
-                    } else {
-                        out_ << f.fieldName << " = 0;\n";
-                    }
-                }
-            }
-            indent_--; emitIndent(); out_ << "}\n";
-            return;
-        }
+    // A program-described file has no record format of its own, so WRITE
+    // and UPDATE take a data structure holding the record (WRITE file ds),
+    // which this compiler does not support; its O-spec records are written
+    // with EXCEPT (IBM: RNF5191 for WRITE file alone).
+    if (flat_output_formats_.count(node.filename) || flat_input_formats_.count(node.filename)) {
+        report_semantic_error(node.line > 0 ? node.line : cur_stmt_line_, "WRITE " + node.filename +
+            ": " + node.filename + " is program-described, so WRITE needs a data structure "
+            "holding the record; write its O-spec records with an E record type and EXCEPT "
+            "(IBM: RNF5191)");
+        return;
     }
 
     // Disk / RLA WRITE
@@ -5938,35 +5971,14 @@ void CodeGen::visit(UpdateStmt& node) {
         }
     }
 
-    // Program-described (I-spec) UPDATE — rewrites the last-read record
-    // with the current flat-field values, using the union of all record
-    // formats' field layouts (a single-record-type file, the common
-    // case, is handled exactly; a multi-record-type file assumes fields
-    // from every format can coexist in one rewritten buffer).
-    {
-        auto fin = flat_input_formats_.find(node.filename);
-        if (fin != flat_input_formats_.end()) {
-            int recLen = flat_record_len_.count(node.filename) ? flat_record_len_[node.filename] : 1;
-            emitIndent(); out_ << "{\n"; indent_++;
-            emitIndent(); out_ << "std::string __rec(" << recLen << ", ' ');\n";
-            for (auto* rf : fin->second) {
-                for (auto& f : rf->fields) {
-                    int width = f.toPos - f.fromPos + 1;
-                    std::string cpptype = typeToString(f.type);
-                    std::string valueExpr = (cpptype == "std::string") ? f.name
-                        : ("rpg_flatfile_format_numeric(static_cast<double>(" + f.name + "), " +
-                           std::to_string(width) + ", " + std::to_string(f.decimals) + ")");
-                    emitIndent();
-                    out_ << "{ std::string __v = " << valueExpr << "; "
-                         << "if ((int)__v.size() > " << width << ") __v.resize(" << width << "); "
-                         << "else if ((int)__v.size() < " << width << ") __v.resize(" << width << ", ' '); "
-                         << "__rec.replace(" << (f.fromPos - 1) << ", " << width << ", __v); }\n";
-                }
-            }
-            emitIndent(); out_ << node.filename << "_ff.updateLast(__rec);\n";
-            indent_--; emitIndent(); out_ << "}\n";
-            return;
-        }
+    // Program-described UPDATE needs a data structure holding the record,
+    // as WRITE does; rewrite the record with an E output record and EXCEPT
+    // (IBM: RNF5191).
+    if (flat_output_formats_.count(node.filename) || flat_input_formats_.count(node.filename)) {
+        report_semantic_error(node.line > 0 ? node.line : cur_stmt_line_, "UPDATE " + node.filename +
+            ": " + node.filename + " is program-described, so UPDATE needs a data structure "
+            "holding the record; rewrite it with an E output record and EXCEPT (IBM: RNF5191)");
+        return;
     }
 
     // Disk / RLA UPDATE

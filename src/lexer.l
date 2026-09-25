@@ -7,6 +7,27 @@
 #include "ast.h"
 #include "keyword_list.h"
 #include "parser.h"
+#include "free_bridge.h"
+
+// One statement per line: IBM i rejects anything but a comment after a
+// statement's semicolon on the same line (RNF5508), in **FREE source as in
+// free-form lines of fixed-format source. g_semi_line is the line of the
+// last semicolon; every token is checked against it before its rule runs.
+// Text the fixed-format transpiler generates is exempt: it is not the
+// user's layout.
+int g_semi_line = -1;
+static void check_one_statement_per_line() {
+    extern int yylineno;
+    extern char* yytext;
+    if (g_semi_line != yylineno || g_allow_fixed_only_stmts) return;
+    char c = yytext[0];
+    if (c == ' ' || c == '\t' || c == '\n' || c == '\r') return;
+    if (c == '/' && yytext[1] == '/') return;
+    g_semi_line = -1;
+    report_semantic_error(yylineno, "Only one statement is allowed on a line: nothing but a "
+        "comment may follow the semicolon ending a statement (IBM: RNF5508)");
+}
+#define YY_USER_ACTION check_one_statement_per_line();
 
 static char* process_rpg_string(const char* text) {
     size_t len = strlen(text);
@@ -266,6 +287,7 @@ static void parse_ctlopt(const char* text) {
     return KW_WRITE_EXT;
 }
 "WRITE"             { return KW_WRITE; }
+"EXCEPT"            { return KW_EXCEPT; }
 "UPDATE("[EHMNRP]+")" {
     char *p = strchr(yytext, '(') + 1;
     char ext[16] = {0}; int i = 0;
@@ -567,7 +589,7 @@ static void parse_ctlopt(const char* text) {
 "*ALLOC"            { return KW_STAR_ALLOC; }
 "*KEEP"             { return KW_STAR_KEEP; }
 
-";"                 { return SEMICOLON; }
+";"                 { g_semi_line = yylineno; return SEMICOLON; }
  /* Compound assignment: x += y is x = x + (y). No expression can contain
     one of these pairs, so they are safe to take as single tokens. */
 "+="                { yylval.ival = 0; return COMPOUND_ASSIGN; }

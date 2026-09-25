@@ -1,18 +1,18 @@
      HDFTACTGRP(*NO)
      FTESTFL155 UF A F   25        DISK
+     DTYPECODE         S              1A
+     DTMPDSP           S             52A
      ITESTFL155 AA  01    1 CC
      I                             A    2   21  NAME
      ITESTFL155 AA  02    1 CP
      I                             A    2   21  NAME
-     DTYPECODE         S              1A
-     DTMPDSP           S             52A
       /free
        TYPECODE = 'C';
        NAME = 'Acme Corp';
-       WRITE TESTFL155;
+       EXCEPT;
        TYPECODE = 'P';
        NAME = 'Widget';
-       WRITE TESTFL155;
+       EXCEPT;
       /end-free
      C                   READ      TESTFL155
      C                   DOW       NOT %EOF(TESTFL155)
@@ -27,6 +27,6 @@
      C                   READ      TESTFL155
      C                   ENDDO
      C                   RETURN
-     OTESTFL155 D
+     OTESTFL155 EADD
      O                       TYPECODE             1
      O                       NAME                21

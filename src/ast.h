@@ -211,6 +211,9 @@ struct OFieldDesc {
 class ORecordFormat : public Statement {
 public:
     std::string fileName;
+    char recType = 'E';       // position 17: E (exception), written by EXCEPT
+    bool add = false;         // positions 18-20 ADD: adds a record to an update file
+    std::string exceptName;   // positions 30-39: the EXCEPT name, empty for unnamed
     std::vector<OFieldDesc> fields;
     explicit ORecordFormat(std::string fileName);
     void accept(ASTVisitor& visitor) override;
@@ -628,6 +631,15 @@ public:
 };
 
 // SORTA statement
+// EXCEPT {name}: writes the exception (E) output records with that EXCEPT
+// name, or the unnamed ones.
+class ExceptStmt : public Statement {
+public:
+    std::string name;
+    explicit ExceptStmt(std::string name);
+    void accept(ASTVisitor& visitor) override;
+};
+
 class SortAStmt : public Statement {
 public:
     std::string array_name;
@@ -974,6 +986,7 @@ public:
     virtual void visit(MoveStmt& node) = 0;
     virtual void visit(CallStmt& node) = 0;
     virtual void visit(SortAStmt& node) = 0;
+    virtual void visit(ExceptStmt& node) = 0;
     virtual void visit(ResetStmt& node) = 0;
     virtual void visit(ClearStmt& node) = 0;
     virtual void visit(DumpStmt& node) = 0;

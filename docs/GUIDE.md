@@ -321,7 +321,14 @@ assignment keeps the first 52 characters.
 
 ### Statement Terminator
 
-Statements end with a semicolon (`;`).
+Statements end with a semicolon (`;`), one statement to a line: after the
+semicolon only a comment may follow (IBM: RNF5508). A statement may run over
+several lines.
+
+```rpgle
+total = 0;          // fine: a comment after the semicolon
+count = 0;  i = 1;  // rejected: two statements on one line
+```
 
 ---
 
@@ -956,9 +963,12 @@ DCL-S names    VARCHAR(50) DIM(10);
 DCL-S nRows    INT(10);
 
 // Multi-row insert from arrays
-ids(1) = 1;  names(1) = 'Alice';
-ids(2) = 2;  names(2) = 'Bob';
-ids(3) = 3;  names(3) = 'Charlie';
+ids(1) = 1;
+names(1) = 'Alice';
+ids(2) = 2;
+names(2) = 'Bob';
+ids(3) = 3;
+names(3) = 'Charlie';
 
 nRows = 3;
 EXEC SQL INSERT INTO employees (id, name)
@@ -2939,29 +2949,42 @@ an OpenRPG interchange format, not literal IBM i on-disk semantics.
 
 ```rpgle
      HDFTACTGRP(*NO)
-     FTESTFL          25           DISK
-     ITESTFL
-     I                             A1    20     NAME
-     I                             S21   25   0 AGE
-     OTESTFL
-     O                       NAME             20
-     O                       AGE              25
+     FTESTFL154 UF A F   25        DISK
+     DTMPDSP           S             52A
+     ITESTFL154 AA
+     I                             A    1   20  NAME
+     I                             S   21   25 0AGE
       /free
-  NAME = 'Alice';
-  AGE = 30;
-  WRITE TESTFL;
+       NAME = 'Alice';
+       AGE = 30;
+       EXCEPT;
+       NAME = 'Bob';
+       AGE = 25;
+       EXCEPT;
+       NAME = 'Carol';
+       AGE = 40;
+       EXCEPT;
       /end-free
-     C                   READ      TESTFL
-     C                   DOW       NOT %EOF(TESTFL)
-     C     %TRIM(NAME)   DSPLY
-     C                   READ      TESTFL
+     C                   READ      TESTFL154
+     C                   DOW       NOT %EOF(TESTFL154)
+     C                   EVAL      TMPDSP = %TRIM(NAME)
+     C     TMPDSP        DSPLY
+     C                   EVAL      TMPDSP = %CHAR(AGE)
+     C     TMPDSP        DSPLY
+     C                   READ      TESTFL154
      C                   ENDDO
      C                   RETURN
+     OTESTFL154 EADD
+     O                       NAME                20
+     O                       AGE                 25
 ```
 
-The F-spec gives the record length in positions 23-27 and leaves the file
-format column blank (program-described). Field names from the I-spec become
-ordinary program variables.
+The F-spec says `UF A F`: an update file (position 17), full procedural,
+read with operation codes (18, required for input and update files, IBM:
+RNF2093), records may be added (20), and `F` in position 22 for
+program-described. The record length is in positions 23-27. Field names from
+the I-spec become ordinary program variables. Specifications come in the order
+H, F, D, I, C, O (IBM: RNF0257).
 
 ### I-Spec — Input Layout
 
@@ -3004,8 +3027,14 @@ anything at run time.
 
 ### O-Spec — Output Layout
 
-One record identification line per file, followed by one field or constant line
-each:
+Output records are exception records: `E` in position 17 of the record line
+(IBM requires a type there, RNF6005), written by the `EXCEPT` operation. `ADD`
+in positions 18-20 adds a new record; without it, a record for an update file
+rewrites the one last read. An EXCEPT name in positions 30-39 lets a program
+write one record and not another. The heading, detail and total types (`H`,
+`D`, `T`) are written by the RPG cycle, which OpenRPG does not implement.
+
+Each record line is followed by one field or constant line each:
 
 | Positions | Field |
 |-----------|-------|
@@ -3018,29 +3047,35 @@ each:
 Field width is inferred from the gap to the previous field's end position, not
 from the field's own declared length. End positions must be absolute — the
 relative `+n`/`-n` forms are not supported. Edit codes use the same engine as
-`%EDITC`.
+`%EDITC`, and the end position must leave room for what the edit code adds
+(IBM: RNF8003).
 
-**A file may have exactly one O-spec record format.** A second one is rejected
-with a clear error rather than silently overwriting the first, because
-disambiguating them needs the record-type and `EXCEPT` mechanisms, which are
-not implemented.
+```rpgle
+     OTESTFL157 EADD         NEWNOTE
+     O                       NOTE                20
+     OTESTFL157 E            CHGNOTE
+     O                       NOTE                20
+```
+
+`EXCEPT NEWNOTE` adds a record; `EXCEPT CHGNOTE` rewrites the one just read.
+`EXCEPT` with no name writes the records that have none.
 
 ### Supported Operations
 
 | Opcode | Behavior |
 |--------|----------|
 | `READ` | Sequential read, dispatching on record type |
-| `WRITE` | Append a record |
-| `UPDATE` | Rewrite the record just read, in place |
+| `EXCEPT` | Write the E output records: add, or rewrite the record just read |
 
-`CHAIN`, `SETLL`, `SETGT` and `DELETE` are **not** supported on
+`WRITE` and `UPDATE` on a program-described file take a data structure holding
+the record on IBM i (RNF5191 without one), which OpenRPG does not support; use
+`EXCEPT`. `CHAIN`, `SETLL`, `SETGT` and `DELETE` are **not** supported on
 program-described files — keyed access needs F-spec key-field columns that are
-not modeled for them. `EXCEPT`, O-spec spacing and skipping, and printer paging
-are also unavailable; there is no PRINTER runtime in this compiler for any file
-type.
+not modeled for them. O-spec spacing and skipping, and printer paging, are also
+unavailable; there is no PRINTER runtime in this compiler for any file type.
 
-A program just writes `READ MYFILE;` regardless of which kind of file `MYFILE`
-is — the compiler picks the flat-file or the RLA path from the declaration.
+A program writes `READ MYFILE;` regardless of which kind of file `MYFILE` is —
+the compiler picks the flat-file or the RLA path from the declaration.
 
 ---
 

@@ -331,6 +331,7 @@ static const std::unordered_map<std::string, OpcodeInfo>& opcodeTable() {
         {"READE",  {CSpecShape::TRADITIONAL, true}},
         {"READPE", {CSpecShape::TRADITIONAL, true}},
         {"WRITE",  {CSpecShape::TRADITIONAL, true}},
+        {"EXCEPT", {CSpecShape::TRADITIONAL}},
         {"UPDATE", {CSpecShape::TRADITIONAL, true}},
         {"DELETE", {CSpecShape::TRADITIONAL, true}},
         {"SETLL",  {CSpecShape::TRADITIONAL}},
@@ -937,6 +938,15 @@ void feedCSpecLine(CSpecRunState& state, const std::string& line, int lineNo) {
                 return;
             }
             built = opcodeName + extender + " " + factor2;
+        } else if (opcodeName == "EXCEPT") {
+            // EXCEPT names the exception output records to write in
+            // Factor 2, or leaves it blank for the unnamed ones.
+            if (!factor1.empty() || !result.empty()) {
+                report_fixed_format_error(lineNo,
+                    "C-spec: EXCEPT takes only an EXCEPT name, in Factor 2");
+                return;
+            }
+            built = factor2.empty() ? "EXCEPT" : "EXCEPT " + factor2;
         } else if (opcodeName == "DELETE") {
             if (factor2.empty() || !factor1.empty() || !result.empty()) {
                 report_fixed_format_error(lineNo,

@@ -37,7 +37,12 @@ real source through both compilers.
 - **F-specs need a File-Type (17) and File-Format (22)**, and input/update files
   need a File-Designation (18).
 - **Specification order is H, F, D, I, C, O** — output specs come after the
-  calculations, not before them.
+  calculations, not before them. (`RNF0257`)
+- **An input or update file needs a File-Designation** in position 18,
+  `F` for one read by operation codes (`RNF2093`).
+- **A program-described file is written with `EXCEPT`** and `E` output
+  records (positions 17-20: `E`, or `EADD` to add). An O-spec record needs a
+  type (`RNF6005`), and `WRITE`/`UPDATE` of the file alone is `RNF5191`.
 - **`KEYED` is a free-form `DCL-F` keyword only.** In a fixed-format F-spec,
   keyed access is the Record-Address-Type entry: `K` in position 34.
 
@@ -158,6 +163,8 @@ format name replaced with the file name to move between the two.
 - **`%DATE`, `%TIME` and `%TIMESTAMP` read `*ISO` by default**, whatever the
   program's `DATFMT`; an *ISO time is `hh.mm.ss`, so `%TIME('14:30:00')` is
   status 112 at run time.
+- **One statement per line**: after a statement's semicolon only a comment
+  may follow (`RNF5508`), in `**FREE` source too.
 
 ### Other limits worth knowing
 

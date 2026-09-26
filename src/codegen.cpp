@@ -1,5 +1,6 @@
 #include "codegen.h"
 #include "free_bridge.h"
+#include <cstring>
 #include <iomanip>
 #include <algorithm>
 #include <functional>

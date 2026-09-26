@@ -4,17 +4,11 @@
 # actually valid RPG?" from an assumption into a categorized inventory.
 #
 # Acceptance only: each source is compiled into one scratch object that is
-# deleted straight away. Execution is a separate exercise (it needs a
-# DSPLY->printf transform; see scripts/ibmi-probe.sh), and is deliberately not
-# attempted here.
+# deleted straight away. Running the programs is scripts/ibmi-execution.sh.
 #
-# Every run that contacts the machine starts from a CLEAN library: it clears the
-# whole library (CLRLIB) and removes its own IFS folders, then rebuilds the
-# objects the corpus needs with scripts/ibmi-setup-objects.sh. The library is
-# shared with other projects (iMoq) that do the same -- each project owns it
-# for the length of its run and reloads everything it needs. Never keep
-# anything in it that is not reproducible from a repository. --no-reset skips
-# this, for a quick rerun straight after a reset one.
+# Every run that contacts the machine starts from a CLEAN library
+# (scripts/ibmi-reset.sh: CLRLIB, then rebuild the objects the corpus needs).
+# --no-reset skips this, for a quick rerun straight after a reset one.
 #
 # The parameters below were established empirically by ibmi-probe.sh; each one
 # is load-bearing and none of them is guessable:
@@ -245,35 +239,9 @@ echo " IBM i conformance run -- ${USER_ID}@${HOST}:${PORT}"
 echo "=================================================================="
 
 # ---- reset: clear the library, then rebuild the test objects -------------
-# The library is discovered, never assumed, and the clear refuses anything that
-# is not plainly a user library (empty, or an IBM Q* system library).
 if [ "$RESET" = "1" ]; then
-    cat > "$STAGE/reset_remote.sh" <<'RESET_EOF'
-PATH=/QOpenSys/usr/bin:/QOpenSys/usr/sbin:/usr/bin:$PATH
-export PATH
-SYS=/QOpenSys/usr/bin/system
-ME=$(whoami | tr 'a-z' 'A-Z')
-LIB=$($SYS "DSPUSRPRF USRPRF($ME) OUTPUT(*PRINT)" </dev/null 2>&1 \
-        | grep -i 'Current library' | awk '{print $NF}' | tr -d '\r')
-case "$LIB" in
-    ""|Q*|\**) echo "refusing to clear library '$LIB'" >&2; exit 1 ;;
-esac
-out=$($SYS "CLRLIB LIB($LIB)" </dev/null 2>&1); rc=$?
-if [ $rc -ne 0 ]; then
-    echo "CLRLIB $LIB failed:" >&2; echo "$out" | grep -E 'CP[FDI][0-9A-F]{4}' >&2
-    exit 1
-fi
-left=$($SYS "DSPLIB LIB($LIB) OUTPUT(*PRINT)" </dev/null 2>&1 \
-        | grep 'Number of objects' | head -1 | awk '{print $NF}')
-echo "cleared $LIB ($left object(s) left)"
-rm -rf "$HOME/rpgc-conf" "$HOME/rpgc-setup"
-RESET_EOF
-    echo "resetting: clearing the library and the IFS work folders"
-    ssh "${SSH_OPTS[@]}" "${USER_ID}@${HOST}" "sh -s" < "$STAGE/reset_remote.sh" \
-        | grep -E '^cleared ' || { echo "reset failed" >&2; exit 1; }
-    echo "rebuilding the objects the corpus references"
     PUB400_USER="$USER_ID" PUB400_HOST="$HOST" PUB400_PORT="$PORT" \
-        "$REPO_ROOT/scripts/ibmi-setup-objects.sh" || { echo "setup failed" >&2; exit 1; }
+        "$REPO_ROOT/scripts/ibmi-reset.sh" || exit 1
     echo
 fi
 

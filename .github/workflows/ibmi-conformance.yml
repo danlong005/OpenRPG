@@ -44,9 +44,9 @@ on:
   workflow_dispatch:
     inputs:
       mode:
-        description: 'changed = verify sources whose hash moved; full = compile the whole corpus; smoke = compile one file to prove the connection'
+        description: 'changed = verify sources whose hash moved; full = compile the whole corpus; smoke = compile one file to prove the connection; execute = run the run tests on IBM i and compare their output'
         type: choice
-        options: [changed, full, smoke]
+        options: [changed, full, smoke, execute]
         default: changed
 
 permissions:
@@ -69,7 +69,7 @@ jobs:
     name: verify on IBM i
     # Never on pull_request: fork PRs cannot see the SSH secret, and a shared
     # free machine should not be reachable from untrusted branch contents.
-    if: github.event_name == 'workflow_dispatch'
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.mode != 'execute'
     runs-on: ubuntu-latest
     # Write access for the wiki push only (the results page, below); every
     # other job keeps the read-only default above.
@@ -228,3 +228,65 @@ jobs:
             git commit -q -m "IBM i conformance results, run ${{ github.run_id }}"
             git push -q
           fi
+
+  # ── execute: runs the programs on the real machine ───────────────────────
+  # scripts/ibmi-execution.sh compiles each standalone run test on IBM i, runs
+  # it, and compares what it displayed with tests/expected_output/ (which rpgc
+  # generated). Commits ibmi-execution-baseline.json (IBM's output per source)
+  # and ibmi-execution-differences.md. Differences are findings, not failures:
+  # the job fails only when the run itself does.
+  execute:
+    name: run on IBM i
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.mode == 'execute'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: recursive
+
+      - name: Configure SSH for PUB400
+        env:
+          KEY: ${{ secrets.PUB400_SSH_KEY }}
+        run: |
+          if [ -z "$KEY" ]; then
+            echo "::error::secret PUB400_SSH_KEY is not set — see TODO.md" >&2
+            exit 1
+          fi
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          printf '%s\n' "$KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -p 2222 -H pub400.com >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: Run on IBM i
+        env:
+          PUB400_USER: ${{ secrets.PUB400_USER }}
+        run: scripts/ibmi-execution.sh
+
+      - name: Publish the run artefacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ibmi-execution
+          path: |
+            ibmi-execution-transcript.txt
+            ibmi-execution-baseline.json
+            ibmi-execution-differences.md
+          if-no-files-found: ignore
+
+      - name: Commit the results
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add ibmi-execution-baseline.json ibmi-execution-differences.md
+          if git diff --cached --quiet; then
+            echo "results unchanged"
+            exit 0
+          fi
+          git commit -q -m "IBM i execution results, run ${{ github.run_id }}"
+          for attempt in 1 2 3; do
+            git pull -q --rebase --autostash origin "${GITHUB_REF_NAME}" && git push -q origin "HEAD:${GITHUB_REF_NAME}" && exit 0
+            sleep 5
+          done
+          echo "::warning::could not push the results; they are in the run's artifact"

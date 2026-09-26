@@ -158,3 +158,21 @@ def root_cause(name, ms):
                 f"line {ln}: {text}" if ln else text)
     return ("Rejected with no diagnostic (return code only)", "")
 
+
+
+# ---- the local suite: which tests run, and how ------------------------------
+def run_tests(tests_dir=None):
+    """[(number, source path, mode, extra link arguments)] for every run_test
+    line in run_tests.sh, in order. Mode is run, run-sql, error, ..."""
+    import shlex
+    tests_dir = tests_dir or TESTS
+    out = []
+    for ln in open(os.path.join(tests_dir, "run_tests.sh"), errors="replace"):
+        if not ln.startswith("run_test "):
+            continue
+        a = shlex.split(ln, comments=True)[1:]
+        if len(a) < 4:
+            continue
+        src = a[2].replace("$TESTDIR", tests_dir)
+        out.append((a[0], src, a[3], a[4] if len(a) > 4 else ""))
+    return out

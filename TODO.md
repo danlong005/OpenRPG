@@ -1442,8 +1442,9 @@ the output.
    compares against cached results offline and PUB400 is consulted only for
    changed files. This is what turns the exercise into a build step.
 4. **Human pass over bucket D** (above).
-5. **Differential *execution*** — needs a mechanical `DSPLY` -> `printf`
-   transform. Proven feasible; not built.
+5. **Differential *execution*** — built 2026-09-26; see "Differential
+   execution" below. It routes DSPLY to a message queue rather than
+   rewriting it to `printf`.
 
 ### The build step (2026-08-30)
 
@@ -1681,6 +1682,56 @@ on PUB400. Tests 271-274 are the four rejected forms.
 Found alongside, not yet done: typed literals (`D'2024-01-15'`, `T'...'`,
 `Z'...'`) and `%DATE(string : *ISO)` with a format are syntax errors in
 rpgc; IBM i accepts both.
+
+### Differential execution (2026-09-26)
+
+`scripts/ibmi-execution.sh` compiles every standalone `run` test on PUB400,
+**runs** it, and compares what it displays with `tests/expected_output/`. This
+is the oracle for behaviour: the compile check cannot see a program both
+compilers accept but run differently, and `expected_output/` is written by
+rpgc itself. On demand: `gh workflow run ibmi-conformance.yml -f mode=execute`.
+Results: `ibmi-execution-differences.md`, from `ibmi-execution-baseline.json`
+(IBM's output per source, keyed by SHA-256).
+
+How, all verified on the machine first:
+- **DSPLY goes to a message queue, not `printf`.** DSPLY's second operand
+  names a message queue. `scripts/exec_transform.py` adds `'RPGCOUT'` to every
+  DSPLY (free, fixed, conditioned, multi-line); the harness reads the queue
+  back in order (`QSYS2.MESSAGE_QUEUE_INFO`). Nothing else in the source
+  changes, so this checks IBM's own DSPLY formatting. The `printf` route
+  would have replaced DSPLY with `%CHAR` and hidden exactly that.
+- **INQMSGRPY is `*RQD`.** An unhandled runtime error sends an inquiry to
+  the system operator and the job waits forever (found by hanging one, which
+  had to be ENDJOBed). Programs run through a CL driver that sets
+  `INQMSGRPY(*DFT)` and reports `RPGCRUN-ERROR <msgid>`.
+- **A watchdog ends a program still running after 60s.** The driver records
+  its job in a data area, and the watchdog ENDJOBs it.
+- **Program-described files keep their records between runs**, so each DISK
+  file a test names is cleared (`CLRPFM`) first.
+- **Other LONGDM jobs (`TLS`, `CORS`) run on the box concurrently.** A first
+  version deleted every spool file the profile created during the run,
+  which took four of their job logs. It now only reports its own driver
+  jobs' leftovers.
+
+**First run (full, 175 programs): 124 same, 31 differ, 19 runtime errors,
+1 timeout.** 8 run tests not run (linked pairs, IBM rejects). A first-pass
+triage, not yet investigated test by test:
+
+| Group | Tests |
+|---|---|
+| `%EDITC`/`%EDITW` keep their fixed width (leading blanks); rpgc trims | 215, 220, 221, 222, 223, 224, 225, 32 |
+| `%CHAR` of FLOAT is `+1.500000000000000E+000` | 60, 70 |
+| `%CHAR` keeps an expression's decimals (`112.50`, not `112.500000`); zero is `.00` | 161, 162, 163, 23, 39 |
+| DS without INZ starts as blanks: decimal data error (MCH1202), blank INT reads as 1077952576 | 249, 91, 230, 236, 23 |
+| One-off behaviours | 26 (`%SIZE` of pointer 16), 33 (`%REPLACE`), 50, 69 (`%SCANR`), 67 (*PSSR), 90 (PSDS user/job), 93/96 (data areas), 102 (SND-MSG escape), 155/216 (I-spec record ID), 193/196/208/212 (MOVE), 228 (loops forever), 267, 283, 87/88 |
+| Probably platform divergence | DATA-INTO/DATA-GEN name rpgc's built-in parsers (RNX0355: 99, 100, 112, 113, 114, 180, 87?); 54 (program name); 115 (DUMP goes to spool) |
+
+Found alongside:
+- rpgc rejects a variable named `ind`; IBM accepts it.
+- `DSPLY` of a DATE or TIME field generates C++ that does not compile.
+- IBM's DSPLY of a numeric *field* shows its digits right-adjusted, with no
+  decimal point and a trailing minus: PACKED(7:2) -12.5 is `   1250-`. rpgc
+  shows `-12.5`. No corpus test covers it yet.
 
 ### Load discipline
 

@@ -378,6 +378,7 @@ static rpg::DclDS* merge_ds_hdr(rpg::DclDS* a, rpg::DclDS* b) {
     a->is_template = a->is_template || b->is_template;
     if (b->dim) { a->dim = b->dim; a->dim_type = b->dim_type; }
     if (!b->prefix.empty()) { a->prefix = b->prefix; a->prefix_nbr = b->prefix_nbr; }
+    if (!b->inz.empty()) a->inz = b->inz;
     delete b;
     return a;
 }
@@ -412,6 +413,7 @@ static rpg::DclS* make_dcl_s(const char* name, rpg::ParamDecl* t, DclSKws* k) {
 %token KW_DATE KW_TIME KW_TIMESTAMP KW_IND KW_POINTER KW_NULL
 %token KW_DAYS KW_MONTHS KW_YEARS KW_HOURS KW_MINUTES KW_SECONDS KW_MSECONDS
 %token KW_CONST KW_INZ
+%token KW_STAR_EXTDFT KW_STAR_LIKEDS
 %token KW_DSPLY
 %token KW_EVAL KW_EVAL_CORR KW_EVALR KW_CALLP KW_LEAVESR KW_ON_EXIT KW_DEALLOC KW_TEST
 %token <sval> KW_EVAL_EXT KW_EVALR_EXT KW_CALLP_EXT
@@ -895,12 +897,13 @@ dcl_s_stmt:
 
 /* A DCL-S type, with the length conventions DclS has always used: INT
    carries no length; UNS, FLOAT, BINDEC and UCS2 carry theirs; PACKED and
-   ZONED carry digits and scale. */
+   ZONED carry digits and scale. INT and UNS also carry their digits (3, 5,
+   10 or 20), which decide their edited width and their size in bytes. */
 dcl_type:
     KW_CHAR LPAREN INTEGER_LITERAL RPAREN     { $$ = new rpg::ParamDecl{"", rpg::RPGType::CHAR, $3, 0, 0, false}; }
     | KW_VARCHAR LPAREN INTEGER_LITERAL RPAREN { $$ = new rpg::ParamDecl{"", rpg::RPGType::VARCHAR, $3, 0, 0, false}; }
-    | KW_INT LPAREN INTEGER_LITERAL RPAREN    { $$ = new rpg::ParamDecl{"", rpg::RPGType::INT10, 0, 0, 0, false}; }
-    | KW_UNS LPAREN INTEGER_LITERAL RPAREN    { $$ = new rpg::ParamDecl{"", rpg::RPGType::UNS, $3, 0, 0, false}; }
+    | KW_INT LPAREN INTEGER_LITERAL RPAREN    { $$ = new rpg::ParamDecl{"", rpg::RPGType::INT10, 0, $3, 0, false}; }
+    | KW_UNS LPAREN INTEGER_LITERAL RPAREN    { $$ = new rpg::ParamDecl{"", rpg::RPGType::UNS, $3, $3, 0, false}; }
     | KW_PACKED LPAREN INTEGER_LITERAL COLON INTEGER_LITERAL RPAREN {
         $$ = new rpg::ParamDecl{"", rpg::RPGType::PACKED, 0, $3, $5, false};
     }
@@ -1552,8 +1555,8 @@ param_decl:
     ;
 
 param_type:
-    KW_INT LPAREN INTEGER_LITERAL RPAREN      { $$ = new rpg::ParamDecl{"", rpg::RPGType::INT10, 0, 0, 0, false}; }
-    | KW_UNS LPAREN INTEGER_LITERAL RPAREN    { $$ = new rpg::ParamDecl{"", rpg::RPGType::UNS, 0, 0, 0, false}; }
+    KW_INT LPAREN INTEGER_LITERAL RPAREN      { $$ = new rpg::ParamDecl{"", rpg::RPGType::INT10, 0, $3, 0, false}; }
+    | KW_UNS LPAREN INTEGER_LITERAL RPAREN    { $$ = new rpg::ParamDecl{"", rpg::RPGType::UNS, 0, $3, 0, false}; }
     | KW_CHAR LPAREN INTEGER_LITERAL RPAREN   { $$ = new rpg::ParamDecl{"", rpg::RPGType::CHAR, $3, 0, 0, false}; }
     | KW_VARCHAR LPAREN INTEGER_LITERAL RPAREN { $$ = new rpg::ParamDecl{"", rpg::RPGType::VARCHAR, $3, 0, 0, false}; }
     | KW_PACKED LPAREN INTEGER_LITERAL COLON INTEGER_LITERAL RPAREN {
@@ -1889,6 +1892,9 @@ ds_hdr_kws:
     | ds_hdr_kws KW_DIM LPAREN KW_DIM_AUTO COLON INTEGER_LITERAL RPAREN {
         $$ = $1; $$->dim = $6; $$->dim_type = 2;
     }
+    | ds_hdr_kws KW_INZ { $$ = $1; $$->inz = "*DFT"; }
+    | ds_hdr_kws KW_INZ LPAREN KW_STAR_EXTDFT RPAREN { $$ = $1; $$->inz = "*EXTDFT"; }
+    | ds_hdr_kws KW_INZ LPAREN KW_STAR_LIKEDS RPAREN { $$ = $1; $$->inz = "*LIKEDS"; }
     | ds_hdr_kws KW_PREFIX LPAREN IDENTIFIER RPAREN { $$ = $1; $$->prefix = $4; free($4); }
     | ds_hdr_kws KW_PREFIX LPAREN IDENTIFIER COLON INTEGER_LITERAL RPAREN {
         $$ = $1; $$->prefix = $4; $$->prefix_nbr = $6; free($4);
@@ -1943,6 +1949,8 @@ ds_kws:
     /* empty */ { $$ = new rpg::DSField{}; }
     | ds_kws KW_POS LPAREN INTEGER_LITERAL RPAREN { $$ = $1; $$->pos = $4; }
     | ds_kws KW_DIM LPAREN INTEGER_LITERAL RPAREN { $$ = $1; $$->dim = $4; }
+    | ds_kws KW_INZ { $$ = $1; $$->inz_default = true; }
+    | ds_kws KW_INZ LPAREN expression RPAREN { $$ = $1; $$->inz_value.reset($4); }
     | ds_kws KW_OVERLAY LPAREN IDENTIFIER RPAREN {
         $$ = $1; $$->overlay_field = $4; free($4);
     }

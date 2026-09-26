@@ -6,19 +6,19 @@
 // CHAR(n) subfield started as an empty string instead of n blanks, and a
 // PACKED(9:2) subfield printed through %CHAR as 1250.000000 where the same
 // value in a standalone field prints 1250.00.
-DCL-DS addr QUALIFIED;
+DCL-DS addr QUALIFIED INZ;
   zip  CHAR(5);
   lat  PACKED(9:4);
 END-DS;
 
-DCL-DS cust QUALIFIED;
+DCL-DS cust QUALIFIED INZ;
   name  CHAR(6);
   codes CHAR(2) DIM(3);
   bal   PACKED(9:2);
   home  LIKEDS(addr);
 END-DS;
 
-DCL-DS line QUALIFIED DIM(2);
+DCL-DS line QUALIFIED INZ DIM(2);
   sku   CHAR(4);
   price PACKED(7:2);
 END-DS;

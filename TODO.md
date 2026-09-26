@@ -1727,11 +1727,40 @@ triage, not yet investigated test by test:
 | Probably platform divergence | DATA-INTO/DATA-GEN name rpgc's built-in parsers (RNX0355: 99, 100, 112, 113, 114, 180, 87?); 54 (program name); 115 (DUMP goes to spool) |
 
 Found alongside:
-- rpgc rejects a variable named `ind`; IBM accepts it.
-- `DSPLY` of a DATE or TIME field generates C++ that does not compile.
-- IBM's DSPLY of a numeric *field* shows its digits right-adjusted, with no
-  decimal point and a trailing minus: PACKED(7:2) -12.5 is `   1250-`. rpgc
-  shows `-12.5`. No corpus test covers it yet.
+- rpgc reserves operation-code names that IBM accepts as variable names:
+  `ind`, `tag` and `out` are all syntax errors in rpgc.
+- `ON-ERROR 907;` (a status list) is a syntax error in rpgc; only a bare
+  `ON-ERROR;` parses.
+
+**Fixed 2026-09-26: formatting and INZ (124 -> 148 of 178 same).**
+- `%EDITC` lays out the field's full edited width for every edit code
+  (1-4, A-D, J-Q, X, Y, Z): commas, zero suppression, CR / trailing /
+  floating minus. Codes 3 and 4 had wrongly attached `CR`. The code must be
+  a literal or named constant (RNF0355, now enforced; test292). `%EDITW`
+  uses the operand's decimals, not a fixed two. O-spec edited fields end at
+  their end position.
+- `%CHAR` of a decimal has no leading zero (`.00`, `-.05`) and keeps an
+  expression's scale (`+`/`-` the larger, `*` the sum). FLOAT is
+  `+1.500000000000000E+000` (8-byte) or `+1.5000000E+00` (4-byte), and so is
+  `%EDITFLT`.
+- DSPLY of a numeric field shows IBM's form: digits right-adjusted, no
+  decimal point, trailing minus. DSPLY of FLOAT, DATE and TIME works (DATE
+  and TIME did not compile).
+- **A data structure without INZ starts as blanks** (decision 2026-09-26:
+  match IBM rather than zero-fill). Integer subfields read as blank bytes
+  decode (INT(10) 1077952576), and packed/zoned subfields raise a decimal
+  data error (907) when used. DS-level `INZ`, `INZ(*EXTDFT)`,
+  `INZ(*LIKEDS)` and subfield `INZ(value)` are now supported, free and
+  fixed. Tests 230, 249 and 267 gained `INZ`. test226 went from "reject" to
+  "run". Every test output involved was checked against IBM's.
+- A data structure declared inside a procedure had no instance at all, so
+  the generated C++ did not compile. It is now declared and initialized
+  where it is declared.
+- `INT(n)`/`UNS(n)` keep their digit count (it was dropped), so `%EDITC`
+  and blank storage know an INT(5) from an INT(10).
+- Not modelled: a blank DATE, TIME, VARCHAR or indicator subfield (they
+  keep their defaults), and comparisons do not raise 907 (arithmetic,
+  assignment and display do).
 
 ### Load discipline
 

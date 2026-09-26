@@ -981,6 +981,24 @@ void CodeGen::visit(Program& node) {
         emitLineDirective(s->line);
         s->accept(*this);
     }
+    // INZ on the program's data structures: run before main, after every
+    // global and constant an initial value could name.
+    for (auto* s : ds_stmts) {
+        auto* ds = dynamic_cast<DclDS*>(s);
+        bool dft = false, subf = false;
+        const DclDS* layout = dsInitPlan(*ds, dft, subf);
+        if (!layout || (ds->dim > 0 && ds->dim_type != 0)) continue;
+        std::ostringstream body;
+        std::swap(body, out_);
+        indent_ = 1;
+        emitDsInit(ds->name, ds->like_ds.empty() ? ds->name : ds->like_ds, *layout,
+                   dft, subf, ds->dim > 0);
+        indent_ = 0;
+        std::swap(body, out_);
+        if (!body.str().empty())
+            out_ << "const bool __rpg_inz_" << ds->name << " = [] {\n" << body.str()
+                 << "    return true;\n}();\n";
+    }
     at_file_scope_ = false;
     out_ << "} // namespace\n\n";
 
@@ -1668,6 +1686,43 @@ int CodeGen::operandDecimals(const rpg::Expression* expr) const {
     return (it == var_decimals_.end()) ? -1 : it->second;
 }
 
+bool CodeGen::decimalScale(const rpg::Expression& e, int& dec, bool& decimal) const {
+    if (dynamic_cast<const IntLiteral*>(&e)) { dec = 0; return true; }
+    if (auto* fl = dynamic_cast<const FloatLiteral*>(&e)) {
+        // A numeric literal with a point is a decimal literal in RPG; its
+        // scale is the digits written after the point.
+        char buf[64];
+        std::snprintf(buf, sizeof(buf), "%.15g", fl->value);
+        const char* pt = std::strchr(buf, '.');
+        if (std::strchr(buf, 'e')) return false;
+        dec = pt ? static_cast<int>(std::strlen(pt + 1)) : 0;
+        decimal = true;
+        return true;
+    }
+    if (auto* be = dynamic_cast<const BinaryExpr*>(&e)) {
+        if (be->op != BinOp::ADD && be->op != BinOp::SUB && be->op != BinOp::MUL) return false;
+        int l = 0, r = 0;
+        if (!decimalScale(*be->left, l, decimal) || !decimalScale(*be->right, r, decimal)) return false;
+        dec = be->op == BinOp::MUL ? std::min(l + r, 63) : std::max(l, r);
+        return true;
+    }
+    FieldAttrs a = attrsOf(e);
+    if (!a.known) return false;
+    if (a.type == RPGType::PACKED || a.type == RPGType::ZONED) {
+        dec = a.decimals; decimal = true; return true;
+    }
+    if (a.type == RPGType::INT10 || a.type == RPGType::UNS) { dec = 0; return true; }
+    return false;
+}
+
+int CodeGen::editDigits(const FieldAttrs& a) {
+    if (!a.known) return 0;
+    if (a.type == RPGType::PACKED || a.type == RPGType::ZONED) return a.digits > 0 ? a.digits : a.length;
+    if (a.type == RPGType::INT10 || a.type == RPGType::UNS)
+        return a.digits > 0 ? a.digits : a.length > 0 ? a.length : 10;
+    return 0;
+}
+
 void CodeGen::visit(DclS& node) {
     // Track variable info for RESET/CLEAR
     var_types_[node.name] = node.type;
@@ -2004,7 +2059,9 @@ CodeGen::FieldAttrs CodeGen::attrsOf(const Expression& e) const {
     const DclDS* ds = dsOfExpr(*object);
     if (!ds) return a;
     for (auto& f : ds->fields) {
-        if (f.name != *field || !f.likeds.empty() || !f.like_var.empty() || f.dim > 0) continue;
+        if (f.name != *field || !f.likeds.empty() || f.dim > 0) continue;
+        // LIKE(x): the subfield has x's declaration.
+        if (!f.like_var.empty()) return f.like_var == *field ? a : attrsOfName(f.like_var);
         a.known = true;
         a.type = f.type;
         a.length = f.length;
@@ -2394,8 +2451,20 @@ void CodeGen::visit(DsplyStmt& node) {
             "Display length " + std::to_string(len) + " greater than maximum allowed of 52: "
             "DSPLY shows at most 52 characters, judged from the declared lengths of what is "
             "displayed; shorten a declaration or display a %SUBST of it (IBM: RNF7016)");
+    // What DSPLY shows depends on the operand's type, as on IBM i: a
+    // numeric field its bare digits, a FLOAT its external form, a date or
+    // time its value.
+    FieldAttrs a = attrsOf(*node.expr);
+    std::string v = emitExpr(*node.expr);
+    if (a.known && editDigits(a) > 0)
+        v = "rpg_dsply_numeric(" + v + ", " + std::to_string(editDigits(a)) + ", " +
+            std::to_string(a.decimals) + ")";
+    else if (a.known && (a.type == RPGType::FLOAT4 || a.type == RPGType::FLOAT8))
+        v = "rpg_float_text(" + v + ", " + (a.type == RPGType::FLOAT4 ? "true" : "false") + ")";
+    else if (a.known && (a.type == RPGType::DATE || a.type == RPGType::TIME || a.type == RPGType::TIMESTAMP))
+        v = "rpg_to_char(" + v + ")";
     emitIndent();
-    out_ << "std::cout << " << emitExpr(*node.expr) << " << std::endl;\n";
+    out_ << "std::cout << " << v << " << std::endl;\n";
 }
 
 void CodeGen::visit(ReturnStmt& node) {
@@ -2558,6 +2627,7 @@ void CodeGen::visit(DclDS& node) {
 
     if (!node.like_ds.empty()) {
         // LIKEDS: no struct to emit, just store reference
+        if (in_procedure_) emitLocalDsInstance(node);
         return;
     }
 
@@ -2612,7 +2682,7 @@ void CodeGen::visit(DclDS& node) {
     // member initializer, so every element of a DS array and every LIKEDS
     // copy of the struct starts that way too. A CHAR subfield used to be
     // an empty string, which is not a value RPG can produce.
-    auto initFor = [](RPGType t, int len) -> std::string {
+    auto zeroFor = [](RPGType t, int len) -> std::string {
         if (t == RPGType::CHAR && len > 0) return " = std::string(" + std::to_string(len) + ", ' ')";
         if (t == RPGType::INT10 || t == RPGType::UNS || t == RPGType::BINDEC) return " = 0";
         if (t == RPGType::PACKED || t == RPGType::ZONED ||
@@ -2621,6 +2691,30 @@ void CodeGen::visit(DclDS& node) {
         if (t == RPGType::POINTER) return " = nullptr";
         return "";  // class types (dates, strings) construct themselves
     };
+    // ...except that on IBM i a data structure without INZ starts as BLANKS,
+    // and a subfield reads as whatever blank bytes decode to: an INT(10)
+    // x'40404040' = 1077952576, a PACKED or ZONED no valid decimal data
+    // (runtime/rpg_runtime.h, "Blank storage"). Verified on PUB400: test23
+    // displayed 1077952576, test249 ended in a decimal data error. So the
+    // struct's members start blank, and INZ -- on the DS or a subfield --
+    // is applied where each instance is declared (emitDsInit). The PSDS is
+    // filled in by the system and keeps its zeros. Dates, times, VARCHARs
+    // and indicators have no blank state here and keep their defaults;
+    // a pointer is *NULL on IBM i too.
+    auto blankFor = [&](RPGType t, int len, int digits = 0) -> std::string {
+        if (node.is_psds) return zeroFor(t, len);
+        if (t == RPGType::INT10 || t == RPGType::UNS || t == RPGType::BINDEC) {
+            int n = digits > 0 ? digits : len;
+            int bytes = t == RPGType::BINDEC ? (n <= 4 ? 2 : 4)
+                      : n == 3 ? 1 : n == 5 ? 2 : 4;
+            return bytes == 1 ? " = 64" : bytes == 2 ? " = 16448" : " = 1077952576";
+        }
+        if (t == RPGType::PACKED || t == RPGType::ZONED) return " = rpg_blank_dec()";
+        if (t == RPGType::FLOAT4) return " = rpg_blank_float4()";
+        if (t == RPGType::FLOAT8) return " = rpg_blank_float8()";
+        return zeroFor(t, len);
+    };
+    auto initFor = blankFor;
     // subfield name -> (ultimate base subfield, 1-based position in it)
     std::map<std::string, std::pair<std::string, int>> ds_overlay_bases;
     for (auto& f : node.fields) {
@@ -2719,25 +2813,117 @@ void CodeGen::visit(DclDS& node) {
             // Per-subfield DIM(n): the subfield itself is an array within the DS.
             out_ << "    std::array<" << typeToString(f.type, f.length) << ", " << f.dim
                  << "> " << f.name;
+            std::string blank = initFor(f.type, f.length, f.digits);
             if (f.type == RPGType::CHAR && f.length > 0)
                 out_ << " = rpg_filled_array<std::string, " << f.dim << ">(std::string("
                      << f.length << ", ' '))";
+            else if (!blank.empty() && blank != " = 0" && blank != " = 0.0" &&
+                     blank != " = false" && blank != " = nullptr")
+                out_ << " = rpg_filled_array<" << typeToString(f.type, f.length) << ", " << f.dim
+                     << ">(" << blank.substr(3) << ")";
             else
                 out_ << "{}"; // numeric elements zero, not indeterminate
             out_ << "; // DIM(" << f.dim << ")\n";
             ds_local_types[f.name] = {f.type, f.length};
         } else if (f.pos > 0) {
             // POS field: emit with comment showing position
-            out_ << "    " << typeToString(f.type, f.length) << " " << f.name << initFor(f.type, f.length)
-                 << "; // POS(" << f.pos << ")\n";
+            out_ << "    " << typeToString(f.type, f.length) << " " << f.name
+                 << initFor(f.type, f.length, f.digits) << "; // POS(" << f.pos << ")\n";
             ds_local_types[f.name] = {f.type, f.length};
         } else {
-            out_ << "    " << typeToString(f.type, f.length) << " " << f.name << initFor(f.type, f.length)
-                 << ";\n";
+            out_ << "    " << typeToString(f.type, f.length) << " " << f.name
+                 << initFor(f.type, f.length, f.digits) << ";\n";
             ds_local_types[f.name] = {f.type, f.length};
         }
     }
     out_ << "};\n";
+    if (in_procedure_) emitLocalDsInstance(node);
+}
+
+// A data structure declared in a procedure: its storage is local, so the
+// instance is declared (and initialized) where the declaration is. Program
+// level ones are declared with the module globals (visit(Program)).
+void CodeGen::emitLocalDsInstance(const DclDS& node) {
+    if (node.is_template) return;
+    std::string type_name = node.like_ds.empty() ? node.name + "_t" : node.like_ds + "_t";
+    emitIndent();
+    if (node.dim > 0 && (node.dim_type == 1 || node.dim_type == 2))
+        out_ << "std::vector<" << type_name << "> " << node.name << ";\n";
+    else if (node.dim > 0)
+        out_ << "std::array<" << type_name << ", " << node.dim << "> " << node.name << ";\n";
+    else
+        out_ << type_name << " " << node.name << ";\n";
+    bool dft = false, subf = false;
+    if (const DclDS* layout = dsInitPlan(node, dft, subf))
+        if (!(node.dim > 0 && node.dim_type != 0))
+            emitDsInit(node.name, node.like_ds.empty() ? node.name : node.like_ds, *layout,
+                       dft, subf, node.dim > 0);
+}
+
+const DclDS* CodeGen::dsInitPlan(const DclDS& ds, bool& dft, bool& subf) const {
+    dft = subf = false;
+    if (ds.is_psds || ds.is_template || !ds.extname.empty()) return nullptr;
+    if (ds.like_ds.empty()) {
+        dft = !ds.inz.empty();
+        subf = true;
+        return &ds;
+    }
+    // LIKEDS copies the layout, not the initialization: without INZ the
+    // copy is blank, INZ gives it defaults, INZ(*LIKEDS) the parent's own.
+    const DclDS* parent = resolveDsDef(ds.like_ds);
+    if (!parent) return nullptr;
+    if (ds.inz == "*DFT") dft = true;
+    else if (ds.inz == "*LIKEDS") { dft = !parent->inz.empty(); subf = true; }
+    return parent;
+}
+
+void CodeGen::emitDsInit(const std::string& target, const std::string& decl, const DclDS& layout,
+                         bool dft, bool subf, bool isArray) {
+    bool anySubf = false;
+    if (subf)
+        for (const auto& f : layout.fields)
+            if (f.overlay_field.empty() && (f.inz_value || f.inz_default)) anySubf = true;
+    if (!dft && !anySubf) return;
+    std::string elem = target;
+    if (isArray) {
+        elem = "__inz";
+        emitIndent();
+        out_ << "for (auto& " << elem << " : " << target << ") {\n";
+        indent_++;
+    }
+    if (dft) emitClearDs(elem, decl, layout, false, 1);
+    if (anySubf) {
+        for (const auto& f : layout.fields) {
+            if (!f.overlay_field.empty() || !(f.inz_value || f.inz_default)) continue;
+            RPGType t = f.type;
+            int len = f.length, dec = f.decimals;
+            FieldAttrs a = attrsOfName(decl + "." + f.name);
+            if (a.known) { t = a.type; len = a.length; dec = a.decimals; }
+            std::string v;
+            if (!f.inz_value) {
+                v = fieldTypeDefault(t, len);
+            } else {
+                auto* id = dynamic_cast<const Identifier*>(f.inz_value.get());
+                if (id) v = figConstValueLen(id->name, t, len);
+                if (v.empty()) {
+                    v = emitExpr(*f.inz_value);
+                    if (t == RPGType::DATE) v = "RpgDate(" + v + ")";
+                    else if (t == RPGType::TIME) v = "RpgTime(" + v + ")";
+                    else if (t == RPGType::TIMESTAMP) v = "RpgTimestamp(" + v + ")";
+                    else v = fitValue(t, len, dec, v);
+                }
+            }
+            emitIndent();
+            std::string ft = elem + "." + f.name;
+            if (f.dim > 0) out_ << "for (auto& __e : " << ft << ") __e = " << v << ";\n";
+            else out_ << ft << " = " << v << ";\n";
+        }
+    }
+    if (isArray) {
+        indent_--;
+        emitIndent();
+        out_ << "}\n";
+    }
 }
 
 void CodeGen::visit(DclEnum& node) {
@@ -3447,8 +3633,16 @@ void CodeGen::visit(ResetStmt& node) {
     Identifier id(name);
     std::string target = emitExpr(id);
     if (ds_defs_.count(name)) {
+        // Back to the state it was declared with: blank storage, then
+        // whatever INZ it has.
+        const DclDS* ds = ds_defs_[name];
         emitIndent();
-        out_ << target << " = {};\n";
+        if (ds->dim > 0) out_ << "for (auto& __r : " << target << ") __r = {};\n";
+        else out_ << target << " = {};\n";
+        bool dft = false, subf = false;
+        if (const DclDS* layout = dsInitPlan(*ds, dft, subf))
+            emitDsInit(target, ds->like_ds.empty() ? ds->name : ds->like_ds, *layout,
+                       dft, subf, ds->dim > 0);
         return;
     }
     if (has_inz_.count(name)) {
@@ -4001,7 +4195,16 @@ void CodeGen::visit(BIFCall& node) {
             bool is_packed = aa.known &&
                 (aa.type == RPGType::PACKED || aa.type == RPGType::ZONED);
             int dec_places = is_packed ? aa.decimals : 0;
-            if (is_packed) {
+            // An expression has the scale IBM gives its result: 12.50 +
+            // 100 of two PACKED(10:2)s is "112.50", not "112.500000".
+            bool decimal = false;
+            if (!aa.known && decimalScale(*node.args[0], dec_places, decimal) && decimal)
+                is_packed = true;
+            if (aa.known && (aa.type == RPGType::FLOAT4 || aa.type == RPGType::FLOAT8)) {
+                expr_ << "rpg_float_text(";
+                node.args[0]->accept(*this);
+                expr_ << ", " << (aa.type == RPGType::FLOAT4 ? "true" : "false") << ")";
+            } else if (is_packed) {
                 expr_ << "rpg_to_char_packed(";
                 node.args[0]->accept(*this);
                 expr_ << ", " << dec_places << ")";
@@ -4314,20 +4517,36 @@ void CodeGen::visit(BIFCall& node) {
         // expression rather than a declared field has no declaration to
         // consult; two is kept for that case, which is what money --
         // overwhelmingly what %EDITC is handed -- wants.
-        int dec = operandDecimals(node.args[0].get());
-        if (dec < 0) dec = 2;
+        // The result is the field's full edited width, so the declared
+        // digit count goes along too (0, no padding, for an expression).
+        // The edit code is fixed when the program is compiled: a literal
+        // or a named constant, never a variable (IBM: RNF0355).
+        auto* codeId = dynamic_cast<const Identifier*>(node.args[1].get());
+        if (!dynamic_cast<const StringLiteral*>(node.args[1].get()) &&
+            !(codeId && const_cats_.count(codeId->name)))
+            report_semantic_error(node.line > 0 ? node.line : cur_stmt_line_,
+                "The second parameter of %EDITC must be a character literal or named "
+                "constant: the edit code is fixed when the program is compiled (IBM: RNF0355)");
+        FieldAttrs ea = attrsOf(*node.args[0]);
+        int dec = ea.known ? ea.decimals : -1;
+        bool decimal = false;
+        if (dec < 0 && !decimalScale(*node.args[0], dec, decimal)) dec = 2;
         expr_ << "rpg_editc(";
         node.args[0]->accept(*this);
         expr_ << ", ";
         node.args[1]->accept(*this);
-        expr_ << ", " << dec << ")";
+        expr_ << ", " << editDigits(ea) << ", " << dec << ")";
     } else if (node.name == "EDITW") {
-        // %EDITW(number : editword)
+        // %EDITW(number : editword), at the operand's own scale
+        FieldAttrs ea = attrsOf(*node.args[0]);
+        int dec = ea.known ? ea.decimals : -1;
+        bool decimal = false;
+        if (dec < 0 && !decimalScale(*node.args[0], dec, decimal)) dec = 2;
         expr_ << "rpg_editw(";
         node.args[0]->accept(*this);
         expr_ << ", ";
         node.args[1]->accept(*this);
-        expr_ << ")";
+        expr_ << ", " << dec << ")";
     } else if (node.name == "LOOKUP" || node.name == "LOOKUPLT" || node.name == "LOOKUPLE" ||
                node.name == "LOOKUPGT" || node.name == "LOOKUPGE") {
         // %LOOKUPxx(arg : array {: start {: count}}) → 1-based index, 0 if not found
@@ -4631,9 +4850,10 @@ void CodeGen::visit(BIFCall& node) {
         }
         expr_ << ")";
     } else if (node.name == "EDITFLT") {
+        FieldAttrs fa = attrsOf(*node.args[0]);
         expr_ << "rpg_editflt(";
         node.args[0]->accept(*this);
-        expr_ << ")";
+        expr_ << ", " << (fa.known && fa.type == RPGType::FLOAT4 ? "true" : "false") << ")";
     } else if (node.name == "UNSH") {
         expr_ << "rpg_unsh(";
         node.args[0]->accept(*this);
@@ -5995,8 +6215,12 @@ void CodeGen::emitOutputRecord(const std::string& file, ORecordFormat& fmt, cons
                 int fdec = var_decimals_.count(f.fieldName)
                            ? var_decimals_[f.fieldName] : 0;
                 if (f.editCode != '\0') {
-                    valueExpr = "rpg_editc(" + f.fieldName + ", \"" + std::string(1, f.editCode) +
-                                "\", " + std::to_string(fdec) + ")";
+                    // An edited field ENDS at its end position, as on IBM
+                    // i: right-adjusted in its slot, at its edited width.
+                    valueExpr = "rpg_right_adjust(rpg_editc(" + f.fieldName + ", \"" +
+                                std::string(1, f.editCode) + "\", " +
+                                std::to_string(editDigits(attrsOf(Identifier(f.fieldName)))) +
+                                ", " + std::to_string(fdec) + "), " + std::to_string(width) + ")";
                 } else if (var_types_.count(f.fieldName) && typeToString(var_types_[f.fieldName]) == "std::string") {
                     valueExpr = f.fieldName;
                 } else {

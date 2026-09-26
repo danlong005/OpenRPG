@@ -15,6 +15,8 @@
 #include <cmath>
 #include <climits>
 #include <cfloat>
+#include <cstdint>
+#include <limits>
 #include <cstdlib>
 #include <ctime>
 #include <cstring>
@@ -401,7 +403,27 @@ inline std::string rpg_fit_varchar(const std::string& v, int maxLen) {
     return v.substr(0, static_cast<size_t>(maxLen));
 }
 
+// --- Blank storage -----------------------------------------------------------
+// On IBM i a data structure without INZ starts as blanks (x'40' bytes). What
+// each subfield then reads as is what those bytes decode to: an INT(10) is
+// 1077952576 (x'40404040'), a FLOAT(8) 32.50196..., and a PACKED or ZONED
+// subfield holds no valid decimal data at all -- using it is a decimal data
+// error (MCH1202, status 907). Here that blank decimal state is a NaN, and
+// every place that consumes a decimal value checks for it.
+[[noreturn]] inline void rpg_raise(int status, const std::string& msg);
+inline double rpg_blank_dec() { return std::numeric_limits<double>::quiet_NaN(); }
+inline float rpg_blank_float4() {
+    uint32_t b = 0x40404040u; float f; std::memcpy(&f, &b, sizeof f); return f;
+}
+inline double rpg_blank_float8() {
+    uint64_t b = 0x4040404040404040ull; double d; std::memcpy(&d, &b, sizeof d); return d;
+}
+inline void rpg_chk_dec(double v) {
+    if (std::isnan(v)) rpg_raise(907, "RNX0907: Decimal data error: a numeric field holds blanks, not decimal data.");
+}
+
 inline double rpg_trunc_dec(double v, int decimals) {
+    rpg_chk_dec(v);
     if (decimals < 0) decimals = 0;
     double scale = 1.0;
     for (int i = 0; i < decimals; i++) scale *= 10.0;
@@ -419,77 +441,116 @@ inline double rpg_trunc_dec(double v, int decimals) {
     return std::trunc(scaled + std::copysign(eps, scaled)) / scale;
 }
 
-// %EDITC - format number with edit code.
+// %EDITC, as IBM i edits. Verified against PUB400 output, 2026-09-26.
 //
-// `decimals` is the operand's own declared decimal position count. It is
-// a parameter rather than a fixed 2 because the edit codes never imply a
-// scale of their own: a PACKED(5:0) counter edits as "15", not "15.00".
-inline std::string rpg_editc(double val, const std::string& code, int decimals) {
+// The result is always the operand's full edited width: `digits` digit
+// positions (the declared length), a decimal point when `decimals` > 0,
+// commas when the code has them, and the code's sign positions. Leading
+// zeros of the integer part become blanks, and so does a comma with no
+// significant digit to its left, so a PACKED(7:2) edits as "  1,250.75"
+// and zero as "       .00". When `digits` is not known (0) the value's own
+// digits are used, with no padding.
+//
+//   code  commas  zero shown  sign
+//   1 2   yes     1 only      none
+//   3 4   no      3 only      none
+//   A B   yes     A only      CR
+//   C D   no      C only      CR
+//   J K   yes     J only      trailing -
+//   L M   no      L only      trailing -
+//   N O   yes     N only      floating leading -
+//   P Q   no      P only      floating leading -
+//   X     digits with leading zeros, no decimal point
+//   Y     date: nn/nn/nn or nn/nn/nnnn, first leading zero blanked
+//   Z     zero suppression only: no commas, point or sign
+inline std::string rpg_editc(double val, const std::string& code, int digits, int decimals) {
+    rpg_chk_dec(val);
     bool negative = val < 0;
-    double absval = negative ? -val : val;
     if (decimals < 0) decimals = 0;
-
-    // Split into whole and fractional parts at the operand's own scale
     double scale = 1.0;
     for (int i = 0; i < decimals; i++) scale *= 10.0;
-    long long scaled = static_cast<long long>(absval * scale + 0.5);
-    long long divisor = static_cast<long long>(scale);
-    long long fraction = (decimals > 0) ? scaled % divisor : 0;
-    long long whole = (decimals > 0) ? scaled / divisor : scaled;
+    long long scaled = std::llround(std::fabs(val) * scale);
+    std::string s = std::to_string(scaled);
+    int width = digits > 0 ? digits : std::max<int>(static_cast<int>(s.size()), decimals);
+    if (static_cast<int>(s.size()) > width) s = s.substr(s.size() - width);  // high-order digits lost
+    s = std::string(width - s.size(), '0') + s;
+    char c = code.empty() ? '1' : static_cast<char>(std::toupper(static_cast<unsigned char>(code[0])));
 
-    std::string digits = std::to_string(whole);
-    char editcode = code.empty() ? '1' : code[0];
-
-    bool use_commas = (editcode == '1' || editcode == '3');
-    bool show_sign = (editcode == '3' || editcode == '4');
-    bool show_all_zeros = (editcode == 'X' || editcode == 'x');
-
-    std::string result;
-    if (show_all_zeros) {
-        // Edit code X: show all digits with leading zeros
-        char buf[32];
-        snprintf(buf, sizeof(buf), "%0*.*f", 7, decimals, absval);
-        return std::string(buf);
+    if (c == 'X') return s;
+    if (c == 'Y') {
+        std::string r;
+        if (width == 6) r = s.substr(0, 2) + "/" + s.substr(2, 2) + "/" + s.substr(4, 2);
+        else if (width == 8) r = s.substr(0, 2) + "/" + s.substr(2, 2) + "/" + s.substr(4, 4);
+        else r = s;
+        if (!r.empty() && r[0] == '0') r[0] = ' ';
+        return r;
+    }
+    if (c == 'Z') {
+        size_t nz = s.find_first_not_of('0');
+        return nz == std::string::npos ? std::string(width, ' ') : std::string(nz, ' ') + s.substr(nz);
     }
 
-    // Insert commas
-    if (use_commas && digits.size() > 3) {
-        std::string with_commas;
-        int count = 0;
-        for (int i = static_cast<int>(digits.size()) - 1; i >= 0; i--) {
-            if (count > 0 && count % 3 == 0) with_commas = "," + with_commas;
-            with_commas = digits[i] + with_commas;
-            count++;
-        }
-        digits = with_commas;
-    }
+    bool commas = std::strchr("12ABJKNO", c) != nullptr;
+    bool zero_shown = std::strchr("13ACJLNP", c) != nullptr;
+    int sign_len = std::strchr("ABCD", c) ? 2 : std::strchr("JKLM", c) ? 1 : 0;
+    bool floating_minus = std::strchr("NOPQ", c) != nullptr;
 
-    if (decimals > 0) {
-        char buf[32];
-        snprintf(buf, sizeof(buf), ".%0*lld", decimals, fraction);
-        result = digits + buf;
-    } else {
-        result = digits;
+    std::string ip = s.substr(0, width - decimals), fp = s.substr(width - decimals);
+    std::string intpart;
+    bool significant = false;
+    for (size_t i = 0; i < ip.size(); i++) {
+        int left = static_cast<int>(ip.size() - i);   // digits from here to the point
+        if (ip[i] != '0') significant = true;
+        // With no decimals, a zero value still shows its units digit.
+        bool units = (left == 1 && decimals == 0);
+        intpart += (significant || units) ? ip[i] : ' ';
+        if (commas && left > 1 && (left - 1) % 3 == 0)
+            intpart += significant ? ',' : ' ';
     }
-
-    if (show_sign && negative) {
-        result += "CR";
+    std::string r = intpart + (decimals > 0 ? "." + fp : "");
+    if (floating_minus) {
+        size_t first = r.find_first_not_of(' ');
+        if (first == std::string::npos) first = r.size();
+        r = " " + r;
+        if (negative) r[first] = '-';
     }
-
-    return result;
+    if (sign_len == 2) r += negative ? "CR" : "  ";
+    if (sign_len == 1) r += negative ? "-" : " ";
+    if (scaled == 0 && !zero_shown) return std::string(r.size(), ' ');
+    return r;
 }
 
-inline std::string rpg_editc(int val, const std::string& code, int decimals) {
-    return rpg_editc(static_cast<double>(val), code, decimals);
+// DSPLY of a numeric field, as IBM i shows it (verified on PUB400): the
+// field's digits right-adjusted in its declared width, leading zeros
+// blank, NO decimal point, and a trailing minus when negative.
+// PACKED(7:2) -12.5 shows "   1250-", INT(10) -7 "         7-".
+inline std::string rpg_dsply_numeric(double val, int digits, int decimals) {
+    std::string r = rpg_editc(val, "Z", digits, decimals);
+    if (r.find_first_not_of(' ') == std::string::npos && !r.empty()) r.back() = '0';
+    if (val < 0) r += "-";
+    return r;
 }
 
-// %EDITW - format number with edit word
-inline std::string rpg_editw(double val, const std::string& editword) {
+// Right-adjusts `s` in a slot `width` wide; a longer value keeps its
+// rightmost characters.
+inline std::string rpg_right_adjust(const std::string& s, int width) {
+    if (static_cast<int>(s.size()) >= width) return s.substr(s.size() - width);
+    return std::string(width - s.size(), ' ') + s;
+}
+
+inline std::string rpg_editc(double val, const std::string& code, int decimals) {
+    return rpg_editc(val, code, 0, decimals);
+}
+
+// %EDITW - format number with edit word. `decimals` is the operand's
+// declared scale: the edit word's digit positions take the value's digits
+// at that scale.
+inline std::string rpg_editw(double val, const std::string& editword, int decimals = 2) {
     bool negative = val < 0;
     double absval = negative ? -val : val;
-
-    // Convert to string of digits (including decimals)
-    long long scaled = static_cast<long long>(absval * 100 + 0.5);
+    double scale = 1.0;
+    for (int i = 0; i < decimals; i++) scale *= 10.0;
+    long long scaled = std::llround(absval * scale);
     std::string digits = std::to_string(scaled);
 
     // Count blanks in edit word (positions for digits)
@@ -522,10 +583,6 @@ inline std::string rpg_editw(double val, const std::string& editword) {
         }
     }
     return result;
-}
-
-inline std::string rpg_editw(int val, const std::string& editword) {
-    return rpg_editw(static_cast<double>(val), editword);
 }
 
 // %STATUS / %ERROR - program status tracking
@@ -598,12 +655,14 @@ inline double rpg_fit_dec_hi(double v, int digits, int decimals) {
 // INT and UNS are 4-byte here whatever width was declared, so this checks
 // that range. The fractional part is dropped, as C++ conversion also does.
 inline int rpg_fit_int(double v) {
+    rpg_chk_dec(v);
     double t = std::trunc(v);
     if (!std::isfinite(v) || t < static_cast<double>(INT_MIN) || t > static_cast<double>(INT_MAX))
         rpg_raise(103, "RNX0103: The target for a numeric operation is too small to hold the result.");
     return static_cast<int>(t);
 }
 inline unsigned int rpg_fit_uns(double v) {
+    rpg_chk_dec(v);
     double t = std::trunc(v);
     if (!std::isfinite(v) || t < 0.0 || t > static_cast<double>(UINT_MAX))
         rpg_raise(103, "RNX0103: The target for a numeric operation is too small to hold the result.");
@@ -799,11 +858,37 @@ inline std::string rpg_to_char(unsigned int v) { return std::to_string(v); }
 inline std::string rpg_to_char(double v) { return std::to_string(v); }
 inline std::string rpg_to_char(const std::string& v) { return v; }
 inline std::string rpg_to_char(bool v) { return v ? "1" : "0"; }
-// PACKED/ZONED: format with exactly the declared number of decimal places
+// PACKED/ZONED: format with exactly the declared number of decimal places.
+// IBM i writes no zero before the decimal point: %CHAR of 0.50 is ".50",
+// of -0.5 "-.50", of zero at two decimals ".00" (verified on PUB400).
 inline std::string rpg_to_char_packed(double v, int dec) {
+    rpg_chk_dec(v);
     char buf[64];
     std::snprintf(buf, sizeof(buf), "%.*f", dec, v);
-    return buf;
+    std::string s = buf;
+    if (dec > 0) {
+        if (s.compare(0, 2, "0.") == 0) s.erase(0, 1);
+        else if (s.compare(0, 3, "-0.") == 0) s.erase(1, 1);
+    }
+    if (s.find_first_not_of("-0.") == std::string::npos && s[0] == '-') s.erase(0, 1);
+    return s;
+}
+
+// FLOAT as IBM i writes it in %CHAR, %EDITFLT and DSPLY: an explicit sign,
+// one digit, the fraction and a signed exponent. An 8-byte float shows 16
+// significant digits and a three-digit exponent, "+1.500000000000000E+000";
+// a 4-byte one 8 and two, "+1.5000000E+00". Both verified on PUB400.
+inline std::string rpg_float_text(double v, bool four_byte) {
+    char buf[64];
+    std::snprintf(buf, sizeof(buf), "%+.*E", four_byte ? 7 : 15, v);
+    std::string s = buf;
+    size_t e = s.find('E');
+    if (e == std::string::npos) return s;   // inf / nan
+    int exp = std::atoi(s.c_str() + e + 1);
+    char tail[16];
+    std::snprintf(tail, sizeof(tail), four_byte ? "E%c%02d" : "E%c%03d",
+                  exp < 0 ? '-' : '+', exp < 0 ? -exp : exp);
+    return s.substr(0, e) + tail;
 }
 
 // --- Date/Time/Timestamp types ---
@@ -2152,10 +2237,8 @@ inline int rpg_scanr(const std::string& search, const std::string& source, int s
 }
 
 // %EDITFLT — external float representation
-inline std::string rpg_editflt(double val) {
-    std::ostringstream oss;
-    oss << std::scientific << std::uppercase << val;
-    return oss.str();
+inline std::string rpg_editflt(double val, bool four_byte = false) {
+    return rpg_float_text(val, four_byte);
 }
 
 // %UNSH — unsigned integer with half-adjust (rounding)

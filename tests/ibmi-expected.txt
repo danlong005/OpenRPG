@@ -16,7 +16,6 @@ test177_fixed_cspec_err_call_dynamic.rpgle  compile  valid RPG; rpgc links calls
 test195_fixed_cspec_err_move_declit.rpgle   compile  valid RPG; rpgc refuses MOVE of a decimal literal
 test205_fixed_cspec_err_entry_f2.rpgle      compile  valid RPG; rpgc does not support Factor 2 on an *ENTRY PARM
 test213_fixed_cspec_err_move_jobrun.rpgle   compile  valid RPG; rpgc has no job attributes for *JOBRUN
-test226_err_subfield_inz.rpgle              compile  valid RPG; rpgc does not support INZ on a subfield
 
 # Syntax-error tests, not registered through run_test.
 test11_errors.rpgle            reject  syntax-error test

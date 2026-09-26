@@ -100,6 +100,11 @@ def classify(entry, tests, src_sha):
         return "no-expected-output"
     same = norm(exp) == norm(entry["output"])
     if entry["status"] == "runtime-error":
+        # rpgc writes its runtime error into its output: the same lines,
+        # then an error of its own, is the same behaviour.
+        e = norm(exp)
+        if e and re.match(r"RNX\d{4}", e[-1]) and e[:-1] == norm(entry["output"]):
+            return "same-error"
         return "runtime-error"
     return "same" if same else "differs"
 
@@ -127,7 +132,9 @@ def report(baseline, tests, out_md, skipped):
     L.append("")
     L.append("| Result | Tests |")
     L.append("|---|---|")
-    for c, label in [("same", "same output"), ("differs", "**output differs**"),
+    for c, label in [("same", "same output"),
+                     ("same-error", "same output, then both end in a runtime error"),
+                     ("differs", "**output differs**"),
                      ("runtime-error", "**ended in a runtime error on IBM i**"),
                      ("timeout", "timed out on IBM i"),
                      ("compile-failed", "did not compile on IBM i"),
@@ -177,7 +184,7 @@ def report(baseline, tests, out_md, skipped):
             L.append(f"| `{name}` | {why} |")
         L.append("")
     open(out_md, "w").write("\n".join(L) + "\n")
-    return {c: count(c) for c in ("same", "differs", "runtime-error", "timeout",
+    return {c: count(c) for c in ("same", "same-error", "differs", "runtime-error", "timeout",
                                    "compile-failed", "no-expected-output", "stale")}
 
 

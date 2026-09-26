@@ -448,6 +448,32 @@ DCL-DS shipping LIKEDS(address);
 shipping.city = 'Springfield';
 ```
 
+### Initial Values: INZ
+
+As on IBM i, a data structure **without `INZ` starts as blanks**, not zeros.
+A character subfield is blank, an integer subfield reads as what blank bytes
+decode to (`INT(10)` is 1077952576, `INT(5)` 16448), and a packed or zoned
+subfield holds no decimal data at all: using it before assigning it is a
+decimal data error (status 907).
+
+```rpgle
+DCL-DS totals QUALIFIED INZ;      // every subfield starts at its type's default
+  count INT(10);
+  amount PACKED(9:2);
+  label CHAR(10) INZ('TOTAL');    // a subfield INZ sets that subfield alone
+END-DS;
+
+DCL-DS work QUALIFIED;            // no INZ: blanks until assigned
+  qty PACKED(5:0) INZ(1);         // ...except this subfield
+  price PACKED(7:2);
+END-DS;
+```
+
+`LIKEDS` copies the layout, not the initialization: `DCL-DS a LIKEDS(b)`
+starts blank, `INZ` gives it type defaults, and `INZ(*LIKEDS)` initializes
+it as `b` is. `CLEAR` sets every subfield to its type's default; `RESET`
+restores the state the data structure was declared with.
+
 ---
 
 ## Arrays

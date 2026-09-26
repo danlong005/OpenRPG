@@ -140,7 +140,7 @@
      C                   ADD       ORDAMT        HLDAMT
      C                   EVAL      RPTLIN = ORDNO + ' ' + ORDCUST + ' ' +
      C                             %EDITC(ORDAMT:'1') + ' HELD - AVAIL ' +
-     C                             %EDITC(AVAIL:'1')
+     C                             %TRIML(%EDITC(AVAIL:'1'))
      C     RPTLIN        DSPLY
      C                   ENDSR
      C*-----------------------------------------------------------------

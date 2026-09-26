@@ -280,6 +280,17 @@ private:
     std::vector<HostVarWithInd> expandSqlIntoVarsWithInd(const std::vector<HostVarWithInd>& vars);
     std::vector<std::pair<std::string, std::string>> multiRowTargets(const std::vector<std::string>& vars);
     std::string expandDsArrayHostVars(const std::string& sql);
+    // A DS's initial state beyond the blank storage its struct starts with
+    // (see visit(DclDS)): `dft` gives every subfield its type's default (INZ
+    // on the DS), `subf` applies the subfields' own INZ values. `decl` names
+    // the declaration whose subfields `layout` describes.
+    void emitDsInit(const std::string& target, const std::string& decl, const DclDS& layout,
+                    bool dft, bool subf, bool isArray);
+    // How a DS is initialized: the layout it takes its subfields from (its
+    // own, or its LIKEDS parent's), and the emitDsInit flags. nullptr when
+    // nothing is to be done.
+    const DclDS* dsInitPlan(const DclDS& ds, bool& dft, bool& subf) const;
+    void emitLocalDsInstance(const DclDS& node);
     void emitClearDs(const std::string& target, const std::string& decl,
                      const DclDS& layout, bool isArray, int depth);
     static std::string escapeSqlForCpp(const std::string& sql);
@@ -309,6 +320,15 @@ private:
     // expression is not a plain reference to a declared field (an arbitrary
     // arithmetic expression has no declaration to consult).
     int operandDecimals(const rpg::Expression* expr) const;
+    // The decimal scale of a numeric expression, by IBM i's rules for the
+    // operators it covers: + and - take the larger scale, * the sum. False
+    // when that cannot be worked out here (division, FLOAT, an unknown
+    // operand). `decimal` is set when a PACKED/ZONED value or a decimal
+    // literal takes part, i.e. the result is not a plain integer.
+    bool decimalScale(const rpg::Expression& e, int& dec, bool& decimal) const;
+    // Digit positions an edit code lays out for a declared numeric field:
+    // PACKED/ZONED digits, INT/UNS length; 0 when unknown.
+    static int editDigits(const FieldAttrs& a);
 
     // DS name -> the subfields of it that are OVERLAY views rather than
     // storage. A view is reached through a member function, so `ds.field`

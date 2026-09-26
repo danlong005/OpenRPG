@@ -123,9 +123,10 @@
      C                   ADD       WTAX          TOTTAX
      C                   ADD       WNET          TOTNET
      C                   EVAL      RPTLIN = EMPNO(IX) + ' ' + EMPNAM(IX) + ' ' +
-     C                             %EDITC(WGROSS:'1')
+     C                             %TRIML(%EDITC(WGROSS:'1'))
      C                   EVAL      RPTLIN = %TRIM(RPTLIN) + ' TAX ' +
-     C                             %EDITC(WTAX:'1') + ' NET ' + %EDITC(WNET:'1')
+     C                             %TRIML(%EDITC(WTAX:'1')) + ' NET ' +
+     C                             %TRIML(%EDITC(WNET:'1'))
      C     RPTLIN        DSPLY
      C                   ENDSR
      C*-----------------------------------------------------------------
@@ -134,13 +135,16 @@
      C     TRLSR         BEGSR
      C                   EVAL      RPTLIN = '---- TOTALS ----'
      C     RPTLIN        DSPLY
-     C                   EVAL      RPTLIN = 'GROSS ' + %EDITC(TOTGRS:'1') +
-     C                             '  TAX ' + %EDITC(TOTTAX:'1')
+     C                   EVAL      RPTLIN = 'GROSS ' +
+     C                             %TRIML(%EDITC(TOTGRS:'1')) +
+     C                             '  TAX ' + %TRIML(%EDITC(TOTTAX:'1'))
      C     RPTLIN        DSPLY
-     C                   EVAL      RPTLIN = 'NET   ' + %EDITC(TOTNET:'1')
+     C                   EVAL      RPTLIN = 'NET   ' +
+     C                             %TRIML(%EDITC(TOTNET:'1'))
      C     RPTLIN        DSPLY
      C                   EVAL      RPTLIN = 'OVERTIME HOURS ' +
-     C                             %EDITC(TOTOT:'1') + ' ON ' + %CHAR(OTCNT) +
+     C                             %TRIML(%EDITC(TOTOT:'1')) + ' ON ' +
+     C                             %CHAR(OTCNT) +
      C                             ' EMPLOYEES'
      C     RPTLIN        DSPLY
      C                   ENDSR

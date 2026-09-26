@@ -1664,9 +1664,9 @@
   "test218_prog_payroll.rpgle": {
    "codes": [],
    "rpgc": "accept",
-   "sha256": "f1866e1efb7b246a413c6d3089e3534251e15f7f8e1f2c17d7e737ca7d4abf98",
+   "sha256": "d1b6bf7dd2935fd7bf17d6a485c8eeeff82c7d4732c041b06a5afa80ef58885e",
    "verdict": "accept",
-   "verified": "2026-09-25"
+   "verified": "2026-09-26"
   },
   "test219_prog_order_release.sqlrpgle": {
    "codes": [
@@ -1701,9 +1701,9 @@
    "reason": "RNF5063: Factor n operand must not be an externally described file for this operation.",
    "reason_detail": "line 270: Factor 2 operand must not be an externally described file for this operation. \u2014 ``",
    "rpgc": "accept",
-   "sha256": "736afac6b0ba5d64ef2dfe370a1296dcbcc4d945dba18c66163386e1d19c2187",
+   "sha256": "69a19f6f03585982162f2206b3b9e08d447935e6a38d3110fe8b36a3b0cf902b",
    "verdict": "reject",
-   "verified": "2026-09-25"
+   "verified": "2026-09-26"
   },
   "test21_parms.rpgle": {
    "codes": [],
@@ -1754,12 +1754,12 @@
    "verdict": "accept",
    "verified": "2026-09-25"
   },
-  "test226_err_subfield_inz.rpgle": {
+  "test226_subfield_inz.rpgle": {
    "codes": [],
-   "rpgc": "reject",
-   "sha256": "e1c1e374387f7041babfcb568ca429880c6515dfdaa7a3331d0db6db1db012ef",
+   "rpgc": "accept",
+   "sha256": "fd7539b8f90892d11ddbb4abf50e30afd2c9bd6a58d5397de7ed6226bed709cb",
    "verdict": "accept",
-   "verified": "2026-09-25"
+   "verified": "2026-09-26"
   },
   "test227_proc_globals.rpgle": {
    "codes": [],
@@ -1792,9 +1792,9 @@
   "test230_ds_subfield_attrs.rpgle": {
    "codes": [],
    "rpgc": "accept",
-   "sha256": "c53ef2f57a7a7558345f9893f3f81d110827218d5809cf688f82c929d013a69f",
+   "sha256": "7569984024de0aadba073806675123fe2d0f9181718ae633c47089c84c7dcf97",
    "verdict": "accept",
-   "verified": "2026-09-25"
+   "verified": "2026-09-26"
   },
   "test231_assign_fit.rpgle": {
    "codes": [],
@@ -1993,9 +1993,9 @@
   "test249_ds_subfield_types.rpgle": {
    "codes": [],
    "rpgc": "accept",
-   "sha256": "5041dbe6a85933b8a0d881ee64373916417e39eae4f92eac17e46cdc363b6426",
+   "sha256": "44c86ccd6bd7b6260cca89735cfaae1694923108dbc305ecff8628127b227a63",
    "verdict": "accept",
-   "verified": "2026-09-25"
+   "verified": "2026-09-26"
   },
   "test24_max_min.rpgle": {
    "codes": [],
@@ -2340,9 +2340,9 @@
   "test267_compound_assign.rpgle": {
    "codes": [],
    "rpgc": "accept",
-   "sha256": "1cd148fb099d20aa48a9929d9f2268e05d8afae12358858a53bb14a0df1b541f",
+   "sha256": "0913ca23fda4912e7e14742de4c2ab4c5e40eadd268997f0d9221484d9937a8d",
    "verdict": "accept",
-   "verified": "2026-09-25"
+   "verified": "2026-09-26"
   },
   "test268_inlr_indicator.rpgle": {
    "codes": [],
@@ -2777,6 +2777,13 @@
    "verdict": "accept",
    "verified": "2026-09-25"
   },
+  "test290_ds_blank_inz.rpgle": {
+   "codes": [],
+   "rpgc": "accept",
+   "sha256": "8e9fe65f4295ecfbf98212262235350a4087cc90275afa6706fdeaab060120f7",
+   "verdict": "accept",
+   "verified": "2026-09-26"
+  },
   "test290_err_test_d_on_date.rpgle": {
    "codes": [
     "RNF7523"
@@ -2796,6 +2803,13 @@
    "verdict": "reject",
    "verified": "2026-09-25"
   },
+  "test291_edit_codes.rpgle": {
+   "codes": [],
+   "rpgc": "accept",
+   "sha256": "375dae4156ef34ee3c3dec8573b619d563e4246e7609b992218a7274cb05064f",
+   "verdict": "accept",
+   "verified": "2026-09-26"
+  },
   "test291_err_two_statements_line.rpgle": {
    "codes": [
     "RNF5508"
@@ -2814,6 +2828,25 @@
    "sha256": "a86bb989b9d102ef0628131f3c084ec3d9aff8981b3025a6cc92def7b06377b6",
    "verdict": "reject",
    "verified": "2026-09-25"
+  },
+  "test292_err_editc_variable.rpgle": {
+   "codes": [
+    "RNF0355"
+   ],
+   "messages": [
+    {
+     "code": "RNF0355",
+     "line": 7,
+     "severity": 20,
+     "text": "The second parameter CODE for %EDITC is not a character constant of length 1."
+    }
+   ],
+   "reason": "RNF0355: The second parameter CODE for %EDITC is not a character constant of length n.",
+   "reason_detail": "line 7: The second parameter CODE for %EDITC is not a character constant of length 1. \u2014 `line = %EDITC(amt : code);`",
+   "rpgc": "reject",
+   "sha256": "f0212a12e3b9f576497b0793536c0abc6e088f1047afd2d46137d4c7b0222c50",
+   "verdict": "reject",
+   "verified": "2026-09-26"
   },
   "test292_err_write_program_described.rpgle": {
    "codes": [
@@ -3702,5 +3735,5 @@
    "verified": "2026-09-25"
   }
  },
- "generated": "2026-09-25T06:16:20+00:00"
+ "generated": "2026-09-26T20:25:45+00:00"
 }

@@ -805,6 +805,10 @@ struct DSField {
     std::string likeds;  // LIKEDS subfield — nested DS type name
     std::string like_var; // LIKE(fieldname) — subfield type/length copied from another field
     int dim = 0;          // DIM(n) — subfield is itself an array within the DS, 0 = not an array
+    // INZ on the subfield: INZ(value), or a bare INZ (its type's default).
+    // Shared, not unique: DSField is copied into and out of the parser.
+    std::shared_ptr<Expression> inz_value;
+    bool inz_default = false;
 };
 
 class DclDS : public Statement {
@@ -820,6 +824,10 @@ public:
     int occurs = 0;      // OCCURS(n), 0 = not multi-occurrence
     bool is_psds = false; // PSDS or SDS keyword
     bool is_template = false; // TEMPLATE: a type for LIKEDS, with no storage of its own
+    // INZ on the data structure: "" none -- the storage starts as blanks,
+    // as on IBM i -- or "*DFT" (a bare INZ: every subfield its type's
+    // default), "*EXTDFT", "*LIKEDS" (the LIKEDS parent's initialization).
+    std::string inz;
     std::vector<DSField> fields;
     DclDS(std::string name);
     void accept(ASTVisitor& visitor) override;

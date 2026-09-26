@@ -439,6 +439,8 @@ static void parse_ctlopt(const char* text) {
 "PERRCD"            { return KW_PERRCD; }
 "DESCEND"           { return KW_DESCEND; }
 "NULLIND"           { return KW_NULLIND; }
+"*EXTDFT"           { return KW_STAR_EXTDFT; }
+"*LIKEDS"           { return KW_STAR_LIKEDS; }
 "*VAR"              { return KW_DIM_VAR; }
 "*AUTO"             { return KW_DIM_AUTO; }
 "*VARSIZE"          { return KW_VARSIZE; }

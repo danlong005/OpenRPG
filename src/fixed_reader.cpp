@@ -639,6 +639,16 @@ static void handleDSpecLine(Program* program, DSpecState& state,
         if (it != kw.end()) ds->extname = it->second;
         it = kw.find("DIM");
         if (it != kw.end() && !it->second.empty()) ds->dim = atoi(it->second.c_str());
+        // INZ on the DS: without it the storage starts as blanks, as on
+        // IBM i; with it every subfield starts at its type's default.
+        it = kw.find("INZ");
+        if (it != kw.end()) {
+            std::string v = upper(trim(it->second));
+            ds->inz = v.empty() ? "*DFT" : v;
+            if (ds->inz != "*DFT" && ds->inz != "*EXTDFT" && ds->inz != "*LIKEDS")
+                report_fixed_format_error(lineNo, "D-spec: INZ(" + it->second + ") on data structure " +
+                                           upper(name) + " — expected INZ, INZ(*EXTDFT) or INZ(*LIKEDS)");
+        }
         program->statements.emplace_back(ds);
         state.currentDS = ds;
         return;
@@ -753,13 +763,13 @@ static void handleDSpecLine(Program* program, DSpecState& state,
         if (it != kw.end()) f.like_var = upper(it->second);
         it = kw.find("DIM");
         if (it != kw.end() && !it->second.empty()) f.dim = atoi(it->second.c_str());
-        // A subfield initial value has nowhere to live on DSField, and
-        // silently dropping INZ is the bug this reader just stopped
-        // committing on standalone fields — so refuse it out loud.
-        if (kw.count("INZ")) {
-            report_fixed_format_error(lineNo, "D-spec: INZ on data structure subfield '" +
-                                       f.name + "' is not supported; initialize it in "
-                                       "*INZSR or the mainline instead");
+        // INZ(value) on a subfield sets that subfield alone; a bare INZ
+        // gives it its type's default.
+        auto inzIt = kw.find("INZ");
+        if (inzIt != kw.end()) {
+            Expression* v = parseInzValue(inzIt->second, lineNo, f.name);
+            if (v) f.inz_value.reset(v);
+            else f.inz_default = true;
         }
         state.currentDS->fields.push_back(f);
     } else {

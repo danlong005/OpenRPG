@@ -4458,13 +4458,10 @@ void CodeGen::visit(MoveStmt& node) {
              << dstWidth << ", " << dstDec << ", " << srcDigitsExpr << ", "
              << (node.pad ? "true" : "false") << ");";
     } else {
-        // Numeric factor 2 into a character result moves the digits alone.
-        // Real IBM i also folds the sign into the zone of the result's
-        // rightmost character (an EBCDIC overpunch); ASCII has no such
-        // encoding, and faking one would corrupt the character rather than
-        // carry a sign, so the sign is dropped here — see TODO.md.
+        // Numeric factor 2 into a character result moves the digits, with
+        // a negative sign in the zone of the rightmost one (rpg_digits_text).
         std::string src = srcNumeric
-            ? "(" + srcDigitsExpr + ").digits"
+            ? "rpg_digits_text(" + srcDigitsExpr + ")"
             : (srcCharExpr.empty() ? emitExpr(*node.source) : srcCharExpr);
         out_ << (node.left ? "rpg_movel(" : "rpg_move(") << node.target << ", "
              << src << ", " << dstWidth << ", "

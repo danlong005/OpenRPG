@@ -16,10 +16,6 @@
 # no note, and a stale one hides a regression.
 
 # --- rpgc: work to do --------------------------------------------------------
-test193_fixed_cspec_move_num_to_char.rpgle rpgc  MOVE of a negative number into characters keeps the sign in the last digit's zone (-12345 ends in N); rpgc moves bare digits
-test196_fixed_cspec_move_data_exc.rpgle rpgc    MOVE of characters into a number takes each character's digit portion, with no data error ('A' is 1); rpgc raises 907 -- and the test asserts it
-test208_fixed_cspec_move_date.rpgle   rpgc      an invalid date in MOVE without (E) ends the program on IBM i (RNX0114); rpgc sets %STATUS and continues
-test212_fixed_cspec_move_dt_err.rpgle rpgc      an invalid date in MOVE without (E) ends the program on IBM i (RNX0112); rpgc sets %STATUS and continues
 
 # --- platform: by design -----------------------------------------------------
 test26_pointers.rpgle                 platform  a pointer is 16 bytes on IBM i and 8 where rpgc runs, so %SIZE of one differs

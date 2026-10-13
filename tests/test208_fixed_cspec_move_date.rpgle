@@ -52,11 +52,15 @@
      C                   EVAL      R = '[' + %char(NUM_DATE2) + ']'
      C     R             DSPLY
      C*Error 114: 9999 is outside a 2-digit year format's 1940-2039
-     C*range, so the *YMD result field is left unchanged.
+     C*range. Unhandled, it ends the program; here MONITOR handles it,
+     C*and the *YMD result field is left unchanged.
      C     *ISO          MOVE      '9999-12-31'  DATE_USA
+     C                   MONITOR
      C                   MOVE      DATE_USA      DATE_YMD
+     C                   ON-ERROR
      C                   EVAL      R = '[' + %char(%STATUS()) + ']'
      C     R             DSPLY
+     C                   ENDMON
      C     *YMD          MOVE      DATE_YMD      DISP8
      C                   EVAL      R = '[' + DISP8 + ']'
      C     R             DSPLY

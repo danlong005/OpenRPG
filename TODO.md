@@ -690,27 +690,20 @@ digit string to act on.
   as long as or longer than the result field", so a shorter factor 2
   leaves the result negative if it already was. Test 191 pins all four
   combinations.
-- **Character→numeric is always positive, and that is the manual's rule
-  rather than a guess.** It asks for a minus sign only when "the zone
-  from the rightmost position of factor 2 is a hexadecimal D", and
-  otherwise a positive one. That zone is EBCDIC; this compiler stores
-  ASCII, where no digit (zone `0x3`) or blank (`0x2`) is ever a D — so
-  the rule *evaluates* to positive here, every time. No overpunch
-  decoding is invented, consistent with how the I-spec reader already
-  refuses `Z`/`D` record-identification code parts. "Blanks are
-  transferred as zeros" is implemented literally, so a `CHAR(5)` holding
-  `'123'` moves the digits `12300` (Test 192).
-- **A character that is not a digit or blank is a data exception**
-  (`%STATUS` 907), matching "if the digit portions are not valid digits,
-  a data exception error occurs" — the moved digits become zeros and the
-  program can test for it (Test 196), rather than the compiler
-  reinterpreting the byte.
-- **Numeric→character drops the sign, and this is the one deviation.**
-  Real IBM i folds it into the EBCDIC zone of the result's rightmost
-  character; in ASCII that byte is a printable character with no zone to
-  spare, so writing one would corrupt the character rather than carry a
-  sign. Digits move, sign does not (Test 193). Flagged here rather than
-  buried because it is the only place this item is not exact.
+- **Character→numeric reads EBCDIC digit portions and zones** (changed
+  2026-10-13, against PUB400). "The digit portion of each character" is
+  the low half of its EBCDIC code, so `'A'` (x'C1') moves as 1 with no
+  data error, and `'A1 '` moves as `110` (Test 196). The result is
+  negative when the rightmost character's zone is D (`'J'`-`'R'`, `'}'`).
+  The bytes are read through CCSID 37 (`rpg_ebcdic37`). "Blanks are
+  transferred as zeros", so a `CHAR(5)` holding `'123'` moves the digits
+  `12300` (Test 192). A digit portion above 9 (`.` `<` `(` `+` `*` and
+  others) is still a data exception, status 907, with the moved digits
+  zeros. IBM's behaviour there is not yet checked.
+- **Numeric→character carries the sign in the last digit's zone**
+  (changed 2026-10-13, against PUB400), as a zoned number does on IBM i:
+  `-12345` moves as `1234N`, a negative last digit reading `}` for 0 and
+  `J`-`R` for 1-9 (`rpg_digits_text`; Test 193).
 - **Still refused, each with its own message**: float operands (the
   manual disallows them outright — Test 194), date/time results and
   factor 2s, and a *decimal* literal as factor 2 (Test 195) — it reaches
@@ -856,6 +849,9 @@ timestamp on either side of the move, plus the Factor-1 format form
   year format reaches 1940-2039 and a 3-digit one 1900-2899 (p.193), and
   a value outside the *result* field's range is error 114 with the result
   left unchanged — which is what Figure 287's own `*HIVAL` move produces.
+  Like 112 (not a valid date), it ends the program unless MONITOR handles
+  it: MOVE has no (E), and the error indicator in positions 73-74 is not
+  supported here (changed 2026-10-13, against PUB400; Tests 208, 212, 439).
   This is checked even on a plain date-to-date move, where the internal
   value is format-independent here, so that example reproduces exactly.
 - **Fixed a pre-existing bug this uncovered**: `*CYMD`/`*CMDY`/`*CDMY`
@@ -2235,7 +2231,7 @@ member's C-spec to host modern free-format statements.
 | 193 | Fixed C-spec: MOVE numeric to character |
 | 194 | Fixed C-spec: reject MOVE on float field |
 | 195 | Fixed C-spec: reject MOVE decimal literal |
-| 196 | Fixed C-spec: MOVE invalid digit -> 907 |
+| 196 | Fixed C-spec: MOVE characters by EBCDIC digit portion |
 | 197 | Fixed C-spec: named PLIST |
 | 198 | Fixed C-spec: PARM factor 1/factor 2 |
 | 199 | Fixed C-spec: reject *ENTRY with NOMAIN |

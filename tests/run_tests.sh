@@ -753,7 +753,7 @@ run_test "192" "Fixed C-spec: MOVE character to numeric" "$TESTDIR/test192_fixed
 run_test "193" "Fixed C-spec: MOVE numeric to character" "$TESTDIR/test193_fixed_cspec_move_num_to_char.rpgle" "run"
 run_test "194" "Fixed C-spec: reject MOVE on float field" "$TESTDIR/test194_fixed_cspec_err_move_float.rpgle" "error"
 run_test "195" "Fixed C-spec: reject MOVE decimal literal" "$TESTDIR/test195_fixed_cspec_err_move_declit.rpgle" "error"
-run_test "196" "Fixed C-spec: MOVE invalid digit -> 907" "$TESTDIR/test196_fixed_cspec_move_data_exc.rpgle" "run"
+run_test "196" "Fixed C-spec: MOVE characters by EBCDIC digit portion" "$TESTDIR/test196_fixed_cspec_move_data_exc.rpgle" "run"
 
 # ── Fixed C-spec: named PLIST and PARM factor 1/2 ────────────────────────
 # The rest of TODO.md's deferred item #2. 197 covers a PLIST defined AFTER
@@ -1040,6 +1040,7 @@ run_test "435" "%TOHEX, %HEX and %FROMHEX" "$TESTDIR/test435_hex_bifs.rpgle" "ru
 run_test "436" "/MESSAGE" "$TESTDIR/test436_message_directive.rpgle" "run"
 run_test "437" "/MESSAGE *ERROR fails the compile" "$TESTDIR/test437_err_message_directive.rpgle" "error"
 run_test "438" "/MESSAGE in fixed-format source" "$TESTDIR/test438_fixed_message_directive.rpgle" "run"
+run_test "439" "Fixed C-spec: an unmonitored bad date in MOVE ends the program" "$TESTDIR/test439_fixed_cspec_move_dt_unmonitored.rpgle" "run"
 
 printf "Test 436w: /MESSAGE warnings are shown            "
 w436=$($RPGC -S "$TESTDIR/test436_message_directive.rpgle" -o "$TMPDIR/test436w.cpp" 2>&1 >/dev/null)

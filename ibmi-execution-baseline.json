@@ -844,9 +844,10 @@
     "[12345   ]                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               ",
     "[ZZZZZ105]                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               ",
     "[ZZZ1234N]                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               ",
+    "[1234\u00fcZZZ]                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               ",
     "[ZZ210991]                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               "
    ],
-   "sha256": "b43fae4223739360ee5ba0516f24bca488f78f76affa54dcbe1739f97d6ea753",
+   "sha256": "9d608399ccb3e33c1c4d4e24b3a207f898b5a359071897f9bf0fc2c071ad50e3",
    "status": "same",
    "test": "193",
    "verified": "2026-10-13"
@@ -855,9 +856,10 @@
    "error": "",
    "output": [
     "[77110]                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  ",
-    "[0]                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      "
+    "[0]                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      ",
+    "[-77125]                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 "
    ],
-   "sha256": "e1a6707759d25a2b827976aa49a83ef2c7343c778673b1e8995209eeb8253120",
+   "sha256": "9bf10743854ad800eb89aeddf69445fa0ffbded5ecada8dc14c41fda8ccfa8c3",
    "status": "same",
    "test": "196",
    "verified": "2026-10-13"
@@ -903,7 +905,7 @@
    "verified": "2026-10-13"
   },
   "test208_fixed_cspec_move_date.rpgle": {
-   "error": "CEE9901 Application error. RNX0114 unmonitored by QRNXUTIL at statement 0000000012, instruction X'0000'..",
+   "error": "",
    "output": [
     "[24.03.1992]                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             ",
     "[1991-09-21]                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             ",
@@ -911,10 +913,13 @@
     "[1953-02-01]                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             ",
     "[1953-02-01]                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             ",
     "[02/01/53]                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               ",
-    "[2082697]                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                "
+    "[2082697]                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                ",
+    "[114]                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    ",
+    "[92/03/24]                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               ",
+    "[39/06/15]                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               "
    ],
-   "sha256": "5cbc11758f380b30daeda764ab9bf4dc88529c5ee8efff1f1052a2e4f71c0271",
-   "status": "runtime-error",
+   "sha256": "53c93da9d94c9282879178f54e7dcf9ca6250d6c0f1503ced4037c186c266508",
+   "status": "same",
    "test": "208",
    "verified": "2026-10-13"
   },
@@ -973,10 +978,14 @@
    "verified": "2026-10-13"
   },
   "test212_fixed_cspec_move_dt_err.rpgle": {
-   "error": "CEE9901 Application error. RNX0112 unmonitored by RPGCXRUN at statement 0000000013, instruction X'0000'..",
-   "output": [],
-   "sha256": "0cc0741e16c82d6cbf7b0b727805de27d279849b2e1a0b2cc84f1959be3c2f30",
-   "status": "runtime-error",
+   "error": "",
+   "output": [
+    "[112]                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    ",
+    "[1996-04-15]                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             ",
+    "[112]                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    "
+   ],
+   "sha256": "462adcffa4bc24795ceeeede74946629a6ae554c364bc43dd9fc3a8355030e3e",
+   "status": "same",
    "test": "212",
    "verified": "2026-10-13"
   },
@@ -1240,7 +1249,7 @@
    "verified": "2026-10-13"
   },
   "test228_exsr_order.rpgle": {
-   "error": "test228_exsr_order.rpgle after 60s, ending job 079826/QUSER/QP0ZSPWT",
+   "error": "test228_exsr_order.rpgle after 60s, ending job 086229/QUSER/QP0ZSPWT",
    "output": [],
    "sha256": "de6d78bdf7f84ba40bc4c19da234fff3ac400cfc8623d2b103efe7d0c97ef351",
    "status": "timeout",
@@ -2586,6 +2595,16 @@
    "sha256": "fe55b9b1b58530b78415625ef2a35f327095f3417d3d80b04006bf32ce4fc781",
    "status": "same",
    "test": "431",
+   "verified": "2026-10-13"
+  },
+  "test439_fixed_cspec_move_dt_unmonitored.rpgle": {
+   "error": "CEE9901 Application error. RNX0112 unmonitored by RPGCXRUN at statement 0000000009, instruction X'0000'..",
+   "output": [
+    "before                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   "
+   ],
+   "sha256": "cf60afb2f8159a984059375cb3ed839ded710c3916c1ca6f521acda600effb02",
+   "status": "runtime-error",
+   "test": "439",
    "verified": "2026-10-13"
   },
   "test43_static.rpgle": {

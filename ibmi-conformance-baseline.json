@@ -1382,9 +1382,9 @@
   "test193_fixed_cspec_move_num_to_char.rpgle": {
    "codes": [],
    "rpgc": "accept",
-   "sha256": "b43fae4223739360ee5ba0516f24bca488f78f76affa54dcbe1739f97d6ea753",
+   "sha256": "9d608399ccb3e33c1c4d4e24b3a207f898b5a359071897f9bf0fc2c071ad50e3",
    "verdict": "accept",
-   "verified": "2026-09-25"
+   "verified": "2026-10-13"
   },
   "test194_fixed_cspec_err_move_float.rpgle": {
    "codes": [
@@ -1415,9 +1415,9 @@
   "test196_fixed_cspec_move_data_exc.rpgle": {
    "codes": [],
    "rpgc": "accept",
-   "sha256": "e1a6707759d25a2b827976aa49a83ef2c7343c778673b1e8995209eeb8253120",
+   "sha256": "9bf10743854ad800eb89aeddf69445fa0ffbded5ecada8dc14c41fda8ccfa8c3",
    "verdict": "accept",
-   "verified": "2026-09-25"
+   "verified": "2026-10-13"
   },
   "test197_fixed_cspec_plist.rpgle": {
    "codes": [],
@@ -1585,9 +1585,9 @@
   "test208_fixed_cspec_move_date.rpgle": {
    "codes": [],
    "rpgc": "accept",
-   "sha256": "5cbc11758f380b30daeda764ab9bf4dc88529c5ee8efff1f1052a2e4f71c0271",
+   "sha256": "53c93da9d94c9282879178f54e7dcf9ca6250d6c0f1503ced4037c186c266508",
    "verdict": "accept",
-   "verified": "2026-09-25"
+   "verified": "2026-10-13"
   },
   "test209_fixed_cspec_move_dt_nosep.rpgle": {
    "codes": [],
@@ -1620,9 +1620,9 @@
   "test212_fixed_cspec_move_dt_err.rpgle": {
    "codes": [],
    "rpgc": "accept",
-   "sha256": "0cc0741e16c82d6cbf7b0b727805de27d279849b2e1a0b2cc84f1959be3c2f30",
+   "sha256": "462adcffa4bc24795ceeeede74946629a6ae554c364bc43dd9fc3a8355030e3e",
    "verdict": "accept",
-   "verified": "2026-09-25"
+   "verified": "2026-10-13"
   },
   "test213_fixed_cspec_err_move_jobrun.rpgle": {
    "codes": [],
@@ -6236,6 +6236,13 @@
    "verdict": "reject",
    "verified": "2026-10-07"
   },
+  "test439_fixed_cspec_move_dt_unmonitored.rpgle": {
+   "codes": [],
+   "rpgc": "accept",
+   "sha256": "cf60afb2f8159a984059375cb3ed839ded710c3916c1ca6f521acda600effb02",
+   "verdict": "accept",
+   "verified": "2026-10-13"
+  },
   "test43_static.rpgle": {
    "codes": [],
    "rpgc": "accept",
@@ -6761,5 +6768,5 @@
    "verified": "2026-09-25"
   }
  },
- "generated": "2026-10-07T16:44:31+00:00"
+ "generated": "2026-10-13T16:35:11+00:00"
 }

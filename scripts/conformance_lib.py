@@ -10,6 +10,22 @@ import os, re
 
 TESTS = "tests"
 
+# ---- tests/ibmi-expected.txt: the exceptions to the default expectation ----
+def load_expected(path):
+    """{source basename: (should compile, reason)} for each exception listed
+    in tests/ibmi-expected.txt; {} when the file does not exist."""
+    out = {}
+    if not os.path.exists(path):
+        return out
+    for ln in open(path):
+        ln = ln.strip()
+        if not ln or ln.startswith("#"):
+            continue
+        parts = ln.split(None, 2)
+        if len(parts) >= 2 and parts[1] in ("compile", "reject"):
+            out[parts[0]] = (parts[1] == "compile", parts[2] if len(parts) > 2 else "")
+    return out
+
 # ---- IBM: per-file messages from the transcript -----------------------------
 # "*RNF7030 30     23 000023  text" (statement, then source line) or, for a
 # message tied to a column marker, "*RNF0622 20 a      000004  text" (marker

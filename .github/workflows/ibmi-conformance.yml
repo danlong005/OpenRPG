@@ -11,7 +11,10 @@ name: IBM i conformance
 #   offline  — runs on every push and pull request, needs no network and no
 #              secrets (so it works from forks). Fails if any source has
 #              changed since it was last verified on IBM i, i.e. if someone
-#              edits a test without re-verifying it.
+#              edits a test without re-verifying it. Not on a dispatch: it
+#              would check the baseline before verify refreshes it, and fail
+#              on the very sources the run is verifying. Verify makes the
+#              same check itself, after the refresh.
 #
 #   verify   — on demand only (Actions → IBM i conformance → Run workflow,
 #              or `gh workflow run ibmi-conformance.yml -f mode=full`).
@@ -56,6 +59,7 @@ jobs:
   # ── offline: no network, no secrets, runs everywhere ─────────────────────
   offline:
     name: baseline check (offline)
+    if: github.event_name != 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -185,6 +189,14 @@ jobs:
             sleep 5
           done
           echo "::warning::could not push the refreshed baseline; it is in the run's artifact"
+
+      # The offline job's check, which a dispatch skips: every source now has
+      # a verified verdict. After the commit, so a failure here still keeps
+      # the verdicts this run did get. A smoke run verifies one file and
+      # cannot pass it.
+      - name: Every source matches a verified IBM i verdict
+        if: steps.compile.outcome == 'success' && github.event.inputs.mode != 'smoke'
+        run: python3 scripts/conformance-baseline.py check
 
       # A regression run commits no baseline (above), but the README's
       # rating is refreshed on every run: commit it alone.

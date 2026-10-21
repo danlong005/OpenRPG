@@ -32,6 +32,9 @@ ap.add_argument("--readme", default="",
                 help="README to update: the rating between its ibmi-compat markers")
 a = ap.parse_args()
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from conformance_lib import load_expected
+
 commit = a.commit
 if not commit:
     try:
@@ -63,15 +66,7 @@ def src_link(name, line=None):
 # should compile. tests/ibmi-expected.txt lists the exceptions, with reasons.
 modes = {m.group(1): m.group(2) for m in re.finditer(
     r'run_test "[^"]+" "[^"]*" "\$TESTDIR/([^"]+)" "([^"]+)"', open(a.run_tests).read())}
-overrides = {}
-if os.path.exists(a.expected):
-    for ln in open(a.expected):
-        ln = ln.strip()
-        if not ln or ln.startswith("#"):
-            continue
-        parts = ln.split(None, 2)
-        if len(parts) >= 2 and parts[1] in ("compile", "reject"):
-            overrides[parts[0]] = (parts[1] == "compile", parts[2] if len(parts) > 2 else "")
+overrides = load_expected(a.expected)
 
 def expectation(name):
     """(should compile, why) for a program."""

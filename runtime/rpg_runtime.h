@@ -2429,8 +2429,9 @@ inline unsigned char rpg_ebcdic37(unsigned char c) {
 // moves as 1 and 'J' (x'D1') as 1 too, with no data error (PUB400,
 // test196). The result is negative when "the zone from the rightmost
 // position of factor 2 is a hexadecimal D", which is 'J'-'R' and '}'.
-// A digit portion above 9 (x'4A'-x'4F', among others) is no digit at all;
-// that stays a data exception (status 907).
+// A digit portion above 9 (x'4A'-x'4F', among others) is no digit at all:
+// a decimal data error (907) that ends the program unless MONITOR handles
+// it, with the result field unchanged (PUB400, 2026-10-21; test440).
 inline RpgDigits rpg_digits_of_char(const std::string& s) {
     std::string out;
     out.reserve(s.size());
@@ -2438,11 +2439,9 @@ inline RpgDigits rpg_digits_of_char(const std::string& s) {
     for (char c : s) {
         unsigned char e = rpg_ebcdic37(static_cast<unsigned char>(c));
         unsigned char d = e & 0x0F;
-        if (d > 9) {
-            rpg_status_code() = 907; // decimal data error
-            rpg_error_flag() = true;
-            return RpgDigits{std::string(s.size(), '0'), false};
-        }
+        if (d > 9)
+            rpg_raise(907, "RNX0907: Decimal data error: a character moved into a numeric "
+                           "field has no valid digit portion.");
         out += static_cast<char>('0' + d);
         zone = static_cast<unsigned char>(e >> 4);
     }

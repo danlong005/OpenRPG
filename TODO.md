@@ -698,8 +698,9 @@ digit string to act on.
   The bytes are read through CCSID 37 (`rpg_ebcdic37`). "Blanks are
   transferred as zeros", so a `CHAR(5)` holding `'123'` moves the digits
   `12300` (Test 192). A digit portion above 9 (`.` `<` `(` `+` `*` and
-  others) is still a data exception, status 907, with the moved digits
-  zeros. IBM's behaviour there is not yet checked.
+  others) is a decimal data error, status 907, that ends the program
+  unless MONITOR handles it, with the result unchanged (checked on
+  PUB400 2026-10-21 for ten such characters; Test 440).
 - **Numeric→character carries the sign in the last digit's zone**
   (changed 2026-10-13, against PUB400), as a zoned number does on IBM i:
   `-12345` moves as `1234N`, a negative last digit reading `}` for 0 and

@@ -2780,10 +2780,11 @@ postfix_expr:
     ;
 
 /* The field LIKE names: a plain name, or a subfield of a qualified data
-   structure, LIKE(ds.field). */
+   structure, LIKE(ds.field), through any depth of nested data structures,
+   LIKE(ds.inner.field). */
 like_name:
     IDENTIFIER { $$ = $1; }
-    | IDENTIFIER DOT IDENTIFIER {
+    | like_name DOT IDENTIFIER {
         std::string n = std::string($1) + "." + $3;
         free($1); free($3);
         $$ = strdup(n.c_str());

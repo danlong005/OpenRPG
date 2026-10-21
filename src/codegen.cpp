@@ -1284,10 +1284,19 @@ void CodeGen::visit(Program& node) {
         if (any) out_ << "\n";
     }
 
-    // Emit prototypes and procedures
-    for (auto* s : proc_stmts) {
-        s->accept(*this);
-    }
+    // Emit prototypes, then OVERLOAD dispatchers, then procedures. A
+    // dispatcher calls its candidates by name, so it comes after every
+    // prototype, wherever in the source its own DCL-PR sits.
+    auto isOverload = [](Statement* s) {
+        auto* pr = dynamic_cast<DclPR*>(s);
+        return pr && !pr->overload_impls.empty();
+    };
+    for (auto* s : proc_stmts)
+        if (dynamic_cast<DclPR*>(s) && !isOverload(s)) s->accept(*this);
+    for (auto* s : proc_stmts)
+        if (isOverload(s)) s->accept(*this);
+    for (auto* s : proc_stmts)
+        if (!dynamic_cast<DclPR*>(s)) s->accept(*this);
 
     // Subroutine definitions, after the procedures so a subroutine may call
     // one, and after the globals it reads.
@@ -2247,6 +2256,32 @@ int CodeGen::editDigits(const FieldAttrs& a) {
 }
 
 void CodeGen::visit(DclS& node) {
+    // LIKE(name): the field takes the referenced declaration's type,
+    // length and scale -- a standalone field, or a subfield at any depth,
+    // LIKE(ds.field) or LIKE(ds.inner.field) -- and is then declared like
+    // any other: INZ, STATIC, DIM and the default initial value (n blanks
+    // for a CHAR(n)) included.
+    if (!node.like_var.empty()) {
+        auto it = var_types_.find(node.like_var);
+        if (it != var_types_.end()) {
+            node.type = it->second;
+            node.length = var_lengths_[node.like_var];
+            node.digits = var_digits_[node.like_var];
+            node.decimals = var_decimals_[node.like_var];
+        } else if (node.like_var.find('.') != std::string::npos) {
+            FieldAttrs a = attrsOfName(node.like_var);
+            if (!a.known) {
+                report_semantic_error(node.line, "LIKE(" + node.like_var + "): " + node.like_var +
+                    " is not a subfield of a data structure (IBM: RNF7030)");
+                return;
+            }
+            node.type = a.type;
+            node.length = a.length;
+            node.digits = a.digits;
+            node.decimals = a.decimals;
+        }
+    }
+
     // Track variable info for RESET/CLEAR
     var_types_[node.name] = node.type;
     var_lengths_[node.name] = node.length;
@@ -2280,30 +2315,6 @@ void CodeGen::visit(DclS& node) {
         emitIndent();
         out_ << "extern " << typeToString(node.type, node.length, node.digits) << " " << node.name << ";\n";
         return;
-    }
-
-    // Handle LIKE - resolve type from referenced variable
-    if (!node.like_var.empty()) {
-        auto it = var_types_.find(node.like_var);
-        if (it != var_types_.end()) {
-            var_types_[node.name] = it->second;
-            var_lengths_[node.name] = var_lengths_[node.like_var];
-            // Scale too: assignment truncates to it, so a LIKE copy of a
-            // PACKED(9:2) left at 0 decimals would lose its cents.
-            var_digits_[node.name] = var_digits_[node.like_var];
-            var_decimals_[node.name] = var_decimals_[node.like_var];
-            emitIndent();
-            std::string cppType = typeToString(it->second, var_lengths_[node.like_var], var_digits_[node.like_var]);
-            if (node.is_static) out_ << "static ";
-            out_ << cppType << " " << node.name;
-            switch (it->second) {
-                case RPGType::INT10: out_ << " = 0"; break;
-                case RPGType::PACKED: case RPGType::ZONED: out_ << " = 0.0"; break;
-                default: break;
-            }
-            out_ << ";\n";
-            return;
-        }
     }
 
     // Handle BASED(pointer) — reference via pointer
@@ -3550,6 +3561,13 @@ void CodeGen::visit(DclDS& node) {
                 if (git != var_types_.end()) {
                     rtype = git->second;
                     rlen = var_lengths_[like];
+                } else if (like.find('.') != std::string::npos) {
+                    // A subfield of another data structure, at any depth.
+                    FieldAttrs a = attrsOfName(like);
+                    if (a.known) { rtype = a.type; rlen = a.length; }
+                    else report_semantic_error(f.line ? f.line : node.line, "LIKE(" + like +
+                        ") on subfield " + f.name + ": " + like +
+                        " is not a subfield of a data structure (IBM: RNF7030)");
                 }
             }
             out_ << "    " << typeToString(rtype, rlen) << " " << f.name << initFor(rtype, rlen)
@@ -3621,10 +3639,19 @@ void CodeGen::visit(DclDS& node) {
         if (!f.like_var.empty()) {
             std::string like = f.like_var;
             size_t dot = like.find('.');
-            if (dot != std::string::npos) like = like.substr(dot + 1);
+            // LIKE(thisds.field) is a sibling; LIKE(otherds.field), at any
+            // depth, is resolved through that data structure.
+            bool other = dot != std::string::npos && like.substr(0, dot) != node.name;
+            if (dot != std::string::npos && !other) like = like.substr(dot + 1);
             bool found = false;
+            if (other) {
+                FieldAttrs a = attrsOfName(like);
+                if (a.known) {
+                    t = a.type; len = a.length; digits = a.digits; dec = a.decimals; found = true;
+                }
+            }
             for (auto& g : node.fields)
-                if (g.name == like && &g != &f) {
+                if (!found && g.name == like && &g != &f) {
                     t = g.type; len = g.length; digits = g.digits; dec = g.decimals; found = true; break;
                 }
             if (!found && var_types_.count(like)) {

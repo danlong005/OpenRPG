@@ -119,6 +119,14 @@
 
 ## 🔲 Remaining Work
 
+### Known gaps
+
+- **An array of LIKEDS subfields, `sub LIKEDS(t) DIM(n)`, in a free-form
+  data structure** (found 2026-10-21). With `LIKEDS` first the `DIM` is
+  silently dropped and the generated C++ does not compile; with `DIM` first
+  it is a syntax error. No test covers it. It also blocks the 26-vote idea
+  of `LIKE` through such an array, `LIKE(ds.arr.field)`.
+
 ### Still TODO
 
 | # | Feature | Section |

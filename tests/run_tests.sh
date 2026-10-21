@@ -1046,6 +1046,10 @@ run_test "439" "Fixed C-spec: an unmonitored bad date in MOVE ends the program" 
 run_test "440" "Fixed C-spec: MOVE of a character with no digit portion is 907" "$TESTDIR/test440_fixed_cspec_move_bad_digit.rpgle" "run"
 rm -f "$TESTDIR/../testfl441.txt"
 run_test "441" "Fixed I-spec: READ leaves other record-identifying indicators on" "$TESTDIR/test441_fixed_ispec_rid_persist.rpgle" "run"
+run_test "442" "LIKE of a field or a qualified subfield, with INZ" "$TESTDIR/test442_like_subfield.rpgle" "run"
+run_test "443" "LIKE of a subfield of a nested data structure" "$TESTDIR/test443_like_nested_subfield.rpgle" "run"
+run_test "444" "LIKE of a subfield that does not exist" "$TESTDIR/test444_err_like_no_subfield.rpgle" "error"
+run_test "445" "OVERLOAD with prototyped candidates" "$TESTDIR/test445_overload_with_prototypes.rpgle" "run"
 
 printf "Test 436w: /MESSAGE warnings are shown            "
 w436=$($RPGC -S "$TESTDIR/test436_message_directive.rpgle" -o "$TMPDIR/test436w.cpp" 2>&1 >/dev/null)

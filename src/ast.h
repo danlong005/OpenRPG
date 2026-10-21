@@ -978,6 +978,7 @@ public:
 struct EntryParam {
     std::string name;   // Result — becomes a by-reference C++ parameter
     std::string target; // Factor 1 — copied from `name` on entry (may be empty)
+    std::string source; // Factor 2 — copied into `name` on return (may be empty)
     int line = 0;       // the PARM's own source line, for diagnostics
 };
 

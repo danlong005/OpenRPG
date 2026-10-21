@@ -793,14 +793,15 @@ about what a *program with parameters* compiles to at all.
   (`entry_params_`) — leaving the caller's storage as the single location
   the body reads and writes, which is what p.929's "each parameter field
   has only one storage location" requires.
-- **Factor 1 works; factor 2 is refused.** p.929 step 3 puts the
+- **Factor 1 and factor 2 both work.** p.929 step 3 puts the
   result→factor 1 copy "after it receives control and after any normal
   program initialization", so it is emitted once, after `*INZSR`, before
   the first executable statement. Step 4's factor 2→result copy happens
-  *on return* — at every exit point, each `RETURN` plus falling off the
-  end — which this line-by-line transpiler cannot place, so it is
-  rejected with a message saying to assign to the parameter directly
-  (Test 205).
+  *on return*, at every exit point. It was refused until 2026-10-21; it is
+  now an object at the top of the entry function (`RpgOnReturn`) whose
+  destructor makes the copies, so every way out runs it -- a `RETURN` in
+  the calculations or a subroutine, or the end -- and an error ending the
+  program does not (Test 205, callee `COPYBACK`).
 - **`NOMAIN` with `*ENTRY` is an error** (Test 199, repurposed): `NOMAIN`
   discards the mainline, which is the very thing `*ENTRY` turns into the
   function, so together they compiled to an empty file.
@@ -891,14 +892,13 @@ staying buried in a completed item's writeup. Both entries are now closed.
 
 1. ~~**`MOVE`/`MOVEL` date/time conversion.**~~ — done: item #16 above.
 2. ~~**Named `PLIST`, `*ENTRY PLIST`, and `PARM` factor 1/2.**~~ — done:
-   items #14 and #15 above. The one piece deliberately left behind is
-   **factor 2 on an `*ENTRY` PARM**, the return-time copy back to the
-   caller: it has to happen at every exit point, which a line-by-line
-   transpiler cannot place, and it is refused rather than approximated
-   (Test 205). Doing it properly means a control-flow pass over the
-   mainline — a single exit rewrite, or a scope guard — which is a
-   bigger change than this entry ever covered. This is the only thing
-   still outstanding from either entry.
+   items #14 and #15 above. Factor 2 on an `*ENTRY` PARM, the one piece
+   left behind, was done 2026-10-21 with a scope guard (Test 205).
+   Writing its test found two bugs in called programs with subroutines:
+   a RETURN in a subroutine of an `*ENTRY` program generated `return 0`
+   in a void function and did not compile, and the subroutine-return
+   flag was shared with the caller, so a callee's subroutine RETURN
+   ended the caller too. Both fixed.
 
 ### ~~Fixed-Format File I/O~~ — Not Planned
 ~~Native record format / INFSR / legacy PLIST-based file I/O~~ — item #4
@@ -2246,7 +2246,7 @@ member's C-spec to host modern free-format statements.
 | 202 | Fixed C-spec: reject literal PARM result |
 | 203 | *ENTRY callee module (ADDTWO) |
 | 204 | Fixed C-spec: *ENTRY PLIST call |
-| 205 | Fixed C-spec: reject *ENTRY PARM factor 2 |
+| 205 | Fixed C-spec: *ENTRY PARM factor 2 copies back on return |
 | 206 | Fixed C-spec: reject undeclared *ENTRY parm |
 | 207 | Fixed C-spec: reject CALL naming *ENTRY |
 | 208 | Fixed C-spec: MOVE date conversions (Figure 287) |

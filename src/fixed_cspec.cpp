@@ -1115,18 +1115,11 @@ void feedCSpecLine(CSpecRunState& state, const std::string& line, int lineNo) {
                 return;
             }
             // p.929 step 4: in the CALLED program, factor 2 is copied into
-            // the result field when control returns to the caller. That is
-            // a copy at *every* exit point — each RETURN plus falling off
-            // the end — which this line-by-line transpiler cannot place.
-            // Factor 1 on an *ENTRY PARM is the entry-time copy (step 3)
-            // and is supported, since it happens once, at the top.
-            if (state.inPlist && state.plistName == "*ENTRY" && !factor2.empty()) {
-                report_fixed_format_error(lineNo, "C-spec: Factor 2 on an *ENTRY PLIST PARM "
-                    "is not supported — it copies the parameter back when the program "
-                    "returns, which would have to happen at every exit point; assign to '" +
-                    result + "' directly instead. Factor 1 (the entry-time copy) does work.");
-                return;
-            }
+            // the result field when control returns to the caller -- at
+            // every exit point. Codegen places that copy (an object whose
+            // destructor runs however the entry function is left), so here
+            // factor 2 is only checked to be something it can copy: a
+            // field, or a literal.
             CSpecParm parm{factor1, factor2, result, lineNo};
             if (state.inPlist) state.plists[state.plistName].push_back(parm);
             else               state.callParms.push_back(parm);

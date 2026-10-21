@@ -778,7 +778,8 @@ run_test "202" "Fixed C-spec: reject literal PARM result" "$TESTDIR/test202_fixe
 # call), so the two halves of this work meet end to end.
 run_test "203" "*ENTRY called program (ADDTWO)" "$TESTDIR/ADDTWO.rpgle" "shared"
 run_test "204" "Fixed C-spec: *ENTRY PLIST call" "$TESTDIR/test204_fixed_cspec_entry_caller.rpgle" "run"
-run_test "205" "Fixed C-spec: reject *ENTRY PARM factor 2" "$TESTDIR/test205_fixed_cspec_err_entry_f2.rpgle" "error"
+run_test "205a" "*ENTRY PARM factor 2 callee (COPYBACK)" "$TESTDIR/COPYBACK.rpgle" "shared"
+run_test "205" "Fixed C-spec: *ENTRY PARM factor 2 copies back on return" "$TESTDIR/test205_fixed_cspec_entry_f2.rpgle" "run"
 run_test "206" "Fixed C-spec: reject undeclared *ENTRY parm" "$TESTDIR/test206_fixed_cspec_err_entry_undecl.rpgle" "error"
 run_test "207" "Fixed C-spec: reject CALL naming *ENTRY" "$TESTDIR/test207_fixed_cspec_err_call_entry.rpgle" "error"
 

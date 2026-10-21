@@ -1330,11 +1330,13 @@ void CodeGen::visit(Program& node) {
         if (!entry_ok) return;
         out_ << "void " << (shared_program_.empty() ? node.entry_name : "rpg_program_entry")
              << "(" << entry_params_str << ") {\n";
+        out_ << "    RpgSrReturnScope __sr_scope;\n";
         void_return_ = true;
     } else if (!shared_program_.empty()) {
         // A called program: its mainline, called by the exported function
         // (emitProgramExport).
         out_ << "static int rpg_program_main() {\n";
+        out_ << "    RpgSrReturnScope __sr_scope;\n";
         if (uses_psds_) out_ << "    rpg_psds_init(\"" << shared_program_ << "\");\n";
     } else if (uses_psds_) {
         // Emit main (use argc/argv when PSDS is declared)
@@ -1414,6 +1416,39 @@ void CodeGen::visit(Program& node) {
         emitIndent();
         out_ << ep.target << " = " << ep.name << ";\n";
     }
+    // *ENTRY PLIST PARM factor 2 (p.929 step 4): copied into the parameter
+    // when control returns to the caller, by whichever exit (RpgOnReturn).
+    {
+        std::string copies;
+        for (const auto& ep : node.entry_params) {
+            if (ep.source.empty()) continue;
+            const std::string& f2 = ep.source;
+            std::string value;
+            if (f2.front() == '\'') {
+                // A character literal, its doubled quotes undone.
+                std::string text = f2.size() >= 2 ? f2.substr(1, f2.size() - 2) : std::string();
+                std::string lit;
+                for (size_t i = 0; i < text.size(); i++) {
+                    if (text[i] == '\'' && i + 1 < text.size() && text[i + 1] == '\'') i++;
+                    lit += text[i];
+                }
+                value = "std::string(\"" + cppEscape(lit) + "\")";
+            } else if (isdigit((unsigned char)f2.front()) || f2.front() == '-' || f2.front() == '.') {
+                value = f2;
+            } else if (var_types_.count(f2)) {
+                value = f2;
+            } else {
+                report_semantic_error(ep.line, "*ENTRY PLIST: PARM factor 2 '" + f2 +
+                    "' is neither a declared field nor a literal");
+                continue;
+            }
+            copies += " " + ep.name + " = " + value + ";";
+        }
+        if (!copies.empty()) {
+            emitIndent();
+            out_ << "RpgOnReturn __entry_return([&] {" << copies << " });\n";
+        }
+    }
 
     // 4. Emit remaining executable statements — wrap in try/catch if *PSSR exists
     if (pssr_stmt) {
@@ -1430,7 +1465,9 @@ void CodeGen::visit(Program& node) {
         // Reaching the *PSSR's ENDSR (no RETURN) ends the program in error,
         // as on IBM i (RNX9001); a RETURN in it ends the program normally.
         emitIndent(); out_ << "sr__PSSR();\n";
-        emitIndent(); out_ << "if (rpg_sr_returned) return " << mainEnd() << ";\n";
+        emitIndent();
+        if (void_return_) out_ << "if (rpg_sr_returned) return;\n";
+        else out_ << "if (rpg_sr_returned) return " << mainEnd() << ";\n";
         emitIndent(); out_ << "rpg_pssr_ended();\n";
         indent_--; emitIndent(); out_ << "}\n";
     }
@@ -3988,7 +4025,9 @@ void CodeGen::visit(ExSR& node) {
 std::string CodeGen::afterSubroutine() const {
     if (in_subroutine_) return in_procedure_ ? "if (__sr_ret) return;" : "if (rpg_sr_returned) return;";
     if (in_procedure_) return void_return_ ? "if (__sr_ret) return;" : "if (__sr_ret) return __sr_val;";
-    return "if (rpg_sr_returned) return " + mainEnd() + ";";
+    // An *ENTRY PLIST mainline is a void function.
+    return void_return_ ? "if (rpg_sr_returned) return;"
+                        : "if (rpg_sr_returned) return " + mainEnd() + ";";
 }
 
 void CodeGen::visit(GotoStmt& node) {

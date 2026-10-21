@@ -855,6 +855,21 @@ struct RpgError : std::runtime_error {
     RpgError(int st, const std::string& msg) : std::runtime_error(msg), status(st) {}
 };
 
+// *ENTRY PLIST PARM factor 2 (SC09-2508 p.929 step 4): copied into the
+// parameter "when control returns to the calling program". An instance at
+// the top of the entry function runs the copy however the function is
+// left -- a RETURN in the mainline or a subroutine, or the end of the
+// calculations -- but not when an error is ending it, which is no return.
+template <class F>
+struct RpgOnReturn {
+    F f;
+    int pending = std::uncaught_exceptions();
+    explicit RpgOnReturn(F g) : f(g) {}
+    ~RpgOnReturn() { if (std::uncaught_exceptions() == pending) f(); }
+    RpgOnReturn(const RpgOnReturn&) = delete;
+    RpgOnReturn& operator=(const RpgOnReturn&) = delete;
+};
+
 [[noreturn]] inline void rpg_raise(int status, const std::string& msg) {
     rpg_status_code() = status;
     rpg_error_flag() = true;
@@ -907,6 +922,19 @@ struct RpgCallerEscape : RpgError { using RpgError::RpgError; };
 // Set when a RETURN runs inside one of the program's subroutines: the
 // program returns too, once the subroutine does.
 inline bool rpg_sr_returned = false;
+
+// A called program's own run of rpg_sr_returned. The flag is one variable
+// for the caller and every program it calls (an inline variable is merged
+// across the program and the shared objects it loads), so a called program
+// starts with it clear and gives the caller back its own value however it
+// ends: a RETURN in the callee's subroutine must not end the caller too.
+struct RpgSrReturnScope {
+    bool saved = rpg_sr_returned;
+    RpgSrReturnScope() { rpg_sr_returned = false; }
+    ~RpgSrReturnScope() { rpg_sr_returned = saved; }
+    RpgSrReturnScope(const RpgSrReturnScope&) = delete;
+    RpgSrReturnScope& operator=(const RpgSrReturnScope&) = delete;
+};
 
 // A *PSSR run because of an error that reaches its ENDSR, with no RETURN,
 // ends the program in error (IBM i: RNX9001).

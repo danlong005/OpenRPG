@@ -1389,7 +1389,7 @@ Program* parseFixedFormat(const std::string& src_text, const std::string& filena
         } else {
             program->entry_name = name;
             for (const auto& p : entry->second)
-                program->entry_params.push_back(EntryParam{p.name, p.target, p.line});
+                program->entry_params.push_back(EntryParam{p.name, p.target, p.source, p.line});
         }
     }
 

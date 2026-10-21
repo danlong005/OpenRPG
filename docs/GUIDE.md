@@ -3549,6 +3549,19 @@ program can be called by others, which pass the fields by reference:
      C                   PARM                    outTotal
 ```
 
+Factor 1 and factor 2 of a `PARM` copy the parameter in and out, as on IBM i.
+Factor 1 receives the parameter when the program starts. Factor 2 is copied
+into the parameter when the program returns to its caller, by whichever way it
+returns: a `RETURN` in the calculations or in a subroutine, or the end of the
+calculations. It is not copied when the program ends in an error.
+
+```rpgle
+     C     *ENTRY        PLIST
+     C     inCopy        PARM                    inCustNo
+     C                   PARM      total         outTotal
+     C                   PARM      'done'        outStatus
+```
+
 The program's name comes from the **source file name**, upper-cased with the
 directory and extension stripped — `ORD100.rpgle` is `CALL 'ORD100'`. A file
 name that is not a usable program name is refused with a message telling you to

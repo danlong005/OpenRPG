@@ -1917,7 +1917,7 @@ The differentiators. Every row is "Not under consideration" at IBM.
 | 25 | ✅ `%CHAR` with `%EDITC` formatting: `%CHAR(n : *NOZEROSUPPRESS)` — done 2026-10-06 (test366-367) | Both BIFs already ship; this merges them. |
 | 15 | ✅ Multiple conditions in one `/IF` directive: AND, OR, NOT, parentheses — done 2026-10-06 (test369-371; free-form `/ELSEIF` after an untaken `/IF` fixed too, test368) | Directive handling already lives in the lexer. |
 | 13 | ✅ `*TRUE` / `*FALSE` figurative constants — done 2026-10-06 (test372-373) | Aliases of `*ON` / `*OFF` for `IND`. |
-| 26 | `LIKE` of a subfield of a nested DS array: `LIKE(DS_A.DS_Arr_B.field1)` (IBMI-I-2973) | Fix first: even one level, `LIKE(DS_A.f1)`, is broken here -- the new field comes out `int` (found by this pull, 2026-10-21). The nested name then needs the qualified-name grammar to take more than one dot in `LIKE`. |
+| 26 | `LIKE` of a subfield of a nested DS array: `LIKE(DS_A.DS_Arr_B.field1)` (IBMI-I-2973) | `LIKE` through nested data structures works (test443); through an *array* of them it is blocked by the known gap of `LIKEDS` + `DIM` subfields (see Known gaps). |
 | 21 | Time format `*HM` (hours and minutes) for `%TIME`, `%DEC` and DDS `TIMFMT` (IBMI-I-2139) | One more entry in the time-format tables (`rpg_runtime.h`), and in OpenDSPF's `TIMFMT` for the DDS half. |
 
 ### Tier 2 — "Future consideration" at IBM, small-to-medium here
@@ -1948,7 +1948,7 @@ The differentiators. Every row is "Not under consideration" at IBM.
 | 38 | `EXTENDS(base)` on a DS template: the base's subfields plus its own (IBMI-I-3447) | `LIKEDS` already copies a template's subfields; this is that plus the DS's own, in one declaration. |
 | 36 | `%PARMLEN(parm)`: the passed length of an `OPTIONS(*VARSIZE)` parameter (IBMI-I-2956) | `*VARSIZE` is parsed; a character parameter is a `std::string`, so its length is already at hand. |
 | 32 | `LIKEFLD` / `LIKE(file.format/field : +n)`: a field defined from a field reference file (IBMI-I-4705) | The `.extdesc` sidecars (`src/extdesc.cpp`) already describe external files' fields; this reads a field's type from one. |
-| 25 | Hide the procedures behind an `OVERLOAD` from direct calls (IBMI-I-2550) | A compile-time check. Fix first: `OVERLOAD` fails to compile when its procedures also have their own `DCL-PR` -- the generated dispatcher names them before they are declared (found by this pull, 2026-10-21). |
+| 25 | Hide the procedures behind an `OVERLOAD` from direct calls (IBMI-I-2550) | A compile-time check on calls to an `OVERLOAD`'s candidates (the `OVERLOAD`-with-prototypes bug this pull found is fixed, test445). |
 | 22 | A case-sensitivity check: every reference spelled as declared (IBMI-I-1842) | Names stay case-insensitive; a CTL-OPT keyword makes a reference spelled differently from its declaration a diagnostic. |
 
 ### Larger, but worth their vote count

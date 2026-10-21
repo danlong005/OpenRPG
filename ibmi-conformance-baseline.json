@@ -14,6 +14,13 @@
    "verdict": "accept",
    "verified": "2026-09-25"
   },
+  "COPYBACK.rpgle": {
+   "codes": [],
+   "rpgc": "accept",
+   "sha256": "0c46cde0f26badf7b5307df39d964a772814aad8ef042972c5c69f1e44e50909",
+   "verdict": "accept",
+   "verified": "2026-10-21"
+  },
   "NETPAY.rpgle": {
    "codes": [],
    "rpgc": "accept",
@@ -1537,12 +1544,12 @@
    "verdict": "accept",
    "verified": "2026-09-25"
   },
-  "test205_fixed_cspec_err_entry_f2.rpgle": {
+  "test205_fixed_cspec_entry_f2.rpgle": {
    "codes": [],
-   "rpgc": "reject",
-   "sha256": "76b9a3d383657ffb81fa287f791c6e1d19c40ba8efbf2af45a459eb1277027dd",
+   "rpgc": "accept",
+   "sha256": "550c39044f5a0b569015e0eb769ee26b94dd0a0ffb4a12a048951e6113c74f98",
    "verdict": "accept",
-   "verified": "2026-09-25"
+   "verified": "2026-10-21"
   },
   "test206_fixed_cspec_err_entry_undecl.rpgle": {
    "codes": [
@@ -6782,5 +6789,5 @@
    "verified": "2026-09-25"
   }
  },
- "generated": "2026-10-21T19:32:37+00:00"
+ "generated": "2026-10-21T19:43:39+00:00"
 }

@@ -62,6 +62,8 @@ test436_message_directive.rpgle      reject  OpenRPG extension: /MESSAGE
 test438_fixed_message_directive.rpgle reject OpenRPG extension: /MESSAGE
 test332_extfile_usropn.rpgle         reject  OpenRPG extension: EXTFILE names a host file path; IBM i wants LIB/FILE, 10 characters each (RNF0652)
 test334_free_dclf_disk_len.rpgle     reject  OpenRPG extension: EXTFILE names a host file path; IBM i wants LIB/FILE, 10 characters each (RNF0652)
+test443_like_nested_subfield.rpgle   reject  OpenRPG extension: LIKE through a nested data structure; IBM i takes one qualifier (RNF0623)
+test446_overload_ind.rpgle           reject  OpenRPG extension: OVERLOAD tells IND from a string; on IBM i both candidates match (RNF3246)
 
 # rpgc names the database FILE on WRITE/UPDATE/DELETE; IBM i requires the
 # record FORMAT name (RNF5063). Deliberately not compatible: TODO.md,

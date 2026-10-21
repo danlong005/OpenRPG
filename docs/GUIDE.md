@@ -3340,7 +3340,9 @@ A subfield `LIKE(other)` resolves against a field declared **earlier in the same
 data structure**. In a `QUALIFIED` data structure that sibling is named
 `LIKE(ds.other)`; alone, `other` is not defined there (IBM: RNF7030). A
 subfield of another data structure is named the same way, `LIKE(otherds.field)`,
-as it is from a `DCL-S`, at any depth: `LIKE(order.header.custno)`. Combining `LIKE` and `DIM` on one subfield is not supported,
+as it is from a `DCL-S`. A name through more than one data structure,
+`LIKE(order.header.custno)`, is an OpenRPG extension: IBM i takes one qualifier
+(RNF0623). Combining `LIKE` and `DIM` on one subfield is not supported,
 and a subfield `DIM` is fixed-size only — no `DIM(*VAR)`/`DIM(*AUTO)`.
 
 ### C-Spec — Calculations

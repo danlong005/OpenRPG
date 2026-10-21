@@ -1,31 +1,26 @@
 **FREE
 // OVERLOAD whose candidate procedures also have their own DCL-PR, declared
-// after the OVERLOAD, as an include file of prototypes would: an indicator
-// argument calls the IND candidate, a character one the string candidate.
-dcl-pr assertEqual overload(assertEqual_string : assertEqual_ind);
-dcl-pr assertEqual_string;
-  a varchar(20) const;
-  b varchar(20) const;
+// after the OVERLOAD, as an include file of prototypes would.
+dcl-pr show overload(show_int : show_text);
+dcl-pr show_int;
+  v int(10) const;
 end-pr;
-dcl-pr assertEqual_ind;
-  a ind const;
-  b ind const;
+dcl-pr show_text;
+  v varchar(20) const;
 end-pr;
-dcl-s f ind inz(*on);
-assertEqual(f : *on);
-assertEqual('x' : 'y');
+dcl-s n int(10) inz(5);
+show(n);
+show('x');
 *inlr = *on;
-dcl-proc assertEqual_string;
+dcl-proc show_int;
   dcl-pi *n;
-    a varchar(20) const;
-    b varchar(20) const;
+    v int(10) const;
   end-pi;
-  dsply ('string ' + a + b);
+  dsply ('int ' + %char(v));
 end-proc;
-dcl-proc assertEqual_ind;
+dcl-proc show_text;
   dcl-pi *n;
-    a ind const;
-    b ind const;
+    v varchar(20) const;
   end-pi;
-  dsply ('ind ' + a + b);
+  dsply ('text ' + v);
 end-proc;

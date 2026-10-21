@@ -43,6 +43,13 @@ if not commit:
         commit = ""
 
 files = json.load(open(a.baseline))["files"]
+# A source IBM has not compiled yet has only rpgc's verdict (a run that
+# stopped before reaching PUB400 still records rpgc's); it has nothing to
+# show here until it has IBM's.
+unverified = sorted(n for n, r in files.items() if "verdict" not in r)
+files = {n: r for n, r in files.items() if "verdict" in r}
+if unverified:
+    print(f"not yet verified on IBM i, left off the page: {', '.join(unverified)}")
 accepted = sorted(n for n, r in files.items() if r["verdict"] == "accept")
 rejected = sorted(n for n, r in files.items() if r["verdict"] != "accept")
 

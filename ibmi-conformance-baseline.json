@@ -6271,6 +6271,114 @@
    "verdict": "accept",
    "verified": "2026-10-21"
   },
+  "test442_like_subfield.rpgle": {
+   "codes": [],
+   "rpgc": "accept",
+   "sha256": "6c0f9b2eefa1d00d1fd1db6604cace432dae4c7b2d265bedd1ae68900811fe7a",
+   "verdict": "accept",
+   "verified": "2026-10-21"
+  },
+  "test443_like_nested_subfield.rpgle": {
+   "codes": [
+    "RNF0623",
+    "RNF7030",
+    "RNF7503"
+   ],
+   "messages": [
+    {
+     "code": "RNF0623",
+     "line": 11,
+     "severity": 20,
+     "text": "The simple qualified name is not specified correctly."
+    },
+    {
+     "code": "RNF7030",
+     "line": 11,
+     "severity": 30,
+     "text": "The name or indicator C is not defined."
+    },
+    {
+     "code": "RNF7030",
+     "line": 11,
+     "severity": 30,
+     "text": "The name or indicator HDR.CODE is not defined."
+    },
+    {
+     "code": "RNF7030",
+     "line": 11,
+     "severity": 30,
+     "text": "The name or indicator OUTER.HDR.CODE is not defined."
+    },
+    {
+     "code": "RNF0623",
+     "line": 12,
+     "severity": 20,
+     "text": "The simple qualified name is not specified correctly."
+    }
+   ],
+   "reason": "Qualified reference (ds.field) to a DS that is not QUALIFIED",
+   "reason_detail": "line 11: `dcl-s c like(outer.hdr.code) inz('AB');`",
+   "rpgc": "accept",
+   "sha256": "82c0d46680d76e6aa2c118b6dae84a8f5cecb7be79008e3cb8b1360e6511baf8",
+   "verdict": "reject",
+   "verified": "2026-10-21"
+  },
+  "test444_err_like_no_subfield.rpgle": {
+   "codes": [
+    "RNF7030"
+   ],
+   "messages": [
+    {
+     "code": "RNF7030",
+     "line": 6,
+     "severity": 30,
+     "text": "The name or indicator C is not defined."
+    },
+    {
+     "code": "RNF7030",
+     "line": 6,
+     "severity": 30,
+     "text": "The name or indicator NOSUCH is not defined."
+    },
+    {
+     "code": "RNF7030",
+     "line": 6,
+     "severity": 30,
+     "text": "The name or indicator OUTER.NOSUCH is not defined."
+    }
+   ],
+   "reason": "Qualified reference (ds.field) to a DS that is not QUALIFIED",
+   "reason_detail": "line 6: `dcl-s c like(outer.nosuch);`",
+   "rpgc": "reject",
+   "sha256": "ea76ed0d79dc9d0825ea0c20b126723a311baf70907f8debceadd1e1ecadd42b",
+   "verdict": "reject",
+   "verified": "2026-10-21"
+  },
+  "test445_overload_with_prototypes.rpgle": {
+   "codes": [
+    "RNF3246"
+   ],
+   "messages": [
+    {
+     "code": "RNF3246",
+     "line": 15,
+     "severity": 30,
+     "text": "Prototypes ASSERTEQUAL_STRING and ASSERTEQUAL_IND both match the call; first match assumed."
+    },
+    {
+     "code": "RNF3246",
+     "line": 16,
+     "severity": 30,
+     "text": "Prototypes ASSERTEQUAL_STRING and ASSERTEQUAL_IND both match the call; first match assumed."
+    }
+   ],
+   "reason": "RNF3246: Prototypes ASSERTEQUAL_STRING and ASSERTEQUAL_IND both match the call; first match assumed.",
+   "reason_detail": "line 15: Prototypes ASSERTEQUAL_STRING and ASSERTEQUAL_IND both match the call; first match assumed. \u2014 `assertEqual(f : *on);`",
+   "rpgc": "accept",
+   "sha256": "26d209d8258371b2412fb069704225b18eee919638b54717533073192f041e95",
+   "verdict": "reject",
+   "verified": "2026-10-21"
+  },
   "test44_alloc.rpgle": {
    "codes": [],
    "rpgc": "accept",
@@ -6789,5 +6897,5 @@
    "verified": "2026-09-25"
   }
  },
- "generated": "2026-10-21T19:43:39+00:00"
+ "generated": "2026-10-21T20:15:48+00:00"
 }

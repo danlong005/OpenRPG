@@ -20,7 +20,9 @@ PORT="${PUB400_PORT:-2222}"
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 echo "resetting: clearing the library and the IFS work folders"
-ssh -p "$PORT" "${USER_ID}@${HOST}" "sh -s" <<'RESET_EOF' | grep -E '^cleared |^warning|refusing|failed|CP[FD]' || { echo "reset failed" >&2; exit 1; }
+# The calling harness's shared connection, when it has one (PUB400_SSH_CTL).
+CTL_OPT=(); [ -n "${PUB400_SSH_CTL:-}" ] && CTL_OPT=(-o ControlPath="$PUB400_SSH_CTL")
+ssh -p "$PORT" "${CTL_OPT[@]+"${CTL_OPT[@]}"}" "${USER_ID}@${HOST}" "sh -s" <<'RESET_EOF' | grep -E '^cleared |^warning|refusing|failed|CP[FD]' || { echo "reset failed" >&2; exit 1; }
 PATH=/QOpenSys/usr/bin:/QOpenSys/usr/sbin:/usr/bin:$PATH
 export PATH
 SYS=/QOpenSys/usr/bin/system

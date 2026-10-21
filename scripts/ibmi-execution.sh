@@ -253,6 +253,18 @@ echo
 echo "=================================================================="
 echo " IBM i execution run -- ${USER_ID}@${HOST}:${PORT}"
 echo "=================================================================="
+# ---- one connection for the whole run ------------------------------------
+# PUB400 now and then closes a new connection before login. Open the one
+# connection every later step shares (the reset and object setup too, through
+# PUB400_SSH_CTL), retrying only that.
+for attempt in 1 2 3 4 5; do
+    ssh "${SSH_OPTS[@]}" -o BatchMode=yes -fN "${USER_ID}@${HOST}" </dev/null 2>/dev/null && break
+    [ "$attempt" = 5 ] && { echo "error: PUB400 closed the connection 5 times" >&2; exit 1; }
+    echo "PUB400 closed the connection; retrying in 20s"
+    sleep 20
+done
+export PUB400_SSH_CTL="$CTL"
+
 if [ "$RESET" = "1" ]; then
     PUB400_USER="$USER_ID" PUB400_HOST="$HOST" PUB400_PORT="$PORT" \
         "$REPO_ROOT/scripts/ibmi-reset.sh" || exit 1

@@ -207,11 +207,16 @@ REMOTE
 echo
 echo "uploading and creating objects on ${USER_ID}@${HOST}..."
 SSH=(-p "$PORT" -o BatchMode=yes)
+SCPO=(-P "$PORT" -o BatchMode=yes)
+# The calling harness's shared connection, when it has one (PUB400_SSH_CTL).
+if [ -n "${PUB400_SSH_CTL:-}" ]; then
+    SSH+=(-o ControlPath="$PUB400_SSH_CTL"); SCPO+=(-o ControlPath="$PUB400_SSH_CTL")
+fi
 ssh "${SSH[@]}" "${USER_ID}@${HOST}" "mkdir -p rpgc-setup" </dev/null || exit 1
-scp -q -P "$PORT" -o BatchMode=yes "$STAGE/setup.sql" "$STAGE/setup.cl" "$STAGE/setup_remote.sh" \
+scp -q "${SCPO[@]}" "$STAGE/setup.sql" "$STAGE/setup.cl" "$STAGE/setup_remote.sh" \
     "${USER_ID}@${HOST}:rpgc-setup/" || exit 1
 for dds in "$STAGE"/*.dds; do
-    [ -f "$dds" ] && { scp -q -P "$PORT" -o BatchMode=yes "$dds" "${USER_ID}@${HOST}:rpgc-setup/" || exit 1; }
+    [ -f "$dds" ] && { scp -q "${SCPO[@]}" "$dds" "${USER_ID}@${HOST}:rpgc-setup/" || exit 1; }
 done
 ssh "${SSH[@]}" "${USER_ID}@${HOST}" 'sh $HOME/rpgc-setup/setup_remote.sh' </dev/null 2>&1 \
   | grep -v 'WELCOME\|access is logged\|be polite\|other users\|limited support\|see https\|Enter your password\|^\*\*\*\|^\* '

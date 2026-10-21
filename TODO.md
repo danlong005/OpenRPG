@@ -346,8 +346,9 @@ nodes RLA already uses (a program just writes `READ MYFILE;` regardless
 of which kind of file `MYFILE` is) — `visit()` for each gained a new
 branch checked before the existing RLA/"no schema" fallback, mirroring
 the pattern the WORKSTN branch already used in the same methods.
-- **In scope**: record identification via character-part (`C`) tests only
-  (position/not/character — no zone/digit tests), field description
+- **In scope**: record identification via character-part (`C`) tests
+  (position/not/character; zone `Z` and digit `D` tests added 2026-10-21,
+  see below), field description
   (from/to byte position, data type, decimals, field name, field
   indicators for plus/minus/zero-or-blank), sequential `READ` with
   multi-record-type dispatch, `UPDATE` (rewrite the last-read record in
@@ -357,8 +358,12 @@ the pattern the WORKSTN branch already used in the same methods.
   edit codes reuse the existing `rpg_editc()` used by `%EDITC`), `WRITE`.
 - **Deferred, documented not dropped** (found or reconfirmed during
   implementation, beyond the two flagged when this item was scoped):
-  zone/digit (`Z`/`D`) record-identification tests (SC09-2508 p.548-549,
-  obscure EBCDIC-era byte testing); matching fields / multi-file record
+  ~~zone/digit (`Z`/`D`) record-identification tests~~ (done 2026-10-21:
+  compared by EBCDIC zone or digit half, CCSID 37; as a `Z` test character
+  `&` also matches zone C (`A`-`I`) and `-` zone D (`J`-`R`), and no other
+  character does; a record is the FIRST type whose codes it matches, not
+  every one -- rpgc applied every match until then; all checked on PUB400;
+  Test 159); matching fields / multi-file record
   merging (RPG-cycle-adjacent, permanently rejected elsewhere);
   `CHAIN`/`SETLL`/`SETGT`/`DELETE` on program-described files (real keyed
   access needs F-spec key-field columns not modeled for program-described
@@ -2195,7 +2200,7 @@ member's C-spec to host modern free-format statements.
 | 156 | Fixed I-spec: field indicators (plus/minus/zero) |
 | 157 | Fixed I-spec: UPDATE rewrites record in place |
 | 158 | Fixed O-spec: field placement + edit code |
-| 159 | Fixed I-spec: reject zone record-ID test |
+| 159 | Fixed I-spec: zone and digit record identification codes |
 | 160 | Fixed I-spec: reject matching fields (M1) |
 | 161 | Fixed D-spec: per-subfield DIM(n) |
 | 162 | Fixed D-spec: per-subfield LIKE(field) |

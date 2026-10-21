@@ -2422,6 +2422,27 @@ inline unsigned char rpg_ebcdic37(unsigned char c) {
     return t[c];
 }
 
+// I-spec record identification codes with code part Z (zone) and D
+// (digit): byte `pos` of the record against character `c`, compared by
+// their EBCDIC codes' high and low halves. A byte past the record's end
+// reads as a blank. As a Z test character, '&' also matches zone C (A-I)
+// and '-' zone D (J-R); no other character does, and a record '&' or '-'
+// does not match the letters (PUB400, 2026-10-21; test159).
+inline unsigned char rpg_rid_byte(const std::string& rec, int pos) {
+    return (pos >= 1 && pos <= static_cast<int>(rec.size()))
+        ? rpg_ebcdic37(static_cast<unsigned char>(rec[static_cast<size_t>(pos - 1)]))
+        : rpg_ebcdic37(' ');
+}
+inline bool rpg_rid_zone(const std::string& rec, int pos, char c) {
+    unsigned rz = rpg_rid_byte(rec, pos) >> 4;
+    unsigned tz = rpg_ebcdic37(static_cast<unsigned char>(c)) >> 4;
+    return rz == tz || (c == '&' && rz == 0xC) || (c == '-' && rz == 0xD);
+}
+inline bool rpg_rid_digit(const std::string& rec, int pos, char c) {
+    return (rpg_rid_byte(rec, pos) & 0x0F) ==
+           (rpg_ebcdic37(static_cast<unsigned char>(c)) & 0x0F);
+}
+
 // Character factor 2 into a numeric result: "the digit portion of each
 // character is converted to its corresponding numeric character and then
 // moved to the result field. Blanks are transferred as zeros." The digit

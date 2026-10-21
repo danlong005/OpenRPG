@@ -647,7 +647,8 @@ rm -f "$TESTDIR/../testfl157.txt"
 run_test "157" "Fixed I-spec: UPDATE rewrites record in place" "$TESTDIR/test157_fixed_ispec_update.rpgle" "run"
 rm -f "$TESTDIR/../testfl158.txt"
 run_test "158" "Fixed O-spec: field placement + edit code" "$TESTDIR/test158_fixed_ospec_editcode.rpgle" "run"
-run_test "159" "Fixed I-spec: reject zone record-ID test" "$TESTDIR/test159_fixed_ispec_err_zone.rpgle" "error"
+rm -f "$TESTDIR/../testfl159.txt"
+run_test "159" "Fixed I-spec: zone and digit record identification codes" "$TESTDIR/test159_fixed_ispec_zone.rpgle" "run"
 run_test "160" "Fixed I-spec: reject matching fields (M1)" "$TESTDIR/test160_fixed_ispec_err_matching.rpgle" "error"
 
 # ── Fixed-format frontend: per-subfield LIKE/DIM (item #5) ───────────────
@@ -1042,6 +1043,7 @@ run_test "437" "/MESSAGE *ERROR fails the compile" "$TESTDIR/test437_err_message
 run_test "438" "/MESSAGE in fixed-format source" "$TESTDIR/test438_fixed_message_directive.rpgle" "run"
 run_test "439" "Fixed C-spec: an unmonitored bad date in MOVE ends the program" "$TESTDIR/test439_fixed_cspec_move_dt_unmonitored.rpgle" "run"
 run_test "440" "Fixed C-spec: MOVE of a character with no digit portion is 907" "$TESTDIR/test440_fixed_cspec_move_bad_digit.rpgle" "run"
+rm -f "$TESTDIR/../testfl441.txt"
 run_test "441" "Fixed I-spec: READ leaves other record-identifying indicators on" "$TESTDIR/test441_fixed_ispec_rid_persist.rpgle" "run"
 
 printf "Test 436w: /MESSAGE warnings are shown            "

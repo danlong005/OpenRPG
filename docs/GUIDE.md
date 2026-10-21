@@ -3785,9 +3785,23 @@ Record identification:
 | 23-30, 31-38, 39-46 | Up to three identification code sets |
 
 Each code set is a position, an optional `N`, a code part and a character —
-which together say "the byte at this position is (or is not) this character".
-Only code part `C` (character) is supported; the EBCDIC-era zone (`Z`) and digit
-(`D`) tests are rejected.
+which together say "the byte at this position matches (or does not match) this
+character". The code part says how:
+
+| Code part | Matches when |
+|-----------|--------------|
+| `C` | the byte is the character |
+| `Z` | the byte's zone (the high half of its EBCDIC code) is the character's |
+| `D` | the byte's digit (the low half of its EBCDIC code) is the character's |
+
+Zone and digit compare EBCDIC codes (CCSID 37), as on IBM i, so `A` (x'C1')
+and `J` (x'D1') share digit 1, and a blank (x'40') has digit 0. As a `Z` test
+character, `&` also matches zone C (`A`-`I`) and `-` also matches zone D
+(`J`-`R`).
+
+A record belongs to the **first** record type whose codes it matches; later
+types are not tried. A record type with no codes matches any record, so it
+goes last.
 
 A `READ` sets on the record identifying indicator of the record type it
 identified and turns no other one off, as on IBM i: after a type `01` record

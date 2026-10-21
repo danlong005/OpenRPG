@@ -168,12 +168,13 @@ public:
 
 // One record-identification test within an I-spec record-identification
 // line (SC09-2508 p.548): does byte `position` (1-based, within the raw
-// record) equal `character` (or NOT equal it, if `negate`)? Only the "C"
-// (entire character) code-part is supported — "Z"/"D" (zone/digit) tests
-// are rejected as unsupported at parse time.
+// record) match `character` (or NOT match it, if `negate`)? The code part
+// says how: 'C' the entire character, 'Z' its EBCDIC zone (high half), 'D'
+// its EBCDIC digit (low half) -- see rpg_rid_zone and rpg_rid_digit.
 struct IRecordIdTest {
     int position = 0;
     bool negate = false;
+    char codePart = 'C';
     std::string character;
 };
 

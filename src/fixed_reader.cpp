@@ -896,7 +896,7 @@ struct ISpecState {
 
 // Parses one record-identification-code set (position/not/codepart/char)
 // and, if a position is given, appends the test to `tests`. Returns false
-// (after reporting an error) if the code-part is Z or D — unsupported.
+// (after reporting an error) for a code part other than C, Z or D.
 static bool parseIdTestSet(const std::string& line, int lineNo,
                             const ColSpec& posSpec, const ColSpec& notSpec,
                             const ColSpec& partSpec, const ColSpec& charSpec,
@@ -904,15 +904,16 @@ static bool parseIdTestSet(const std::string& line, int lineNo,
     std::string posStr = extractCol(line, posSpec);
     if (posStr.empty()) return true; // this set isn't used on this line
     std::string partStr = upper(extractCol(line, partSpec));
-    if (!partStr.empty() && partStr != "C") {
+    if (!partStr.empty() && partStr != "C" && partStr != "Z" && partStr != "D") {
         report_fixed_format_error(lineNo,
             "I-spec: record-identification code part '" + partStr +
-            "' is not supported (only 'C' — entire character — is; see TODO.md)");
+            "' is not valid — it is C (character), Z (zone) or D (digit)");
         return false;
     }
     IRecordIdTest test;
     test.position = atoi(posStr.c_str());
     test.negate = upper(extractCol(line, notSpec)) == "N";
+    test.codePart = partStr.empty() ? 'C' : partStr[0];
     test.character = extractCol(line, charSpec);
     tests.push_back(test);
     return true;

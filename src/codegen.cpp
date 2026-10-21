@@ -7756,6 +7756,11 @@ void CodeGen::visit(ReadStmt& node) {
             // and 02 are both on (PUB400, 2026-10-21; test441). The RPG
             // cycle turns them off between records; a program reading
             // with READ, as here, sets them off itself.
+            // The record is the FIRST record type whose identification
+            // codes it matches, and only that one: a later type that
+            // would also match, or one with no codes at all, is not
+            // applied too (PUB400, 2026-10-21; test159).
+            bool firstFmt = true;
             for (auto* rf : fin->second) {
                 std::string cond;
                 if (rf->idTests.empty()) {
@@ -7764,11 +7769,22 @@ void CodeGen::visit(ReadStmt& node) {
                     for (size_t i = 0; i < rf->idTests.size(); i++) {
                         auto& t = rf->idTests[i];
                         if (i) cond += " && ";
+                        if (t.codePart == 'Z' || t.codePart == 'D') {
+                            // A blank character position is a blank.
+                            char c = t.character.empty() ? ' ' : t.character[0];
+                            cond += std::string(t.negate ? "!" : "") +
+                                    (t.codePart == 'Z' ? "rpg_rid_zone(" : "rpg_rid_digit(") +
+                                    "__rec, " + std::to_string(t.position) + ", '" +
+                                    (c == '\'' || c == '\\' ? std::string("\\") + c : std::string(1, c)) +
+                                    "')";
+                            continue;
+                        }
                         cond += "__rec.substr(" + std::to_string(t.position - 1) + ", 1) " +
                                 (t.negate ? "!= \"" : "== \"") + cppEscape(t.character) + "\"";
                     }
                 }
-                emitIndent(); out_ << "if (" << cond << ") {\n"; indent_++;
+                emitIndent(); out_ << (firstFmt ? "if (" : "else if (") << cond << ") {\n"; indent_++;
+                firstFmt = false;
                 if (!rf->recordIdIndicator.empty()) {
                     emitIndent(); out_ << "rpg_indicators[" << atoi(rf->recordIdIndicator.c_str())
                                        << "] = true;\n";

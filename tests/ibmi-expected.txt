@@ -11,7 +11,6 @@
 
 # rpgc refuses these on purpose — they are registered as error tests — but they
 # are valid RPG, and IBM compiles them.
-test159_fixed_ispec_err_zone.rpgle          compile  valid RPG; rpgc does not support I-spec record-identification zone codes
 test195_fixed_cspec_err_move_declit.rpgle   compile  valid RPG; rpgc refuses MOVE of a decimal literal
 test205_fixed_cspec_err_entry_f2.rpgle      compile  valid RPG; rpgc does not support Factor 2 on an *ENTRY PARM
 test213_fixed_cspec_err_move_jobrun.rpgle   compile  valid RPG; rpgc has no job attributes for *JOBRUN

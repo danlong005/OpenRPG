@@ -603,6 +603,24 @@
    "test": "158",
    "verified": "2026-10-21"
   },
+  "test159_fixed_ispec_zone.rpgle": {
+   "error": "",
+   "output": [
+    "A 0100                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   ",
+    "& 0100                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   ",
+    "* 0100                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   ",
+    "J 0010                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   ",
+    "- 0010                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   ",
+    "5 1000                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   ",
+    "E 1000                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   ",
+    "1 0001                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   ",
+    "S 0001                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   "
+   ],
+   "sha256": "2ffbcf3575962ce7c19b591116ec8963b2dd0155a1527c6bae6122c1434da47c",
+   "status": "same",
+   "test": "159",
+   "verified": "2026-10-21"
+  },
   "test15_dou.rpgle": {
    "error": "",
    "output": [
@@ -1217,7 +1235,7 @@
    "verified": "2026-10-21"
   },
   "test228_exsr_order.rpgle": {
-   "error": "test228_exsr_order.rpgle after 60s, ending job 715002/QUSER/QP0ZSPWT",
+   "error": "test228_exsr_order.rpgle after 60s, ending job 723236/QUSER/QP0ZSPWT",
    "output": [],
    "sha256": "de6d78bdf7f84ba40bc4c19da234fff3ac400cfc8623d2b103efe7d0c97ef351",
    "status": "timeout",

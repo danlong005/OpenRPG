@@ -7751,17 +7751,11 @@ void CodeGen::visit(ReadStmt& node) {
             emitIndent(); out_ << node.filename << "_eof = !__ok;\n";
             emitIndent(); out_ << node.filename << "_found = __ok;\n";
             emitIndent(); out_ << "if (__ok) {\n"; indent_++;
-            // Reset every record-identifying indicator this file's
-            // formats use before dispatch, so a later read of a
-            // different record type doesn't leave an earlier read's
-            // indicator stuck on (this compiler has no RPG cycle to do
-            // that reset for us).
-            for (auto* rf : fin->second) {
-                if (!rf->recordIdIndicator.empty()) {
-                    emitIndent(); out_ << "rpg_indicators[" << atoi(rf->recordIdIndicator.c_str())
-                                       << "] = false;\n";
-                }
-            }
+            // A READ sets on the identified record's indicator and turns
+            // no other one off: after a 'C' record then a 'P' record, 01
+            // and 02 are both on (PUB400, 2026-10-21; test441). The RPG
+            // cycle turns them off between records; a program reading
+            // with READ, as here, sets them off itself.
             for (auto* rf : fin->second) {
                 std::string cond;
                 if (rf->idTests.empty()) {

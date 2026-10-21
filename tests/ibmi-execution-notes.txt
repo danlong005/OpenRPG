@@ -36,5 +36,3 @@ test236_assign_fit_paths.rpgle        platform  its DATA-INTO names rpgc's built
 test228_exsr_order.rpgle              test      its subroutines call each other recursively; an IBM i subroutine has one return point, which the recursion overwrites, so the program loops
 
 # --- open: cause not established ---------------------------------------------
-test155_fixed_ispec_multi.rpgle       open      multiple record types identified by I-spec record identification codes: IBM displays one record more
-test216_prog_gl_post.rpgle            open      I-spec record identification across batch header and detail records: IBM groups the records differently

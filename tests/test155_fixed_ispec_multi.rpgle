@@ -1,3 +1,7 @@
+     H*Two record types in one program-described file, told apart by
+     H*the code in position 1. READ sets on the identified record's
+     H*indicator and no other one off, so the program sets both off
+     H*before each READ (test441).
      HDFTACTGRP(*NO)
      FTESTFL155 UF A F   25        DISK
      DTYPECODE         S              1A
@@ -14,6 +18,8 @@
        NAME = 'Widget';
        EXCEPT;
       /end-free
+     C                   EVAL      *IN01 = *OFF
+     C                   EVAL      *IN02 = *OFF
      C                   READ      TESTFL155
      C                   DOW       NOT %EOF(TESTFL155)
      C                   IF        *IN01
@@ -24,6 +30,8 @@
      C                   ENDIF
      C                   EVAL      TMPDSP = %TRIM(NAME)
      C     TMPDSP        DSPLY
+     C                   EVAL      *IN01 = *OFF
+     C                   EVAL      *IN02 = *OFF
      C                   READ      TESTFL155
      C                   ENDDO
      C                   RETURN

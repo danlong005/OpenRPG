@@ -1042,6 +1042,7 @@ run_test "437" "/MESSAGE *ERROR fails the compile" "$TESTDIR/test437_err_message
 run_test "438" "/MESSAGE in fixed-format source" "$TESTDIR/test438_fixed_message_directive.rpgle" "run"
 run_test "439" "Fixed C-spec: an unmonitored bad date in MOVE ends the program" "$TESTDIR/test439_fixed_cspec_move_dt_unmonitored.rpgle" "run"
 run_test "440" "Fixed C-spec: MOVE of a character with no digit portion is 907" "$TESTDIR/test440_fixed_cspec_move_bad_digit.rpgle" "run"
+run_test "441" "Fixed I-spec: READ leaves other record-identifying indicators on" "$TESTDIR/test441_fixed_ispec_rid_persist.rpgle" "run"
 
 printf "Test 436w: /MESSAGE warnings are shown            "
 w436=$($RPGC -S "$TESTDIR/test436_message_directive.rpgle" -o "$TMPDIR/test436w.cpp" 2>&1 >/dev/null)

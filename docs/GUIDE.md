@@ -3789,6 +3789,18 @@ which together say "the byte at this position is (or is not) this character".
 Only code part `C` (character) is supported; the EBCDIC-era zone (`Z`) and digit
 (`D`) tests are rejected.
 
+A `READ` sets on the record identifying indicator of the record type it
+identified and turns no other one off, as on IBM i: after a type `01` record
+and then a type `02` record, `*IN01` and `*IN02` are both on. A `READ` at end
+of file changes none of them. The RPG cycle would set them off between records;
+a program that reads with `READ` sets them off itself before each one:
+
+```
+     C                   EVAL      *IN01 = *OFF
+     C                   EVAL      *IN02 = *OFF
+     C                   READ      CUSTFILE
+```
+
 Field description:
 
 | Positions | Field |

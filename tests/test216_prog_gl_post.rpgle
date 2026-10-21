@@ -123,11 +123,16 @@
      C* MAIN LINE
      C*-----------------------------------------------------------------
      C                   EXSR      INZSR1
+     C* READ SETS ON THE RECORD'S OWN INDICATOR AND NO OTHER ONE OFF
+     C                   EVAL      *IN01 = *OFF
+     C                   EVAL      *IN02 = *OFF
      C                   READ      TESTFL216
      C                   DOW       NOT %EOF(TESTFL216)
      C* 01 = BATCH HEADER, 02 = JOURNAL DETAIL
      C   01              EXSR      HDRSR
      C   02              EXSR      DTLSR
+     C                   EVAL      *IN01 = *OFF
+     C                   EVAL      *IN02 = *OFF
      C                   READ      TESTFL216
      C                   ENDDO
      C* EDIT THE LAST BATCH, THEN PRINT THE RUN SUMMARY

@@ -6355,27 +6355,34 @@
    "verified": "2026-10-21"
   },
   "test445_overload_with_prototypes.rpgle": {
+   "codes": [],
+   "rpgc": "accept",
+   "sha256": "adca1b38e9bc6fdd55eb638f13ec370c4faaefec619a7935784837a5395a8532",
+   "verdict": "accept",
+   "verified": "2026-10-21"
+  },
+  "test446_overload_ind.rpgle": {
    "codes": [
     "RNF3246"
    ],
    "messages": [
     {
      "code": "RNF3246",
-     "line": 15,
+     "line": 16,
      "severity": 30,
      "text": "Prototypes ASSERTEQUAL_STRING and ASSERTEQUAL_IND both match the call; first match assumed."
     },
     {
      "code": "RNF3246",
-     "line": 16,
+     "line": 17,
      "severity": 30,
      "text": "Prototypes ASSERTEQUAL_STRING and ASSERTEQUAL_IND both match the call; first match assumed."
     }
    ],
    "reason": "RNF3246: Prototypes ASSERTEQUAL_STRING and ASSERTEQUAL_IND both match the call; first match assumed.",
-   "reason_detail": "line 15: Prototypes ASSERTEQUAL_STRING and ASSERTEQUAL_IND both match the call; first match assumed. \u2014 `assertEqual(f : *on);`",
+   "reason_detail": "line 16: Prototypes ASSERTEQUAL_STRING and ASSERTEQUAL_IND both match the call; first match assumed. \u2014 `assertEqual(f : *on);`",
    "rpgc": "accept",
-   "sha256": "26d209d8258371b2412fb069704225b18eee919638b54717533073192f041e95",
+   "sha256": "320e95d468fbe7406b3ed8dd73c12f327a3e6e15d63df47a635465ac1908b280",
    "verdict": "reject",
    "verified": "2026-10-21"
   },
@@ -6897,5 +6904,5 @@
    "verified": "2026-09-25"
   }
  },
- "generated": "2026-10-21T20:15:48+00:00"
+ "generated": "2026-10-21T20:25:25+00:00"
 }

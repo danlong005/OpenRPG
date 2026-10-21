@@ -20,7 +20,7 @@ PORT="${PUB400_PORT:-2222}"
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 echo "resetting: clearing the library and the IFS work folders"
-ssh -p "$PORT" "${USER_ID}@${HOST}" "sh -s" <<'RESET_EOF' | grep -E '^cleared |refusing|failed|CP[FD]' || { echo "reset failed" >&2; exit 1; }
+ssh -p "$PORT" "${USER_ID}@${HOST}" "sh -s" <<'RESET_EOF' | grep -E '^cleared |^warning|refusing|failed|CP[FD]' || { echo "reset failed" >&2; exit 1; }
 PATH=/QOpenSys/usr/bin:/QOpenSys/usr/sbin:/usr/bin:$PATH
 export PATH
 SYS=/QOpenSys/usr/bin/system
@@ -32,8 +32,18 @@ case "$LIB" in
 esac
 out=$($SYS "CLRLIB LIB($LIB)" </dev/null 2>&1); rc=$?
 if [ $rc -ne 0 ]; then
-    echo "CLRLIB $LIB failed:"; echo "$out" | grep -E 'CP[FDI][0-9A-F]{4}'
-    exit 1
+    # CLRLIB deletes all it can and fails on what it cannot: another
+    # project's object in use. An output queue left behind is harmless --
+    # no harness creates one, so nothing can collide with it (2026-10-21:
+    # MYOUTQ, "Lab 05 output queue", in use). Anything else still
+    # stops the run.
+    types=$($SYS "DSPOBJD OBJ($LIB/*ALL) OBJTYPE(*ALL) OUTPUT(*PRINT)" </dev/null 2>&1 \
+            | awk '$1 ~ /^[A-Z#$@][A-Z0-9_#$@]*$/ && $2 ~ /^\*[A-Z]+$/ {print $2}' | sort -u)
+    if [ "$types" != "*OUTQ" ]; then
+        echo "CLRLIB $LIB failed:"; echo "$out" | grep -E 'CP[FDI][0-9A-F]{4}'
+        exit 1
+    fi
+    echo "warning: CLRLIB $LIB left output queue(s) in use by another job; continuing"
 fi
 left=$($SYS "DSPLIB LIB($LIB) OUTPUT(*PRINT)" </dev/null 2>&1 \
         | grep 'Number of objects' | head -1 | awk '{print $NF}')

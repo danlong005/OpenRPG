@@ -875,12 +875,12 @@
    "verdict": "accept",
    "verified": "2026-09-25"
   },
-  "test159_fixed_ispec_err_zone.rpgle": {
+  "test159_fixed_ispec_zone.rpgle": {
    "codes": [],
-   "rpgc": "reject",
-   "sha256": "5ca2591ccb80dd941dca6936d90796f822214eb4ce8509515c598725fa10328a",
+   "rpgc": "accept",
+   "sha256": "2ffbcf3575962ce7c19b591116ec8963b2dd0155a1527c6bae6122c1434da47c",
    "verdict": "accept",
-   "verified": "2026-09-25"
+   "verified": "2026-10-21"
   },
   "test15_dou.rpgle": {
    "codes": [],
@@ -6782,5 +6782,5 @@
    "verified": "2026-09-25"
   }
  },
- "generated": "2026-10-21T19:06:06+00:00"
+ "generated": "2026-10-21T19:32:37+00:00"
 }

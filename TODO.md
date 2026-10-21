@@ -1861,8 +1861,10 @@ oracle cache (step 3) exists, day-to-day CI needs no network at all.
 Append `&sort=popular&page=N` to walk the list vote-ranked, highest first
 (~290 ideas over 29 pages as of the last pull).
 
-**Last pulled: 2026-08-29** — vote-sorted walk down to a 20-vote floor
-(~60 of ~290 ideas reviewed).
+**Last pulled: 2026-10-21** — vote-sorted walk down to a 20-vote floor
+(61 ideas, pages 1-7 of 29). Eighteen ideas above the floor were in no
+part of this file; each was judged from its description and, where it
+might already work, by compiling a program with rpgc.
 
 Why this list exists: the portal is a free, continuously-updated, vote-ranked
 backlog of what real RPG shops actually want from the language. IBM marks many
@@ -1915,6 +1917,8 @@ The differentiators. Every row is "Not under consideration" at IBM.
 | 25 | ✅ `%CHAR` with `%EDITC` formatting: `%CHAR(n : *NOZEROSUPPRESS)` — done 2026-10-06 (test366-367) | Both BIFs already ship; this merges them. |
 | 15 | ✅ Multiple conditions in one `/IF` directive: AND, OR, NOT, parentheses — done 2026-10-06 (test369-371; free-form `/ELSEIF` after an untaken `/IF` fixed too, test368) | Directive handling already lives in the lexer. |
 | 13 | ✅ `*TRUE` / `*FALSE` figurative constants — done 2026-10-06 (test372-373) | Aliases of `*ON` / `*OFF` for `IND`. |
+| 26 | `LIKE` of a subfield of a nested DS array: `LIKE(DS_A.DS_Arr_B.field1)` (IBMI-I-2973) | Fix first: even one level, `LIKE(DS_A.f1)`, is broken here -- the new field comes out `int` (found by this pull, 2026-10-21). The nested name then needs the qualified-name grammar to take more than one dot in `LIKE`. |
+| 21 | Time format `*HM` (hours and minutes) for `%TIME`, `%DEC` and DDS `TIMFMT` (IBMI-I-2139) | One more entry in the time-format tables (`rpg_runtime.h`), and in OpenDSPF's `TIMFMT` for the DDS half. |
 
 ### Tier 2 — "Future consideration" at IBM, small-to-medium here
 
@@ -1929,7 +1933,7 @@ The differentiators. Every row is "Not under consideration" at IBM.
 | 39 | ✅ `%XFOOT` over subfields of a DS array: `%XFOOT(ds(*).subf)` — done 2026-10-07 (test409-410; `ds(*).subf` itself in SORTA and %LOOKUP, standard RPG, test408) | |
 | 38 | ✅ BIF for comparing data structures: `%COMPCORR(ds1 : ds2 {: n})` — done 2026-10-07 (test411-413) | |
 | 35 | ✅ `DEPRECATED` keyword on procedures — done 2026-10-07 (test415; a call to a procedure defined later with no DCL-PR fixed too, test414) | Just a compiler warning. |
-| 34 | ✅ `%LOOKUP` searching more than one subfield: `%LOOKUP(%KDS(key) : ds(*))` — done 2026-10-07 (test416-417) | |
+| 35 | ✅ `%LOOKUP` searching more than one subfield: `%LOOKUP(%KDS(key) : ds(*))` — done 2026-10-07 (test416-417) | |
 | 29 | ✅ `%REPEAT` BIF — done 2026-10-07 (test418-419) | |
 | 28 | ✅ Default values for `*NOPASS` / `*OMIT` parameters: `DEFAULT(value)` — done 2026-10-07 (test420-421) | |
 | 27 | ✅ `%PROGNAME` BIF — done 2026-10-07 (test422) | |
@@ -1941,14 +1945,22 @@ The differentiators. Every row is "Not under consideration" at IBM.
 | 16 | ✅ `*EMPTY` figurative constant — done 2026-10-07 (test434) | |
 | 14 | ✅ `%HEX` / `%TOHEX` / `%FROMHEX` — done 2026-10-07 (test435) | |
 | 12 | ✅ `/MESSAGE` compiler directive: `/MESSAGE {*WARNING \| *ERROR} 'text'` — done 2026-10-07 (test436-438) | |
+| 38 | `EXTENDS(base)` on a DS template: the base's subfields plus its own (IBMI-I-3447) | `LIKEDS` already copies a template's subfields; this is that plus the DS's own, in one declaration. |
+| 36 | `%PARMLEN(parm)`: the passed length of an `OPTIONS(*VARSIZE)` parameter (IBMI-I-2956) | `*VARSIZE` is parsed; a character parameter is a `std::string`, so its length is already at hand. |
+| 32 | `LIKEFLD` / `LIKE(file.format/field : +n)`: a field defined from a field reference file (IBMI-I-4705) | The `.extdesc` sidecars (`src/extdesc.cpp`) already describe external files' fields; this reads a field's type from one. |
+| 25 | Hide the procedures behind an `OVERLOAD` from direct calls (IBMI-I-2550) | A compile-time check. Fix first: `OVERLOAD` fails to compile when its procedures also have their own `DCL-PR` -- the generated dispatcher names them before they are declared (found by this pull, 2026-10-21). |
+| 22 | A case-sensitivity check: every reference spelled as declared (IBMI-I-1842) | Names stay case-insensitive; a CTL-OPT keyword makes a reference spelled differently from its declaration a diagnostic. |
 
 ### Larger, but worth their vote count
 
 | Votes | Idea | Note |
 |-------|------|------|
-| 86 | Restrict global-variable use in subprocedures | A `DCL-PROC` keyword plus a codegen-time scope check — the `report_semantic_error` channel built for `MOVE` is the right home. |
+| 87 | Restrict global-variable use in subprocedures | A `DCL-PROC` keyword plus a codegen-time scope check — the `report_semantic_error` channel built for `MOVE` is the right home. |
 | 45 | `FOR-EACH` over record-level access | RLA over ODBC already ships (Tests 103–108); this is a real but tractable iterator. |
-| 38 / 33 | Consistent null handling / full NULL support | Partly touched by SQL indicator variables; genuinely deep otherwise. |
+| 38 / 34 | Consistent null handling / full NULL support | Partly touched by SQL indicator variables; genuinely deep otherwise. |
+| 43 | Namespaces for exports and prototypes, `code::proc()` (IBMI-I-1129; also IBMI-I-921, 19 votes) | Generated code is C++, which has namespaces, but every name crosses the CALL/EXTPROC and shared-object boundaries too. Not under consideration at IBM. |
+| 29 | Encapsulation: methods on objects, `My.setValue(...)` (IBMI-I-2700) | Object orientation is a language design project, not a feature. Not under consideration at IBM. |
+| 21 | Runtime reflection, `%VARINFO(var)`: a variable's type, length, decimals, subfields (IBMI-I-5078) | Codegen knows all of it and could emit it as data; the work is the shape of the result. IBM: "functionality already exists" in the compile listing. |
 
 ### Already satisfied here (confirm + document, no work)
 
@@ -1957,6 +1969,12 @@ The differentiators. Every row is "Not under consideration" at IBM.
 | 60 | Make `%DEC()` 2nd & 3rd parms optional | Already true — `%DEC` codegen is `static_cast<double>(…)` and ignores digits/decimals entirely. |
 | 30 | Expand the 16,773,104-byte limit within data structures | No such limit exists here. |
 | 26 | Raise maximum variable length to 4GB | No such limit exists here — strings are `std::string`. |
+| 30 | String templates, `` `My name is ${ name }` `` (IBMI-I-1525) | `f'My name is {name}'` (test355-357) does the interpolation; the multi-line backtick form is not provided. |
+| 27 | `DTAARA` in subprocedures (IBMI-I-1822) | Already compiles and runs: `IN`/`OUT` of a data area declared in a `DCL-PROC` (checked 2026-10-21). |
+| 24 | XML files over 2GB for `XML-INTO`/`XML-SAX` (IBMI-I-1826) | No 2GB cap by construction (the document is a `std::string`); not tested at that size. |
+| 23 | Indicators told apart from strings in `OVERLOAD` / `OPTIONS(*EXACT)` for `IND` (IBMI-I-4227) | `IND` is its own type here, so `OVERLOAD(x_string : x_ind)` already picks `x_ind` for an indicator argument (checked 2026-10-21). |
+| 22 | `IN %SPLIT(...)` (IBMI-I-3775) | Already works: `if r in %split('admin;developer;keyUser' : ';')` (checked 2026-10-21). |
+| 22 | `DATA-INTO` JSON with no root object (IBMI-I-2055) | Already works: rpgc's JSON parser reads `{"name": ..., "age": ...}` into a DS (checked 2026-10-21). |
 
 ### Reviewed and not planned
 
@@ -1967,13 +1985,15 @@ Cross-check against **❌ Not Planned** below before re-adding any of these.
 | 76 | Rename "ILE/RPG" to "RPG for i" | Not a compiler feature. |
 | 38 / 1 | Native CLOB/BLOB in RPG | Already declined under *Embedded SQL — Not Planned* (LOB support varies wildly by ODBC driver). |
 | 36 | Control joblog writes with `ON-ERROR` | IBM i runtime. |
-| 36 | Mixed-case DB2 column names in DS | IBM i catalog behavior. |
+| 35 | Mixed-case DB2 column names in DS | IBM i catalog behavior. |
 | 34 | `EXTNAME`/`LIKEREC(*NULL)` SQL indicator subfields | `LIKEREC`/`EXTNAME` options are already Not Planned. |
 | 27 | `*NODEBUGSQL` control option | IBM i compilation directive. |
 | 24 | Exclude hidden fields from externally-described DS | IBM i catalog behavior. |
 | 23 | `DECFLOAT` data type | Needs a real decimal library — large, standalone. |
 | 20 | Better UTF-8 (CCSID 1208) support | `CCSID` is already Not Planned; real work, deep. |
 | 16 | Prohibit changing a program's activation group | Activation groups are parsed for compatibility only. |
+| 37 | SQL table name for an `EXTNAME` DS (IBMI-I-1893) | `EXTNAME` is already Not Planned. |
+| 21 | `RCV-MSG` opcode, message data on `ON-EXCP`/`ON-EXIT` (IBMI-I-3974) | Receives from the IBM i job log, which has no equivalent here. |
 
 ---
 

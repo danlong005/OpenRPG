@@ -1,7 +1,8 @@
 **FREE
 // Program calls that fail: a program that can't be found is status 211,
-// one that ends in an error (or with a halt indicator on) is 202 in its
-// caller. Either can be handled, and the next call goes on as usual.
+// one that ends in an error is 202 in its caller, and one that returns
+// with a halt indicator on is 231. Any of them can be handled, and the next call
+// goes on as usual.
 DCL-PR missing EXTPGM('NOSUCHPGM');
 END-PR;
 DCL-PR pgmFail EXTPGM('PGMFAIL');

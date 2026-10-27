@@ -185,6 +185,18 @@ static bool parseResultIndicator(const std::string& raw, int lineNo,
 // are all rejected, while the same built-in in EXTENDED Factor 2 (EVAL)
 // compiles cleanly -- which is why this check lives only in the TRADITIONAL
 // branch below.
+// Factor 1, factor 2 and the result field each start in the first position
+// of their columns: IBM i rejects an entry that starts further in (RNF0262,
+// "Entry not left-adjusted", severity 20). An extended factor 2 may start
+// anywhere in 36-80.
+static bool leftAdjusted(const std::string& line, const ColSpec& spec, int lineNo, const char* what) {
+    std::string raw = extractColRaw(line, spec);
+    if (raw.find_first_not_of(' ') == std::string::npos || raw[0] != ' ') return true;
+    report_fixed_format_error(lineNo, std::string("C-spec: the ") + what + " entry must start in "
+        "position " + std::to_string(spec.startCol) + ", the first of its columns (IBM: RNF0262)");
+    return false;
+}
+
 static bool containsBuiltIn(const std::string& s) {
     bool inLiteral = false;
     for (size_t i = 0; i < s.size(); ++i) {
@@ -625,6 +637,7 @@ void feedCSpecLine(CSpecRunState& state, const std::string& line, int lineNo) {
     // else ends it. "A parameter list is ended when an operation other
     // than PARM is encountered" (SC09-2508 p.930).
     if (opcodeName != "PARM") { finishCall(state); finishPlist(state); }
+    if (!leftAdjusted(line, CSpec::Factor1, lineNo, "Factor 1")) return;
 
     // CASxx / CABxx / ENDCS. Handled ahead of the opcode table because the
     // comparison mnemonic is glued onto the opcode itself (`CASGT`), so
@@ -646,6 +659,8 @@ void feedCSpecLine(CSpecRunState& state, const std::string& line, int lineNo) {
                 "' is not supported on '" + opcodeName + "' in this compiler");
             return;
         }
+        if (!leftAdjusted(line, CSpec::Factor2, lineNo, "Factor 2") ||
+            !leftAdjusted(line, CSpec::Result, lineNo, "Result Field")) return;
         std::string factor1 = extractCol(line, CSpec::Factor1);
         std::string factor2 = extractCol(line, CSpec::Factor2);
         std::string result  = extractCol(line, CSpec::Result);
@@ -842,6 +857,8 @@ void feedCSpecLine(CSpecRunState& state, const std::string& line, int lineNo) {
         return; // closed by the next non-continuation feedCSpecLine call, or flush
     }
     case CSpecShape::TRADITIONAL: {
+        if (!leftAdjusted(line, CSpec::Factor2, lineNo, "Factor 2") ||
+            !leftAdjusted(line, CSpec::Result, lineNo, "Result Field")) return;
         std::string factor2 = extractCol(line, CSpec::Factor2);
         std::string result = extractCol(line, CSpec::Result);
         if (rejectBuiltInOperands(opcodeName, lineNo, factor1, factor2, result)) return;

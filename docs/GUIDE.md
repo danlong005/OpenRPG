@@ -314,6 +314,19 @@ what it shows (`'Hello, '` + a `VARCHAR(40)` + `'!'` is 48). To show something
 longer, assign it to a `VARCHAR(52)` work field and display that; the
 assignment keeps the first 52 characters.
 
+### Ending the Program
+
+A program ends where its calculations end, if `*INLR` is on, or at `RETURN`.
+Setting `*INLR` does not end it on the spot: the statements after it still run.
+As on IBM i, a program whose calculations end with `*INLR` off runs them again
+from the top -- the RPG cycle, with no primary file -- and its fields keep their
+values from one pass to the next. A program that sets neither `*INLR` nor
+reaches a `RETURN` therefore loops.
+
+An indicator the program refers to has to be set somewhere in it: by an
+assignment, a resulting indicator, an I-spec, or a display file. One that is
+tested but never set is a compile error, as on IBM i (RNF7030).
+
 ### Comments
 
 ```rpgle
@@ -3449,6 +3462,10 @@ set. Conditioning a block-structure opcode is a compile error, because the
 wrapper would leave the block unbalanced; fold the test into the block's own
 condition instead. `TAG` cannot be conditioned either.
 
+Factor 1, factor 2 and the result field each start in the first position of
+their columns -- 12, 36 and 50 -- as IBM i requires (RNF0262); an extended
+factor 2 may start anywhere in 36-80.
+
 A C-spec line has room for exactly one indicator, so `AN`/`OR` in positions 7-8
 combine the indicators of consecutive lines. The operation code sits on the
 last line of the group, and RPG relates the terms as an **OR of AND-groups**:
@@ -3634,8 +3651,9 @@ The library is looked for in the calling program's own directory, then in each
 directory on `PATH`, then wherever the system loader looks (`LD_LIBRARY_PATH`,
 `DYLD_LIBRARY_PATH`). It is loaded on its first call and stays loaded. A program
 that can't be found is status 211; one that ends in error -- an unhandled
-error, an `*ESCAPE`, a halt indicator left on -- is status 202 in its caller.
-Both can be handled with `MONITOR` or `CALLP(E)`.
+error or an `*ESCAPE` -- is status 202 in its caller, and one that returns with
+a halt indicator on is status 231, as on IBM i. Each can be handled with
+`MONITOR` or `CALLP(E)`.
 
 **Parameters in IBM i's formats.** Each parameter is passed by reference as its
 bytes in IBM i's format, so a called program need not be RPG. Any shared library
@@ -3698,8 +3716,10 @@ everything in the [Embedded SQL](#embedded-sql) chapter applies unchanged.
 
 ### What Is Not Supported
 
-The RPG cycle is not implemented and will not be. Concretely, in fixed-format
-source that means:
+The RPG cycle is not implemented beyond what a program with no primary file
+does -- run its calculations again while `*INLR` is off (see
+[Ending the Program](#ending-the-program)) -- and will not be. Concretely, in
+fixed-format source that means:
 
 | Rejected | Where | Note |
 |----------|-------|------|

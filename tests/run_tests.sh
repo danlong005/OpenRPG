@@ -1053,6 +1053,11 @@ run_test "445" "OVERLOAD with prototyped candidates" "$TESTDIR/test445_overload_
 run_test "446" "OVERLOAD tells an indicator from a string" "$TESTDIR/test446_overload_ind.rpgle" "run"
 run_test "447" "LIKEDS and LIKE subfields with DIM; %SIZE and CLEAR of them" "$TESTDIR/test447_likeds_dim_subfield.rpgle" "run"
 run_test "448" "Fixed-format LIKEDS subfield with DIM" "$TESTDIR/test448_fixed_dspec_likeds_dim.rpgle" "run"
+run_test "449" "An indicator tested but never set (RNF7030)" "$TESTDIR/test449_err_ind_never_set.rpgle" "error"
+run_test "450" "Fixed: a conditioning indicator never set (RNF7030)" "$TESTDIR/test450_fixed_err_ind_never_set.rpgle" "error"
+run_test "451" "Fixed: Factor 1 not left-adjusted (RNF0262)" "$TESTDIR/test451_fixed_err_factor1_not_left.rpgle" "error"
+run_test "452" "Fixed: the result field not left-adjusted (RNF0262)" "$TESTDIR/test452_fixed_err_result_not_left.rpgle" "error"
+run_test "453" "The RPG cycle runs the calculations again while LR is off" "$TESTDIR/test453_cycle_repeat.rpgle" "run"
 
 printf "Test 436w: /MESSAGE warnings are shown            "
 w436=$($RPGC -S "$TESTDIR/test436_message_directive.rpgle" -o "$TMPDIR/test436w.cpp" 2>&1 >/dev/null)

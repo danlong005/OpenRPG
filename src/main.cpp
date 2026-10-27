@@ -482,6 +482,8 @@ static std::string rpgc_temp_dir() {
 extern FILE* yyin;
 extern rpg::Program* get_parsed_program();
 extern int get_parse_error_count();
+extern void reset_indicator_uses();
+extern void check_indicators_defined(rpg::Program* program);
 
 int main(int argc, char* argv[]) {
     if (argc == 2 && (strcmp(argv[1], "-v") == 0 || strcmp(argv[1], "--version") == 0)) {
@@ -582,6 +584,7 @@ int main(int argc, char* argv[]) {
     if (ctdata_at != std::string::npos) ctdata = parseCtdata(src_text.substr(ctdata_at));
 
     if (is_fixed) {
+        reset_indicator_uses();
         program = rpg::fixed::parseFixedFormat(src_text.substr(0, ctdata_at), input_file);
         errors = get_parse_error_count();
     } else {
@@ -592,6 +595,10 @@ int main(int argc, char* argv[]) {
         }
         program = get_parsed_program();
         fclose(yyin);
+        errors = get_parse_error_count();
+    }
+    if (program) {
+        check_indicators_defined(program);
         errors = get_parse_error_count();
     }
 

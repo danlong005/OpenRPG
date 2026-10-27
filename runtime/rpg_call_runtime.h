@@ -23,8 +23,9 @@
 //     data structure   its bytes, as the data structure is a character
 //                      value (see rpg_img_* in rpg_runtime.h)
 // The function returns 0, or a negative value when the program ended in
-// error; the caller then gets status 202. A program that can't be found
-// is status 211.
+// error; the caller then gets status 202, or 231 for -2, which an rpgc
+// program returns when it ended with a halt indicator on. A program that
+// can't be found is status 211.
 //
 // The library is looked for in the calling program's own directory, then
 // in each directory on PATH, then wherever the system loader looks
@@ -317,12 +318,15 @@ inline void rpg_call_program(const std::string& name, std::vector<std::string>& 
     if (rc < 0) {
         std::string key = rpg_trim(name);
         for (auto& c : key) c = static_cast<char>(std::toupper(static_cast<unsigned char>(c)));
+        if (rc == -2)
+            rpg_raise(231, "RNX0231: The called program " + key + " returned with a halt indicator on.");
         rpg_raise(202, "RNX0202: The call to program " + key + " ended in error.");
     }
 }
 
-// A called program built by rpgc: whether it ended in error. A halt
-// indicator left on ends it in error (and is reset for the next call).
+// A called program built by rpgc: whether it ended with a halt indicator
+// on, which its caller sees as status 231. The indicators are reset for
+// the next call.
 inline bool rpg_called_program_failed() {
     bool failed = false;
     for (int i = 1; i <= 9; i++) {

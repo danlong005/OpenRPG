@@ -96,16 +96,18 @@ extern bool ctlopt_nolenchk;
 // Set line number on AST node
 #define SET_LINE(node) do { if (node) (node)->line = yylineno; } while(0)
 
-// *INLR tested (first line) and set anywhere. IBM i rejects a program that
-// tests an indicator it never sets: RNF7030, "The name or indicator *INLR
-// is not defined". Checked once the whole source is parsed.
-static int g_lr_tested_line = 0;
-static bool g_lr_set = false;
+// Each indicator's first reference as a value, and whether anything sets
+// it, across every parse of the source (the fixed-format reader parses its
+// calculations a block at a time). IBM i rejects a program that refers to
+// an indicator nothing sets: RNF7030, "The name or indicator *IN55 is not
+// defined". check_indicators_defined (main.cpp, once the whole source is
+// parsed) reports them. Indexed by IndicatorExpr number: LR 0, 01-99,
+// H1-H9 101-109.
+int g_ind_tested_line[110];
+bool g_ind_set[110];
 
-static void check_lr_defined() {
-    if (g_lr_tested_line && !g_lr_set)
-        report_semantic_error(g_lr_tested_line, "The name or indicator *INLR is not defined: the "
-            "program tests LR but never sets it (IBM: RNF7030)");
+void reset_indicator_uses() {
+    for (int i = 0; i < 110; i++) { g_ind_tested_line[i] = 0; g_ind_set[i] = false; }
 }
 
 // The value of target op= value: target op (value), with the target copied,
@@ -692,11 +694,9 @@ static rpg::DclS* make_dcl_s_list(const char* first, std::vector<std::string>* m
 
 program:
     KW_FREE statements_opt {
-        check_lr_defined();
         $$ = g_program;
     }
     | statements_opt {
-        check_lr_defined();
         $$ = g_program;
     }
     ;
@@ -1237,7 +1237,7 @@ eval_target:
         free($1);
     }
     | INDICATOR {
-        if ($1 == rpg::IndicatorExpr::LR) g_lr_set = true;
+        g_ind_set[$1] = true;
         $$ = new rpg::IndicatorExpr($1);
     }
     /* Qualified targets chain to any depth: ds.f, ds.sub.f, ds(i).sub.f.
@@ -3497,7 +3497,7 @@ primary_expr:
     | BIF_FIND LPAREN arg_list RPAREN { $$ = make_bif("FIND", $3); $$->line = yylineno; }
     | BIF_COUNTMATCHES LPAREN arg_list RPAREN { $$ = make_bif("COUNTMATCHES", $3); $$->line = yylineno; }
     | INDICATOR {
-        if ($1 == rpg::IndicatorExpr::LR && !g_lr_tested_line) g_lr_tested_line = yylineno;
+        if (!g_ind_tested_line[$1]) g_ind_tested_line[$1] = yylineno;
         $$ = new rpg::IndicatorExpr($1);
     }
     | KW_ON {
@@ -3607,8 +3607,42 @@ void yyerror(const char* s) {
 rpg::Program* get_parsed_program() {
     g_program = new rpg::Program();
     g_error_count = 0;
+    reset_indicator_uses();
     yyparse();
     return g_program;
+}
+
+// RNF7030 for every indicator the program refers to and nothing sets.
+// Besides an assignment (which a fixed-format resulting indicator also
+// becomes), an I-spec's record identifying and field indicators set theirs,
+// and a display file sets 01-99 from its own DDS, which this source does
+// not show, so a program with a WORKSTN file is not checked for those.
+// U1-U8 and 1P are always defined on IBM i; rpgc has neither.
+void check_indicators_defined(rpg::Program* program) {
+    bool set[110];
+    for (int i = 0; i < 110; i++) set[i] = g_ind_set[i];
+    bool workstn = false;
+    auto mark = [&](const std::string& ind) {
+        if (ind.size() == 2 && isdigit((unsigned char)ind[0]) && isdigit((unsigned char)ind[1]))
+            set[atoi(ind.c_str())] = true;
+    };
+    for (auto& st : program->statements) {
+        if (auto* f = dynamic_cast<rpg::DclF*>(st.get()); f && f->usage == "WORKSTN") workstn = true;
+        if (auto* r = dynamic_cast<rpg::IRecordFormat*>(st.get())) {
+            mark(r->recordIdIndicator);
+            for (auto& fd : r->fields) { mark(fd.indPlus); mark(fd.indMinus); mark(fd.indZeroBlank); }
+        }
+    }
+    for (int i = 0; i < 110; i++) {
+        if (!g_ind_tested_line[i] || set[i]) continue;
+        if (i >= 1 && i <= 99 && workstn) continue;
+        char name[8];
+        if (i == rpg::IndicatorExpr::LR) snprintf(name, sizeof name, "LR");
+        else if (i >= rpg::IndicatorExpr::H1) snprintf(name, sizeof name, "H%d", i - 100);
+        else snprintf(name, sizeof name, "%02d", i);
+        report_semantic_error(g_ind_tested_line[i], std::string("The name or indicator *IN") + name +
+            " is not defined: the program refers to it but never sets it (IBM: RNF7030)");
+    }
 }
 
 int get_parse_error_count() {

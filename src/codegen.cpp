@@ -1463,10 +1463,16 @@ void CodeGen::visit(Program& node) {
     if (pssr_stmt) {
         emitIndent(); out_ << "try {\n"; indent_++;
     }
+    // The RPG cycle: with no primary file, a program that reaches the end of
+    // its calculations with LR off runs them again, as on IBM i; LR on, or
+    // RETURN, ends it. *INZSR and the *ENTRY copies above run once.
+    bool cycle = !exec_stmts.empty();
+    if (cycle) { emitIndent(); out_ << "do {\n"; indent_++; }
     for (auto* s : exec_stmts) {
         emitLineDirective(s->line);
         s->accept(*this);
     }
+    if (cycle) { indent_--; emitIndent(); out_ << "} while (!rpg_inlr);\n"; }
     if (pssr_stmt) {
         indent_--; emitIndent(); out_ << "} catch (const RpgCallerEscape&) { throw; } catch (...) {\n";
         indent_++;
@@ -5288,7 +5294,8 @@ void CodeGen::emitProgramExport(const Program& node) {
         out_ << "        rpg_abi_put(__p" << i << ", "
              << abiEncode(parms[i].target, parms[i].a, parms[i].likeds) << ");\n";
     out_ << "        std::cout.flush();\n"
-         << "        return (__rc != 0 || rpg_called_program_failed()) ? -1 : 0;\n"
+         << "        if (rpg_called_program_failed()) return -2;  // a halt indicator on: 231\n"
+         << "        return __rc != 0 ? -1 : 0;\n"
          << "    } catch (...) {\n"
          << "        std::cout.flush();\n"
          << "        rpg_called_program_failed();\n"

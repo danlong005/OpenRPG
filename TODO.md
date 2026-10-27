@@ -986,7 +986,6 @@ operations, neither of which item #4 touches.
 | # | Feature |
 |---|---------|
 | 46 | XML-SAX (%HANDLER) |
-| 47 | Remaining CTL-OPT keywords (USRPRF, VALIDATE) |
 
 ---
 
@@ -1617,15 +1616,22 @@ indicators accept it. As on IBM i, a program that tests LR without setting
 it anywhere is rejected (RNF7030); test 166 now fails for that reason, the
 same line and code as IBM. Tests 268-269 compile on PUB400.
 
-Not emulated: with LR off at the end of the mainline, an IBM i cycle
-program with no primary file runs its calculations again; rpgc ends.
+With LR off at the end of the mainline, an IBM i cycle program with no
+primary file runs its calculations again; rpgc does too since 2026-10-27
+(test453, checked on PUB400).
 
-Found alongside, not yet done:
-- IBM rejects any indicator tested but never set (RNF7030), not only LR.
-  rpgc checks LR alone: for numbered indicators the ones a display file
-  sets have to count as set.
-- Fixed-format factor 1 must be left-adjusted (RNF0262, severity 20); rpgc
-  accepts it anywhere in columns 12-25.
+Found alongside, both done 2026-10-27 after probing PUB400:
+- IBM rejects any indicator referred to but never set (RNF7030), not only
+  LR: 01-99 and H1-H9 as rpgc has them. An assignment, a resulting
+  indicator, an I-spec or a display file sets one; passing it as a
+  parameter does not. Any use of the *IN array as such (*IN(i), %ADDR(*IN),
+  CLEAR *IN) turns IBM's check off; rpgc has no *IN array. Tests 449-450.
+- Factor 1, factor 2 and the result field must each be left-adjusted
+  (RNF0262, severity 20); an indented extended factor 2 is fine. Tests
+  451-452.
+- Also found: rpgc has no SETON/SETOFF, no *IN array (*IN(i), *IN), and
+  none of the indicators U1-U8, KA-KY, L1-L9, MR, RT, 1P, OA-OG, OV. IBM i
+  takes them all.
 
 ### BOOLEAN removed, DCL-ENUM in IBM's syntax (2026-09-24)
 
@@ -2002,6 +2008,13 @@ Cross-check against **❌ Not Planned** below before re-adding any of these.
 ## ❌ Not Planned
 
 These features are IBM i-specific, legacy, or otherwise not applicable:
+
+### CTL-OPT USRPRF and VALIDATE — Not Planned
+- USRPRF (adopted authority) and VALIDATE (SQL validation of the ILE
+  program object) belong to IBM i's object model, which a host executable
+  has no counterpart for. Decided 2026-10-27. Like CTL-OPT's other IBM
+  i-only keywords, both are accepted and ignored, so source written for
+  IBM i still compiles.
 
 ### Embedded SQL — Not Planned
 - SQLTYPE (CLOB, BLOB, XML) — LOB support varies wildly by ODBC driver

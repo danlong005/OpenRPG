@@ -4889,6 +4889,13 @@ void CodeGen::emitClearDs(const std::string& target, const std::string& decl,
         out_ << "for (auto& " << elem << " : " << target << ") {\n";
         indent_++;
     }
+    // CLEAR of a BASED data structure first blanks all its bytes, those no
+    // subfield covers too, then gives each subfield its default in turn, as
+    // IBM i does.
+    if (!layout.based_ptr.empty()) {
+        emitIndent();
+        out_ << elem << ".rpg_set_chars(std::string());\n";
+    }
     for (const auto& f : layout.fields) {
         if (!layout.based_ptr.empty()) {
             // Every subfield of a BASED data structure is a view; an

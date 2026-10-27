@@ -1410,6 +1410,9 @@ inline std::string rpg_to_char(unsigned long long v) { return std::to_string(v);
 inline std::string rpg_to_char(double v) { return std::to_string(v); }
 inline std::string rpg_to_char(const std::string& v) { return v; }
 inline std::string rpg_to_char(bool v) { return v ? "1" : "0"; }
+// An indicator is its character, whatever it holds: a CLEAR of a character
+// field laid over *IN leaves blanks there, and %CHAR shows the blank.
+inline std::string rpg_to_char(const RpgInd& v) { return std::string(1, v.c); }
 // PACKED/ZONED: format with exactly the declared number of decimal places.
 // IBM i writes no zero before the decimal point: %CHAR of 0.50 is ".50",
 // of -0.5 "-.50", of zero at two decimals ".00" (verified on PUB400).

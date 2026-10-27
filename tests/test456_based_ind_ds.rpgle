@@ -1,7 +1,9 @@
 **FREE
 // Named indicators: a data structure BASED on %ADDR(*IN), with LEN. Its
 // subfields are the indicator bytes, so setting either one sets the other;
-// %LOOKUP searches *IN; CLEAR of the data structure turns them off.
+// %LOOKUP searches *IN. CLEAR of the data structure blanks all 99 bytes,
+// then gives each subfield its default, so *IN52, under the character
+// subfield ERRORS, is left blank, as on IBM i.
 dcl-s pInd pointer inz(%addr(*in));
 dcl-ds inds len(99) based(pInd);
   exitKey ind pos(3);

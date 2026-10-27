@@ -612,7 +612,10 @@ pRec = %ALLOC(%SIZE(rec_t));
 rec.qty = 12.5;
 ```
 
-Using a BASED data structure while its pointer is `*NULL` is status 222. Its
+`CLEAR` of one blanks all its bytes, then gives each subfield its default, as
+IBM i does: an indicator under a character subfield is left blank, which
+`%CHAR` shows. Using a BASED data structure while its pointer is `*NULL` is
+status 222. Its
 subfields can be character, indicator or numeric; a `LIKEDS`, `LIKE` or `DIM`
 subfield inside one is not supported yet. `%ADDR` of an ordinary field points
 at rpgc's own representation of it, not at IBM i's bytes, so a BASED data

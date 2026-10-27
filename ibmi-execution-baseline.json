@@ -1285,7 +1285,7 @@
    "verified": "2026-10-27"
   },
   "test228_exsr_order.rpgle": {
-   "error": "test228_exsr_order.rpgle after 60s, ending job 329872/QUSER/QP0ZSPWT",
+   "error": "test228_exsr_order.rpgle after 60s, ending job 336168/QUSER/QP0ZSPWT",
    "output": [],
    "sha256": "de6d78bdf7f84ba40bc4c19da234fff3ac400cfc8623d2b103efe7d0c97ef351",
    "status": "timeout",
@@ -2845,6 +2845,19 @@
    "test": "458",
    "verified": "2026-10-27"
   },
+  "test459_based_dim_likeds.rpgle": {
+   "error": "",
+   "output": [
+    "03: 1 elems 24                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           ",
+    "errs(3): 1                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               ",
+    "IT2  10 FIRST 77 44                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      ",
+    "[     ] 15                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               "
+   ],
+   "sha256": "e023dca5d0655befe7324c8c5c58840eddf6c5fa5d499ee8b956633b034d55af",
+   "status": "same",
+   "test": "459",
+   "verified": "2026-10-27"
+  },
   "test45_array_bifs.rpgle": {
    "error": "",
    "output": [
@@ -2853,6 +2866,40 @@
    "sha256": "7287e294abddd32ea09ae64299a1e29b454c12bea069ed6d568b9149dc408da2",
    "status": "same",
    "test": "45",
+   "verified": "2026-10-27"
+  },
+  "test460_based_bare_dim_nested.rpgle": {
+   "error": "",
+   "output": [
+    "key 5 1                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  ",
+    "after clear 0                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            ",
+    "EUR 19.99 24                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             "
+   ],
+   "sha256": "a94e5d41df355e94e787b42408e04d97033ed151b3f05ff20de6a13058380aea",
+   "status": "same",
+   "test": "460",
+   "verified": "2026-10-27"
+  },
+  "test461_fixed_based_dim_overlay.rpgle": {
+   "error": "",
+   "output": [
+    "         7                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               ",
+    "1                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        "
+   ],
+   "sha256": "fdc791bc258d3fbb063987cdc7a36bb45e813234803446cb3f32c1f0f1c70cec",
+   "status": "same",
+   "test": "461",
+   "verified": "2026-10-27"
+  },
+  "test462_unqual_dim_subfield.rpgle": {
+   "error": "",
+   "output": [
+    "AB                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       ",
+    "[  ] 3                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   "
+   ],
+   "sha256": "3c8b84a5f4335202362eb84280ee9c50c6e5956c403dddca1472819f147f81da",
+   "status": "same",
+   "test": "462",
    "verified": "2026-10-27"
   },
   "test46_options.rpgle": {

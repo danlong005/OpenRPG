@@ -1285,7 +1285,7 @@
    "verified": "2026-10-27"
   },
   "test228_exsr_order.rpgle": {
-   "error": "test228_exsr_order.rpgle after 60s, ending job 306370/QUSER/QP0ZSPWT",
+   "error": "test228_exsr_order.rpgle after 60s, ending job 314261/QUSER/QP0ZSPWT",
    "output": [],
    "sha256": "de6d78bdf7f84ba40bc4c19da234fff3ac400cfc8623d2b103efe7d0c97ef351",
    "status": "timeout",
@@ -2775,6 +2775,33 @@
    "sha256": "8eba42ae09ea3675340b20431ad5e037584ec625b3bb35da24d14b787e896522",
    "status": "same",
    "test": "453",
+   "verified": "2026-10-27"
+  },
+  "test454_fixed_seton_setoff.rpgle": {
+   "error": "",
+   "output": [
+    "    1                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    ",
+    "    2                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    ",
+    "off                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      "
+   ],
+   "sha256": "0bbaa790f84de5506a2ca243b204bf1755fa92b9c449da3b9c10d1bb14d340e8",
+   "status": "same",
+   "test": "454",
+   "verified": "2026-10-27"
+  },
+  "test455_in_array.rpgle": {
+   "error": "",
+   "output": [
+    "set by index                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             ",
+    "on: 3                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    ",
+    "51 cleared: 0                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            ",
+    "all on: 1                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                ",
+    "cleared: 0                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               ",
+    "status 121                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               "
+   ],
+   "sha256": "1e14619861688ba3a9bc0591a52d12cee0c4efced92813f44e818630483e63e1",
+   "status": "same",
+   "test": "455",
    "verified": "2026-10-27"
   },
   "test45_array_bifs.rpgle": {

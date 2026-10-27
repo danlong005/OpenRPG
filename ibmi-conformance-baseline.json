@@ -6497,6 +6497,20 @@
    "verdict": "accept",
    "verified": "2026-10-27"
   },
+  "test454_fixed_seton_setoff.rpgle": {
+   "codes": [],
+   "rpgc": "accept",
+   "sha256": "0bbaa790f84de5506a2ca243b204bf1755fa92b9c449da3b9c10d1bb14d340e8",
+   "verdict": "accept",
+   "verified": "2026-10-27"
+  },
+  "test455_in_array.rpgle": {
+   "codes": [],
+   "rpgc": "accept",
+   "sha256": "1e14619861688ba3a9bc0591a52d12cee0c4efced92813f44e818630483e63e1",
+   "verdict": "accept",
+   "verified": "2026-10-27"
+  },
   "test45_array_bifs.rpgle": {
    "codes": [],
    "rpgc": "accept",
@@ -7008,5 +7022,5 @@
    "verified": "2026-09-25"
   }
  },
- "generated": "2026-10-27T17:47:46+00:00"
+ "generated": "2026-10-27T18:00:38+00:00"
 }

@@ -24,6 +24,7 @@ test313_dump_debug.rpgle              platform  IBM i writes the dump to a spool
 test314_dump_always.rpgle             platform  IBM i writes the dump to a spooled file (QPPGMDMP); rpgc has none and prints it
 test54_memory_bifs.rpgle              platform  the program's name: RPGCXRUN is the object the execution harness creates on IBM i; rpgc's program is main
 test242_hex_nul.rpgle                 platform  a hex literal is bytes in the job's character set: x'C1C2' is 'AB' in EBCDIC, not in ASCII
+test193_fixed_cspec_move_num_to_char.rpgle platform  a negative zero digit is the byte x'D0', which is '}' in CCSID 37, as rpgc shows it, and 'u' with an umlaut in CCSID 273, PUB400's job CCSID
 test99_data_into.rpgle                platform  DATA-INTO names a parser program; the parsers the tests use are built into rpgc and do not exist on IBM i (RNX0355)
 test100_data_gen.rpgle                platform  DATA-GEN names a generator program; the ones the tests use are built into rpgc and do not exist on IBM i (RNX0355)
 test112_data_into_csv.rpgle           platform  DATA-INTO names a parser program; the parsers the tests use are built into rpgc and do not exist on IBM i (RNX0355)

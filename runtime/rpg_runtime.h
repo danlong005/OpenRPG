@@ -986,7 +986,7 @@ inline int rpg_main_end() {
     for (int i = 1; i <= 9; i++) {
         if (rpg_halt_indicators()[i]) {
             std::cout.flush();
-            std::fprintf(stderr, "The program ended with halt indicator H%d on.\n", i);
+            std::fprintf(stderr, "RNX0233: The program ended with halt indicator H%d on.\n", i);
             std::_Exit(i);
         }
     }

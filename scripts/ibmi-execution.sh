@@ -123,6 +123,33 @@ for num, src, mode, extra in run_tests(tests):
             files.add(m.group(1).upper())
     manifest.append((name, num, ','.join(sorted(files)) or '-'))
 if limit > 0: manifest = manifest[:limit]
+
+# The programs the tests CALL: run_tests.sh builds each as "shared" before
+# the tests that call it, and so does every run here, before the first test
+# (the library starts empty). A C program on IBM i takes its parameters
+# through main's argv, so a C callee gets a main that passes them on.
+callees = []
+for num, src, mode, extra in run_tests(tests):
+    name = os.path.basename(src)
+    stem, ext = os.path.splitext(name)
+    if mode != 'shared': continue
+    if ext == '.rpgle':
+        if baseline.get(name, {}).get('verdict') == 'accept':
+            callees.append((stem.upper(), 'rpg', name))
+    elif ext == '.c':
+        text = open(src, encoding='utf-8', errors='replace').read()
+        m = re.search(r'\bint\s+' + stem + r'\s*\(([^)]*)\)\s*\{', text)
+        if not m: continue
+        params = [p.strip() for p in m.group(1).split(',') if p.strip()]
+        types = [re.sub(r'\w+\s*$', '', p).strip() for p in params]
+        args = ', '.join(f'({t})argv[{i + 1}]' for i, t in enumerate(types))
+        open(os.path.join(dst, name), 'w').write(text.encode('ascii', 'replace').decode('ascii'))
+        open(os.path.join(dst, stem + '_main.c'), 'w').write(
+            f'#include "{name}"\nint main(int argc, char *argv[]) {{\n'
+            f'    return {stem}({args});\n}}\n')
+        callees.append((stem.upper(), 'c', stem + '_main.c'))
+with open(os.path.join(dst, 'CALLEES'), 'w') as f:
+    for pgm, kind, name in callees: f.write(f"{pgm} {kind} {name}\n")
 with open(os.path.join(dst, 'MANIFEST'), 'w') as f:
     for name, num, files in manifest: f.write(f"{name} {num} {files}\n")
 with open(os.path.join(dst, 'SKIPPED'), 'w') as f:
@@ -176,7 +203,7 @@ LIB=$($SYS "DSPUSRPRF USRPRF($ME) OUTPUT(*PRINT)" </dev/null 2>&1 \
         | grep -i 'Current library' | awk '{print $NF}' | tr -d '\r')
 [ -z "$LIB" ] && LIB="${ME}1"
 echo "@@@LIB $LIB"
-for f in tests/*.rpgle tests/*.sqlrpgle tests/*.clle; do
+for f in tests/*.rpgle tests/*.sqlrpgle tests/*.clle tests/*.c; do
     [ -f "$f" ] && setccsid 819 "$f" </dev/null >/dev/null 2>&1
 done
 STARTED=$(date '+%Y-%m-%d-%H.%M.%S')
@@ -191,6 +218,25 @@ out=$($SYS "CRTBNDCL PGM($LIB/RPGCDRV) SRCSTMF('$WORK/tests/rpgcdrv.clle')" </de
 
 # Compile listings are filtered as in ibmi-conformance.sh.
 verdict() { grep -E '^ *\*?RN[SF][0-9]{4}|^ +(Error|Severe Error) ' ; }
+
+# The called programs, built fresh every run before any test. They join the
+# calling test's activation group (*CALLER), which ends with that test, so
+# no state carries from one test to the next.
+while read -r pgm kind src; do
+    [ -z "$pgm" ] && continue
+    $SYS "DLTPGM PGM($LIB/$pgm)" </dev/null >/dev/null 2>&1
+    if [ "$kind" = "c" ]; then
+        out=$($SYS "CRTBNDC PGM($LIB/$pgm) SRCSTMF('$WORK/tests/$src') TGTCCSID(*JOB) INCDIR('$WORK/tests')" </dev/null 2>&1)
+    else
+        out=$($SYS "CRTBNDRPG PGM($LIB/$pgm) SRCSTMF('$WORK/tests/$src') TGTCCSID(*JOB) INCDIR('$WORK') DFTACTGRP(*NO) ACTGRP(*CALLER)" </dev/null 2>&1)
+    fi
+    if [ $? -eq 0 ]; then
+        echo "@@@CALLEE $pgm built"
+    else
+        echo "@@@CALLEE $pgm FAILED"
+        echo "$out" | grep -E 'RN[SF][0-9]{4}|CZM|CPF|CPD' | head -5
+    fi
+done < "$WORK/tests/CALLEES"
 
 while read -r f num files; do
     [ -z "$f" ] && continue
@@ -244,6 +290,9 @@ db2q "SELECT 'S|' CONCAT TRIM(SPOOLED_FILE_NAME) CONCAT ' ' CONCAT TRIM(JOB_NAME
     | sed -n 's/^S|/@@@SPOOL left /p'
 
 $SYS "DLTPGM PGM($LIB/RPGCDRV)" </dev/null >/dev/null 2>&1
+while read -r pgm kind src; do
+    [ -n "$pgm" ] && $SYS "DLTPGM PGM($LIB/$pgm)" </dev/null >/dev/null 2>&1
+done < "$WORK/tests/CALLEES"
 $SYS "DLTMSGQ MSGQ($LIB/RPGCOUT)" </dev/null >/dev/null 2>&1
 $SYS "DLTDTAARA DTAARA($LIB/RPGCJOB)" </dev/null >/dev/null 2>&1
 echo "@@@DONE"
@@ -278,7 +327,7 @@ echo "uploaded; running (serial -- expect several minutes)"
 echo
 
 ssh "${SSH_OPTS[@]}" "${USER_ID}@${HOST}" "sh \$HOME/${WORKDIR}/exec_remote.sh ${RUN_LIMIT}" </dev/null \
-    | tee "$LOG" | grep --line-buffered -E '^@@@(FILE|TIMEOUT|FATAL|DONE)' | sed 's/^@@@FILE /  running /'
+    | tee "$LOG" | grep --line-buffered -E '^@@@(CALLEE|FILE|TIMEOUT|FATAL|DONE)' | sed 's/^@@@FILE /  running /'
 ssh "${SSH_OPTS[@]}" "${USER_ID}@${HOST}" "rm -rf ${WORKDIR}" </dev/null
 
 echo

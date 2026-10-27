@@ -9,7 +9,7 @@
    "sha256": "e69f4962b809737e82c97fc7589d93e577e3cd2d2fbe65d067a5bd7e552cd56a",
    "status": "same",
    "test": "01",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test02_arithmetic.rpgle": {
    "error": "",
@@ -23,7 +23,7 @@
    "sha256": "dea2d9696497d3f2fa6335d30f6b128928abd4dafaaede7e1631d941fe770a84",
    "status": "same",
    "test": "02",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test03_types.rpgle": {
    "error": "",
@@ -37,7 +37,7 @@
    "sha256": "ce99cf73d6a6cd4122cbe33312eed617b06713715c95f7374d649ef2f908e208",
    "status": "same",
    "test": "03",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test04_bifs.rpgle": {
    "error": "",
@@ -51,7 +51,7 @@
    "sha256": "3b352119f3f24331af9eb6e72349a86162fc674e0e7fc656773a08fa417d5f96",
    "status": "same",
    "test": "04",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test05_if.rpgle": {
    "error": "",
@@ -64,7 +64,7 @@
    "sha256": "39e42a6fbd7a65b717182fd82984ca5443fbc94bb14ccad3515d134d333326bb",
    "status": "same",
    "test": "05",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test06_loops.rpgle": {
    "error": "",
@@ -78,7 +78,7 @@
    "sha256": "bc0c9b494a3e2261549da8be3214e5485892cad03c38efd91f3a9241d3337bc9",
    "status": "same",
    "test": "06",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test07_select.rpgle": {
    "error": "",
@@ -89,7 +89,7 @@
    "sha256": "839d605c26c2714f47aa25c1a35d95f911115b4d0c2b6794ad1c1557c32bb78a",
    "status": "same",
    "test": "07",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test08_procedures.rpgle": {
    "error": "",
@@ -101,7 +101,7 @@
    "sha256": "111d5b993b81db6dac435f2aad1e3c0ee1484a6c697c2ddecbd97bd26ea68879",
    "status": "same",
    "test": "08",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test09_datastructs.rpgle": {
    "error": "",
@@ -117,7 +117,7 @@
    "sha256": "c25152dda4ecb254ed1d46f1ca58d612a041cda802f0303a89b5bfe8a98441fa",
    "status": "same",
    "test": "09",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test100_data_gen.rpgle": {
    "error": "CEE9901 Application error. RNX0355 unmonitored by RPGCXRUN at statement 0000000034, instruction X'0000'..",
@@ -125,7 +125,7 @@
    "sha256": "23e92d600a5ebefc0fea433f674244725822908c1cb59251da304a97a5645d52",
    "status": "runtime-error",
    "test": "100",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test101_user.rpgle": {
    "error": "",
@@ -136,7 +136,7 @@
    "sha256": "c6a87c6420c44ce7223c5261267e33d1fd31fcb5f45ad7b8988698f368ab19a0",
    "status": "same",
    "test": "101",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test102_snd_msg.rpgle": {
    "error": "",
@@ -146,7 +146,7 @@
    "sha256": "59fc0740b1bbf0c88e6524773020e59c11e1c5c0f678007ed366a2b17ebccc5e",
    "status": "same",
    "test": "102",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test10_bifs_expanded.rpgle": {
    "error": "",
@@ -162,7 +162,7 @@
    "sha256": "aa22cf06f5cdf111b140ef3dfbf028f0e3bf07b2e9a08dc3fb2e37628493296d",
    "status": "same",
    "test": "10",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test110_overload.rpgle": {
    "error": "",
@@ -177,7 +177,7 @@
    "sha256": "05e1aba8ba2f4d96d29eaba2cf6ea1b7b5c01d785ed84dc4bad9b91bf3b0751f",
    "status": "same",
    "test": "110",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test111_elem_alloc.rpgle": {
    "error": "",
@@ -192,7 +192,7 @@
    "sha256": "68386d570019a019a517bf0d27d06f6496a087f0a6109b61c99bcf489a834e3f",
    "status": "same",
    "test": "111",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test112_data_into_csv.rpgle": {
    "error": "CEE9901 Application error. RNX0355 unmonitored by RPGCXRUN at statement 0000000033, instruction X'0000'..",
@@ -200,7 +200,7 @@
    "sha256": "d2c210af59ae16b9e6fab7c6e8d213c9a77a27e41b10b745b4c20fbbcb9c80cd",
    "status": "runtime-error",
    "test": "112",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test113_data_gen_csv.rpgle": {
    "error": "CEE9901 Application error. RNX0355 unmonitored by RPGCXRUN at statement 0000000030, instruction X'0000'..",
@@ -208,7 +208,7 @@
    "sha256": "d48f01fc80d0e66921aacde3cdc2587f93055af5ec983ea8a2973edfe59ee540",
    "status": "runtime-error",
    "test": "113",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test114_data_into_json_parser.rpgle": {
    "error": "CEE9901 Application error. RNX0355 unmonitored by RPGCXRUN at statement 0000000020, instruction X'0000'..",
@@ -216,7 +216,7 @@
    "sha256": "59b4532bd40f844abb17d03893b1997d2557d4dbde90752e45bf8404303769f3",
    "status": "runtime-error",
    "test": "114",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test115_dump.rpgle": {
    "error": "",
@@ -226,7 +226,7 @@
    "sha256": "dea3f00b4919299fe3db3cad37f1bdb8c8918be0e5d39895a6c705f89df5cabf",
    "status": "same",
    "test": "115",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test116_fixed_hd.rpgle": {
    "error": "",
@@ -234,7 +234,7 @@
    "sha256": "2d908398eeaa538d2f7c781bfae2937bb7cd6b579a1f1cf9e821d464a2e5d6b7",
    "status": "same",
    "test": "116",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test117_fixed_free_hello.rpgle": {
    "error": "",
@@ -245,7 +245,7 @@
    "sha256": "35b853e51274958bed474d8a0c0e728d324ddae1d28bc12b29987b84e836f5a1",
    "status": "same",
    "test": "117",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test120_fixed_varchar.rpgle": {
    "error": "",
@@ -256,7 +256,7 @@
    "sha256": "3b0dbd8d4466705ba85ccd1ff838228301ab08051f04a309b8453a68413956e5",
    "status": "same",
    "test": "120",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test121_fixed_varchar_subfield.rpgle": {
    "error": "",
@@ -267,7 +267,7 @@
    "sha256": "33def5c1c7fe7c63448e29c93e2d1fb17333d00db6de326541a7fd4dc85370cd",
    "status": "same",
    "test": "121",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test123_fixed_ds_dim.rpgle": {
    "error": "",
@@ -278,7 +278,7 @@
    "sha256": "ec18b308b77ca6dfd049d2557254bceb8e824f8b1f3679d7071fd651e4dab564",
    "status": "same",
    "test": "123",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test124_fixed_overlay.rpgle": {
    "error": "",
@@ -292,7 +292,7 @@
    "sha256": "a3957c29d11db19dac28d784b132b5774dfadabfbeda7177e161222c8d82b504",
    "status": "same",
    "test": "124",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test125_fixed_cspec_if.rpgle": {
    "error": "",
@@ -302,7 +302,7 @@
    "sha256": "9abea2db289705bdb16399cfd089785b13fec97de4b10ae749d42311e4bfc13a",
    "status": "same",
    "test": "125",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test126_fixed_cspec_dow_dou.rpgle": {
    "error": "",
@@ -317,7 +317,7 @@
    "sha256": "a67061c6f8d18020270a5a46638ae17b8d9fe9b9f51c3f9e1236edf208cd091f",
    "status": "same",
    "test": "126",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test127_fixed_cspec_for.rpgle": {
    "error": "",
@@ -332,7 +332,7 @@
    "sha256": "4429b10c1355a2d15b7fdf08cf8e17d6e0c1b991c56dc7d5bebd0190d357975b",
    "status": "same",
    "test": "127",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test128_fixed_cspec_select.rpgle": {
    "error": "",
@@ -342,7 +342,7 @@
    "sha256": "f9e888dfc9eeaad1477a3357751234bebb451923e4832377ac85bed5aa004538",
    "status": "same",
    "test": "128",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test129_fixed_cspec_subr.rpgle": {
    "error": "",
@@ -352,7 +352,7 @@
    "sha256": "f864263af59efbc51b5ab64489d2264756a760b35e95ca4b1938d0cbf4d1a954",
    "status": "same",
    "test": "129",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test12_monitor.rpgle": {
    "error": "",
@@ -363,7 +363,7 @@
    "sha256": "8d44e83f4c1f1dc67bd2712c11050f9163713824833dc1e72ffb5b6d03817602",
    "status": "same",
    "test": "12",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test130_fixed_cspec_eval_callp.rpgle": {
    "error": "",
@@ -377,7 +377,7 @@
    "sha256": "21794190e7496ece89a2873c94af60156f9a32f5e0017db2396fb5386afb6532",
    "status": "same",
    "test": "130",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test131_fixed_cspec_clear_sorta.rpgle": {
    "error": "",
@@ -391,7 +391,7 @@
    "sha256": "7abeee696d63e461c16a15aafb2a0ecb3516266f43907b00f87e07aa5b462327",
    "status": "same",
    "test": "131",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test132_fixed_cspec_monitor.rpgle": {
    "error": "",
@@ -401,7 +401,7 @@
    "sha256": "c4c508b2501ae4a222eeab0f473444f346209c6778daa3b7525a7145117ee22d",
    "status": "same",
    "test": "132",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test133_fixed_cspec_continuation.rpgle": {
    "error": "",
@@ -412,7 +412,7 @@
    "sha256": "83ab1cbf31a2da7af598d8a2db9e2b2bdcad71eabb45b79b4773dd634852908a",
    "status": "same",
    "test": "133",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test134_fixed_cspec_mixed_free.rpgle": {
    "error": "",
@@ -424,7 +424,7 @@
    "sha256": "e8161c77a816606668da50422ffd66ba200ffbf62f9feaf46434ed2fe5426bf6",
    "status": "same",
    "test": "134",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test139_fixed_copy_dspec.rpgle": {
    "error": "",
@@ -435,7 +435,7 @@
    "sha256": "0405bee3ed21585fcb52d07fa51f6640a36d5c25d8153e77659655a847e28ef2",
    "status": "same",
    "test": "139",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test13_subroutines.rpgle": {
    "error": "",
@@ -446,7 +446,7 @@
    "sha256": "4e544ab89f84b6a274fc7e979e0e19f7ff0a4f8f1874284a3a8fb7a9d12fc4a4",
    "status": "same",
    "test": "13",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test140_fixed_copy_cspec.rpgle": {
    "error": "",
@@ -458,7 +458,7 @@
    "sha256": "a059378740b7ee8fe5fd8106642d2c370dbc8649853c778fa82ec38e5fa605de",
    "status": "same",
    "test": "140",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test141_fixed_copy_nested.rpgle": {
    "error": "",
@@ -468,7 +468,7 @@
    "sha256": "1152b26455ccb0fa5cf5a007f2ab25bcf8d50b781f211c37190b78f73bf38427",
    "status": "same",
    "test": "141",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test142_fixed_copy_in_free.rpgle": {
    "error": "",
@@ -479,7 +479,7 @@
    "sha256": "81af51af8cfa1604fb9a9217b45acee6cf93f5a3f7cae80e64b06105d5691c88",
    "status": "same",
    "test": "142",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test148_fixed_cspec_goto_tag.rpgle": {
    "error": "",
@@ -492,7 +492,7 @@
    "sha256": "10dd6290c218babd31ec422da6ad4612049591dedd09e7d7b571f569456ba128",
    "status": "same",
    "test": "148",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test149_fixed_cspec_goto_in_begsr.rpgle": {
    "error": "",
@@ -502,7 +502,7 @@
    "sha256": "6430806a8d6623a1e26509fbf5bc0e261e70a941b0ee930a261dd394c0b0cd26",
    "status": "same",
    "test": "149",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test14_indicators.rpgle": {
    "error": "",
@@ -515,7 +515,7 @@
    "sha256": "c5db3881b1dd2dcea8c99fef4bf3d355281a19d7d4404f30dfb68c2434f732c4",
    "status": "same",
    "test": "14",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test150_fixed_cspec_arith.rpgle": {
    "error": "",
@@ -532,7 +532,7 @@
    "sha256": "8b4c330ff8d3de2def89e31b9df32a55ee69a8d455379ad6a5fa61259a6f5b92",
    "status": "same",
    "test": "150",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test151_fixed_cspec_zadd_zsub.rpgle": {
    "error": "",
@@ -543,7 +543,7 @@
    "sha256": "9316c2df41c299133649a17425e1aeca403a1950c0fdace0ab1fdb3bd5679196",
    "status": "same",
    "test": "151",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test154_fixed_ispec_single.rpgle": {
    "error": "",
@@ -558,7 +558,7 @@
    "sha256": "7787dfdc55328f3ddc6d4c9649a06cb88c0b23636ba499644307de94587baa3c",
    "status": "same",
    "test": "154",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test155_fixed_ispec_multi.rpgle": {
    "error": "",
@@ -571,7 +571,7 @@
    "sha256": "d39cd6b534849e4edf378b6ac059976d610241fa764a7f972d1e5481e7012836",
    "status": "same",
    "test": "155",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test156_fixed_ispec_field_ind.rpgle": {
    "error": "",
@@ -583,7 +583,7 @@
    "sha256": "a94600c82a63bbfe586010a08e7c054f45ab707816941b1313da99bdcc2ea09d",
    "status": "same",
    "test": "156",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test157_fixed_ispec_update.rpgle": {
    "error": "",
@@ -593,7 +593,7 @@
    "sha256": "114344dedb66d762238990367a3d0d822b9ca57664b4d91228ec1d903dfcf91f",
    "status": "same",
    "test": "157",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test158_fixed_ospec_editcode.rpgle": {
    "error": "",
@@ -601,7 +601,7 @@
    "sha256": "711478a44ff14f02ebfef5987f55e0c78acabff0bc17248c54dd82621b65b514",
    "status": "same",
    "test": "158",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test159_fixed_ispec_zone.rpgle": {
    "error": "",
@@ -619,7 +619,7 @@
    "sha256": "2ffbcf3575962ce7c19b591116ec8963b2dd0155a1527c6bae6122c1434da47c",
    "status": "same",
    "test": "159",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test15_dou.rpgle": {
    "error": "",
@@ -630,7 +630,7 @@
    "sha256": "6753abba7a2acf88ebc3a3ed9771ca931a9e185b5caf36501945e016a05856a0",
    "status": "same",
    "test": "15",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test161_fixed_subf_dim.rpgle": {
    "error": "",
@@ -642,7 +642,7 @@
    "sha256": "bcc0c136f71311b59774a9a24d4ed05cede70ae67c84525f4d75d6ee062a17fc",
    "status": "same",
    "test": "161",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test162_fixed_subf_like.rpgle": {
    "error": "",
@@ -653,7 +653,7 @@
    "sha256": "2eccfb62c524824aaa05e484ca6090d53677459033de575dc1a11ad029970b2e",
    "status": "same",
    "test": "162",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test163_subfield_like_dim.rpgle": {
    "error": "",
@@ -665,7 +665,7 @@
    "sha256": "3c35ce1adfbcb003d2d1ed93df6c08120f67c4f5c0c920196e7baca102d62e02",
    "status": "same",
    "test": "163",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test164_fixed_cspec_cond_ind.rpgle": {
    "error": "",
@@ -687,7 +687,7 @@
    "sha256": "3c9bf1fd2919bfea62dbfd75528f595be1a71cf6e669f50fbb386fbf50bcce5e",
    "status": "same",
    "test": "164",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test167_fixed_cspec_cond_anor.rpgle": {
    "error": "",
@@ -703,7 +703,7 @@
    "sha256": "49aa1111c4dec3d87b7b17acba1a417600d40e1d2779687604f6eac29fe05e29",
    "status": "same",
    "test": "167",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test16_copy.rpgle": {
    "error": "",
@@ -714,7 +714,7 @@
    "sha256": "3dd7c3bed7f22da604406adee0ec8f16e65a8b825ba697808408a98754321298",
    "status": "same",
    "test": "16",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test170_fixed_cspec_move.rpgle": {
    "error": "",
@@ -730,7 +730,7 @@
    "sha256": "8767993ae135d4ad65cb6ee0e8b5637488063e3a1dacd15a8f15eeac542f1754",
    "status": "same",
    "test": "170",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test175_fixed_cspec_call_parm.rpgle": {
    "error": "CEE9901 Application error. MCH3401 unmonitored by RPGCXRUN at statement 0000000007, instruction X'0000'..",
@@ -738,7 +738,7 @@
    "sha256": "a94b47088a9b9d73c273cdfeba989d606f61d213f6e0304d65fb2515fb237aff",
    "status": "runtime-error",
    "test": "175",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test177_fixed_cspec_call_var.rpgle": {
    "error": "CEE9901 Application error. MCH3401 unmonitored by RPGCXRUN at statement 0000000008, instruction X'0000'..",
@@ -746,7 +746,7 @@
    "sha256": "7b2d89f51efe4848c66510ab15fec8b748fc089b3b9a02143e12df7a8c02b284",
    "status": "runtime-error",
    "test": "177",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test17_constants.rpgle": {
    "error": "",
@@ -759,7 +759,7 @@
    "sha256": "65a012b7988260f7e31d91d341c64616c218f8c543de3de169b555e279dbfb4f",
    "status": "same",
    "test": "17",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test180_fixed_cspec_modern_opcodes.rpgle": {
    "error": "CEE9901 Application error. RNX0355 unmonitored by RPGCXRUN at statement 0000000008, instruction X'0000'..",
@@ -767,7 +767,7 @@
    "sha256": "d8dd0d505b9ec76d7380a67074829081122293b6f5ce3393ffe07402c308caeb",
    "status": "runtime-error",
    "test": "180",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test182_fixed_cspec_cas_cab.rpgle": {
    "error": "",
@@ -782,7 +782,7 @@
    "sha256": "d2d6297a46d09a116a00e068c277a8aa40a193e70e8fcf8cf66cf515f3fb1e8f",
    "status": "same",
    "test": "182",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test186_fixed_cspec_comp.rpgle": {
    "error": "",
@@ -794,7 +794,7 @@
    "sha256": "c6f7cdab4fba8549d2423deb8942750b5ee36e3d74d1345d56d0b1933f662d37",
    "status": "same",
    "test": "186",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test18_datetime.rpgle": {
    "error": "",
@@ -810,7 +810,7 @@
    "sha256": "0c28ed2df823fb68d496a448d9d5143f381e45df2761d8cbf7009d65f7853029",
    "status": "same",
    "test": "18",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test191_fixed_cspec_move_num.rpgle": {
    "error": "",
@@ -832,7 +832,7 @@
    "sha256": "63eb363f81ce89d1f92e2d65749405991aafdf25077614bdc7aebcd5f29c3b69",
    "status": "same",
    "test": "191",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test192_fixed_cspec_move_char_to_num.rpgle": {
    "error": "",
@@ -850,7 +850,7 @@
    "sha256": "b41e03d0872e5bafd7466dbe3db057b897a7cfa7b5d4016d24d055ee55c28071",
    "status": "same",
    "test": "192",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test193_fixed_cspec_move_num_to_char.rpgle": {
    "error": "",
@@ -867,7 +867,7 @@
    "sha256": "9d608399ccb3e33c1c4d4e24b3a207f898b5a359071897f9bf0fc2c071ad50e3",
    "status": "same",
    "test": "193",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test196_fixed_cspec_move_data_exc.rpgle": {
    "error": "",
@@ -879,7 +879,7 @@
    "sha256": "9bf10743854ad800eb89aeddf69445fa0ffbded5ecada8dc14c41fda8ccfa8c3",
    "status": "same",
    "test": "196",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test197_fixed_cspec_plist.rpgle": {
    "error": "CEE9901 Application error. MCH3401 unmonitored by RPGCXRUN at statement 0000000012, instruction X'0000'..",
@@ -887,7 +887,7 @@
    "sha256": "c4ae0cb004e9246b1e593ec11c8dcd9ee2852e5706c6646248f6fd0d4b1ac63a",
    "status": "runtime-error",
    "test": "197",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test198_fixed_cspec_parm_f1f2.rpgle": {
    "error": "CEE9901 Application error. MCH3401 unmonitored by RPGCXRUN at statement 0000000020, instruction X'0000'..",
@@ -895,7 +895,7 @@
    "sha256": "3d6b0218cae5898a14d21c14ab5e0611f03e33226bacf251b55517b3d6a5c017",
    "status": "runtime-error",
    "test": "198",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test19_math_bifs.rpgle": {
    "error": "",
@@ -911,7 +911,7 @@
    "sha256": "d9df54d6e38e543da85caa31022b2132d1e6eaf4dda57fd5e7257181004e2361",
    "status": "same",
    "test": "19",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test204_fixed_cspec_entry_caller.rpgle": {
    "error": "CEE9901 Application error. MCH3401 unmonitored by RPGCXRUN at statement 0000000008, instruction X'0000'..",
@@ -919,7 +919,15 @@
    "sha256": "5b11f9ffe91f9b37a414b644d8653a02cec5982330bcc81275cac2c5bf586f1b",
    "status": "runtime-error",
    "test": "204",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
+  },
+  "test205_fixed_cspec_entry_f2.rpgle": {
+   "error": "CEE9901 Application error. MCH3401 unmonitored by RPGCXRUN at statement 0000000020, instruction X'0000'..",
+   "output": [],
+   "sha256": "550c39044f5a0b569015e0eb769ee26b94dd0a0ffb4a12a048951e6113c74f98",
+   "status": "runtime-error",
+   "test": "205",
+   "verified": "2026-10-27"
   },
   "test208_fixed_cspec_move_date.rpgle": {
    "error": "",
@@ -938,7 +946,7 @@
    "sha256": "53c93da9d94c9282879178f54e7dcf9ca6250d6c0f1503ced4037c186c266508",
    "status": "same",
    "test": "208",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test209_fixed_cspec_move_dt_nosep.rpgle": {
    "error": "",
@@ -950,7 +958,7 @@
    "sha256": "97a208a281a9b3d7180004c51128295f6a6b5f9013aab559ea2c43a136b83286",
    "status": "same",
    "test": "209",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test20_memory_bifs.rpgle": {
    "error": "",
@@ -964,7 +972,7 @@
    "sha256": "ce873e966ff68ad6abfab2172245bb3df3a8e8a42de9d30ea1b7d89e23701279",
    "status": "same",
    "test": "20",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test210_fixed_cspec_move_timestamp.rpgle": {
    "error": "",
@@ -977,7 +985,7 @@
    "sha256": "f870041c376ef99e9336ffba6e6cb5f422ba0f80ce58a774ae0658aaf16e630d",
    "status": "same",
    "test": "210",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test211_fixed_cspec_move_dt_align.rpgle": {
    "error": "",
@@ -992,7 +1000,7 @@
    "sha256": "7d3312cf39f9ddd0b48161a99f52d98ba89ae8b30f805a12fbb108ee3f0aad1a",
    "status": "same",
    "test": "211",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test212_fixed_cspec_move_dt_err.rpgle": {
    "error": "",
@@ -1004,7 +1012,7 @@
    "sha256": "462adcffa4bc24795ceeeede74946629a6ae554c364bc43dd9fc3a8355030e3e",
    "status": "same",
    "test": "212",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test215_prog_ar_aging.rpgle": {
    "error": "",
@@ -1036,7 +1044,7 @@
    "sha256": "81f2a1163c7455342f7412188b06ae81dc08a6833cf9811d87a2021dd99e84ab",
    "status": "same",
    "test": "215",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test216_prog_gl_post.rpgle": {
    "error": "",
@@ -1069,7 +1077,7 @@
    "sha256": "fc46c8e37ae25139908e84dbc3b3eb18221cb3a53887e6ed7027317ebef2af1c",
    "status": "same",
    "test": "216",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test217_prog_inv_reorder.rpgle": {
    "error": "",
@@ -1099,7 +1107,7 @@
    "sha256": "f127a4bbf6e7699f9ab0bda0599fa510a8e14fd7154d892885615395b9a4b778",
    "status": "same",
    "test": "217",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test218_prog_payroll.rpgle": {
    "error": "CEE9901 Application error. MCH3401 unmonitored by RPGCXRUN at statement 0000000121, instruction X'0000'..",
@@ -1109,7 +1117,7 @@
    "sha256": "d1b6bf7dd2935fd7bf17d6a485c8eeeff82c7d4732c041b06a5afa80ef58885e",
    "status": "runtime-error",
    "test": "218",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test21_parms.rpgle": {
    "error": "",
@@ -1120,7 +1128,7 @@
    "sha256": "fa8a0f4f9091aa62c027afa54ff8695ddadcbb5e7bc660420690ee4194a95673",
    "status": "same",
    "test": "21",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test220_overlay_alias.rpgle": {
    "error": "",
@@ -1135,7 +1143,7 @@
    "sha256": "6ca9e6950f0057c4a83c83c4cdf731296d04d04f0fb23eff5f2ce29da0f1a108",
    "status": "same",
    "test": "220",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test221_ospec_decimals.rpgle": {
    "error": "",
@@ -1147,7 +1155,7 @@
    "sha256": "6d5dffb8848080b2752f1a616cc97f78fe2c9b141370569143db8c1fcfdaa388",
    "status": "same",
    "test": "221",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test222_half_adjust.rpgle": {
    "error": "",
@@ -1162,7 +1170,7 @@
    "sha256": "5820a237cb6459987012201ae88de4d94251afa62c4055af817010a98bee4526",
    "status": "same",
    "test": "222",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test223_editc_decimals.rpgle": {
    "error": "",
@@ -1175,7 +1183,7 @@
    "sha256": "493b657b249a7298915294e1bae73a8292da679cbbaf7700bcf1bbfb46572eb2",
    "status": "same",
    "test": "223",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test224_fixed_dspec_inz.rpgle": {
    "error": "",
@@ -1192,7 +1200,7 @@
    "sha256": "0d306d73030cea17cd95554115530a14b2dcd6efd3ba9b81dd529a5032c399c4",
    "status": "same",
    "test": "224",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test225_decimal_division.rpgle": {
    "error": "",
@@ -1205,7 +1213,7 @@
    "sha256": "671f7cd68a77185b42771bb7eb8f8a46937fd2fd8d9793e8dd5ad4430a64917e",
    "status": "same",
    "test": "225",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test226_subfield_inz.rpgle": {
    "error": "",
@@ -1217,7 +1225,7 @@
    "sha256": "fd7539b8f90892d11ddbb4abf50e30afd2c9bd6a58d5397de7ed6226bed709cb",
    "status": "same",
    "test": "226",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test227_proc_globals.rpgle": {
    "error": "",
@@ -1232,15 +1240,15 @@
    "sha256": "70d2b9e22731ea15a3347b815840a8a951bdb8d1ef02ab75b8229a2bb9de2791",
    "status": "same",
    "test": "227",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test228_exsr_order.rpgle": {
-   "error": "test228_exsr_order.rpgle after 60s, ending job 723236/QUSER/QP0ZSPWT",
+   "error": "test228_exsr_order.rpgle after 60s, ending job 245404/QUSER/QP0ZSPWT",
    "output": [],
    "sha256": "de6d78bdf7f84ba40bc4c19da234fff3ac400cfc8623d2b103efe7d0c97ef351",
    "status": "timeout",
    "test": "228",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test229_char_compare.rpgle": {
    "error": "",
@@ -1270,7 +1278,7 @@
    "sha256": "e800db609f23a244697db4e5cb1787b03ab26a2c2d2a0c121a8c50138b53cc8a",
    "status": "same",
    "test": "229",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test22_status_error.rpgle": {
    "error": "",
@@ -1282,7 +1290,7 @@
    "sha256": "63c33729ddba93614457553830b62c67e8846ab11e90fe25aea5d11de0560d26",
    "status": "same",
    "test": "22",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test230_ds_subfield_attrs.rpgle": {
    "error": "",
@@ -1303,7 +1311,7 @@
    "sha256": "7569984024de0aadba073806675123fe2d0f9181718ae633c47089c84c7dcf97",
    "status": "same",
    "test": "230",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test231_assign_fit.rpgle": {
    "error": "",
@@ -1328,7 +1336,7 @@
    "sha256": "1a51204ac5e40ff56a985a1de23492299c228ce6cabce1e1271c6a5d0db6fd0a",
    "status": "same",
    "test": "231",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test232_fixed_conditionals.rpgle": {
    "error": "",
@@ -1344,7 +1352,7 @@
    "sha256": "7e9a58f1610541ecb80342f0fa6b83fc6005bff27d0d55086352806e9e4a07af",
    "status": "same",
    "test": "232",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test235_copy_eof.rpgle": {
    "error": "",
@@ -1355,7 +1363,7 @@
    "sha256": "d91638d834c7b246fcfd15f7924215f87febf0e0e3f45f112cbdd56cbc6025a4",
    "status": "same",
    "test": "235",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test236_assign_fit_paths.rpgle": {
    "error": "CEE9901 Application error. RNX0355 unmonitored by RPGCXRUN at statement 0000000050, instruction X'0000'..",
@@ -1368,7 +1376,7 @@
    "sha256": "c9eaaeaf00500881e490d8be1e665ac9a8a943d240a38a61d5d0e5d203a4c9c6",
    "status": "runtime-error",
    "test": "236",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test239_numeric_overflow.rpgle": {
    "error": "",
@@ -1388,7 +1396,7 @@
    "sha256": "85fea203811af7c372a69bdc75eed79fbd3cf0cc3fa11488f07809ad24e86415",
    "status": "same",
    "test": "239",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test23_reset_clear.rpgle": {
    "error": "",
@@ -1410,7 +1418,7 @@
    "sha256": "c4933a35d11656ffd9ba6857a4b7b7df7901b294077f0a40577015900dd18318",
    "status": "same",
    "test": "23",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test240_fixed_arith_trunc.rpgle": {
    "error": "",
@@ -1423,7 +1431,7 @@
    "sha256": "279c9aa99433fcbf49450236dd4f28d78d424fac215f0836f217a326fab6ff77",
    "status": "same",
    "test": "240",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test242_hex_nul.rpgle": {
    "error": "",
@@ -1438,7 +1446,7 @@
    "sha256": "4b8ded7659f2e4c8c1f5f55ac7493ce2961bcefda27463877d74d7a752cb3ae9",
    "status": "same",
    "test": "242",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test243_array_init.rpgle": {
    "error": "",
@@ -1452,7 +1460,7 @@
    "sha256": "2b15058d78c907a1020ba77ef2129f349c8c6c26cf6f3322fad2d9e52ccd6b3f",
    "status": "same",
    "test": "243",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test244_pi_star_n.rpgle": {
    "error": "",
@@ -1466,7 +1474,7 @@
    "sha256": "e7bc9b2705883b71a63ed85929e73b8318dde4d1de5b89f25df4461c07635408",
    "status": "same",
    "test": "244",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test245_bare_call.rpgle": {
    "error": "",
@@ -1478,7 +1486,7 @@
    "sha256": "291c51c23c0e984856da21e7e3c17a273b2c8c0a532f8e3054aba6967898dd44",
    "status": "same",
    "test": "245",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test246_const_params.rpgle": {
    "error": "",
@@ -1494,7 +1502,7 @@
    "sha256": "1923c6012b3a5c0bcb62396082d5e1a45437e6a29e13cc0fc568ec65426bf003",
    "status": "same",
    "test": "246",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test248_proc_no_pi.rpgle": {
    "error": "",
@@ -1506,7 +1514,7 @@
    "sha256": "1cf7537d122a8b0cdfbe8cca516bb9df0543c135054a567560f01f4dbed9ddee",
    "status": "same",
    "test": "248",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test249_ds_subfield_types.rpgle": {
    "error": "",
@@ -1519,7 +1527,7 @@
    "sha256": "44c86ccd6bd7b6260cca89735cfaae1694923108dbc305ecff8628127b227a63",
    "status": "same",
    "test": "249",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test24_max_min.rpgle": {
    "error": "",
@@ -1536,7 +1544,7 @@
    "sha256": "375db5d58ebb471adbf702aeabd3ae2fd74d9c99b6a9915449cee5a1cecdae6c",
    "status": "same",
    "test": "24",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test250_dcl_s_keywords.rpgle": {
    "error": "",
@@ -1552,7 +1560,7 @@
    "sha256": "ddf86b69188859f65971d950d81ad6d4a04dccbe9cbcde0dc004a66afe229e37",
    "status": "same",
    "test": "250",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test251_ds_template.rpgle": {
    "error": "",
@@ -1565,7 +1573,7 @@
    "sha256": "7b90144264613994066afc6c2ad6d40a04f7daa2022867e63ea6205b6c20b235",
    "status": "same",
    "test": "251",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test252_nested_target.rpgle": {
    "error": "",
@@ -1577,7 +1585,7 @@
    "sha256": "23c643605fd12d5a2a7fbe48f8add07b6cebf69b998ad5397882fb04bf7de87c",
    "status": "same",
    "test": "252",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test253_unqualified_subfields.rpgle": {
    "error": "",
@@ -1589,7 +1597,7 @@
    "sha256": "078dab2c8fd6388395b2321d06abbb713635c10348718e681df0b9efd8742e27",
    "status": "same",
    "test": "253",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test254_fixed_unqualified_ds.rpgle": {
    "error": "",
@@ -1600,7 +1608,7 @@
    "sha256": "e0408f7f4194ce02534db3d37f22059885cd7e295216685a1b1438faf51a4bfd",
    "status": "same",
    "test": "254",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test259_not_precedence.rpgle": {
    "error": "",
@@ -1613,7 +1621,7 @@
    "sha256": "e9d02657ff6a11ae0f1771c5afdec3a86ec51e5038437f72d38f7b991e3b5211",
    "status": "same",
    "test": "259",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test25_dclf.rpgle": {
    "error": "",
@@ -1623,7 +1631,7 @@
    "sha256": "122fb2af5af780f03218b975700f7323bcdfde97aa17a8bbdb84b9637646c5c4",
    "status": "same",
    "test": "25",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test267_compound_assign.rpgle": {
    "error": "",
@@ -1642,7 +1650,7 @@
    "sha256": "0913ca23fda4912e7e14742de4c2ab4c5e40eadd268997f0d9221484d9937a8d",
    "status": "same",
    "test": "267",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test268_inlr_indicator.rpgle": {
    "error": "",
@@ -1655,7 +1663,7 @@
    "sha256": "1bdf3795c36552aa573b648e7a0ff35610283f399ccb79cafe27d9dbbb60bf15",
    "status": "same",
    "test": "268",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test269_fixed_inlr.rpgle": {
    "error": "",
@@ -1666,7 +1674,7 @@
    "sha256": "b8107cd1d5e4cd52bbd2659f253e5a0499960717869584c104f1da9f44d43570",
    "status": "same",
    "test": "269",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test26_pointers.rpgle": {
    "error": "",
@@ -1680,7 +1688,7 @@
    "sha256": "55bf583c884f7386079c773172eeb20ce75f70be11d2ee98f337c9e9f5b2f60d",
    "status": "same",
    "test": "26",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test27_arrays.rpgle": {
    "error": "",
@@ -1695,7 +1703,7 @@
    "sha256": "9bf92eae44ecc782097f600df8bf6daf24f49793292fc433ca5fcbbad9aeb30e",
    "status": "same",
    "test": "27",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test282_ctdata.rpgle": {
    "error": "",
@@ -1711,7 +1719,7 @@
    "sha256": "f51dc55c1b9eb1d481db91cd705efeae5529c596b72638d1e7a1819cfccc5e97",
    "status": "same",
    "test": "282",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test283_fixed_ctdata.rpgle": {
    "error": "",
@@ -1723,7 +1731,7 @@
    "sha256": "164ee9bf621a357589da2ea11365d4ce6093467b7429db85523011aa2f98ee39",
    "status": "same",
    "test": "283",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test28_conditional.rpgle": {
    "error": "",
@@ -1736,7 +1744,7 @@
    "sha256": "b04766e1d48767826d2c6f17c4469bd0a5ebbee5c2de9562e0dcee6aeb09f840",
    "status": "same",
    "test": "28",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test29_dclsubf_parm.rpgle": {
    "error": "",
@@ -1749,7 +1757,7 @@
    "sha256": "c0d8d8f5e1013c5314eb562b5ac7eccb25a2552369659c4c9d3287f501fa86c2",
    "status": "same",
    "test": "29",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test302_ds_blank_inz.rpgle": {
    "error": "",
@@ -1764,7 +1772,7 @@
    "sha256": "8e9fe65f4295ecfbf98212262235350a4087cc90275afa6706fdeaab060120f7",
    "status": "same",
    "test": "302",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test303_edit_codes.rpgle": {
    "error": "",
@@ -1816,7 +1824,7 @@
    "sha256": "375dae4156ef34ee3c3dec8573b619d563e4246e7609b992218a7274cb05064f",
    "status": "same",
    "test": "303",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test305_on_error_codes.rpgle": {
    "error": "",
@@ -1830,7 +1838,7 @@
    "sha256": "c7597b3d2b6e095914e19e6ba17c5476aee4989739dbebf18697e419a1064d49",
    "status": "same",
    "test": "305",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test306_keyword_names.rpgle": {
    "error": "",
@@ -1842,7 +1850,7 @@
    "sha256": "5c8bb5c16d9265d78726f5cd0edfd4f5c918ec8f03a7d5314468c7aa3f181003",
    "status": "same",
    "test": "306",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test30_like.rpgle": {
    "error": "",
@@ -1854,7 +1862,7 @@
    "sha256": "612d5f93d921210592e53659e1ae9e5cbf5db1caad8538c35d1549be6c2ddec1",
    "status": "same",
    "test": "30",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test310_pssr_proc.rpgle": {
    "error": "",
@@ -1866,7 +1874,7 @@
    "sha256": "ec4db5a5323b9b72efa543b11bc8f98b7ac8c4c989d82e961fc2f29a90ca36f3",
    "status": "same",
    "test": "310",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test311_subst_range.rpgle": {
    "error": "",
@@ -1880,7 +1888,7 @@
    "sha256": "b226789ac67aa0d16b5a7e5c89ec083cf08744e24488ff8ca0497bf33f71e4ee",
    "status": "same",
    "test": "311",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test312_snd_msg_escape.rpgle": {
    "error": "",
@@ -1892,7 +1900,7 @@
    "sha256": "7c3e5a8eeccf07f9dc85cddd1e9855d4d4d1f659096725377e58e27f83a1056a",
    "status": "same",
    "test": "312",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test313_dump_debug.rpgle": {
    "error": "",
@@ -1902,7 +1910,7 @@
    "sha256": "b2e5d6b034d3bbd6b3d6c7c79c570bc8b0df8e84016e81d67aa9910bd9a5812d",
    "status": "same",
    "test": "313",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test314_dump_always.rpgle": {
    "error": "",
@@ -1912,7 +1920,7 @@
    "sha256": "2a74f75668308ae6cb93221dedae5efee3eed6cdad812c84cb8060923cfb585a",
    "status": "same",
    "test": "314",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test315_ds_position_overlap.rpgle": {
    "error": "",
@@ -1925,7 +1933,7 @@
    "sha256": "b80d0fdcaff53addd3bcf9973de0477d309989abfb455ca411d33b87f580bbb4",
    "status": "same",
    "test": "315",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test316_test_subfield.rpgle": {
    "error": "",
@@ -1938,7 +1946,7 @@
    "sha256": "2d260aad79b62ad12fec6989a7cd9c497b7bfa64a9f57faa8cabadd61d6df1fb",
    "status": "same",
    "test": "316",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test317_numeric_bif_char.rpgle": {
    "error": "",
@@ -1957,7 +1965,7 @@
    "sha256": "f69287dc5f9c985aeb93d1b2385a68f3d6c29ae68ee8a0940372f64f3a974680",
    "status": "same",
    "test": "317",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test318_fixed_inz_sys.rpgle": {
    "error": "",
@@ -1969,7 +1977,7 @@
    "sha256": "ed7c2388bb469016675c328e806784ea46cb48c1cfd61072339700f7207c7936",
    "status": "same",
    "test": "318",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test319_begsr_in_proc.rpgle": {
    "error": "",
@@ -1983,7 +1991,7 @@
    "sha256": "9ca563d85522c154fd07fda96205365c4c3d2819ebcd784816a238844eeea557",
    "status": "same",
    "test": "319",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test31_lookup_sorta.rpgle": {
    "error": "",
@@ -2004,7 +2012,7 @@
    "sha256": "31f06f993dbc233f2761378f3d6694c65b34086f517bf9bcbb3879b0222cfa29",
    "status": "same",
    "test": "31",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test320_ds_as_char.rpgle": {
    "error": "",
@@ -2022,7 +2030,7 @@
    "sha256": "b98a9b036193a7920d05be41c56251ed3f45b68c2d0bd3e017a2c9bfa3004244",
    "status": "same",
    "test": "320",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test321_ds_unnamed.rpgle": {
    "error": "",
@@ -2034,7 +2042,7 @@
    "sha256": "f0f744d263f0cd8c1b89c1d29d52f965c614bbdbe7f0914c3c30aec87e7aa438",
    "status": "same",
    "test": "321",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test322_fixed_ds_unnamed.rpgle": {
    "error": "",
@@ -2044,7 +2052,7 @@
    "sha256": "1c00cbee008f0bf5fe84b9e3fbdfc3ad0715c2cae46effb8324e1a9d7c7cdc4b",
    "status": "same",
    "test": "322",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test323_likeds_overlay.rpgle": {
    "error": "",
@@ -2057,7 +2065,7 @@
    "sha256": "504ccc16385c20387021096d4860f253aa4ce53e7b56061f95cc4a140060d2cd",
    "status": "same",
    "test": "323",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test32_editc_editw.rpgle": {
    "error": "",
@@ -2072,7 +2080,7 @@
    "sha256": "e17539897306e1f9d011c2aa0bbf094fa1abae6d3f1a8b40a090a54aa897f763",
    "status": "same",
    "test": "32",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test336_exit_status.rpgle": {
    "error": "CEE9901 Application error. RNX0233 unmonitored by RPGCXRUN at statement *N, instruction X'0000'..",
@@ -2082,7 +2090,7 @@
    "sha256": "d745382526aa461461ac78ad7fb72ebfc0e85a78f0164658bce42a3455001ac0",
    "status": "runtime-error",
    "test": "336",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test337_exit_status_set.rpgle": {
    "error": "",
@@ -2092,7 +2100,7 @@
    "sha256": "b36b27f83f97f96bf1930ee3a02acf27b80583198e3db7c8d87e0c32adb6bf03",
    "status": "same",
    "test": "337",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test338_extpgm_types.rpgle": {
    "error": "CEE9901 Application error. MCH3401 unmonitored by RPGCXRUN at statement 0000000048, instruction X'0000'..",
@@ -2100,7 +2108,7 @@
    "sha256": "af20de42042f048cf1becb50f88b060180686a6c1d63b55e310ee8dfa3dd908e",
    "status": "runtime-error",
    "test": "338",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test339_call_errors.rpgle": {
    "error": "CEE9901 Application error. MCH3401 unmonitored by RPGCXRUN at statement 0000000031, instruction X'0000'..",
@@ -2113,7 +2121,7 @@
    "sha256": "49a616d31e19331f21915e0809b9f11b4b491b992714a0bc6708f668ae2ee981",
    "status": "runtime-error",
    "test": "339",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test33_replace.rpgle": {
    "error": "",
@@ -2130,7 +2138,7 @@
    "sha256": "f877fa3930a5dfc560847ce49c59e27b8c69c37bcb6c55155707f1bc25bf2ae6",
    "status": "same",
    "test": "33",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test340_call_c_program.rpgle": {
    "error": "CEE9901 Application error. MCH3401 unmonitored by RPGCXRUN at statement 0000000013, instruction X'0000'..",
@@ -2138,7 +2146,7 @@
    "sha256": "56732642c092a41e1bff65d95c636b00a5f3a80334f255fade66bce47a6a9bb1",
    "status": "runtime-error",
    "test": "340",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test341_int_sizes.rpgle": {
    "error": "",
@@ -2157,7 +2165,7 @@
    "sha256": "4a235b7d9869e14a867129982bd84c9187f9e553b4e4d3c8a02463273ac5b043",
    "status": "same",
    "test": "341",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test343_fixed_int20.rpgle": {
    "error": "",
@@ -2168,7 +2176,7 @@
    "sha256": "e2d2b640a5b98982b7ae06dfdf30472ba64c8dd794496aaa8a9d0d5f30eff00c",
    "status": "same",
    "test": "343",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test344_ind_inz.rpgle": {
    "error": "",
@@ -2183,7 +2191,7 @@
    "sha256": "e93de3f1fabd45a258cd94f8869cd28d9cd99808c5041a2befb9f6f629888c01",
    "status": "same",
    "test": "344",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test345_fixed_ind_inz.rpgle": {
    "error": "",
@@ -2193,7 +2201,7 @@
    "sha256": "28b343bc8fcb455af49af4b3355d2fcbfd930ecdafe50d1ff9117541d316a53f",
    "status": "same",
    "test": "345",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test346_timestamp_duration.rpgle": {
    "error": "",
@@ -2213,7 +2221,7 @@
    "sha256": "5829a2bbf64bfe9ada75bd7519e7a172d9137c42b519167b955fe6be6232b9b1",
    "status": "same",
    "test": "346",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test347_ind_as_char.rpgle": {
    "error": "",
@@ -2232,7 +2240,7 @@
    "sha256": "4641b3e41d42e00a19a7e7fe87ebc555259928ef9577f79e75313d58a85d068e",
    "status": "same",
    "test": "347",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test348_date_month_end.rpgle": {
    "error": "",
@@ -2248,7 +2256,7 @@
    "sha256": "35297941f0d376088de45b02a42bcc5814eca87052e12de08b306ea9e1ff955e",
    "status": "same",
    "test": "348",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test34_check.rpgle": {
    "error": "",
@@ -2261,7 +2269,7 @@
    "sha256": "413835c0968f4fa00934ec5ec906cb6d162fcc2fadd72a5492e948dfab6f7707",
    "status": "same",
    "test": "34",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test35_evalcorr.rpgle": {
    "error": "",
@@ -2273,7 +2281,7 @@
    "sha256": "7d0f54e468aaad79ec11d44e455c44c1533d181da1c48a287c46e2efdfc36e43",
    "status": "same",
    "test": "35",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test361_in_array.rpgle": {
    "error": "",
@@ -2286,7 +2294,7 @@
    "sha256": "d11c4b069f70566c6daa90a81b9a20185dbc29a9704354b2d067ac81e9dadd10",
    "status": "same",
    "test": "361",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test368_elseif_directive.rpgle": {
    "error": "",
@@ -2297,7 +2305,7 @@
    "sha256": "30f70f9e4d1df1513553959d2f326bd44d88251b90c3f712013c78b3e2a0e995",
    "status": "same",
    "test": "368",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test36_ds_params.rpgle": {
    "error": "",
@@ -2308,7 +2316,7 @@
    "sha256": "69bb27ee43ad6fe00f229eb385a63512f048b83dff5ec3ed21d7fad9d0bd324f",
    "status": "same",
    "test": "36",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test374_proc_return_ind.rpgle": {
    "error": "",
@@ -2319,7 +2327,7 @@
    "sha256": "5b1ba7f09fbcd921f2805451296e230551a39f88973447d8a83c2551713d4a54",
    "status": "same",
    "test": "374",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test378_local_hides_global.rpgle": {
    "error": "",
@@ -2332,7 +2340,7 @@
    "sha256": "9f670fe7d24f31b8ee7d640904ed710d6a8933aa314f9cd3b53f721907db8252",
    "status": "same",
    "test": "378",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test379_subst_target.rpgle": {
    "error": "",
@@ -2350,7 +2358,7 @@
    "sha256": "11796b2d90f281d3e8f8b5c6ae62615d182855874e83f00c74375dbb1d39f3ae",
    "status": "same",
    "test": "379",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test37_inzsr.rpgle": {
    "error": "",
@@ -2361,7 +2369,7 @@
    "sha256": "3f1ff9a60d08f1bf66616052f8a02d761f4aad3f28217e7521d66570ed559c49",
    "status": "same",
    "test": "37",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test380_fixed_subst_target.rpgle": {
    "error": "",
@@ -2371,7 +2379,7 @@
    "sha256": "780d20bfc04b6e6b903caa5f6c0c6d68b5a734aa80bd7689b256d36566be7979",
    "status": "same",
    "test": "380",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test384_fixed_starts_with_directive.rpgle": {
    "error": "",
@@ -2382,7 +2390,7 @@
    "sha256": "f38b8db96d49b5baa515611ef46428986ddbaee4fa852657c5762b57dd94d6aa",
    "status": "same",
    "test": "384",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test385_fixed_starts_with_free.rpgle": {
    "error": "",
@@ -2393,7 +2401,7 @@
    "sha256": "f5eb8399bc2d6ac8cfeb56838395a318286b8f7758f5772a601afbfe54d7b51a",
    "status": "same",
    "test": "385",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test389_omit_args.rpgle": {
    "error": "",
@@ -2407,7 +2415,7 @@
    "sha256": "9ff9a76e7b2993806c69561740dc46b803b8b3e19f7ad47589bfb858e020acea",
    "status": "same",
    "test": "389",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test38_ctlopt.rpgle": {
    "error": "",
@@ -2417,7 +2425,7 @@
    "sha256": "370d0e2cd118e11b714e87201178720a95e2dd114e782effd00ae8ebee933b7a",
    "status": "same",
    "test": "38",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test396_scanrpl_portion.rpgle": {
    "error": "",
@@ -2432,7 +2440,7 @@
    "sha256": "97050ca2318d9fde2500203726a59a471381080d723a18a1ffe6e8a59d728d50",
    "status": "same",
    "test": "396",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test398_scanrpl_empty_scan.rpgle": {
    "error": "",
@@ -2442,7 +2450,7 @@
    "sha256": "15adf400970aab81cd023106ad55b582514153b5ad15a199a800cf3f612c7bd0",
    "status": "same",
    "test": "398",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test399_options_trim.rpgle": {
    "error": "",
@@ -2454,7 +2462,7 @@
    "sha256": "2a020f941a0d349ac449ff3d81edc72f50f6aba3d275d3df6ea4bbc0ec0542d6",
    "status": "same",
    "test": "399",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test39_figconst.rpgle": {
    "error": "",
@@ -2468,7 +2476,7 @@
    "sha256": "596f4c6905a7267bfbf88d229a6bb61c5c89097d91ca4c0416bb2e93cf3a9a52",
    "status": "same",
    "test": "39",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test408_ds_column.rpgle": {
    "error": "",
@@ -2485,7 +2493,7 @@
    "sha256": "d765a2291d85eaa232e1fd9dde014727691070b0c98b85a46c5f01310711721d",
    "status": "same",
    "test": "408",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test40_evalr_leavesr.rpgle": {
    "error": "",
@@ -2496,7 +2504,7 @@
    "sha256": "a8e22ead3de7e93244c7f96da6d3b4d1c1178254cc6d0a3c724d221fe846224c",
    "status": "same",
    "test": "40",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test414_proc_forward.rpgle": {
    "error": "",
@@ -2506,7 +2514,7 @@
    "sha256": "d3c00814cbf3508de4249b5469d38eb5b5dee4b54cffc54e4f828879249662bf",
    "status": "same",
    "test": "414",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test41_string_bifs.rpgle": {
    "error": "",
@@ -2522,7 +2530,7 @@
    "sha256": "6b40af2cd9c5c7fe44595892e1789b320d927dee32773b890c929b8cb474d7de",
    "status": "same",
    "test": "41",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test423_bit_chars.rpgle": {
    "error": "",
@@ -2540,7 +2548,7 @@
    "sha256": "0c12c27ffaba62ebb4d473ef77d2f63c822953e84ceebedf79cd06cc74c5dd1e",
    "status": "same",
    "test": "423",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test426_auto_next.rpgle": {
    "error": "",
@@ -2553,7 +2561,7 @@
    "sha256": "5e5a358b6d4a7a1950f3aac2668807ef938f77c6f937aae87dbfd74eb6b54839",
    "status": "same",
    "test": "426",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test42_onexit.rpgle": {
    "error": "",
@@ -2565,7 +2573,7 @@
    "sha256": "7126373e9444295f059d855968d2797e8cab584ba6501bef4c1260c78eedaf63",
    "status": "same",
    "test": "42",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test431_select_when_is.rpgle": {
    "error": "",
@@ -2581,7 +2589,7 @@
    "sha256": "fe55b9b1b58530b78415625ef2a35f327095f3417d3d80b04006bf32ce4fc781",
    "status": "same",
    "test": "431",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test439_fixed_cspec_move_dt_unmonitored.rpgle": {
    "error": "CEE9901 Application error. RNX0112 unmonitored by RPGCXRUN at statement 0000000009, instruction X'0000'..",
@@ -2591,7 +2599,7 @@
    "sha256": "cf60afb2f8159a984059375cb3ed839ded710c3916c1ca6f521acda600effb02",
    "status": "runtime-error",
    "test": "439",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test43_static.rpgle": {
    "error": "",
@@ -2603,7 +2611,7 @@
    "sha256": "ac8cfa8cdbebd7c511f4904528f82f7a049597cc975dd99b1abbfb3ca659009e",
    "status": "same",
    "test": "43",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test440_fixed_cspec_move_bad_digit.rpgle": {
    "error": "CEE9901 Application error. MCH1202 unmonitored by RPGCXRUN at statement 0000000029, instruction X'0000'..",
@@ -2616,7 +2624,7 @@
    "sha256": "a91945a55a7ec9d4a27aa3fc255b77e320f005a2209054c3b3710e75a54ec4ed",
    "status": "runtime-error",
    "test": "440",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test441_fixed_ispec_rid_persist.rpgle": {
    "error": "",
@@ -2629,7 +2637,63 @@
    "sha256": "d0b7ee46e349d7255a747f0deed2e0ce33c128ef81050bab37b4ace4b9bd25f9",
    "status": "same",
    "test": "441",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
+  },
+  "test442_like_subfield.rpgle": {
+   "error": "",
+   "output": [
+    "[       ] 7                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              ",
+    "[xy     ]                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                ",
+    "2.25                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     ",
+    "[abcdefg] 7                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              ",
+    "4.50                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     ",
+    "[klmnopq]                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                ",
+    "3.14                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     "
+   ],
+   "sha256": "6c0f9b2eefa1d00d1fd1db6604cace432dae4c7b2d265bedd1ae68900811fe7a",
+   "status": "same",
+   "test": "442",
+   "verified": "2026-10-27"
+  },
+  "test445_overload_with_prototypes.rpgle": {
+   "error": "",
+   "output": [
+    "int 5                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    ",
+    "text x                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   "
+   ],
+   "sha256": "adca1b38e9bc6fdd55eb638f13ec370c4faaefec619a7935784837a5395a8532",
+   "status": "same",
+   "test": "445",
+   "verified": "2026-10-27"
+  },
+  "test447_likeds_dim_subfield.rpgle": {
+   "error": "",
+   "output": [
+    "ITEM1     10                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             ",
+    "ITEM2     20                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             ",
+    "ITEM3     30                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             ",
+    "SPARE     99                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             ",
+    "spare(1) [          ] 0                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  ",
+    "codes 5 6                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                ",
+    "elem 3 2                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 ",
+    "size 77 13 13                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            ",
+    "cleared [          ] 0                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   ",
+    "[          ] 0 codes 0                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   "
+   ],
+   "sha256": "6290299bd1225e62ebd14122551b822b99acc7705bf00214bc4b9e72b3706486",
+   "status": "same",
+   "test": "447",
+   "verified": "2026-10-27"
+  },
+  "test448_fixed_dspec_likeds_dim.rpgle": {
+   "error": "",
+   "output": [
+    "        43                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               "
+   ],
+   "sha256": "77b298288bdbed8882c7e6fce1cc86a06081ec83afada5dabce046ea6e90f4c2",
+   "status": "same",
+   "test": "448",
+   "verified": "2026-10-27"
   },
   "test44_alloc.rpgle": {
    "error": "",
@@ -2641,7 +2705,7 @@
    "sha256": "b72d62d505c531cd113c0581cc338dcad9c14f6465f90d8f9e8704286ebcd29e",
    "status": "same",
    "test": "44",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test45_array_bifs.rpgle": {
    "error": "",
@@ -2651,7 +2715,7 @@
    "sha256": "7287e294abddd32ea09ae64299a1e29b454c12bea069ed6d568b9149dc408da2",
    "status": "same",
    "test": "45",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test46_options.rpgle": {
    "error": "",
@@ -2662,7 +2726,7 @@
    "sha256": "833c7693b7cb014d179cff8a2035dfd06a8087df1ca73d49a12b0702229dd650",
    "status": "same",
    "test": "46",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test47_test.rpgle": {
    "error": "",
@@ -2678,7 +2742,7 @@
    "sha256": "c2bf976e4178605c8fa8f4dd18932e19a3ab0d705880b28e91de15e632bfb96b",
    "status": "same",
    "test": "47",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test50_numeric_bifs.rpgle": {
    "error": "",
@@ -2692,7 +2756,7 @@
    "sha256": "0b84c54c565d05a1cb91097ac7251e1ea1b5cd6547fdb53c17c1119e851ecc68",
    "status": "same",
    "test": "50",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test51_string_bifs.rpgle": {
    "error": "",
@@ -2704,7 +2768,7 @@
    "sha256": "527b20557d7ed206f77dcc56c120710fa99acb202bb6834dcaa556609f31dc21",
    "status": "same",
    "test": "51",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test52_array_bifs.rpgle": {
    "error": "",
@@ -2717,7 +2781,7 @@
    "sha256": "d3b858f9c44233a790dd3f417637dce43a5b7ef3fe849c7198d828c9cf35045f",
    "status": "same",
    "test": "52",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test53_datetime_bifs.rpgle": {
    "error": "",
@@ -2731,7 +2795,7 @@
    "sha256": "908abcfb3eb63b60f9c885d6aa8c71aafbe73f7001b929579f1e98f8bc2095e6",
    "status": "same",
    "test": "53",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test54_memory_bifs.rpgle": {
    "error": "",
@@ -2742,7 +2806,7 @@
    "sha256": "7f855977083ce66d6e0306e3bc1e0804137ec68f9e37cb5bce6eb347a4b85276",
    "status": "same",
    "test": "54",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test55_figconst.rpgle": {
    "error": "",
@@ -2754,7 +2818,7 @@
    "sha256": "987c9ebf8a331725e0aaa475c7082b0da069b58e2787d30e5eb39403bf36888e",
    "status": "same",
    "test": "55",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test56_ctlopt_main.rpgle": {
    "error": "",
@@ -2765,7 +2829,7 @@
    "sha256": "1515003fdaa76871103448180ea379d577777efabda1eb3652a117c516c42397",
    "status": "same",
    "test": "56",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test57_datfmt.rpgle": {
    "error": "",
@@ -2777,7 +2841,7 @@
    "sha256": "7b8fe5d1604643b5c91aabbac83b98fbd66cfe9576e3b53c50d492455b93c746",
    "status": "same",
    "test": "57",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test58_foreach_in.rpgle": {
    "error": "",
@@ -2792,7 +2856,7 @@
    "sha256": "9b3f34fc3176ef3e5574cc05a1aab3f21df1e6642633a51c9a37e82886e4dae6",
    "status": "same",
    "test": "58",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test59_passed_omitted.rpgle": {
    "error": "",
@@ -2803,7 +2867,7 @@
    "sha256": "dabbe2e33be75b93e6ff0a41f1f0b6deb03f808029cb0f8cc2b23b9102df43f9",
    "status": "same",
    "test": "59",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test60_datatypes.rpgle": {
    "error": "",
@@ -2817,7 +2881,7 @@
    "sha256": "179a80c6fa2d4883fbb8899fb42ffcd7220306d332bf3ab0cb4a1f7fc6ac960f",
    "status": "same",
    "test": "60",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test62_overlay_pos.rpgle": {
    "error": "",
@@ -2831,7 +2895,7 @@
    "sha256": "65d619400064711da997c50a8cd58bd3bdb8011a49b2ca902813cb08bcfab519",
    "status": "same",
    "test": "62",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test64_omit.rpgle": {
    "error": "",
@@ -2841,7 +2905,7 @@
    "sha256": "463698f29ca50dffe983a55fbc04fb0699a3e2c51ce12b3aabd6ccdca1633344",
    "status": "same",
    "test": "64",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test65_actgrp.rpgle": {
    "error": "",
@@ -2851,7 +2915,7 @@
    "sha256": "3c49958da23f1e1fb8d26f9533089ffdb8dc1ed7a7b4ce80aadb85451591c890",
    "status": "same",
    "test": "65",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test66_pssr.rpgle": {
    "error": "",
@@ -2861,7 +2925,7 @@
    "sha256": "33a0271f05a3f4d28a4518c0576f6af919a180c615740ef862f4839caa326f67",
    "status": "same",
    "test": "66",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test67_pssr_error.rpgle": {
    "error": "CEE9901 Application error. RNX9001 unmonitored by RPGCXRUN at statement *N, instruction X'0000'..",
@@ -2872,7 +2936,7 @@
    "sha256": "9d25ff9946e9ad68aa93e1da25174039c215a7acae5bbb94c80b35739a4cca22",
    "status": "runtime-error",
    "test": "67",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test68_bitwise_power.rpgle": {
    "error": "",
@@ -2887,7 +2951,7 @@
    "sha256": "800e9cbb33812c7209b35a1c3b978c627d9ef99d173731df02fe397ef2db1f73",
    "status": "same",
    "test": "68",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test69_scanr.rpgle": {
    "error": "",
@@ -2904,7 +2968,7 @@
    "sha256": "fc732b8110ff9ed4a9b8b12e0a5c5a87c2b7bcd41e1978bdf3c77e99ef137c90",
    "status": "same",
    "test": "69",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test70_editflt_unsh.rpgle": {
    "error": "",
@@ -2918,7 +2982,7 @@
    "sha256": "942cd5a0307abbbb6d1a2b6ec32395b1ce4aee85faf31943880a2ac81f84bb0d",
    "status": "same",
    "test": "70",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test71_enum_boolean.rpgle": {
    "error": "",
@@ -2933,7 +2997,7 @@
    "sha256": "fd77caf85bd8ada5b4bf866c52c03a2a2b96d6cdfed79b1cf0f8d63eab757837",
    "status": "same",
    "test": "71",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test72_dim_var.rpgle": {
    "error": "",
@@ -2946,7 +3010,7 @@
    "sha256": "5c045a8dd9dc5b005292635bb516c259130aae7c4badc53a43e0d473202fe01b",
    "status": "same",
    "test": "72",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test73_date_formats.rpgle": {
    "error": "",
@@ -2956,7 +3020,7 @@
    "sha256": "3e4eef7f355abe9ee440fcb5580c4ea4986e1794a4e72e951ea75a52c74800e7",
    "status": "same",
    "test": "73",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test74_concat.rpgle": {
    "error": "",
@@ -2969,7 +3033,7 @@
    "sha256": "8dfbfe1eb27df5e7a034ea574661a52763da2b1a7be309348326548ce3496406",
    "status": "same",
    "test": "74",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test75_tlookup_elem.rpgle": {
    "error": "",
@@ -2983,7 +3047,7 @@
    "sha256": "efcc239b0f3169e1740aee6389bddf5fba1c922d7f3660dc65a7b93f6a3d77e2",
    "status": "same",
    "test": "75",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test76_ds_dim_var.rpgle": {
    "error": "",
@@ -2997,7 +3061,7 @@
    "sha256": "4dbcbd43a6fe8dfc0628070409d7e8d67983f4feb25eb303829175a26ee9f52d",
    "status": "same",
    "test": "76",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test87.rpgle": {
    "error": "",
@@ -3029,7 +3093,7 @@
    "sha256": "8e35419586951c734a3b9eb297153f8c5334f94a7285b42726e95dc8ace5682c",
    "status": "same",
    "test": "87",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test88.rpgle": {
    "error": "",
@@ -3046,7 +3110,7 @@
    "sha256": "dd78b08d8be44fbc3f199e9ef2106198c70678a1c4a8e5593bb97034ddf42113",
    "status": "same",
    "test": "88",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test89.rpgle": {
    "error": "",
@@ -3065,7 +3129,7 @@
    "sha256": "a69fc66f056c4433621572b59320010e2f7ea7a9df063becd2a790bf9fd8adfc",
    "status": "same",
    "test": "89",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test90_psds_basic.rpgle": {
    "error": "",
@@ -3081,7 +3145,7 @@
    "sha256": "2b149898e717b56538dbf131265da611d1cecec97f8063b00e3fbfb2c880a670",
    "status": "same",
    "test": "90",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test91_psds_monitor.rpgle": {
    "error": "",
@@ -3094,7 +3158,7 @@
    "sha256": "ac432bc2904fffcd8d74f948eb6451d2532291ce36cec2f869031a8aca7b4bfd",
    "status": "same",
    "test": "91",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test92_data_area_lda.rpgle": {
    "error": "",
@@ -3104,7 +3168,7 @@
    "sha256": "e4baa78e3cf6d78366ae3f3df15222ccb4c3216a4521117cdd0796c11ad5e409",
    "status": "same",
    "test": "92",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test93_data_area_named.rpgle": {
    "error": "",
@@ -3118,7 +3182,7 @@
    "sha256": "b8358649cea9e65a2f015b5a005d3c9b83762d907a0b9571611ad2cd82e67194",
    "status": "same",
    "test": "93",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test94_extender_h.rpgle": {
    "error": "",
@@ -3131,7 +3195,7 @@
    "sha256": "3f3dc5057adb9b392e06148b6e7d33066e20db0c17bcf585a09ab504b4e0c1c9",
    "status": "same",
    "test": "94",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test95_extender_e.rpgle": {
    "error": "",
@@ -3142,7 +3206,7 @@
    "sha256": "b328a954218b9b389d972896f3bca305225382ab8de7b7b222a2db618c282b2d",
    "status": "same",
    "test": "95",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test96_da_status401.rpgle": {
    "error": "",
@@ -3153,7 +3217,7 @@
    "sha256": "b2609299bdcbbb712f1e66a2c94aacb6001bfbec7ff6ccb58b220b1302377214",
    "status": "same",
    "test": "96",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   },
   "test99_data_into.rpgle": {
    "error": "CEE9901 Application error. RNX0355 unmonitored by RPGCXRUN at statement 0000000032, instruction X'0000'..",
@@ -3161,10 +3225,10 @@
    "sha256": "eda4d8b3210d38c0793647b423c39cb19ad23e7443a4fcc92835487a6300f506",
    "status": "runtime-error",
    "test": "99",
-   "verified": "2026-10-21"
+   "verified": "2026-10-27"
   }
  },
- "generated": "2026-10-21",
+ "generated": "2026-10-27",
  "skipped": [
   [
    "test332_extfile_usropn.rpgle",
@@ -3312,6 +3376,14 @@
   ],
   [
    "test438_fixed_message_directive.rpgle",
+   "IBM i does not compile it"
+  ],
+  [
+   "test443_like_nested_subfield.rpgle",
+   "IBM i does not compile it"
+  ],
+  [
+   "test446_overload_ind.rpgle",
    "IBM i does not compile it"
   ],
   [

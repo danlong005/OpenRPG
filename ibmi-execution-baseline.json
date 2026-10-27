@@ -1285,7 +1285,7 @@
    "verified": "2026-10-27"
   },
   "test228_exsr_order.rpgle": {
-   "error": "test228_exsr_order.rpgle after 60s, ending job 295832/QUSER/QP0ZSPWT",
+   "error": "test228_exsr_order.rpgle after 60s, ending job 306370/QUSER/QP0ZSPWT",
    "output": [],
    "sha256": "de6d78bdf7f84ba40bc4c19da234fff3ac400cfc8623d2b103efe7d0c97ef351",
    "status": "timeout",
@@ -2171,7 +2171,7 @@
     "halt indicator: 231                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      ",
     "normal: 2                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                "
    ],
-   "sha256": "49a616d31e19331f21915e0809b9f11b4b491b992714a0bc6708f668ae2ee981",
+   "sha256": "0c6ef2fb759e8541e1461e499e7bba1cc78c88a61bdaf3029f4c549a026b1f44",
    "status": "same",
    "test": "339",
    "verified": "2026-10-27"
@@ -2760,6 +2760,21 @@
    "sha256": "b72d62d505c531cd113c0581cc338dcad9c14f6465f90d8f9e8704286ebcd29e",
    "status": "same",
    "test": "44",
+   "verified": "2026-10-27"
+  },
+  "test453_cycle_repeat.rpgle": {
+   "error": "",
+   "output": [
+    "pass 1                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   ",
+    "after 1                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  ",
+    "pass 2                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   ",
+    "after 2                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  ",
+    "pass 3                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   ",
+    "after 3                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  "
+   ],
+   "sha256": "8eba42ae09ea3675340b20431ad5e037584ec625b3bb35da24d14b787e896522",
+   "status": "same",
+   "test": "453",
    "verified": "2026-10-27"
   },
   "test45_array_bifs.rpgle": {

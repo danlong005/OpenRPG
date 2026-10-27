@@ -152,7 +152,10 @@ private:
     std::string current_proc_name_;
     const DclProc* current_proc_node_ = nullptr;   // the procedure being emitted
     std::map<std::string, int> based_ds_len_;       // a BASED data structure's length in bytes
+    std::set<std::string> based_view_names_;        // the views made for LIKEDS subfields of one
+    std::vector<std::unique_ptr<DclDS>> synthetic_ds_;  // and the layouts they own
     std::set<std::string> global_decl_names_;       // the main source section's standalone fields
+    std::map<std::string, const DclS*> global_dcls_; // and their declarations
     // True while emitting a function with no return value, so a bare RPG
     // RETURN emits `return;` rather than `return 0;` (which does not
     // compile in a void function). Set for a DCL-PROC with no return type
@@ -348,6 +351,9 @@ private:
     const DclDS* dsInitPlan(const DclDS& ds, bool& dft, bool& subf) const;
     void emitLocalDsInstance(const DclDS& node);
     void emitBasedDs(DclDS& node);
+    int emitViewStruct(DclDS& node, bool root);
+    std::string accessorPath(const std::string& qname) const;
+    std::string unqualArray(const std::string& name) const;
     void emitBasedDsInstance(const DclDS& node);
     bool pointerDeclared(const std::string& name) const;
     void emitClearDs(const std::string& target, const std::string& decl,

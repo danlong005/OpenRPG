@@ -1046,6 +1046,7 @@ void CodeGen::visit(Program& node) {
         } else {
             // Check if this is an EXPORT or IMPORT DclS — goes at file scope
             auto* dcls = dynamic_cast<DclS*>(stmt.get());
+            if (dcls) { global_dcls_[dcls->name] = dcls; global_decl_names_.insert(dcls->name); }
             if (dcls && (dcls->is_export || dcls->is_import)) {
                 export_decls.push_back(stmt.get());
             } else {
@@ -1182,9 +1183,6 @@ void CodeGen::visit(Program& node) {
         }
     }
 
-    for (auto* s : global_decls) {
-        if (auto* d = dynamic_cast<DclS*>(s)) global_decl_names_.insert(d->name);
-    }
     for (auto* s : global_decls) {
         emitLineDirective(s->line);
         s->accept(*this);
@@ -2652,6 +2650,11 @@ CodeGen::FieldAttrs CodeGen::attrsOf(const Expression& e) const {
     if (!arrName.empty()) {
         size_t dotPos = arrName.find('.');
         if (dotPos == std::string::npos) {
+            std::string q = unqualArray(arrName);
+            if (!q.empty()) {
+                ArrayAccess qa(q, std::make_unique<IntLiteral>(1));
+                return attrsOf(qa);
+            }
             if (!array_vars_.count(arrName) || ds_defs_.count(arrName)) return a;
             Identifier id(arrName);
             return attrsOf(id);
@@ -3814,21 +3817,92 @@ void CodeGen::visit(DclDS& node) {
 // through %ADDR(*IN), or storage from %ALLOC. The instance holds the
 // pointer's address and follows it as it changes (emitBasedDsInstance).
 void CodeGen::emitBasedDs(DclDS& node) {
-    std::map<std::string, int> from_of;
-    int next = 1, extent = 0;
-    out_ << "struct " << node.name << "_t {   // BASED(" << node.based_ptr << ")\n";
-    out_ << "    void** __pp = nullptr;\n";
-    out_ << "    char* __at() const { return rpg_based_at(__pp ? *__pp : nullptr); }\n";
+    based_ds_len_[node.name] = emitViewStruct(node, true);
+    if (in_procedure_) emitBasedDsInstance(node);
+}
+
+// The view struct for a BASED data structure (root: its bytes are at the
+// pointer) or for a LIKEDS subfield inside one (its bytes are at an
+// address the enclosing view gives it). A LIKEDS subfield's layout is
+// copied into a synthetic data structure of its own, emitted first, so
+// that ds.sub.field finds accessors all the way down. Returns the length.
+int CodeGen::emitViewStruct(DclDS& node, bool root) {
+    // LIKE takes the declaration it names; LIKEDS a view type of its own.
     for (auto& f : node.fields) {
         int line = f.line ? f.line : node.line;
-        if (!f.likeds.empty() || !f.like_var.empty() || f.dim > 0) {
-            report_semantic_error(line, "Subfield " + f.name + " of BASED data structure " + node.name +
-                ": LIKEDS, LIKE and DIM subfields are not supported in a BASED data structure yet");
-            continue;
+        if (!f.like_var.empty()) {
+            std::string like = f.like_var;
+            size_t dot = like.find('.');
+            if (dot != std::string::npos && like.substr(0, dot) == node.name) like = like.substr(dot + 1);
+            bool found = false;
+            for (auto& g : node.fields)
+                if (&g != &f && g.name == like && g.like_var.empty() && g.likeds.empty()) {
+                    f.type = g.type; f.length = g.length; f.digits = g.digits; f.decimals = g.decimals;
+                    found = true;
+                    break;
+                }
+            if (!found) {
+                FieldAttrs a = attrsOfName(like);
+                if (!a.known && var_types_.count(like)) {
+                    a.known = true;
+                    a.type = var_types_[like];
+                    a.length = var_lengths_.count(like) ? var_lengths_[like] : 0;
+                    a.digits = var_digits_.count(like) ? var_digits_[like] : 0;
+                    a.decimals = var_decimals_.count(like) ? var_decimals_[like] : 0;
+                } else if (!a.known && global_dcls_.count(like)) {
+                    // A main-section field, declared after the data
+                    // structures are emitted.
+                    const DclS* d = global_dcls_[like];
+                    if (d->like_var.empty()) {
+                        a.known = true;
+                        a.type = d->type; a.length = d->length; a.digits = d->digits; a.decimals = d->decimals;
+                    }
+                }
+                if (!a.known) {
+                    report_semantic_error(line, "LIKE(" + f.like_var + ") on subfield " + f.name +
+                        ": no field of that name is declared before it (IBM: RNF7030)");
+                    continue;
+                }
+                f.type = a.type; f.length = a.length; f.digits = a.digits; f.decimals = a.decimals;
+            }
+            f.like_var.clear();
         }
-        int bytes = subfieldBytes(f);
+        if (!f.likeds.empty() && !based_view_names_.count(f.likeds)) {
+            const DclDS* parent = resolveDsDef(f.likeds);
+            if (!parent) {
+                report_semantic_error(line, "LIKEDS(" + f.likeds + ") on subfield " + f.name +
+                    ": no data structure of that name is declared (IBM: RNF7030)");
+                continue;
+            }
+            auto view = std::make_unique<DclDS>(node.name + "__" + f.name);
+            view->fields = parent->fields;
+            view->qualified = true;
+            view->based_ptr = "*VIEW";
+            view->line = node.line;
+            DclDS* v = view.get();
+            synthetic_ds_.push_back(std::move(view));
+            ds_defs_[v->name] = v;
+            based_view_names_.insert(v->name);
+            based_ds_len_[v->name] = emitViewStruct(*v, false);
+            f.likeds = v->name;
+        }
+    }
+
+    std::map<std::string, int> from_of;
+    int next = 1, extent = 0;
+    std::ostringstream body;
+    for (auto& f : node.fields) {
+        int line = f.line ? f.line : node.line;
+        DSField elem = f;
+        elem.dim = 0;
+        int one = !f.likeds.empty() ? based_ds_len_[f.likeds] : subfieldBytes(elem);
+        if (one == 0) continue;   // reported above, or a type with no size
+        int bytes = one * (f.dim > 0 ? f.dim : 1);
         int from;
-        if (!f.overlay_field.empty()) {
+        if (f.overlay_field == node.name) {
+            // OVERLAY(ds:pos): at that position of the data structure itself.
+            from = f.overlay_pos > 0 ? f.overlay_pos : 1;
+        } else if (!f.overlay_field.empty()) {
             auto b = from_of.find(f.overlay_field);
             if (b == from_of.end()) {
                 report_semantic_error(line, "OVERLAY(" + f.overlay_field + ") on subfield " + f.name +
@@ -3842,44 +3916,69 @@ void CodeGen::emitBasedDs(DclDS& node) {
         }
         from_of[f.name] = from;
         extent = std::max(extent, from + bytes - 1);
-        std::string at = "__at() + " + std::to_string(from - 1);
+
+        // The view of one element at address p, and its C++ type.
+        std::string type, make;
         char kind = 0;
-        switch (f.type) {
+        if (!f.likeds.empty()) {
+            type = f.likeds + "_t";
+            make = type + "{p}";
+        } else switch (f.type) {
             case RPGType::CHAR:
-                out_ << "    RpgCharOverlay " << f.name << "() const { return RpgCharOverlay(__at(), "
-                     << from << ", " << bytes << "); }\n";
+                type = "RpgCharOverlay";
+                make = "RpgCharOverlay(p, 1, " + std::to_string(one) + ")";
                 break;
             case RPGType::IND:
-                out_ << "    RpgIndView " << f.name << "() const { return RpgIndView(" << at << "); }\n";
+                type = "RpgIndView";
+                make = "RpgIndView(p)";
+                break;
+            case RPGType::INT10: case RPGType::UNS:
+                type = "RpgImgInt";
+                make = "RpgImgInt(p, " + std::to_string(one) + ", " +
+                       (f.type == RPGType::UNS ? "true" : "false") + ")";
                 break;
             case RPGType::ZONED:  kind = 'Z'; break;
             case RPGType::PACKED: kind = 'P'; break;
-            case RPGType::INT10: case RPGType::UNS:
-                out_ << "    RpgImgInt " << f.name << "() const { return RpgImgInt(" << at << ", " << bytes
-                     << ", " << (f.type == RPGType::UNS ? "true" : "false") << "); }\n";
-                break;
             case RPGType::BINDEC: kind = 'B'; break;
             case RPGType::FLOAT4: case RPGType::FLOAT8: kind = 'F'; break;
             default:
                 report_semantic_error(line, "Subfield " + f.name + " of BASED data structure " + node.name +
-                    ": only character, indicator and numeric subfields are supported in a BASED "
-                    "data structure yet");
+                    ": only character, indicator and numeric subfields, and data structures "
+                    "of them, are supported in a BASED data structure yet");
                 continue;
         }
-        if (kind)
-            out_ << "    RpgImgNum " << f.name << "() const { return RpgImgNum(" << at << ", " << bytes
-                 << ", '" << kind << "', " << f.digits << ", " << f.decimals << "); }\n";
+        if (kind) {
+            type = "RpgImgNum";
+            make = "RpgImgNum(p, " + std::to_string(one) + ", '" + kind + "', " +
+                   std::to_string(f.digits) + ", " + std::to_string(f.decimals) + ")";
+        }
+        std::string at = "__at() + " + std::to_string(from - 1);
+        if (f.dim > 0)
+            body << "    auto " << f.name << "() const { return rpg_view_array<" << type << ">(" << at
+                 << ", " << one << ", " << f.dim << ", [](char* p) { return " << make << "; }); }\n";
+        else
+            body << "    " << type << " " << f.name << "() const { char* p = " << at << "; return "
+                 << make << "; }\n";
         overlay_subfields_[node.name].insert(f.name);
     }
     int len = node.len > 0 ? node.len : extent;
-    based_ds_len_[node.name] = len;
     if (node.len > 0 && extent > node.len)
         report_semantic_error(node.line, "Data structure " + node.name + " is LEN(" + std::to_string(node.len) +
             "), but its subfields reach position " + std::to_string(extent) + " (IBM: RNF3577)");
+
+    out_ << "struct " << node.name << "_t {   // " << (root ? "BASED(" + node.based_ptr + ")" : std::string("a view")) << "\n";
+    if (root) {
+        out_ << "    void** __pp = nullptr;\n";
+        out_ << "    char* __at() const { return rpg_based_at(__pp ? *__pp : nullptr); }\n";
+    } else {
+        out_ << "    char* __b = nullptr;\n";
+        out_ << "    char* __at() const { return __b; }\n";
+    }
+    out_ << body.str();
     out_ << "    std::string rpg_chars() const { return std::string(__at(), " << len << "); }\n";
-    out_ << "    void rpg_set_chars(const std::string& s) { rpg_based_put(__at(), s, " << len << "); }\n";
+    out_ << "    void rpg_set_chars(const std::string& s) const { rpg_based_put(__at(), s, " << len << "); }\n";
     out_ << "};\n";
-    if (in_procedure_) emitBasedDsInstance(node);
+    return len;
 }
 
 // Whether a pointer of this name is declared where a BASED data structure
@@ -4109,7 +4208,50 @@ void CodeGen::visit(ArrayAccess& node) {
         expr_ << elemRef(node.name, "(static_cast<int>(" + node.name + ".size()) + 1)");
         return;
     }
-    expr_ << elemRef(node.name, subExpr(*node.index));
+    if (node.name.find('.') == std::string::npos) {
+        std::string q = unqualArray(node.name);
+        if (!q.empty()) { expr_ << elemRef(accessorPath(q), subExpr(*node.index)); return; }
+    }
+    expr_ << elemRef(accessorPath(node.name), subExpr(*node.index));
+}
+
+// A bare name that is a DIM subfield of a data structure without
+// QUALIFIED, as "DS.NAME"; "" for any other name. Its elements are
+// written NAME(i), with no data structure name.
+std::string CodeGen::unqualArray(const std::string& name) const {
+    if (var_types_.count(name) || array_vars_.count(name)) return "";
+    auto uq = unqualified_subfields_.find(name);
+    if (uq == unqualified_subfields_.end()) return "";
+    const DclDS* ds = resolveDsDef(uq->second);
+    if (!ds) return "";
+    for (auto& f : ds->fields)
+        if (f.name == name && f.dim > 0) return uq->second + "." + name;
+    return "";
+}
+
+// A qualified name as C++ spells it: a subfield that is an accessor (an
+// OVERLAY subfield, or any subfield of a BASED data structure) is called,
+// DS.SUB().FLD(), at each step of the chain.
+std::string CodeGen::accessorPath(const std::string& qname) const {
+    size_t dot = qname.find('.');
+    if (dot == std::string::npos) return qname;
+    std::string out = qname.substr(0, dot);
+    const DclDS* cur = resolveDsDef(out);
+    while (dot != std::string::npos) {
+        size_t next = qname.find('.', dot + 1);
+        std::string field = qname.substr(dot + 1, next == std::string::npos ? std::string::npos : next - dot - 1);
+        out += "." + field;
+        const DclDS* inner = nullptr;
+        if (cur) {
+            auto ov = overlay_subfields_.find(cur->name);
+            if (ov != overlay_subfields_.end() && ov->second.count(field)) out += "()";
+            for (auto& f : cur->fields)
+                if (f.name == field && !f.likeds.empty()) inner = resolveDsDef(f.likeds);
+        }
+        cur = inner;
+        dot = next;
+    }
+    return out;
 }
 
 // RPG indexes from 1, and an index outside the array is an error (status
@@ -4837,7 +4979,17 @@ void CodeGen::visit(ClearStmt& node) {
         }
         FieldAttrs a;
         if (whole) {
-            ArrayAccess elem(target, std::make_unique<IntLiteral>(1));
+            // One element's declaration, by the subfield's RPG name.
+            std::function<std::string(const Expression&)> qname = [&](const Expression& x) -> std::string {
+                if (auto* id = dynamic_cast<const Identifier*>(&x)) return id->name;
+                if (auto* d = dynamic_cast<const DotExpr*>(&x)) {
+                    std::string b = qname(*d->object);
+                    return b.empty() ? "" : b + "." + d->field;
+                }
+                return "";
+            };
+            std::string q = qname(e);
+            ArrayAccess elem(q.empty() ? target : q, std::make_unique<IntLiteral>(1));
             a = attrsOf(elem);
         } else {
             a = attrsOf(e);
@@ -4848,8 +5000,20 @@ void CodeGen::visit(ClearStmt& node) {
         }
         std::string def = fieldTypeDefault(a.type, a.length);
         emitIndent();
-        if (whole) out_ << "for (auto& __e : " << target << ") __e = " << def << ";\n";
+        if (whole) out_ << "for (auto&& __e : " << target << ") __e = " << def << ";\n";
         else out_ << target << " = " << def << ";\n";
+        return;
+    }
+    // A bare DIM subfield of a data structure without QUALIFIED is that
+    // subfield, every element of it.
+    if (std::string q = unqualArray(node.var_name); !q.empty()) {
+        node.target = std::make_unique<DotExpr>(std::make_unique<Identifier>(q.substr(0, q.find('.'))),
+                                                node.var_name);
+        node.var_name.clear();
+        bool saved = in_bare_subfield_;
+        in_bare_subfield_ = true;   // written bare, which is right without QUALIFIED
+        visit(node);
+        in_bare_subfield_ = saved;
         return;
     }
     const std::string& name = node.var_name;
@@ -4886,7 +5050,7 @@ void CodeGen::emitClearDs(const std::string& target, const std::string& decl,
     if (isArray) {
         elem = "__c" + std::to_string(depth);
         emitIndent();
-        out_ << "for (auto& " << elem << " : " << target << ") {\n";
+        out_ << "for (auto&& " << elem << " : " << target << ") {\n";
         indent_++;
     }
     // CLEAR of a BASED data structure first blanks all its bytes, those no
@@ -4898,11 +5062,17 @@ void CodeGen::emitClearDs(const std::string& target, const std::string& decl,
     }
     for (const auto& f : layout.fields) {
         if (!layout.based_ptr.empty()) {
-            // Every subfield of a BASED data structure is a view; an
-            // OVERLAY one is cleared through the subfield it overlays.
-            if (!f.overlay_field.empty()) continue;
+            // Every subfield of a BASED data structure is a view, an
+            // OVERLAY one too, and each gets its default in turn.
+            std::string ft = elem + "." + f.name + "()";
+            if (!f.likeds.empty()) {
+                if (const DclDS* sub = resolveDsDef(f.likeds))
+                    emitClearDs(ft, f.likeds, *sub, f.dim > 0, depth + 1);
+                continue;
+            }
             emitIndent();
-            out_ << elem << "." << f.name << "() = " << fieldTypeDefault(f.type, f.length) << ";\n";
+            if (f.dim > 0) out_ << "for (auto&& __e : " << ft << ") __e = " << fieldTypeDefault(f.type, f.length) << ";\n";
+            else out_ << ft << " = " << fieldTypeDefault(f.type, f.length) << ";\n";
             continue;
         }
         if (!f.overlay_field.empty()) continue;   // a view onto a subfield cleared here
@@ -5746,6 +5916,10 @@ void CodeGen::visit(FuncCall& node) {
     if (array_vars_.count(node.name) && node.args.size() == 1) {
         expr_ << elemRef(node.name, subExpr(*node.args[0]));
         return;
+    }
+    if (node.args.size() == 1 && !proc_sigs_.count(node.name)) {
+        std::string q = unqualArray(node.name);
+        if (!q.empty()) { expr_ << elemRef(accessorPath(q), subExpr(*node.args[0])); return; }
     }
     // An overloaded name calls the one candidate the arguments fit.
     const std::string target = overloads_.count(node.name) ? resolveOverload(node) : node.name;

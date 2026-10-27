@@ -1063,6 +1063,10 @@ run_test "455" "The *IN array: *IN(i), *IN = value, CLEAR *IN" "$TESTDIR/test455
 run_test "456" "A data structure BASED on %ADDR(*IN); %LOOKUP over *IN" "$TESTDIR/test456_based_ind_ds.rpgle" "run"
 run_test "457" "BASED data structures over %ALLOC storage" "$TESTDIR/test457_based_ds_alloc.rpgle" "run"
 run_test "458" "Fixed: a data structure BASED on %ADDR(*IN)" "$TESTDIR/test458_fixed_based_ind_ds.rpgle" "run"
+run_test "459" "DIM, LIKE and LIKEDS subfields of BASED data structures" "$TESTDIR/test459_based_dim_likeds.rpgle" "run"
+run_test "460" "BASED: bare DIM subfields, nested LIKEDS" "$TESTDIR/test460_based_bare_dim_nested.rpgle" "run"
+run_test "461" "Fixed: DIM subfields of a BASED data structure, OVERLAY(ds:pos)" "$TESTDIR/test461_fixed_based_dim_overlay.rpgle" "run"
+run_test "462" "A bare DIM subfield of an unqualified data structure" "$TESTDIR/test462_unqual_dim_subfield.rpgle" "run"
 
 printf "Test 436w: /MESSAGE warnings are shown            "
 w436=$($RPGC -S "$TESTDIR/test436_message_directive.rpgle" -o "$TMPDIR/test436w.cpp" 2>&1 >/dev/null)

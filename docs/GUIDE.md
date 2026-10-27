@@ -616,8 +616,20 @@ rec.qty = 12.5;
 IBM i does: an indicator under a character subfield is left blank, which
 `%CHAR` shows. Using a BASED data structure while its pointer is `*NULL` is
 status 222. Its
-subfields can be character, indicator or numeric; a `LIKEDS`, `LIKE` or `DIM`
-subfield inside one is not supported yet. `%ADDR` of an ordinary field points
+subfields can be character, indicator or numeric, and can be `LIKE` another
+field, have `DIM`, or be `LIKEDS` another data structure, as an array too:
+
+```rpgle
+DCL-DS inds LEN(99) BASED(pInd);
+  fkeys IND DIM(24) POS(1);       // fkeys(3) is *IN03
+END-DS;
+
+DCL-DS buf BASED(pBuf) QUALIFIED;
+  lines LIKEDS(line_t) DIM(10);   // buf.lines(2).qty
+END-DS;
+```
+
+`%ADDR` of an ordinary field points
 at rpgc's own representation of it, not at IBM i's bytes, so a BASED data
 structure over one does not see its value.
 

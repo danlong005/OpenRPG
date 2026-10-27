@@ -925,6 +925,40 @@ inline auto& rpg_elem(A& a, I index) {
         rpg_raise(121, "RNX0121: Array index not valid.");
     return a[static_cast<size_t>(i - 1)];
 }
+
+// A DIM subfield of a BASED data structure: n elements of `bytes` each at
+// `at`, each one a view (an RpgIndView, an RpgCharOverlay, a nested data
+// structure's view...) that `make` builds on the spot. It is indexed and
+// iterated like an array, by value.
+template <class V, class Make>
+struct RpgViewArray {
+    char* at;
+    int bytes;
+    int n;
+    Make make;
+    std::size_t size() const { return static_cast<std::size_t>(n); }
+    V operator[](std::size_t i) const { return make(at + i * static_cast<std::size_t>(bytes)); }
+    struct iterator {
+        const RpgViewArray* a;
+        std::size_t i;
+        V operator*() const { return (*a)[i]; }
+        iterator& operator++() { ++i; return *this; }
+        bool operator!=(const iterator& o) const { return i != o.i; }
+    };
+    iterator begin() const { return {this, 0}; }
+    iterator end() const { return {this, size()}; }
+};
+template <class V, class Make>
+inline RpgViewArray<V, Make> rpg_view_array(char* at, int bytes, int n, Make make) {
+    return {at, bytes, n, make};
+}
+template <class V, class Make, class I>
+inline V rpg_elem(const RpgViewArray<V, Make>& a, I index) {
+    long long i = static_cast<long long>(index);
+    if (i < 1 || i > static_cast<long long>(a.size()))
+        rpg_raise(121, "RNX0121: Array index not valid.");
+    return a[static_cast<size_t>(i - 1)];
+}
 // DIM(*AUTO:max): an index past the current end extends the array, up to
 // its maximum; new elements take the array's initial value.
 template <class V, class I, class T>
@@ -1000,7 +1034,7 @@ inline int rpg_caught_status() {
 // *IN(i): the indicator's slot, i being one of 01-99; any other index is
 // status 121, as for an array.
 inline int rpg_ind_index(long long i) {
-    if (i < 1 || i > 99) rpg_raise(121, "RNX0121: An array index is out of range.");
+    if (i < 1 || i > 99) rpg_raise(121, "RNX0121: Array index not valid.");
     return static_cast<int>(i);
 }
 

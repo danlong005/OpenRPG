@@ -1634,9 +1634,11 @@ Found alongside, both done 2026-10-27 after probing PUB400:
   outside 1-99), *IN = value and CLEAR *IN. Then BASED data structures
   (free and fixed, with LEN), indicators held as '0'/'1' bytes so one can
   be based on %ADDR(*IN), %LOOKUP over *IN, and a pointer's INZ, which was
-  dropped (tests 456-458). Not done: LIKEDS, LIKE or DIM subfields inside
-  a BASED data structure; and the indicators U1-U8, KA-KY, L1-L9, MR, RT,
-  1P, OA-OG, OV, which IBM i takes and rpgc will not (2026-10-27).
+  dropped (tests 456-458); then LIKEDS, LIKE and DIM subfields inside
+  one, OVERLAY(ds:pos) on one, and bare DIM subfields of any data
+  structure without QUALIFIED, which were a compile error (tests 459-462).
+  Not done: the indicators U1-U8, KA-KY, L1-L9, MR, RT, 1P, OA-OG, OV,
+  which IBM i takes and rpgc will not (2026-10-27).
 
 ### BOOLEAN removed, DCL-ENUM in IBM's syntax (2026-09-24)
 

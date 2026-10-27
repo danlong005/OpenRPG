@@ -733,18 +733,25 @@
    "verified": "2026-10-27"
   },
   "test175_fixed_cspec_call_parm.rpgle": {
-   "error": "CEE9901 Application error. MCH3401 unmonitored by RPGCXRUN at statement 0000000007, instruction X'0000'..",
-   "output": [],
+   "error": "",
+   "output": [
+    "42                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       ",
+    "called                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   ",
+    "100                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      ",
+    "101                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      "
+   ],
    "sha256": "a94b47088a9b9d73c273cdfeba989d606f61d213f6e0304d65fb2515fb237aff",
-   "status": "runtime-error",
+   "status": "same",
    "test": "175",
    "verified": "2026-10-27"
   },
   "test177_fixed_cspec_call_var.rpgle": {
-   "error": "CEE9901 Application error. MCH3401 unmonitored by RPGCXRUN at statement 0000000008, instruction X'0000'..",
-   "output": [],
+   "error": "",
+   "output": [
+    "10 called                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                "
+   ],
    "sha256": "7b2d89f51efe4848c66510ab15fec8b748fc089b3b9a02143e12df7a8c02b284",
-   "status": "runtime-error",
+   "status": "same",
    "test": "177",
    "verified": "2026-10-27"
   },
@@ -882,18 +889,36 @@
    "verified": "2026-10-27"
   },
   "test197_fixed_cspec_plist.rpgle": {
-   "error": "CEE9901 Application error. MCH3401 unmonitored by RPGCXRUN at statement 0000000012, instruction X'0000'..",
-   "output": [],
+   "error": "",
+   "output": [
+    "[11]                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     ",
+    "[12]                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     ",
+    "[13]                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     ",
+    "[13]                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     ",
+    "[14]                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     ",
+    "[called    ]                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             "
+   ],
    "sha256": "c4ae0cb004e9246b1e593ec11c8dcd9ee2852e5706c6646248f6fd0d4b1ac63a",
-   "status": "runtime-error",
+   "status": "same",
    "test": "197",
    "verified": "2026-10-27"
   },
   "test198_fixed_cspec_parm_f1f2.rpgle": {
-   "error": "CEE9901 Application error. MCH3401 unmonitored by RPGCXRUN at statement 0000000020, instruction X'0000'..",
-   "output": [],
+   "error": "",
+   "output": [
+    "[41]                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     ",
+    "[42]                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     ",
+    "[42]                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     ",
+    "[seeded    ]                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             ",
+    "[called    ]                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             ",
+    "[called    ]                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             ",
+    "[101]                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    ",
+    "[-1]                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     ",
+    "[102]                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    ",
+    "[102]                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    "
+   ],
    "sha256": "3d6b0218cae5898a14d21c14ab5e0611f03e33226bacf251b55517b3d6a5c017",
-   "status": "runtime-error",
+   "status": "same",
    "test": "198",
    "verified": "2026-10-27"
   },
@@ -914,18 +939,26 @@
    "verified": "2026-10-27"
   },
   "test204_fixed_cspec_entry_caller.rpgle": {
-   "error": "CEE9901 Application error. MCH3401 unmonitored by RPGCXRUN at statement 0000000008, instruction X'0000'..",
-   "output": [],
+   "error": "",
+   "output": [
+    "[42]                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     ",
+    "[entered   ]                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             ",
+    "[44]                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     "
+   ],
    "sha256": "5b11f9ffe91f9b37a414b644d8653a02cec5982330bcc81275cac2c5bf586f1b",
-   "status": "runtime-error",
+   "status": "same",
    "test": "204",
    "verified": "2026-10-27"
   },
   "test205_fixed_cspec_entry_f2.rpgle": {
-   "error": "CEE9901 Application error. MCH3401 unmonitored by RPGCXRUN at statement 0000000020, instruction X'0000'..",
-   "output": [],
+   "error": "",
+   "output": [
+    "1 40 returned                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            ",
+    "2 41 returned                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            ",
+    "3 45 returned                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            "
+   ],
    "sha256": "550c39044f5a0b569015e0eb769ee26b94dd0a0ffb4a12a048951e6113c74f98",
-   "status": "runtime-error",
+   "status": "same",
    "test": "205",
    "verified": "2026-10-27"
   },
@@ -1110,12 +1143,21 @@
    "verified": "2026-10-27"
   },
   "test218_prog_payroll.rpgle": {
-   "error": "CEE9901 Application error. MCH3401 unmonitored by RPGCXRUN at statement 0000000121, instruction X'0000'..",
+   "error": "",
    "output": [
-    "PAYROLL REGISTER  PERIOD ENDING 2026-06-30                                                                                                                                                                                                                                                                                                                                                                                                                                                                               "
+    "PAYROLL REGISTER  PERIOD ENDING 2026-06-30                                                                                                                                                                                                                                                                                                                                                                                                                                                                               ",
+    "E001 SMITH J    855.00 TAX 155.10 NET 699.90                                                                                                                                                                                                                                                                                                                                                                                                                                                                             ",
+    "E002 JONES A    868.50 TAX 174.57 NET 693.93                                                                                                                                                                                                                                                                                                                                                                                                                                                                             ",
+    "E003 BROWN K    1,250.00 TAX 225.50 NET 1,024.50                                                                                                                                                                                                                                                                                                                                                                                                                                                                         ",
+    "E004 DAVIS M    899.00 TAX 197.78 NET 701.22                                                                                                                                                                                                                                                                                                                                                                                                                                                                             ",
+    "E005 WILSON T   540.00 TAX 52.80 NET 487.20                                                                                                                                                                                                                                                                                                                                                                                                                                                                              ",
+    "---- TOTALS ----                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         ",
+    "GROSS 4,412.50  TAX 805.75                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               ",
+    "NET   3,606.75                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           ",
+    "OVERTIME HOURS 17.50 ON 2 EMPLOYEES                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      "
    ],
    "sha256": "d1b6bf7dd2935fd7bf17d6a485c8eeeff82c7d4732c041b06a5afa80ef58885e",
-   "status": "runtime-error",
+   "status": "same",
    "test": "218",
    "verified": "2026-10-27"
   },
@@ -1243,7 +1285,7 @@
    "verified": "2026-10-27"
   },
   "test228_exsr_order.rpgle": {
-   "error": "test228_exsr_order.rpgle after 60s, ending job 245404/QUSER/QP0ZSPWT",
+   "error": "test228_exsr_order.rpgle after 60s, ending job 295832/QUSER/QP0ZSPWT",
    "output": [],
    "sha256": "de6d78bdf7f84ba40bc4c19da234fff3ac400cfc8623d2b103efe7d0c97ef351",
    "status": "timeout",
@@ -2103,23 +2145,34 @@
    "verified": "2026-10-27"
   },
   "test338_extpgm_types.rpgle": {
-   "error": "CEE9901 Application error. MCH3401 unmonitored by RPGCXRUN at statement 0000000048, instruction X'0000'..",
-   "output": [],
+   "error": "",
+   "output": [
+    "callee got k=KEY1                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        ",
+    "c=[abc!    ] v=[hello world]                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             ",
+    "i5=-123 i10=-80000 i20=900001                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            ",
+    "u=4000000001 p=-1235.56 z=12.34                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          ",
+    "f=250                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    ",
+    "flag turned off                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          ",
+    "d=2024-02-29 t=00.15.00                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  ",
+    "ts=2025-01-01-00.00.00.000000                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            ",
+    "rec=NEW 15 -99.50                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        "
+   ],
    "sha256": "af20de42042f048cf1becb50f88b060180686a6c1d63b55e310ee8dfa3dd908e",
-   "status": "runtime-error",
+   "status": "same",
    "test": "338",
    "verified": "2026-10-27"
   },
   "test339_call_errors.rpgle": {
-   "error": "CEE9901 Application error. MCH3401 unmonitored by RPGCXRUN at statement 0000000031, instruction X'0000'..",
+   "error": "",
    "output": [
     "not found: 211                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           ",
     "CALLP(E): 211 1                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          ",
-    "ended in error: 211                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      ",
-    "halt indicator: 211                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      "
+    "ended in error: 202                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      ",
+    "halt indicator: 231                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      ",
+    "normal: 2                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                "
    ],
    "sha256": "49a616d31e19331f21915e0809b9f11b4b491b992714a0bc6708f668ae2ee981",
-   "status": "runtime-error",
+   "status": "same",
    "test": "339",
    "verified": "2026-10-27"
   },
@@ -2141,10 +2194,12 @@
    "verified": "2026-10-27"
   },
   "test340_call_c_program.rpgle": {
-   "error": "CEE9901 Application error. MCH3401 unmonitored by RPGCXRUN at statement 0000000013, instruction X'0000'..",
-   "output": [],
+   "error": "",
+   "output": [
+    "144 [from C      ] -246.90                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               "
+   ],
    "sha256": "56732642c092a41e1bff65d95c636b00a5f3a80334f255fade66bce47a6a9bb1",
-   "status": "runtime-error",
+   "status": "same",
    "test": "340",
    "verified": "2026-10-27"
   },

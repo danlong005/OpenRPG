@@ -3532,9 +3532,9 @@
   "test339_call_errors.rpgle": {
    "codes": [],
    "rpgc": "accept",
-   "sha256": "49a616d31e19331f21915e0809b9f11b4b491b992714a0bc6708f668ae2ee981",
+   "sha256": "0c6ef2fb759e8541e1461e499e7bba1cc78c88a61bdaf3029f4c549a026b1f44",
    "verdict": "accept",
-   "verified": "2026-10-06"
+   "verified": "2026-10-27"
   },
   "test33_replace.rpgle": {
    "codes": [],
@@ -6400,12 +6400,102 @@
    "verdict": "accept",
    "verified": "2026-10-27"
   },
+  "test449_err_ind_never_set.rpgle": {
+   "codes": [
+    "RNF7030",
+    "RNF7503"
+   ],
+   "messages": [
+    {
+     "code": "RNF7503",
+     "line": 5,
+     "severity": 30,
+     "text": "Expression contains an operand that is not defined."
+    },
+    {
+     "code": "RNF7030",
+     "line": 5,
+     "severity": 30,
+     "text": "The name or indicator *IN55 is not defined."
+    }
+   ],
+   "reason": "Undefined name, cause not reported by IBM (RNF7503)",
+   "reason_detail": "line 5: Expression contains an operand that is not defined.",
+   "rpgc": "reject",
+   "sha256": "45cc554b0d66bd64cf025955bdc94dfe68d95ccf877224282c731e27cc382f64",
+   "verdict": "reject",
+   "verified": "2026-10-27"
+  },
   "test44_alloc.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "b72d62d505c531cd113c0581cc338dcad9c14f6465f90d8f9e8704286ebcd29e",
    "verdict": "accept",
    "verified": "2026-09-25"
+  },
+  "test450_fixed_err_ind_never_set.rpgle": {
+   "codes": [
+    "RNF7030"
+   ],
+   "messages": [
+    {
+     "code": "RNF7030",
+     "line": 3,
+     "severity": 30,
+     "text": "The name or indicator *IN55 is not defined."
+    }
+   ],
+   "reason": "Undefined name, cause not reported by IBM (RNF7030)",
+   "reason_detail": "line 3: The name or indicator *IN55 is not defined.",
+   "rpgc": "reject",
+   "sha256": "0cae7bf9bbcf9d92f186f310ceeb8cc2e96b177d930a03f2db394a949a360683",
+   "verdict": "reject",
+   "verified": "2026-10-27"
+  },
+  "test451_fixed_err_factor1_not_left.rpgle": {
+   "codes": [
+    "RNF0262"
+   ],
+   "messages": [
+    {
+     "code": "RNF0262",
+     "line": 5,
+     "severity": 20,
+     "text": "Entry not left-adjusted; defaults to left-adjusted."
+    }
+   ],
+   "reason": "RNF0262: Entry not left-adjusted; defaults to left-adjusted.",
+   "reason_detail": "line 5: Entry not left-adjusted; defaults to left-adjusted. \u2014 `C       X           ADD       1             Y`",
+   "rpgc": "reject",
+   "sha256": "b9be32568d92d792fdce0a40789fc8a62210aec78dcb6ab56c9ad3887bf2baf2",
+   "verdict": "reject",
+   "verified": "2026-10-27"
+  },
+  "test452_fixed_err_result_not_left.rpgle": {
+   "codes": [
+    "RNF0262"
+   ],
+   "messages": [
+    {
+     "code": "RNF0262",
+     "line": 5,
+     "severity": 20,
+     "text": "Entry not left-adjusted; defaults to left-adjusted."
+    }
+   ],
+   "reason": "RNF0262: Entry not left-adjusted; defaults to left-adjusted.",
+   "reason_detail": "line 5: Entry not left-adjusted; defaults to left-adjusted. \u2014 `C     X             ADD       1               Y`",
+   "rpgc": "reject",
+   "sha256": "eff44ccdc354365b1b98eb31d659da149c0b52d9b08611cd8cfb29d892dc06ac",
+   "verdict": "reject",
+   "verified": "2026-10-27"
+  },
+  "test453_cycle_repeat.rpgle": {
+   "codes": [],
+   "rpgc": "accept",
+   "sha256": "8eba42ae09ea3675340b20431ad5e037584ec625b3bb35da24d14b787e896522",
+   "verdict": "accept",
+   "verified": "2026-10-27"
   },
   "test45_array_bifs.rpgle": {
    "codes": [],
@@ -6918,5 +7008,5 @@
    "verified": "2026-09-25"
   }
  },
- "generated": "2026-10-27T15:41:57+00:00"
+ "generated": "2026-10-27T17:47:46+00:00"
 }

@@ -13,6 +13,9 @@
 #include <set>
 #include <sstream>
 
+// The *IN array used as such (parser.y): %ADDR(*IN) is one way.
+extern bool g_ind_array_used;
+
 namespace rpg {
 namespace fixed {
 
@@ -566,6 +569,21 @@ static Expression* parseInzValue(const std::string& text, int lineNo,
     std::string v = trim(text);
     if (v.empty()) return nullptr;
 
+    // A pointer's INZ(%ADDR(name)), or INZ(%ADDR(*IN)): the indicators,
+    // any of which may then be set through the pointer.
+    std::string up = upper(v);
+    if (up.rfind("%ADDR(", 0) == 0 && up.back() == ')') {
+        std::string arg = trim(up.substr(6, up.size() - 7));
+        std::vector<std::unique_ptr<Expression>> args;
+        if (arg == "*IN") {
+            g_ind_array_used = true;
+            args.push_back(std::make_unique<IndicatorExpr>(IndicatorExpr::ARRAY));
+        } else {
+            args.push_back(std::make_unique<Identifier>(arg));
+        }
+        return new BIFCall("ADDR", std::move(args));
+    }
+
     if (v[0] == '*') {
         std::string fig = upper(v);
         if (fig == "*BLANK" || fig == "*BLANKS") return new Identifier("RPG_BLANKS");
@@ -683,6 +701,13 @@ static void handleDSpecLine(Program* program, DSpecState& state,
         if (it != kw.end()) ds->extname = it->second;
         it = kw.find("DIM");
         if (it != kw.end() && !it->second.empty()) ds->dim = atoi(it->second.c_str());
+        // BASED(ptr): the data structure is the bytes at ptr. Its length,
+        // if given, is in positions 33-39 as LEN(n) gives it free-form.
+        it = kw.find("BASED");
+        if (it != kw.end()) ds->based_ptr = upper(trim(it->second));
+        it = kw.find("LEN");
+        if (it != kw.end() && !it->second.empty()) ds->len = atoi(it->second.c_str());
+        if (toLen > 0) ds->len = toLen;
         // INZ on the DS: without it the storage starts as blanks, as on
         // IBM i; with it every subfield starts at its type's default.
         it = kw.find("INZ");

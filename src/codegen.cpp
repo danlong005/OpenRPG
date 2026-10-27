@@ -1162,7 +1162,7 @@ void CodeGen::visit(Program& node) {
     out_ << "\nnamespace { // module globals — visible to every subprocedure\n";
     indent_ = 0;
     at_file_scope_ = true;
-    out_ << "bool rpg_indicators[100] = {};\n";
+    out_ << "RpgInd rpg_indicators[100] = {};\n";
     out_ << "bool rpg_inlr = false;   // *INLR\n";
 
     // DS instances. Only the declaration belongs out here; anything that has
@@ -1171,7 +1171,7 @@ void CodeGen::visit(Program& node) {
         auto* ds = dynamic_cast<DclDS*>(s);
         // TEMPLATE: the struct type exists for LIKEDS to name, but there is
         // no data structure of this name to store into.
-        if (ds->is_template) continue;
+        if (ds->is_template || !ds->based_ptr.empty()) continue;
         std::string type_name = ds->like_ds.empty() ? ds->name + "_t" : ds->like_ds + "_t";
         if (ds->dim > 0 && (ds->dim_type == 1 || ds->dim_type == 2)) {
             out_ << "std::vector<" << type_name << "> " << ds->name << ";\n";
@@ -1183,8 +1183,16 @@ void CodeGen::visit(Program& node) {
     }
 
     for (auto* s : global_decls) {
+        if (auto* d = dynamic_cast<DclS*>(s)) global_decl_names_.insert(d->name);
+    }
+    for (auto* s : global_decls) {
         emitLineDirective(s->line);
         s->accept(*this);
+    }
+    // BASED data structures, after the fields their pointers may be.
+    for (auto* s : ds_stmts) {
+        auto* ds = dynamic_cast<DclDS*>(s);
+        if (!ds->based_ptr.empty() && !ds->is_template) emitBasedDsInstance(*ds);
     }
     // INZ on the program's data structures: run before main, after every
     // global and constant an initial value could name.
@@ -1719,6 +1727,8 @@ void CodeGen::visit(DclProc& node) {
     out_ << (nested ? ") -> " + ret + " {\n" : ") {\n");
     indent_ = base + 1;
     in_procedure_ = true;
+    const DclProc* saved_proc_node = current_proc_node_;
+    current_proc_node_ = &node;
     const_params_.clear();
     // A procedure's own declarations are local to it. The attribute tables
     // are flat maps keyed by name, so without this a local that shares a
@@ -1962,6 +1972,7 @@ void CodeGen::visit(DclProc& node) {
         }
     }
     in_procedure_ = false;
+    current_proc_node_ = saved_proc_node;
     const_params_.clear();
     current_return_attrs_ = FieldAttrs{};
     var_types_    = std::move(saved_types);
@@ -2486,7 +2497,9 @@ void CodeGen::visit(DclS& node) {
             out_ << ";\n";
             break;
         case RPGType::POINTER:
-            out_ << "void* " << node.name << " = nullptr;\n";
+            // INZ(%ADDR(field)) or INZ(*NULL), as IBM i allows a pointer.
+            out_ << "void* " << node.name << " = "
+                 << (node.inz_value ? emitInzValue(node) : std::string("nullptr")) << ";\n";
             break;
         case RPGType::UNS: {
             std::string t = typeToString(node.type, node.length, node.digits);
@@ -3326,7 +3339,46 @@ std::string CodeGen::fieldTypeDefault(RPGType type, int length) {
     return "0";
 }
 
+// A subfield's length in bytes in the data structure: its declared type's
+// size on IBM i, times its DIM. 0 when it cannot be worked out here.
+static int subfieldBytes(const DSField& f) {
+    int n = 0;
+    switch (f.type) {
+        case RPGType::CHAR:     n = f.length; break;
+        case RPGType::VARCHAR:  n = f.length + 2; break;
+        case RPGType::UCS2:     n = f.length * 2; break;
+        case RPGType::ZONED:    n = f.digits; break;
+        case RPGType::PACKED:   n = f.digits / 2 + 1; break;
+        case RPGType::INT10: case RPGType::UNS:
+            n = f.digits <= 3 ? 1 : f.digits <= 5 ? 2 : f.digits <= 10 ? 4 : 8; break;
+        case RPGType::BINDEC:   n = f.digits <= 4 ? 2 : f.digits <= 9 ? 4 : 8; break;
+        case RPGType::FLOAT4:   n = 4; break;
+        case RPGType::FLOAT8:   n = 8; break;
+        case RPGType::IND:      n = 1; break;
+        case RPGType::DATE:     n = 10; break;
+        case RPGType::TIME:     n = 8; break;
+        case RPGType::TIMESTAMP: n = 26; break;
+        case RPGType::POINTER:  n = 16; break;
+        default: return 0;
+    }
+    return n * (f.dim > 0 ? f.dim : 1);
+}
+
 void CodeGen::visit(DclDS& node) {
+    // BASED with LIKEDS: the layout is the parent's, laid over the bytes at
+    // the pointer, so the subfields are copied in and it is emitted as a
+    // BASED data structure of its own (always qualified, as LIKEDS is).
+    if (!node.based_ptr.empty() && !node.like_ds.empty()) {
+        if (const DclDS* parent = resolveDsDef(node.like_ds)) {
+            node.fields = parent->fields;
+            node.qualified = true;
+            node.like_ds.clear();
+        } else {
+            report_semantic_error(node.line, "LIKEDS(" + node.like_ds + ") on " + node.name +
+                ": no data structure of that name is declared (IBM: RNF7030)");
+            return;
+        }
+    }
     // A subfield has a place in the structure's bytes, so a length.
     for (const auto& f : node.fields)
         if (f.type == RPGType::VARCHAR && f.length == 0 && f.overlay_field.empty())
@@ -3383,6 +3435,8 @@ void CodeGen::visit(DclDS& node) {
         }
     }
 
+    if (!node.based_ptr.empty()) { emitBasedDs(node); return; }
+
     // A subfield placed by position (fixed-form From/To, free-form POS)
     // inside the bytes of an earlier character subfield shares those bytes,
     // just as OVERLAY would: on IBM i `TEXT 1 3A` and `NUM 1 3S 0` are two
@@ -3395,28 +3449,7 @@ void CodeGen::visit(DclDS& node) {
     // time), for rpg_chars() below.
     std::map<std::string, int> img_from;
     {
-        auto bytesOf = [](const DSField& f) -> int {
-            int n = 0;
-            switch (f.type) {
-                case RPGType::CHAR:     n = f.length; break;
-                case RPGType::VARCHAR:  n = f.length + 2; break;
-                case RPGType::UCS2:     n = f.length * 2; break;
-                case RPGType::ZONED:    n = f.digits; break;
-                case RPGType::PACKED:   n = f.digits / 2 + 1; break;
-                case RPGType::INT10: case RPGType::UNS:
-                    n = f.digits <= 3 ? 1 : f.digits <= 5 ? 2 : f.digits <= 10 ? 4 : 8; break;
-                case RPGType::BINDEC:   n = f.digits <= 4 ? 2 : f.digits <= 9 ? 4 : 8; break;
-                case RPGType::FLOAT4:   n = 4; break;
-                case RPGType::FLOAT8:   n = 8; break;
-                case RPGType::IND:      n = 1; break;
-                case RPGType::DATE:     n = 10; break;
-                case RPGType::TIME:     n = 8; break;
-                case RPGType::TIMESTAMP: n = 26; break;
-                case RPGType::POINTER:  n = 16; break;
-                default: return 0;
-            }
-            return n * (f.dim > 0 ? f.dim : 1);
-        };
+        auto bytesOf = subfieldBytes;
         struct Span { std::string name; int from, to; };
         std::vector<Span> charSpans;
         int next = 1;           // where a subfield without a position starts
@@ -3775,8 +3808,109 @@ void CodeGen::visit(DclDS& node) {
 // A data structure declared in a procedure: its storage is local, so the
 // instance is declared (and initialized) where the declaration is. Program
 // level ones are declared with the module globals (visit(Program)).
+// A data structure BASED(ptr): a struct of views onto the bytes at ptr,
+// one accessor per subfield (as OVERLAY subfields are), in IBM i's byte
+// formats, so it reads and writes whatever the pointer addresses -- *IN
+// through %ADDR(*IN), or storage from %ALLOC. The instance holds the
+// pointer's address and follows it as it changes (emitBasedDsInstance).
+void CodeGen::emitBasedDs(DclDS& node) {
+    std::map<std::string, int> from_of;
+    int next = 1, extent = 0;
+    out_ << "struct " << node.name << "_t {   // BASED(" << node.based_ptr << ")\n";
+    out_ << "    void** __pp = nullptr;\n";
+    out_ << "    char* __at() const { return rpg_based_at(__pp ? *__pp : nullptr); }\n";
+    for (auto& f : node.fields) {
+        int line = f.line ? f.line : node.line;
+        if (!f.likeds.empty() || !f.like_var.empty() || f.dim > 0) {
+            report_semantic_error(line, "Subfield " + f.name + " of BASED data structure " + node.name +
+                ": LIKEDS, LIKE and DIM subfields are not supported in a BASED data structure yet");
+            continue;
+        }
+        int bytes = subfieldBytes(f);
+        int from;
+        if (!f.overlay_field.empty()) {
+            auto b = from_of.find(f.overlay_field);
+            if (b == from_of.end()) {
+                report_semantic_error(line, "OVERLAY(" + f.overlay_field + ") on subfield " + f.name +
+                    ": no earlier subfield of that name");
+                continue;
+            }
+            from = b->second + (f.overlay_pos > 0 ? f.overlay_pos : 1) - 1;
+        } else {
+            from = f.pos > 0 ? f.pos : next;
+            next = std::max(next, from + bytes);
+        }
+        from_of[f.name] = from;
+        extent = std::max(extent, from + bytes - 1);
+        std::string at = "__at() + " + std::to_string(from - 1);
+        char kind = 0;
+        switch (f.type) {
+            case RPGType::CHAR:
+                out_ << "    RpgCharOverlay " << f.name << "() const { return RpgCharOverlay(__at(), "
+                     << from << ", " << bytes << "); }\n";
+                break;
+            case RPGType::IND:
+                out_ << "    RpgIndView " << f.name << "() const { return RpgIndView(" << at << "); }\n";
+                break;
+            case RPGType::ZONED:  kind = 'Z'; break;
+            case RPGType::PACKED: kind = 'P'; break;
+            case RPGType::INT10: case RPGType::UNS:
+                out_ << "    RpgImgInt " << f.name << "() const { return RpgImgInt(" << at << ", " << bytes
+                     << ", " << (f.type == RPGType::UNS ? "true" : "false") << "); }\n";
+                break;
+            case RPGType::BINDEC: kind = 'B'; break;
+            case RPGType::FLOAT4: case RPGType::FLOAT8: kind = 'F'; break;
+            default:
+                report_semantic_error(line, "Subfield " + f.name + " of BASED data structure " + node.name +
+                    ": only character, indicator and numeric subfields are supported in a BASED "
+                    "data structure yet");
+                continue;
+        }
+        if (kind)
+            out_ << "    RpgImgNum " << f.name << "() const { return RpgImgNum(" << at << ", " << bytes
+                 << ", '" << kind << "', " << f.digits << ", " << f.decimals << "); }\n";
+        overlay_subfields_[node.name].insert(f.name);
+    }
+    int len = node.len > 0 ? node.len : extent;
+    based_ds_len_[node.name] = len;
+    if (node.len > 0 && extent > node.len)
+        report_semantic_error(node.line, "Data structure " + node.name + " is LEN(" + std::to_string(node.len) +
+            "), but its subfields reach position " + std::to_string(extent) + " (IBM: RNF3577)");
+    out_ << "    std::string rpg_chars() const { return std::string(__at(), " << len << "); }\n";
+    out_ << "    void rpg_set_chars(const std::string& s) { rpg_based_put(__at(), s, " << len << "); }\n";
+    out_ << "};\n";
+    if (in_procedure_) emitBasedDsInstance(node);
+}
+
+// Whether a pointer of this name is declared where a BASED data structure
+// in the current scope can see it: in the procedure being emitted, or in
+// the main source section.
+bool CodeGen::pointerDeclared(const std::string& name) const {
+    if (in_procedure_ && current_proc_node_) {
+        for (auto& p : current_proc_node_->interface.params)
+            if (p.name == name) return true;
+        for (auto& st : current_proc_node_->body)
+            if (auto* d = dynamic_cast<const DclS*>(st.get()); d && d->name == name) return true;
+    }
+    return global_decl_names_.count(name) > 0;
+}
+
+// The instance of a BASED data structure, bound to its pointer. A pointer
+// declared nowhere is declared here, as IBM i declares it implicitly.
+void CodeGen::emitBasedDsInstance(const DclDS& node) {
+    const std::string& p = node.based_ptr;
+    if (!pointerDeclared(p) && !var_types_.count(p)) {
+        emitIndent();
+        out_ << "void* " << p << " = nullptr;   // declared by BASED(" << p << ")\n";
+        var_types_[p] = RPGType::POINTER;
+    }
+    emitIndent();
+    out_ << node.name << "_t " << node.name << "{reinterpret_cast<void**>(&" << p << ")};\n";
+}
+
 void CodeGen::emitLocalDsInstance(const DclDS& node) {
     if (node.is_template) return;
+    if (!node.based_ptr.empty()) return;   // emitBasedDs declares it
     std::string type_name = node.like_ds.empty() ? node.name + "_t" : node.like_ds + "_t";
     emitIndent();
     if (node.dim > 0 && (node.dim_type == 1 || node.dim_type == 2))
@@ -3794,7 +3928,7 @@ void CodeGen::emitLocalDsInstance(const DclDS& node) {
 
 const DclDS* CodeGen::dsInitPlan(const DclDS& ds, bool& dft, bool& subf) const {
     dft = subf = false;
-    if (ds.is_psds || ds.is_template || !ds.extname.empty()) return nullptr;
+    if (ds.is_psds || ds.is_template || !ds.extname.empty() || !ds.based_ptr.empty()) return nullptr;
     if (ds.like_ds.empty()) {
         dft = !ds.inz.empty();
         subf = true;
@@ -4756,6 +4890,14 @@ void CodeGen::emitClearDs(const std::string& target, const std::string& decl,
         indent_++;
     }
     for (const auto& f : layout.fields) {
+        if (!layout.based_ptr.empty()) {
+            // Every subfield of a BASED data structure is a view; an
+            // OVERLAY one is cleared through the subfield it overlays.
+            if (!f.overlay_field.empty()) continue;
+            emitIndent();
+            out_ << elem << "." << f.name << "() = " << fieldTypeDefault(f.type, f.length) << ";\n";
+            continue;
+        }
         if (!f.overlay_field.empty()) continue;   // a view onto a subfield cleared here
         std::string ft = elem + "." + f.name;
         if (!f.likeds.empty()) {
@@ -5958,17 +6100,37 @@ void CodeGen::visit(BIFCall& node) {
                 emitted = true;
             }
         }
-        if (!emitted && dsOfExpr(*node.args[0])) {
-            expr_ << "rpg_ds_size(";
-            node.args[0]->accept(*this);
-            expr_ << ")";
-            emitted = true;
+        if (!emitted) {
+            if (const DclDS* ds = dsOfExpr(*node.args[0])) {
+                // A BASED data structure's length is known here, and reading
+                // it must not need the pointer; a TEMPLATE has no instance,
+                // so a temporary of its type is measured.
+                auto bl = based_ds_len_.find(ds->name);
+                auto* id = dynamic_cast<Identifier*>(node.args[0].get());
+                if (bl != based_ds_len_.end()) {
+                    expr_ << bl->second;
+                } else if (id && ds->is_template && id->name == ds->name) {
+                    expr_ << "rpg_ds_size(" << ds->name << "_t{})";
+                } else {
+                    expr_ << "rpg_ds_size(";
+                    node.args[0]->accept(*this);
+                    expr_ << ")";
+                }
+                emitted = true;
+            }
         }
         if (!emitted) {
             expr_ << "static_cast<int>(sizeof(";
             node.args[0]->accept(*this);
             expr_ << "))";
         }
+    } else if (node.name == "ADDR" && !node.args.empty() &&
+               dynamic_cast<IndicatorExpr*>(node.args[0].get()) &&
+               static_cast<IndicatorExpr*>(node.args[0].get())->number == IndicatorExpr::ARRAY &&
+               !static_cast<IndicatorExpr*>(node.args[0].get())->index) {
+        // %ADDR(*IN): the 99 indicator bytes, *IN01 first.
+        uses_indicators_ = true;
+        expr_ << "static_cast<void*>(&rpg_indicators[1])";
     } else if (node.name == "ADDR") {
         expr_ << "static_cast<void*>(&";
         node.args[0]->accept(*this);
@@ -6309,6 +6471,22 @@ void CodeGen::visit(BIFCall& node) {
         expr_ << ", ";
         if (node.args.size() >= 5) node.args[3]->accept(*this); else expr_ << "-1";
         expr_ << ", [&](auto __a, auto __b) { return static_cast<int>(" << proc << "(__a, __b)); })";
+    } else if ((node.name == "LOOKUP" || node.name == "LOOKUPLT" || node.name == "LOOKUPLE" ||
+                node.name == "LOOKUPGT" || node.name == "LOOKUPGE") && node.args.size() >= 2 &&
+               dynamic_cast<IndicatorExpr*>(node.args[1].get()) &&
+               static_cast<IndicatorExpr*>(node.args[1].get())->number == IndicatorExpr::ARRAY &&
+               !static_cast<IndicatorExpr*>(node.args[1].get())->index) {
+        // %LOOKUPxx(arg : *IN {: start {: count}}): searched over *IN01-*IN99.
+        uses_indicators_ = true;
+        char mode = node.name == "LOOKUP" ? 'E' : node.name == "LOOKUPLT" ? 'L' :
+                    node.name == "LOOKUPLE" ? 'l' : node.name == "LOOKUPGT" ? 'G' : 'g';
+        expr_ << "rpg_lookup_in(";
+        node.args[0]->accept(*this);
+        expr_ << ", &rpg_indicators[1], 99, '" << mode << "', ";
+        if (node.args.size() >= 3) node.args[2]->accept(*this); else expr_ << "1";
+        expr_ << ", ";
+        if (node.args.size() >= 4) node.args[3]->accept(*this); else expr_ << "-1";
+        expr_ << ")";
     } else if (node.name == "LOOKUP" || node.name == "LOOKUPLT" || node.name == "LOOKUPLE" ||
                node.name == "LOOKUPGT" || node.name == "LOOKUPGE") {
         // %LOOKUPxx(arg : array {: start {: count}}) → 1-based index, 0 if not found
@@ -7896,7 +8074,7 @@ void CodeGen::visit(ReadStmt& node) {
                     }
                 }
             }
-            emitIndent(); out_ << "dspf_set_indicators(rpg_indicators, 100);\n";
+            emitIndent(); out_ << "{ bool __b[100]; rpg_ind_get(rpg_indicators, __b); dspf_set_indicators(__b, 100); }\n";
             emitIndent(); out_ << "int __dspf_key = dspf_read(\""
                                << node.filename << "\", &" << bufName << ");\n";
             if (rci) {
@@ -8303,7 +8481,7 @@ void CodeGen::visit(WriteStmt& node) {
                     }
                 }
             }
-            emitIndent(); out_ << "dspf_set_indicators(rpg_indicators, 100);\n";
+            emitIndent(); out_ << "{ bool __b[100]; rpg_ind_get(rpg_indicators, __b); dspf_set_indicators(__b, 100); }\n";
             emitIndent(); out_ << "dspf_write(\"" << node.filename << "\", &" << bufName << ");\n";
             uses_indicators_ = true;
             indent_--; emitIndent(); out_ << "}\n";
@@ -8378,7 +8556,7 @@ void CodeGen::visit(UpdateStmt& node) {
                     }
                 }
             }
-            emitIndent(); out_ << "dspf_set_indicators(rpg_indicators, 100);\n";
+            emitIndent(); out_ << "{ bool __b[100]; rpg_ind_get(rpg_indicators, __b); dspf_set_indicators(__b, 100); }\n";
             emitIndent(); out_ << "dspf_update(\"" << node.filename << "\", &" << bufName << ");\n";
             indent_--; emitIndent(); out_ << "}\n";
             return;
@@ -8559,7 +8737,7 @@ void CodeGen::visit(ExfmtStmt& node) {
     }
 
     // Pass current indicators then call dspf_exfmt
-    emitIndent(); out_ << "dspf_set_indicators(rpg_indicators, 100);\n";
+    emitIndent(); out_ << "{ bool __b[100]; rpg_ind_get(rpg_indicators, __b); dspf_set_indicators(__b, 100); }\n";
     emitIndent(); out_ << "int __dspf_key = dspf_exfmt(\""
                        << node.format << "\", &" << bufName << ");\n";
 
@@ -8586,7 +8764,7 @@ void CodeGen::visit(ExfmtStmt& node) {
                        << "rpg_indicators[__dspf_key] = true;\n";
     // CHANGE/BLANKS response indicators — can land anywhere in 1-99, so
     // applied after the block above rather than folded into it.
-    emitIndent(); out_ << "dspf_apply_out_indicators(rpg_indicators, 100);\n";
+    emitIndent(); out_ << "{ bool __b[100]; rpg_ind_get(rpg_indicators, __b); dspf_apply_out_indicators(__b, 100); rpg_ind_put(rpg_indicators, __b); }\n";
     uses_indicators_ = true;
 
     indent_--; emitIndent(); out_ << "}\n";

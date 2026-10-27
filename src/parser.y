@@ -536,6 +536,8 @@ static rpg::DclDS* merge_ds_hdr(rpg::DclDS* a, rpg::DclDS* b) {
     if (b->dim) { a->dim = b->dim; a->dim_type = b->dim_type; }
     if (!b->prefix.empty()) { a->prefix = b->prefix; a->prefix_nbr = b->prefix_nbr; }
     if (!b->inz.empty()) a->inz = b->inz;
+    if (!b->based_ptr.empty()) a->based_ptr = b->based_ptr;
+    if (b->len) a->len = b->len;
     delete b;
     return a;
 }
@@ -2361,6 +2363,16 @@ ds_hdr_kws:
     | ds_hdr_kws KW_INZ { $$ = $1; $$->inz = "*DFT"; }
     | ds_hdr_kws KW_INZ LPAREN KW_STAR_EXTDFT RPAREN { $$ = $1; $$->inz = "*EXTDFT"; }
     | ds_hdr_kws KW_INZ LPAREN KW_STAR_LIKEDS RPAREN { $$ = $1; $$->inz = "*LIKEDS"; }
+    | ds_hdr_kws KW_BASED LPAREN IDENTIFIER RPAREN { $$ = $1; $$->based_ptr = $4; free($4); }
+    /* LEN(n). LEN is not a keyword of its own, so a field may still be
+       named LEN. */
+    | ds_hdr_kws IDENTIFIER LPAREN INTEGER_LITERAL RPAREN {
+        $$ = $1;
+        if (strcasecmp($2, "LEN") != 0)
+            yyerror((std::string("unknown data structure keyword ") + $2).c_str());
+        else $$->len = $4;
+        free($2);
+    }
     | ds_hdr_kws KW_PREFIX LPAREN IDENTIFIER RPAREN { $$ = $1; $$->prefix = $4; free($4); }
     | ds_hdr_kws KW_PREFIX LPAREN IDENTIFIER COLON INTEGER_LITERAL RPAREN {
         $$ = $1; $$->prefix = $4; $$->prefix_nbr = $6; free($4);
@@ -3219,6 +3231,10 @@ primary_expr:
         $$ = make_bif("SIZE", $3);
     }
     | BIF_ADDR LPAREN arg_list RPAREN {
+        // %ADDR(*IN) lets any of 01-99 be set through the pointer.
+        if (!$3->empty())
+            if (auto* ind = dynamic_cast<rpg::IndicatorExpr*>((*$3)[0]); ind && ind->number == rpg::IndicatorExpr::ARRAY)
+                g_ind_array_used = true;
         $$ = make_bif("ADDR", $3);
     }
     | BIF_ABS LPAREN arg_list RPAREN {

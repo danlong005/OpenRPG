@@ -890,6 +890,8 @@ public:
     int occurs = 0;      // OCCURS(n), 0 = not multi-occurrence
     bool is_psds = false; // PSDS or SDS keyword
     bool is_template = false; // TEMPLATE: a type for LIKEDS, with no storage of its own
+    std::string based_ptr;    // BASED(ptr): no storage of its own; it is the bytes at ptr
+    int len = 0;              // LEN(n): the data structure's length, 0 = its subfields' extent
     // INZ on the data structure: "" none -- the storage starts as blanks,
     // as on IBM i -- or "*DFT" (a bare INZ: every subfield its type's
     // default), "*EXTDFT", "*LIKEDS" (the LIKEDS parent's initialization).

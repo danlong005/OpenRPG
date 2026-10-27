@@ -1,0 +1,5 @@
+sizes 17 17
+AB12 -123.45 70000 42
+size 19
+in proc: AB12 70000
+unset: 222

@@ -225,6 +225,22 @@ inline auto rpg_fig_like(const RpgFigConst& f, const Other& other) {
         return f.num;
 }
 
+// One numbered indicator, held as IBM i holds it: the character '1' or '0',
+// so *IN is 99 bytes and a data structure based on %ADDR(*IN) reads them.
+// It converts to and from bool, which is how codegen uses an indicator.
+struct RpgInd {
+    char c = '0';
+    RpgInd() = default;
+    RpgInd(bool b) : c(b ? '1' : '0') {}
+    RpgInd& operator=(bool b) { c = b ? '1' : '0'; return *this; }
+    operator bool() const { return c == '1'; }
+};
+static_assert(sizeof(RpgInd) == 1, "an indicator is one byte");
+
+// The display file runtime takes the indicators as bools.
+inline void rpg_ind_get(const RpgInd* inds, bool* out) { for (int i = 0; i < 100; i++) out[i] = inds[i]; }
+inline void rpg_ind_put(RpgInd* inds, const bool* in) { for (int i = 0; i < 100; i++) inds[i] = in[i]; }
+
 // An indicator is character data on IBM i, '1' or '0': 'flag=' + flag is
 // flag=1, and flag = '1' compares characters. Here it is a bool, so it goes
 // through these wherever it meets a character value. A character value
@@ -234,7 +250,11 @@ inline bool rpg_chars_ind(std::string_view s) { return !s.empty() && s[0] == '1'
 
 template<typename A, typename B, typename Op>
 inline bool rpg_compare(const A& a, const B& b, Op op) {
-    if constexpr (std::is_same_v<A, bool> && rpg_is_char_v<B>)
+    if constexpr (std::is_same_v<A, RpgInd>)
+        return rpg_compare(static_cast<bool>(a), b, op);
+    else if constexpr (std::is_same_v<B, RpgInd>)
+        return rpg_compare(a, static_cast<bool>(b), op);
+    else if constexpr (std::is_same_v<A, bool> && rpg_is_char_v<B>)
         return rpg_compare(rpg_ind_chars(a), b, op);
     else if constexpr (rpg_is_char_v<A> && std::is_same_v<B, bool>)
         return rpg_compare(a, rpg_ind_chars(b), op);
@@ -513,10 +533,15 @@ inline std::string rpg_replace(const std::string& repl, const std::string& sourc
 // A numeric overlay deliberately does NOT inherit the character view's
 // std::string conversion: a class offering conversions to both double and
 // std::string makes every runtime helper overloaded on the two ambiguous.
+// The bytes may also be raw memory -- a data structure BASED on a pointer,
+// whose subfields are the bytes at that address (see RpgIndView).
 class RpgOverlayBase {
 public:
     RpgOverlayBase(std::string& base, int pos, int len)
-        : base_(base), pos_(static_cast<size_t>(pos - 1)),
+        : base_(&base), pos_(static_cast<size_t>(pos - 1)),
+          len_(static_cast<size_t>(len)) {}
+    RpgOverlayBase(char* raw, int pos, int len)
+        : raw_(raw), pos_(static_cast<size_t>(pos - 1)),
           len_(static_cast<size_t>(len)) {}
 
 protected:
@@ -524,22 +549,25 @@ protected:
     // the base leaves the trailing window readable as blanks rather than
     // making the slice fall off the end.
     void reserveBase() {
-        if (base_.size() < pos_ + len_) base_.resize(pos_ + len_, ' ');
+        if (base_->size() < pos_ + len_) base_->resize(pos_ + len_, ' ');
     }
     std::string read() const {
-        if (base_.size() >= pos_ + len_) return base_.substr(pos_, len_);
-        std::string padded = base_;
+        if (raw_) return std::string(raw_ + pos_, len_);
+        if (base_->size() >= pos_ + len_) return base_->substr(pos_, len_);
+        std::string padded = *base_;
         padded.resize(pos_ + len_, ' ');
         return padded.substr(pos_, len_);
     }
     void writeRaw(const std::string& value) {
-        reserveBase();
         std::string v = value;
         if (v.size() < len_) v.resize(len_, ' ');
         else if (v.size() > len_) v.resize(len_);
-        base_.replace(pos_, len_, v);
+        if (raw_) { std::memcpy(raw_ + pos_, v.data(), len_); return; }
+        reserveBase();
+        base_->replace(pos_, len_, v);
     }
-    std::string& base_;
+    std::string* base_ = nullptr;
+    char* raw_ = nullptr;
     size_t pos_;
     size_t len_;
 };
@@ -548,6 +576,8 @@ class RpgCharOverlay : public RpgOverlayBase {
 public:
     RpgCharOverlay(std::string& base, int pos, int len)
         : RpgOverlayBase(base, pos, len) {}
+    RpgCharOverlay(char* raw, int pos, int len)
+        : RpgOverlayBase(raw, pos, len) {}
 
     operator std::string() const { return read(); }
     std::string str() const { return read(); }
@@ -1605,6 +1635,93 @@ inline double rpg_unimg_float(const std::string& b) {
     if (b.size() == 4) { float f; std::memcpy(&f, r, 4); return f; }
     double d; std::memcpy(&d, r, 8); return d;
 }
+
+// --- Data structures BASED on a pointer ---
+// A BASED data structure has no storage of its own: each subfield is the
+// bytes at the pointer, in IBM i's formats, read and written in place.
+// Using one while its pointer is *NULL is status 222, as on IBM i.
+inline char* rpg_based_at(void* p) {
+    if (!p) rpg_raise(222, "RNX0222: Pointer or parameter error: the basing pointer is not set.");
+    return static_cast<char*>(p);
+}
+inline void rpg_based_put(char* at, const std::string& s, int len) {
+    std::string v = s;
+    v.resize(static_cast<size_t>(len), ' ');
+    std::memcpy(at, v.data(), static_cast<size_t>(len));
+}
+
+// An indicator subfield: the character '1' or '0'.
+class RpgIndView {
+public:
+    explicit RpgIndView(char* p) : p_(p) {}
+    operator bool() const { return *p_ == '1'; }
+    RpgIndView& operator=(bool b) { *p_ = b ? '1' : '0'; return *this; }
+    RpgIndView& operator=(const RpgIndView& o) { return *this = static_cast<bool>(o); }
+private:
+    char* p_;
+};
+
+// An integer subfield: a native integer of 1, 2, 4 or 8 bytes, big-endian
+// as on IBM i. It converts to an integer, so %CHAR shows no decimals.
+class RpgImgInt {
+public:
+    RpgImgInt(char* p, int bytes, bool uns) : p_(p), bytes_(bytes), uns_(uns) {}
+    operator long long() const {
+        std::string b(p_, static_cast<size_t>(bytes_));
+        return uns_ ? static_cast<long long>(rpg_unimg_uns(b)) : rpg_unimg_int(b);
+    }
+    RpgImgInt& operator=(long long v) {
+        std::memcpy(p_, rpg_img_int(v, bytes_).data(), static_cast<size_t>(bytes_));
+        return *this;
+    }
+    RpgImgInt& operator=(const RpgImgInt& o) { return *this = static_cast<long long>(o); }
+private:
+    char* p_;
+    int bytes_;
+    bool uns_;
+};
+
+// A numeric subfield in its IBM i format: Z zoned, P packed, B binary
+// decimal, F float.
+class RpgImgNum {
+public:
+    RpgImgNum(char* p, int bytes, char kind, int digits, int dec)
+        : p_(p), bytes_(bytes), kind_(kind), digits_(digits), dec_(dec) {}
+    operator double() const {
+        std::string b(p_, static_cast<size_t>(bytes_));
+        switch (kind_) {
+            case 'Z': return rpg_unimg_zoned(b, dec_);
+            case 'P': return rpg_unimg_packed(b, dec_);
+            case 'B': {
+                double v = static_cast<double>(rpg_unimg_int(b));
+                for (int i = 0; i < dec_; i++) v /= 10.0;
+                return v;
+            }
+            default:  return rpg_unimg_float(b);
+        }
+    }
+    RpgImgNum& operator=(double v) {
+        std::string b;
+        switch (kind_) {
+            case 'Z': b = rpg_img_zoned(v, digits_, dec_); break;
+            case 'P': b = rpg_img_packed(v, digits_, dec_); break;
+            case 'B': {
+                for (int i = 0; i < dec_; i++) v *= 10.0;
+                b = rpg_img_int(static_cast<long long>(std::llround(v)), bytes_);
+                break;
+            }
+            default:  b = rpg_img_float(v, bytes_); break;
+        }
+        std::memcpy(p_, b.data(), static_cast<size_t>(bytes_));
+        return *this;
+    }
+    RpgImgNum& operator=(const RpgImgNum& o) { return *this = static_cast<double>(o); }
+private:
+    char* p_;
+    int bytes_;
+    char kind_;
+    int digits_, dec_;
+};
 
 
 // --- Date/Time format helpers ---

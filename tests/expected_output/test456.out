@@ -1,0 +1,7 @@
+exit via name
+*IN12 via ds
+52: 1 50: 0
+first on: 3
+from 4: 12
+after clear: 000
+bytes 1-5: 00000

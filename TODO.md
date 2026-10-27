@@ -1631,11 +1631,12 @@ Found alongside, both done 2026-10-27 after probing PUB400:
   451-452.
 - Also found: rpgc had no SETON/SETOFF and no *IN array; both done
   2026-10-27 (tests 454-455): *IN(i) as a value or target (status 121
-  outside 1-99), *IN = value and CLEAR *IN. Not done: a data structure
-  based on %ADDR(*IN), which needs BASED data structures (a syntax error
-  in rpgc) and indicators held as '0'/'1' bytes; %LOOKUP over *IN; and
-  the indicators U1-U8, KA-KY, L1-L9, MR, RT, 1P, OA-OG, OV, which IBM i
-  takes and rpgc will not (2026-10-27).
+  outside 1-99), *IN = value and CLEAR *IN. Then BASED data structures
+  (free and fixed, with LEN), indicators held as '0'/'1' bytes so one can
+  be based on %ADDR(*IN), %LOOKUP over *IN, and a pointer's INZ, which was
+  dropped (tests 456-458). Not done: LIKEDS, LIKE or DIM subfields inside
+  a BASED data structure; and the indicators U1-U8, KA-KY, L1-L9, MR, RT,
+  1P, OA-OG, OV, which IBM i takes and rpgc will not (2026-10-27).
 
 ### BOOLEAN removed, DCL-ENUM in IBM's syntax (2026-09-24)
 

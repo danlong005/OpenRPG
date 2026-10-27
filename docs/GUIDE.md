@@ -579,6 +579,45 @@ CLEAR order.lines;                 // every element
 `%SIZE(order)` is the data structure's length in bytes, 4 + 20 × 13 + 5 × 4
 = 284 here, and `%SIZE(order.lines)` one element's, 13.
 
+### Data Structures Based on a Pointer
+
+A data structure declared `BASED(ptr)` has no storage of its own: its subfields
+are the bytes at the address in `ptr`, read and written in place in IBM i's
+formats, so changing the pointer moves the whole structure. A pointer named only
+in `BASED` is declared by it, as on IBM i. `LEN(n)` gives the structure's
+length when its subfields don't reach the end.
+
+The common use is names for indicators. `*IN` is 99 bytes, `'1'` or `'0'`, so
+a data structure based on `%ADDR(*IN)` is a set of names for them:
+
+```rpgle
+DCL-S pInd POINTER INZ(%ADDR(*IN));
+DCL-DS inds LEN(99) BASED(pInd);
+  exitKey   IND POS(3);           // *IN03
+  cancelKey IND POS(12);          // *IN12
+  errors    CHAR(10) POS(50);     // *IN50-*IN59
+END-DS;
+
+IF exitKey;                       // the same byte as *IN03
+  ...
+cancelKey = *ON;                  // sets *IN12
+```
+
+It also lays a structure over storage from `%ALLOC`, or over what a parameter
+points to, with `LIKEDS` for the layout:
+
+```rpgle
+DCL-DS rec LIKEDS(rec_t) BASED(pRec);
+pRec = %ALLOC(%SIZE(rec_t));
+rec.qty = 12.5;
+```
+
+Using a BASED data structure while its pointer is `*NULL` is status 222. Its
+subfields can be character, indicator or numeric; a `LIKEDS`, `LIKE` or `DIM`
+subfield inside one is not supported yet. `%ADDR` of an ordinary field points
+at rpgc's own representation of it, not at IBM i's bytes, so a BASED data
+structure over one does not see its value.
+
 ### Initial Values: INZ
 
 As on IBM i, a data structure **without `INZ` starts as blanks**, not zeros.
@@ -3492,9 +3531,13 @@ IF *IN(50);
 CLEAR *IN;
 ```
 
-Using `*IN` this way also means any indicator may be set through it, so the
-check for indicators that are tested but never set (RNF7030) no longer applies
-to `01`-`99`, as on IBM i.
+`%LOOKUP(*ON : *IN)` finds the first indicator that is on, and a data structure
+based on `%ADDR(*IN)` gives indicators names (see
+[Data Structures Based on a Pointer](#data-structures-based-on-a-pointer)).
+
+Using `*IN(i)`, assigning or clearing `*IN`, or taking `%ADDR(*IN)` means any
+indicator may be set through it, so the check for indicators that are tested
+but never set (RNF7030) no longer applies to `01`-`99`, as on IBM i.
 
 ### Legacy Operation Codes
 

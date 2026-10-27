@@ -150,6 +150,9 @@ private:
     int current_proc_parm_count_ = 0;
     bool has_nopass_params_ = false;
     std::string current_proc_name_;
+    const DclProc* current_proc_node_ = nullptr;   // the procedure being emitted
+    std::map<std::string, int> based_ds_len_;       // a BASED data structure's length in bytes
+    std::set<std::string> global_decl_names_;       // the main source section's standalone fields
     // True while emitting a function with no return value, so a bare RPG
     // RETURN emits `return;` rather than `return 0;` (which does not
     // compile in a void function). Set for a DCL-PROC with no return type
@@ -344,6 +347,9 @@ private:
     // nothing is to be done.
     const DclDS* dsInitPlan(const DclDS& ds, bool& dft, bool& subf) const;
     void emitLocalDsInstance(const DclDS& node);
+    void emitBasedDs(DclDS& node);
+    void emitBasedDsInstance(const DclDS& node);
+    bool pointerDeclared(const std::string& name) const;
     void emitClearDs(const std::string& target, const std::string& decl,
                      const DclDS& layout, bool isArray, int depth);
     static std::string escapeSqlForCpp(const std::string& sql);

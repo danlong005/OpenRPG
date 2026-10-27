@@ -1285,7 +1285,7 @@
    "verified": "2026-10-27"
   },
   "test228_exsr_order.rpgle": {
-   "error": "test228_exsr_order.rpgle after 60s, ending job 314261/QUSER/QP0ZSPWT",
+   "error": "test228_exsr_order.rpgle after 60s, ending job 323495/QUSER/QP0ZSPWT",
    "output": [],
    "sha256": "de6d78bdf7f84ba40bc4c19da234fff3ac400cfc8623d2b103efe7d0c97ef351",
    "status": "timeout",
@@ -2802,6 +2802,47 @@
    "sha256": "1e14619861688ba3a9bc0591a52d12cee0c4efced92813f44e818630483e63e1",
    "status": "same",
    "test": "455",
+   "verified": "2026-10-27"
+  },
+  "test456_based_ind_ds.rpgle": {
+   "error": "",
+   "output": [
+    "exit via name                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            ",
+    "*IN12 via ds                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             ",
+    "52: 1 50: 0                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              ",
+    "first on: 3                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              ",
+    "from 4: 12                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               ",
+    "after clear: 00                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          ",
+    "bytes 1-5:   0                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           "
+   ],
+   "sha256": "b43c64c7377c1350b0217188edbce283dd15e7901a4b40a9aca5f9321f6b5730",
+   "status": "same",
+   "test": "456",
+   "verified": "2026-10-27"
+  },
+  "test457_based_ds_alloc.rpgle": {
+   "error": "",
+   "output": [
+    "sizes 17 17                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              ",
+    "AB12 -123.45 70000 42                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    ",
+    "size 19                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  ",
+    "in proc: AB12 70000                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      ",
+    "unset: 222                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               "
+   ],
+   "sha256": "33f373f4caa9466b365c8256ec724ed62436e831c960c1dcd7603781eb46ee74",
+   "status": "same",
+   "test": "457",
+   "verified": "2026-10-27"
+  },
+  "test458_fixed_based_ind_ds.rpgle": {
+   "error": "",
+   "output": [
+    "exit                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     ",
+    "1                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        "
+   ],
+   "sha256": "99bacf27e2b2d283c64e6c8411e4f4c3de1dede741c5fef3faaea17ca0da1561",
+   "status": "same",
+   "test": "458",
    "verified": "2026-10-27"
   },
   "test45_array_bifs.rpgle": {

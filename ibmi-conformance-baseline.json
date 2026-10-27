@@ -6386,6 +6386,20 @@
    "verdict": "reject",
    "verified": "2026-10-21"
   },
+  "test447_likeds_dim_subfield.rpgle": {
+   "codes": [],
+   "rpgc": "accept",
+   "sha256": "6290299bd1225e62ebd14122551b822b99acc7705bf00214bc4b9e72b3706486",
+   "verdict": "accept",
+   "verified": "2026-10-27"
+  },
+  "test448_fixed_dspec_likeds_dim.rpgle": {
+   "codes": [],
+   "rpgc": "accept",
+   "sha256": "77b298288bdbed8882c7e6fce1cc86a06081ec83afada5dabce046ea6e90f4c2",
+   "verdict": "accept",
+   "verified": "2026-10-27"
+  },
   "test44_alloc.rpgle": {
    "codes": [],
    "rpgc": "accept",
@@ -6904,5 +6918,5 @@
    "verified": "2026-09-25"
   }
  },
- "generated": "2026-10-21T20:25:25+00:00"
+ "generated": "2026-10-27T15:41:57+00:00"
 }

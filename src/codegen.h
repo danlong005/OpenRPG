@@ -305,6 +305,7 @@ private:
     std::map<std::string, std::string> likeds_params_;
     std::set<std::string> proc_params_;   // every parameter of the procedure being emitted
     void registerExtField(const std::string& fvar, const ExtField& f);
+    const DclDS* dsOfName(const std::string& name) const;
     const DclDS* dsOfExpr(const Expression& e) const;
     const DclDS* resolveDsDef(const std::string& name) const;
     std::string emitInzValue(const rpg::DclS& node);

@@ -697,6 +697,7 @@ public:
 class ClearStmt : public Statement {
 public:
     std::string var_name;
+    std::unique_ptr<Expression> target;  // a subfield or element; var_name is then empty
     explicit ClearStmt(std::string name);
     void accept(ASTVisitor& visitor) override;
 };

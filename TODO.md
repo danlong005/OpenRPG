@@ -121,11 +121,13 @@
 
 ### Known gaps
 
-- **An array of LIKEDS subfields, `sub LIKEDS(t) DIM(n)`, in a free-form
-  data structure** (found 2026-10-21). With `LIKEDS` first the `DIM` is
-  silently dropped and the generated C++ does not compile; with `DIM` first
-  it is a syntax error. No test covers it. It also blocks the 26-vote idea
-  of `LIKE` through such an array, `LIKE(ds.arr.field)`.
+- None open. The last one, an array of LIKEDS subfields
+  (`sub LIKEDS(t) DIM(n)`), was fixed 2026-10-27 (tests 447-448): `DIM`
+  goes before or after `LIKEDS` or `LIKE`, `%SIZE` of a data structure is
+  its length in bytes rather than the C++ object's size, and `CLEAR` takes
+  a subfield or element (`CLEAR ds.sub`, `CLEAR ds.sub(i)`). The 26-vote
+  idea of `LIKE` through such an array, `LIKE(ds.arr.field)`, needs IBM i
+  to accept it first.
 
 ### Still TODO
 
@@ -421,8 +423,8 @@ existed at the subfield level in free-format either, so — unlike items
   version, which referenced an outer field and silently got the fallback
   placeholder type. Works fine inside a `DCL-PROC` body, where
   declarations emit in textual order.
-- **Deferred, not V1**: combining `LIKE` and `DIM` on the same subfield
-  (e.g. `qty LIKE(other) DIM(5)`); `DIM(*VAR:n)`/`DIM(*AUTO:n)` on a
+- **Deferred, not V1**: ~~combining `LIKE` and `DIM` on the same subfield
+  (e.g. `qty LIKE(other) DIM(5)`)~~ done 2026-10-27 (test447); `DIM(*VAR:n)`/`DIM(*AUTO:n)` on a
   subfield (fixed-size only, matching the DS-level DIM(n) case this
   mirrors, not the *VAR/*AUTO forms DCL-S standalone fields support).
 - Tests 161-162 (fixed-format D-spec — declaration only, since
@@ -1600,8 +1602,8 @@ with `cloneExpr` copying the target, for a plain assignment, `EVAL` and
 `EVAL(x)`, so codegen needed nothing new. rpgc had none of them, and IBM i
 accepts them all; test 267 covers each operator, arrays, qualified
 subfields, strings and `EVAL(H)`, and compiles on PUB400. Found alongside:
-fixed-format `C EVAL *INLR = *ON` is a syntax error in rpgc, with or
-without compound operators. Not yet fixed.
+fixed-format `C EVAL *INLR = *ON` was a syntax error in rpgc; it works
+now (rechecked 2026-10-27).
 
 ### *INLR is a real indicator (2026-09-24)
 
@@ -1661,9 +1663,9 @@ rewritten: INT-vs-FLOAT dispatch through VALUE is ambiguous on IBM i. It
 now overloads by type family and by number of parameters, and compiles
 on PUB400. Tests 271-274 are the four rejected forms.
 
-Found alongside, not yet done: typed literals (`D'2024-01-15'`, `T'...'`,
-`Z'...'`) and `%DATE(string : *ISO)` with a format are syntax errors in
-rpgc; IBM i accepts both.
+Found alongside: typed literals (`D'2024-01-15'`, `T'...'`, `Z'...'`) and
+`%DATE(string : *ISO)` with a format were syntax errors in rpgc; both work
+now (rechecked 2026-10-27).
 
 ### Differential execution (2026-09-26)
 

@@ -876,6 +876,16 @@ struct RpgOnReturn {
     throw RpgError(status, msg);
 }
 
+// %SIZE of a data structure: the length of its RPG image, not the C++
+// object's sizeof. For an array of them it is one element's size, as %SIZE
+// of any array is.
+template <class D>
+inline int rpg_ds_size(const D& d) { return static_cast<int>(d.rpg_chars().size()); }
+template <class D, std::size_t N>
+inline int rpg_ds_size(const std::array<D, N>& a) { return N ? rpg_ds_size(a[0]) : 0; }
+template <class D>
+inline int rpg_ds_size(const std::vector<D>& v) { return v.empty() ? rpg_ds_size(D{}) : rpg_ds_size(v[0]); }
+
 // An array element as RPG indexes it: from 1, and an index outside the
 // array is status 121 (RNX0121), not a read or write past its end.
 template <class A, class I>

@@ -542,6 +542,30 @@ DCL-DS shipping LIKEDS(address);
 shipping.city = 'Springfield';
 ```
 
+A subfield can be a data structure too, and with `DIM` an array of them.
+`DIM` may come before or after `LIKEDS`, and a `LIKE` subfield takes `DIM`
+the same way:
+
+```rpgle
+DCL-DS line_t QUALIFIED TEMPLATE;
+  item CHAR(10);
+  qty PACKED(5:0);
+END-DS;
+
+DCL-DS order QUALIFIED INZ;
+  id INT(10);
+  lines LIKEDS(line_t) DIM(20);
+  codes DIM(5) LIKE(order.id);
+END-DS;
+
+order.lines(2).item = 'WIDGET';
+CLEAR order.lines(2);              // one element
+CLEAR order.lines;                 // every element
+```
+
+`%SIZE(order)` is the data structure's length in bytes, 4 + 20 × 13 + 5 × 4
+= 284 here, and `%SIZE(order.lines)` one element's, 13.
+
 ### Initial Values: INZ
 
 As on IBM i, a data structure **without `INZ` starts as blanks**, not zeros.

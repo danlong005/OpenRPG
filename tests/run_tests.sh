@@ -1051,6 +1051,8 @@ run_test "443" "LIKE of a subfield of a nested data structure" "$TESTDIR/test443
 run_test "444" "LIKE of a subfield that does not exist" "$TESTDIR/test444_err_like_no_subfield.rpgle" "error"
 run_test "445" "OVERLOAD with prototyped candidates" "$TESTDIR/test445_overload_with_prototypes.rpgle" "run"
 run_test "446" "OVERLOAD tells an indicator from a string" "$TESTDIR/test446_overload_ind.rpgle" "run"
+run_test "447" "LIKEDS and LIKE subfields with DIM; %SIZE and CLEAR of them" "$TESTDIR/test447_likeds_dim_subfield.rpgle" "run"
+run_test "448" "Fixed-format LIKEDS subfield with DIM" "$TESTDIR/test448_fixed_dspec_likeds_dim.rpgle" "run"
 
 printf "Test 436w: /MESSAGE warnings are shown            "
 w436=$($RPGC -S "$TESTDIR/test436_message_directive.rpgle" -o "$TMPDIR/test436w.cpp" 2>&1 >/dev/null)

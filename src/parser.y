@@ -167,6 +167,21 @@ static rpg::DSField* make_ds_field(const char* name, rpg::ParamDecl* type, rpg::
     return f;
 }
 
+// The subfield keywords written before LIKEDS or LIKE and those after it,
+// as one set: the later ones are folded into the earlier.
+static rpg::DSField* merge_ds_kws(rpg::DSField* before, rpg::DSField* after) {
+    if (after->pos) before->pos = after->pos;
+    if (after->dim) before->dim = after->dim;
+    if (after->inz_default) before->inz_default = true;
+    if (after->inz_value) before->inz_value = after->inz_value;
+    if (!after->overlay_field.empty()) {
+        before->overlay_field = after->overlay_field;
+        before->overlay_pos = after->overlay_pos;
+    }
+    delete after;
+    return before;
+}
+
 // Parameter keyword bits collected by param_kws (see param_decl).
 enum { PK_VALUE = 1, PK_CONST = 2, PK_NOPASS = 4, PK_OMIT = 8,
        PK_VARSIZE = 16, PK_STRING = 32, PK_TRIM = 64, PK_UPPER = 128, PK_LOWER = 256 };
@@ -2155,10 +2170,19 @@ reset_stmt:
     }
     ;
 
+/* CLEAR takes a name, or a subfield or array element: ds.sub, arr(i),
+   ds.sub(i).field. A plain name keeps the name-only form codegen has
+   always had; anything else carries the expression. */
 clear_stmt:
-    KW_CLEAR ident SEMICOLON {
-        $$ = new rpg::ClearStmt($2);
-        free($2);
+    KW_CLEAR postfix_expr SEMICOLON {
+        if (auto* id = dynamic_cast<rpg::Identifier*>($2)) {
+            $$ = new rpg::ClearStmt(id->name);
+            delete $2;
+        } else {
+            auto* c = new rpg::ClearStmt("");
+            c->target.reset($2);
+            $$ = c;
+        }
     }
     ;
 
@@ -2342,7 +2366,8 @@ psds_kw:
 
 /* One data-structure subfield: a name (optionally DCL-SUBF), a type from
    param_type — shared with procedure parameters — or LIKEDS/LIKE, then any
-   of POS, OVERLAY and DIM. This replaced 26 hand-enumerated alternatives
+   of POS, OVERLAY and DIM. LIKEDS and LIKE are keywords like the others,
+   so as on IBM i the rest may also come before them: sub DIM(3) LIKEDS(t). This replaced 26 hand-enumerated alternatives
    that covered only INT, CHAR, VARCHAR and PACKED, each with its own
    fixed set of keywords, so a ZONED, IND, DATE, UNS or FLOAT subfield was
    a syntax error, as was any keyword combination not spelled out. */
@@ -2353,17 +2378,17 @@ ds_field:
     | KW_DCL_SUBF ident param_type ds_kws SEMICOLON {
         $$ = make_ds_field($2, $3, $4); free($2);
     }
-    | plain_name KW_LIKEDS LPAREN IDENTIFIER RPAREN ds_kws SEMICOLON {
-        $$ = make_ds_field($1, nullptr, $6); $$->likeds = $4; free($1); free($4);
+    | plain_name ds_kws KW_LIKEDS LPAREN IDENTIFIER RPAREN ds_kws SEMICOLON {
+        $$ = make_ds_field($1, nullptr, merge_ds_kws($2, $7)); $$->likeds = $5; free($1); free($5);
     }
-    | KW_DCL_SUBF ident KW_LIKEDS LPAREN IDENTIFIER RPAREN ds_kws SEMICOLON {
-        $$ = make_ds_field($2, nullptr, $7); $$->likeds = $5; free($2); free($5);
+    | KW_DCL_SUBF ident ds_kws KW_LIKEDS LPAREN IDENTIFIER RPAREN ds_kws SEMICOLON {
+        $$ = make_ds_field($2, nullptr, merge_ds_kws($3, $8)); $$->likeds = $6; free($2); free($6);
     }
-    | plain_name KW_LIKE LPAREN like_name RPAREN ds_kws SEMICOLON {
-        $$ = make_ds_field($1, nullptr, $6); $$->like_var = $4; free($1); free($4);
+    | plain_name ds_kws KW_LIKE LPAREN like_name RPAREN ds_kws SEMICOLON {
+        $$ = make_ds_field($1, nullptr, merge_ds_kws($2, $7)); $$->like_var = $5; free($1); free($5);
     }
-    | KW_DCL_SUBF ident KW_LIKE LPAREN like_name RPAREN ds_kws SEMICOLON {
-        $$ = make_ds_field($2, nullptr, $7); $$->like_var = $5; free($2); free($5);
+    | KW_DCL_SUBF ident ds_kws KW_LIKE LPAREN like_name RPAREN ds_kws SEMICOLON {
+        $$ = make_ds_field($2, nullptr, merge_ds_kws($3, $8)); $$->like_var = $6; free($2); free($6);
     }
     ;
 

@@ -2543,12 +2543,30 @@ const DclDS* CodeGen::resolveDsDef(const std::string& name) const {
     return nullptr;
 }
 
+// The DS definition a name denotes: a DS, or a LIKEDS subfield reached
+// through a qualified name, ds.sub or ds.sub.inner.
+const DclDS* CodeGen::dsOfName(const std::string& name) const {
+    size_t dot = name.find('.');
+    const DclDS* cur = resolveDsDef(name.substr(0, dot));
+    while (cur && dot != std::string::npos) {
+        size_t next = name.find('.', dot + 1);
+        std::string field = name.substr(dot + 1, next == std::string::npos ? std::string::npos : next - dot - 1);
+        const DclDS* inner = nullptr;
+        for (auto& f : cur->fields)
+            if (f.name == field && !f.likeds.empty()) inner = resolveDsDef(f.likeds);
+        cur = inner;
+        dot = next;
+    }
+    return cur;
+}
+
 // The DS definition an expression denotes: a DS name, one element of a DS
 // array (which parses as either ArrayAccess or FuncCall), or a LIKEDS
-// subfield of another DS.
+// subfield of another DS, an element of one when it has DIM,
+// ds.sub(i), which parses as an ArrayAccess of the qualified name.
 const DclDS* CodeGen::dsOfExpr(const Expression& e) const {
     if (auto* id = dynamic_cast<const Identifier*>(&e)) return resolveDsDef(id->name);
-    if (auto* aa = dynamic_cast<const ArrayAccess*>(&e)) return resolveDsDef(aa->name);
+    if (auto* aa = dynamic_cast<const ArrayAccess*>(&e)) return dsOfName(aa->name);
     if (auto* fc = dynamic_cast<const FuncCall*>(&e)) return resolveDsDef(fc->name);
     if (auto* dot = dynamic_cast<const DotExpr*>(&e)) {
         const DclDS* parent = dsOfExpr(*dot->object);
@@ -2619,11 +2637,13 @@ CodeGen::FieldAttrs CodeGen::attrsOf(const Expression& e) const {
             Identifier id(arrName);
             return attrsOf(id);
         }
-        const DclDS* ds = resolveDsDef(arrName.substr(0, dotPos));
+        size_t lastDot = arrName.rfind('.');
+        const DclDS* ds = dsOfName(arrName.substr(0, lastDot));
         if (!ds) return a;
-        std::string fname = arrName.substr(dotPos + 1);
+        std::string fname = arrName.substr(lastDot + 1);
         for (auto& f : ds->fields) {
-            if (f.name != fname || f.dim <= 0 || !f.likeds.empty() || !f.like_var.empty()) continue;
+            if (f.name != fname || f.dim <= 0 || !f.likeds.empty()) continue;
+            if (!f.like_var.empty()) return attrsOfName(f.like_var);
             a.known = true; a.type = f.type; a.length = f.length;
             a.digits = f.digits; a.decimals = f.decimals;
             return a;
@@ -3472,6 +3492,22 @@ void CodeGen::visit(DclDS& node) {
         return zeroFor(t, len);
     };
     auto initFor = blankFor;
+    // A DIM(n) subfield: an array within the DS, each element starting as
+    // a field of its type does.
+    auto emitDimSubfield = [&](const DSField& f, RPGType type, int length, int digits) {
+        out_ << "    std::array<" << typeToString(type, length, digits) << ", " << f.dim
+             << "> " << f.name;
+        std::string blank = initFor(type, length, digits);
+        if (type == RPGType::CHAR && length > 0)
+            out_ << " = rpg_filled_array<std::string, " << f.dim << ">(std::string("
+                 << length << ", ' '))";
+        else if (!blank.empty() && blank != " = 0" && blank != " = 0.0" &&
+                 blank != " = false" && blank != " = nullptr")
+            out_ << " = rpg_filled_array<" << typeToString(type, length, digits) << ", " << f.dim
+                 << ">(" << blank.substr(3) << ")";
+        else
+            out_ << "{}"; // numeric elements zero, not indeterminate
+    };
     // subfield name -> (ultimate base subfield, 1-based position in it)
     std::map<std::string, std::pair<std::string, int>> ds_overlay_bases;
     for (auto& f : node.fields) {
@@ -3533,8 +3569,12 @@ void CodeGen::visit(DclDS& node) {
             overlay_subfields_[node.name].insert(f.name);
             ds_local_types[f.name] = {f.type, f.length};
         } else if (!f.likeds.empty()) {
-            // LIKEDS subfield: emit nested struct type
-            out_ << "    " << f.likeds << "_t " << f.name << ";\n";
+            // LIKEDS subfield: emit nested struct type, an array of it with DIM
+            if (f.dim > 0)
+                out_ << "    std::array<" << f.likeds << "_t, " << f.dim << "> " << f.name
+                     << "; // DIM(" << f.dim << ")\n";
+            else
+                out_ << "    " << f.likeds << "_t " << f.name << ";\n";
         } else if (!f.like_var.empty()) {
             // Per-subfield LIKE(other): resolve type/length from an earlier
             // subfield in this DS, else an outer standalone field. In a
@@ -3570,23 +3610,17 @@ void CodeGen::visit(DclDS& node) {
                         " is not a subfield of a data structure (IBM: RNF7030)");
                 }
             }
-            out_ << "    " << typeToString(rtype, rlen) << " " << f.name << initFor(rtype, rlen)
-                 << "; // LIKE(" << f.like_var << ")\n";
+            if (f.dim > 0) {
+                emitDimSubfield(f, rtype, rlen, 0);
+                out_ << "; // LIKE(" << f.like_var << ") DIM(" << f.dim << ")\n";
+            } else {
+                out_ << "    " << typeToString(rtype, rlen) << " " << f.name << initFor(rtype, rlen)
+                     << "; // LIKE(" << f.like_var << ")\n";
+            }
             ds_local_types[f.name] = {rtype, rlen};
         } else if (f.dim > 0) {
             // Per-subfield DIM(n): the subfield itself is an array within the DS.
-            out_ << "    std::array<" << typeToString(f.type, f.length, f.digits) << ", " << f.dim
-                 << "> " << f.name;
-            std::string blank = initFor(f.type, f.length, f.digits);
-            if (f.type == RPGType::CHAR && f.length > 0)
-                out_ << " = rpg_filled_array<std::string, " << f.dim << ">(std::string("
-                     << f.length << ", ' '))";
-            else if (!blank.empty() && blank != " = 0" && blank != " = 0.0" &&
-                     blank != " = false" && blank != " = nullptr")
-                out_ << " = rpg_filled_array<" << typeToString(f.type, f.length, f.digits) << ", " << f.dim
-                     << ">(" << blank.substr(3) << ")";
-            else
-                out_ << "{}"; // numeric elements zero, not indeterminate
+            emitDimSubfield(f, f.type, f.length, f.digits);
             out_ << "; // DIM(" << f.dim << ")\n";
             ds_local_types[f.name] = {f.type, f.length};
         } else if (f.pos > 0) {
@@ -4627,6 +4661,38 @@ void CodeGen::visit(ResetStmt& node) {
 // whatever its INZ; RESET is the one that restores INZ. A whole array
 // clears every element, a data structure every subfield.
 void CodeGen::visit(ClearStmt& node) {
+    if (node.target) {
+        // A subfield or element. A DIM subfield named whole, ds.sub, clears
+        // every element; a data structure clears subfield by subfield, and
+        // a field takes its type's default.
+        Expression& e = *node.target;
+        std::string target = emitExpr(e);
+        bool whole = false;
+        if (auto* dot = dynamic_cast<const DotExpr*>(&e))
+            if (const DclDS* parent = dsOfExpr(*dot->object))
+                for (auto& f : parent->fields)
+                    if (f.name == dot->field) whole = f.dim > 0;
+        if (const DclDS* layout = dsOfExpr(e)) {
+            emitClearDs(target, layout->name, *layout, whole, 0);
+            return;
+        }
+        FieldAttrs a;
+        if (whole) {
+            ArrayAccess elem(target, std::make_unique<IntLiteral>(1));
+            a = attrsOf(elem);
+        } else {
+            a = attrsOf(e);
+        }
+        if (!a.known) {
+            report_semantic_error(node.line, "CLEAR: '" + target + "' is not a declared variable");
+            return;
+        }
+        std::string def = fieldTypeDefault(a.type, a.length);
+        emitIndent();
+        if (whole) out_ << "for (auto& __e : " << target << ") __e = " << def << ";\n";
+        else out_ << target << " = " << def << ";\n";
+        return;
+    }
     const std::string& name = node.var_name;
     Identifier id(name);
     std::string target = emitExpr(id);
@@ -4676,6 +4742,7 @@ void CodeGen::emitClearDs(const std::string& target, const std::string& decl,
         int len = f.length;
         if (!f.like_var.empty()) {
             FieldAttrs a = attrsOfName(decl + "." + f.name);
+            if (!a.known) a = attrsOfName(f.like_var);  // the field LIKE names
             if (a.known) { t = a.type; len = a.length; }
         }
         std::string def = fieldTypeDefault(t, len);
@@ -5849,6 +5916,12 @@ void CodeGen::visit(BIFCall& node) {
                 expr_ << ((digits + 1) / 2);
                 emitted = true;
             }
+        }
+        if (!emitted && dsOfExpr(*node.args[0])) {
+            expr_ << "rpg_ds_size(";
+            node.args[0]->accept(*this);
+            expr_ << ")";
+            emitted = true;
         }
         if (!emitted) {
             expr_ << "static_cast<int>(sizeof(";

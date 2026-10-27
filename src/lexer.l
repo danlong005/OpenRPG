@@ -757,6 +757,8 @@ static void parse_ctlopt(const char* text) {
 "*SECONDS"          { return KW_SECONDS; }
 "*MSECONDS"         { return KW_MSECONDS; }
 "*IN"[0-9][0-9]     { yylval.ival = atoi(yytext + 3); return INDICATOR; }
+ /* *IN, the array of the 99 numbered indicators: *IN(i) or *IN itself. */
+"*IN"/[^A-Za-z0-9_#$@]       { return KW_STAR_IN; }
  /* Halt indicators *H1-*H9 (also *INH1-*INH9): IndicatorExpr::H1 + n - 1 */
 "*H"[1-9]/[^A-Za-z0-9_#$@]   { yylval.ival = 100 + (yytext[2] - '0'); return INDICATOR; }
 "*INH"[1-9]/[^A-Za-z0-9_#$@] { yylval.ival = 100 + (yytext[4] - '0'); return INDICATOR; }

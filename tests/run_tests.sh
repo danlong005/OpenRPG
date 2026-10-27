@@ -1058,6 +1058,8 @@ run_test "450" "Fixed: a conditioning indicator never set (RNF7030)" "$TESTDIR/t
 run_test "451" "Fixed: Factor 1 not left-adjusted (RNF0262)" "$TESTDIR/test451_fixed_err_factor1_not_left.rpgle" "error"
 run_test "452" "Fixed: the result field not left-adjusted (RNF0262)" "$TESTDIR/test452_fixed_err_result_not_left.rpgle" "error"
 run_test "453" "The RPG cycle runs the calculations again while LR is off" "$TESTDIR/test453_cycle_repeat.rpgle" "run"
+run_test "454" "Fixed: SETON and SETOFF" "$TESTDIR/test454_fixed_seton_setoff.rpgle" "run"
+run_test "455" "The *IN array: *IN(i), *IN = value, CLEAR *IN" "$TESTDIR/test455_in_array.rpgle" "run"
 
 printf "Test 436w: /MESSAGE warnings are shown            "
 w436=$($RPGC -S "$TESTDIR/test436_message_directive.rpgle" -o "$TMPDIR/test436w.cpp" 2>&1 >/dev/null)

@@ -1629,9 +1629,13 @@ Found alongside, both done 2026-10-27 after probing PUB400:
 - Factor 1, factor 2 and the result field must each be left-adjusted
   (RNF0262, severity 20); an indented extended factor 2 is fine. Tests
   451-452.
-- Also found: rpgc has no SETON/SETOFF, no *IN array (*IN(i), *IN), and
-  none of the indicators U1-U8, KA-KY, L1-L9, MR, RT, 1P, OA-OG, OV. IBM i
-  takes them all.
+- Also found: rpgc had no SETON/SETOFF and no *IN array; both done
+  2026-10-27 (tests 454-455): *IN(i) as a value or target (status 121
+  outside 1-99), *IN = value and CLEAR *IN. Not done: a data structure
+  based on %ADDR(*IN), which needs BASED data structures (a syntax error
+  in rpgc) and indicators held as '0'/'1' bytes; %LOOKUP over *IN; and
+  the indicators U1-U8, KA-KY, L1-L9, MR, RT, 1P, OA-OG, OV, which IBM i
+  takes and rpgc will not (2026-10-27).
 
 ### BOOLEAN removed, DCL-ENUM in IBM's syntax (2026-09-24)
 
@@ -2076,8 +2080,8 @@ Source Support" above. What's rejected here is reviving the RPG cycle and
 legacy fixed-column opcode semantics, not the ability for a fixed-format
 member's C-spec to host modern free-format statements.
 
-### Indicator Types (beyond *IN01-*IN99, *INLR)
-- *INKx, *INHx, *INOx, *INLx, *INUx, *INRT, *INMR, *IN array
+### Indicator Types (beyond *IN01-*IN99, *INLR, *INH1-*INH9 and *IN)
+- *INKx, *INOx, *INLx, *INUx, *INRT, *INMR
 
 ---
 

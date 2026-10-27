@@ -3396,7 +3396,7 @@ file.
 | 36-49 | Factor 2 (traditional syntax) |
 | 36-80 | The whole expression (extended factor 2) |
 | 50-63 | Result (traditional syntax) |
-| 71-76 | Resulting indicators — blank except on `COMP` |
+| 71-76 | Resulting indicators — blank except on `COMP`, `SETON` and `SETOFF` |
 
 Positions 64-70 (inline field length and decimals) must be blank; declare the
 field on a D-spec instead.
@@ -3437,6 +3437,7 @@ and continues onto further lines that leave 7-35 blank:
 | Assignment | `EVAL` `EVALR` `EVAL-CORR` `CLEAR` `RESET` `MOVE` `MOVEL` `Z-ADD` `Z-SUB` |
 | Arithmetic | `ADD` `SUB` `MULT` `DIV` |
 | Comparison / branching | `COMP` `CASxx` `CABxx` `GOTO` `TAG` |
+| Indicators | `SETON` `SETOFF` |
 | Calls | `CALLP` `CALL` `PARM` `PLIST` `RETURN` |
 | File I/O | `CHAIN` `READ` `READP` `READE` `READPE` `WRITE` `UPDATE` `DELETE` `SETLL` `SETGT` |
 | Other | `DSPLY` `SORTA` `XML-INTO` `DATA-INTO` `DATA-GEN` `SND-MSG` |
@@ -3476,9 +3477,24 @@ last line of the group, and RPG relates the terms as an **OR of AND-groups**:
      COR 20              EVAL      msg = '(10 and 30) or 20'
 ```
 
-Only `*IN01`-`*IN99` are supported. `LR`, `MR`, `RT`, `OV`, `1P`, `L1`-`L9`,
+`01`-`99` and `LR` can condition a statement. `MR`, `RT`, `OV`, `1P`, `L1`-`L9`,
 `H1`-`H9`, `U1`-`U8`, `KA`-`KY` and `OA`-`OG` are recognized by name so they get
 a clear "not supported" message rather than being reported as a typo.
+
+The numbered indicators are also the array `*IN`, in either format:
+`*IN(i)` is indicator `i`, as a value or a target, and an index outside 1-99 is
+status 121. `*IN` on its own is all 99, which can be assigned or cleared:
+
+```rpgle
+*IN = *OFF;                 // all 99 off
+*IN(fkey) = *ON;
+IF *IN(50);
+CLEAR *IN;
+```
+
+Using `*IN` this way also means any indicator may be set through it, so the
+check for indicators that are tested but never set (RNF7030) no longer applies
+to `01`-`99`, as on IBM i.
 
 ### Legacy Operation Codes
 
@@ -3530,8 +3546,17 @@ Because `MOVE`, `MOVEL`, `GOTO` and `TAG` are now lexer keywords, free-format
 source can no longer use them as variable names.
 
 **`COMP`** sets its three resulting indicators — high, low and equal — in
-positions 71-72, 73-74 and 75-76. It is the only opcode for which those columns
-may be non-blank.
+positions 71-72, 73-74 and 75-76. **`SETON`** and **`SETOFF`** set the
+indicators in those same positions on or off, up to three at once, `LR` and
+`H1`-`H9` included; their factors and result field stay blank:
+
+```rpgle
+     C                   SETON                                        5556
+     C   55              SETOFF                                         55
+     C                   SETON                                        LR
+```
+
+These three are the only opcodes for which those columns may be non-blank.
 
 **`CASxx` and `CABxx`** glue a comparison mnemonic (`EQ` `NE` `LT` `LE` `GT`
 `GE`, or nothing for the unconditional form) onto the opcode. `CABxx` is a

@@ -662,7 +662,11 @@ public:
     // The halt indicators *H1-*H9 are 101-109. One left on when the
     // program ends makes it end in error.
     static constexpr int H1 = 101;
-    int number; // 1-99, LR, or H1-H9
+    // The *IN array: *IN(index), one of 01-99 chosen at run time, or *IN
+    // itself, all 99 (index null).
+    static constexpr int ARRAY = -1;
+    int number; // 1-99, LR, H1-H9, or ARRAY
+    std::unique_ptr<Expression> index;  // *IN(index); ARRAY only
     explicit IndicatorExpr(int number);
     void accept(ASTVisitor& visitor) override;
 };

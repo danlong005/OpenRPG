@@ -106,8 +106,22 @@ extern bool ctlopt_nolenchk;
 int g_ind_tested_line[110];
 bool g_ind_set[110];
 
+// The *IN array used as such -- *IN(i), or *IN itself -- which on IBM i
+// leaves 01-99 unchecked, since any of them may be set through it.
+bool g_ind_array_used;
+
 void reset_indicator_uses() {
     for (int i = 0; i < 110; i++) { g_ind_tested_line[i] = 0; g_ind_set[i] = false; }
+    g_ind_array_used = false;
+}
+
+// *IN(index), or *IN itself when index is null. Reading *IN whole (in
+// %LOOKUP, say) does not count as using it to set indicators.
+static rpg::Expression* make_ind_array(rpg::Expression* index, bool sets = true) {
+    if (sets) g_ind_array_used = true;
+    auto* ind = new rpg::IndicatorExpr(rpg::IndicatorExpr::ARRAY);
+    ind->index.reset(index);
+    return ind;
 }
 
 // The value of target op= value: target op (value), with the target copied,
@@ -631,6 +645,7 @@ static rpg::DclS* make_dcl_s_list(const char* first, std::vector<std::string>* m
 %token KW_FOR_EACH KW_IN KW_XML_INTO KW_DATA_INTO KW_DATA_GEN KW_SND_MSG
 %token KW_STAR_INFO KW_STAR_DIAG KW_STAR_ESCAPE KW_TYPE
 %token KW_STAR_LOCK KW_STAR_DTAARA KW_STAR_SYS KW_EXCEPT
+%token KW_STAR_IN
 %token KW_STAR_COMP KW_STAR_STATUS KW_STAR_NOTIFY KW_STAR_CALLER KW_STAR_SELF KW_STAR_EXT BIF_TARGET
 %token KW_STAR_ALLOC KW_STAR_KEEP
 %token KW_READ KW_READC KW_READE KW_READP KW_READPE KW_CHAIN KW_WRITE KW_UPDATE KW_DELETE KW_SETLL KW_SETGT KW_EXFMT
@@ -1240,6 +1255,8 @@ eval_target:
         g_ind_set[$1] = true;
         $$ = new rpg::IndicatorExpr($1);
     }
+    | KW_STAR_IN LPAREN expression RPAREN { $$ = make_ind_array($3); }
+    | KW_STAR_IN { $$ = make_ind_array(nullptr); }
     /* Qualified targets chain to any depth: ds.f, ds.sub.f, ds(i).sub.f.
        Only one level used to be accepted, so assigning to a subfield of a
        LIKEDS subfield — readable as an expression — was a syntax error. */
@@ -2179,6 +2196,8 @@ clear_stmt:
             $$ = new rpg::ClearStmt(id->name);
             delete $2;
         } else {
+            if (auto* ind = dynamic_cast<rpg::IndicatorExpr*>($2); ind && ind->number == rpg::IndicatorExpr::ARRAY)
+                g_ind_array_used = true;   // CLEAR *IN sets them all
             auto* c = new rpg::ClearStmt("");
             c->target.reset($2);
             $$ = c;
@@ -3500,6 +3519,8 @@ primary_expr:
         if (!g_ind_tested_line[$1]) g_ind_tested_line[$1] = yylineno;
         $$ = new rpg::IndicatorExpr($1);
     }
+    | KW_STAR_IN LPAREN expression RPAREN { $$ = make_ind_array($3); }
+    | KW_STAR_IN { $$ = make_ind_array(nullptr, false); }
     | KW_ON {
         auto* v = new rpg::IntLiteral(1);  // *ON → true
         v->indicator = true;
@@ -3635,7 +3656,7 @@ void check_indicators_defined(rpg::Program* program) {
     }
     for (int i = 0; i < 110; i++) {
         if (!g_ind_tested_line[i] || set[i]) continue;
-        if (i >= 1 && i <= 99 && workstn) continue;
+        if (i >= 1 && i <= 99 && (workstn || g_ind_array_used)) continue;
         char name[8];
         if (i == rpg::IndicatorExpr::LR) snprintf(name, sizeof name, "LR");
         else if (i >= rpg::IndicatorExpr::H1) snprintf(name, sizeof name, "H%d", i - 100);

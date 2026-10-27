@@ -285,7 +285,11 @@ std::unique_ptr<Expression> cloneExpr(const Expression& e) {
     else if (auto* x = dynamic_cast<const IntLiteral*>(&e))    c = std::make_unique<IntLiteral>(x->value);
     else if (auto* x = dynamic_cast<const FloatLiteral*>(&e))  c = std::make_unique<FloatLiteral>(*x);
     else if (auto* x = dynamic_cast<const StringLiteral*>(&e)) c = std::make_unique<StringLiteral>(x->value);
-    else if (auto* x = dynamic_cast<const IndicatorExpr*>(&e)) c = std::make_unique<IndicatorExpr>(x->number);
+    else if (auto* x = dynamic_cast<const IndicatorExpr*>(&e)) {
+        auto ind = std::make_unique<IndicatorExpr>(x->number);
+        if (x->index) ind->index = cloneExpr(*x->index);
+        c = std::move(ind);
+    }
     else if (auto* x = dynamic_cast<const BinaryExpr*>(&e))
         c = std::make_unique<BinaryExpr>(x->op, cloneExpr(*x->left), cloneExpr(*x->right));
     else if (auto* x = dynamic_cast<const NotExpr*>(&e))   c = std::make_unique<NotExpr>(cloneExpr(*x->operand));

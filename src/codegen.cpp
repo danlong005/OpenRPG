@@ -2897,6 +2897,15 @@ void CodeGen::visit(EvalStmt& node) {
         report_semantic_error(node.line > 0 ? node.line : cur_stmt_line_,
             "*USER is only valid as an initial value, INZ(*USER); declare a CHAR(10) field "
             "with INZ(*USER) and use that (IBM: RNF7416)");
+    // *IN = value: every one of the 99 indicators.
+    if (auto* ind = dynamic_cast<IndicatorExpr*>(node.target.get());
+        ind && ind->number == IndicatorExpr::ARRAY && !ind->index) {
+        uses_indicators_ = true;
+        std::string val = emitExpr(*node.value);
+        emitIndent();
+        out_ << "{ bool __v = " << val << "; for (int __i = 1; __i <= 99; ++__i) rpg_indicators[__i] = __v; }\n";
+        return;
+    }
     // Check for %ELEM(array) = n (resize varying array)
     auto* lhs_bif = dynamic_cast<BIFCall*>(node.target.get());
     // A varying array's element count, allocated or current, cannot exceed
@@ -4672,6 +4681,16 @@ void CodeGen::visit(ClearStmt& node) {
         // every element; a data structure clears subfield by subfield, and
         // a field takes its type's default.
         Expression& e = *node.target;
+        if (auto* ind = dynamic_cast<IndicatorExpr*>(&e)) {
+            // CLEAR *IN turns all 99 off; CLEAR *INnn or *IN(i), one.
+            uses_indicators_ = true;
+            emitIndent();
+            if (ind->number == IndicatorExpr::ARRAY && !ind->index)
+                out_ << "for (int __i = 1; __i <= 99; ++__i) rpg_indicators[__i] = false;\n";
+            else
+                out_ << emitExpr(e) << " = false;\n";
+            return;
+        }
         std::string target = emitExpr(e);
         bool whole = false;
         if (auto* dot = dynamic_cast<const DotExpr*>(&e))
@@ -4820,6 +4839,21 @@ void CodeGen::visit(DumpStmt& node) {
 
 void CodeGen::visit(IndicatorExpr& node) {
     uses_indicators_ = true;
+    if (node.number == IndicatorExpr::ARRAY) {
+        // *IN(i): indicator i, checked to be one of 01-99 (status 121).
+        // *IN on its own is all 99, which only an assignment or CLEAR
+        // takes (visit(EvalStmt), visit(ClearStmt)).
+        if (!node.index) {
+            report_semantic_error(cur_stmt_line_, "*IN as a whole can be assigned (*IN = *OFF) or "
+                "cleared (CLEAR *IN); use *IN(i) for one indicator");
+            expr_ << "false";
+            return;
+        }
+        expr_ << "rpg_indicators[rpg_ind_index(";
+        node.index->accept(*this);
+        expr_ << ")]";
+        return;
+    }
     if (node.number == IndicatorExpr::LR) { expr_ << "rpg_inlr"; return; }
     if (node.number >= IndicatorExpr::H1) {
         expr_ << "rpg_halt_indicators()[" << (node.number - IndicatorExpr::H1 + 1) << "]";

@@ -143,14 +143,14 @@ static bool casCabOperator(const std::string& mn, std::string& op) {
 // indicator's free-form name. Empty slot -> empty name (that comparison
 // simply is not recorded). Same supported set as conditioning indicators:
 // only the numbered *IN01-*IN99 exist in this compiler.
-static bool parseResultIndicator(const std::string& raw, int lineNo,
+static bool parseResultIndicator(const std::string& raw, int lineNo, const std::string& opcode,
                                  const char* which, std::string& name) {
     std::string t = trim(raw);
     if (t.empty()) { name.clear(); return true; }
     std::string up = upper(t);
     if (up.size() == 2 && isdigit((unsigned char)up[0]) && isdigit((unsigned char)up[1])) {
         if (up == "00") {
-            report_fixed_format_error(lineNo, std::string("C-spec: COMP ") + which +
+            report_fixed_format_error(lineNo, "C-spec: " + opcode + " " + which +
                 " resulting indicator '00' is not valid — indicators are 01-99");
             return false;
         }
@@ -158,13 +158,14 @@ static bool parseResultIndicator(const std::string& raw, int lineNo,
         return true;
     }
     if (up == "LR") { name = "*INLR"; return true; }
+    if (up.size() == 2 && up[0] == 'H' && up[1] >= '1' && up[1] <= '9') { name = "*INH" + up.substr(1); return true; }
     if (isUnsupportedIndicatorName(up)) {
-        report_fixed_format_error(lineNo, std::string("C-spec: COMP ") + which +
+        report_fixed_format_error(lineNo, "C-spec: " + opcode + " " + which +
             " resulting indicator '" + up + "' is not supported — this compiler implements "
-            "only the numbered indicators *IN01-*IN99 and LR (see TODO.md \"Indicator Types\")");
+            "only the numbered indicators *IN01-*IN99, LR and H1-H9 (see TODO.md \"Indicator Types\")");
         return false;
     }
-    report_fixed_format_error(lineNo, std::string("C-spec: COMP ") + which +
+    report_fixed_format_error(lineNo, "C-spec: " + opcode + " " + which +
         " resulting indicator '" + t + "' is malformed — expected a two-digit indicator (01-99)");
     return false;
 }
@@ -328,6 +329,9 @@ static const std::unordered_map<std::string, OpcodeInfo>& opcodeTable() {
         // COMP — the sole opcode allowed to fill the resulting-indicator
         // columns (71-76); see the COMP branch in feedCSpecLine.
         {"COMP",  {CSpecShape::TRADITIONAL}},
+        // SETON / SETOFF — set the indicators in 71-76 on or off.
+        {"SETON",  {CSpecShape::TRADITIONAL}},
+        {"SETOFF", {CSpecShape::TRADITIONAL}},
 
         // RLA opcodes (item 1b, fast-follow to V1) — this compiler's own
         // free-format grammar (parser.y) is a simplified subset of the
@@ -862,6 +866,34 @@ void feedCSpecLine(CSpecRunState& state, const std::string& line, int lineNo) {
         std::string factor2 = extractCol(line, CSpec::Factor2);
         std::string result = extractCol(line, CSpec::Result);
         if (rejectBuiltInOperands(opcodeName, lineNo, factor1, factor2, result)) return;
+        if (opcodeName == "SETON" || opcodeName == "SETOFF") {
+            // The indicators in positions 71-76, all three slots alike,
+            // set on or off; factors and the result field stay blank.
+            if (!factor1.empty() || !factor2.empty() || !result.empty() ||
+                !extractCol(line, CSpec::Length).empty() ||
+                !extractCol(line, CSpec::Decimals).empty()) {
+                report_fixed_format_error(lineNo, "C-spec: " + opcodeName + " takes only the "
+                    "indicators in positions 71-76; Factor 1, Factor 2 and the Result field "
+                    "must be blank");
+                return;
+            }
+            std::string ind[3];
+            if (!parseResultIndicator(extractCol(line, CSpec::ResultIndHi), lineNo, opcodeName, "first", ind[0]) ||
+                !parseResultIndicator(extractCol(line, CSpec::ResultIndLo), lineNo, opcodeName, "second", ind[1]) ||
+                !parseResultIndicator(extractCol(line, CSpec::ResultIndEq), lineNo, opcodeName, "third", ind[2]))
+                return;
+            std::string text;
+            for (auto& i : ind)
+                if (!i.empty()) text += i + (opcodeName == "SETON" ? " = *ON; " : " = *OFF; ");
+            if (text.empty()) {
+                report_fixed_format_error(lineNo, "C-spec: " + opcodeName + " needs at least one "
+                    "indicator in positions 71-76");
+                return;
+            }
+            text.pop_back();
+            state.bufLines[idx] = wrapCond(cond, text);
+            return;
+        }
         if (opcodeName == "COMP") {
             // The one opcode whose resulting indicators are its entire
             // effect — and, unlike the resulting indicators free-form
@@ -886,9 +918,9 @@ void feedCSpecLine(CSpecRunState& state, const std::string& line, int lineNo) {
                 return;
             }
             std::string hi, lo, eq;
-            if (!parseResultIndicator(extractCol(line, CSpec::ResultIndHi), lineNo, "high", hi) ||
-                !parseResultIndicator(extractCol(line, CSpec::ResultIndLo), lineNo, "low",  lo) ||
-                !parseResultIndicator(extractCol(line, CSpec::ResultIndEq), lineNo, "equal", eq))
+            if (!parseResultIndicator(extractCol(line, CSpec::ResultIndHi), lineNo, "COMP", "high", hi) ||
+                !parseResultIndicator(extractCol(line, CSpec::ResultIndLo), lineNo, "COMP", "low",  lo) ||
+                !parseResultIndicator(extractCol(line, CSpec::ResultIndEq), lineNo, "COMP", "equal", eq))
                 return;
             if (hi.empty() && lo.empty() && eq.empty()) {
                 report_fixed_format_error(lineNo, "C-spec: COMP with no resulting indicators "

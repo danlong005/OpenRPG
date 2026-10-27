@@ -967,6 +967,13 @@ inline int rpg_caught_status() {
     catch (...) { return rpg_status_code(); }
 }
 
+// *IN(i): the indicator's slot, i being one of 01-99; any other index is
+// status 121, as for an array.
+inline int rpg_ind_index(long long i) {
+    if (i < 1 || i > 99) rpg_raise(121, "RNX0121: An array index is out of range.");
+    return static_cast<int>(i);
+}
+
 // --- The program's exit status ---
 // A program that ends normally exits with status 0, unless one of the
 // halt indicators *H1-*H9 is on: then it ends in error, as on IBM i, with

@@ -6532,12 +6532,40 @@
    "verdict": "accept",
    "verified": "2026-10-27"
   },
+  "test459_based_dim_likeds.rpgle": {
+   "codes": [],
+   "rpgc": "accept",
+   "sha256": "e023dca5d0655befe7324c8c5c58840eddf6c5fa5d499ee8b956633b034d55af",
+   "verdict": "accept",
+   "verified": "2026-10-27"
+  },
   "test45_array_bifs.rpgle": {
    "codes": [],
    "rpgc": "accept",
    "sha256": "7287e294abddd32ea09ae64299a1e29b454c12bea069ed6d568b9149dc408da2",
    "verdict": "accept",
    "verified": "2026-09-25"
+  },
+  "test460_based_bare_dim_nested.rpgle": {
+   "codes": [],
+   "rpgc": "accept",
+   "sha256": "a94e5d41df355e94e787b42408e04d97033ed151b3f05ff20de6a13058380aea",
+   "verdict": "accept",
+   "verified": "2026-10-27"
+  },
+  "test461_fixed_based_dim_overlay.rpgle": {
+   "codes": [],
+   "rpgc": "accept",
+   "sha256": "fdc791bc258d3fbb063987cdc7a36bb45e813234803446cb3f32c1f0f1c70cec",
+   "verdict": "accept",
+   "verified": "2026-10-27"
+  },
+  "test462_unqual_dim_subfield.rpgle": {
+   "codes": [],
+   "rpgc": "accept",
+   "sha256": "3c8b84a5f4335202362eb84280ee9c50c6e5956c403dddca1472819f147f81da",
+   "verdict": "accept",
+   "verified": "2026-10-27"
   },
   "test46_options.rpgle": {
    "codes": [],
@@ -7043,5 +7071,5 @@
    "verified": "2026-09-25"
   }
  },
- "generated": "2026-10-27T18:43:42+00:00"
+ "generated": "2026-10-27T19:02:05+00:00"
 }

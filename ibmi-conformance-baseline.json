@@ -6511,6 +6511,27 @@
    "verdict": "accept",
    "verified": "2026-10-27"
   },
+  "test456_based_ind_ds.rpgle": {
+   "codes": [],
+   "rpgc": "accept",
+   "sha256": "b43c64c7377c1350b0217188edbce283dd15e7901a4b40a9aca5f9321f6b5730",
+   "verdict": "accept",
+   "verified": "2026-10-27"
+  },
+  "test457_based_ds_alloc.rpgle": {
+   "codes": [],
+   "rpgc": "accept",
+   "sha256": "33f373f4caa9466b365c8256ec724ed62436e831c960c1dcd7603781eb46ee74",
+   "verdict": "accept",
+   "verified": "2026-10-27"
+  },
+  "test458_fixed_based_ind_ds.rpgle": {
+   "codes": [],
+   "rpgc": "accept",
+   "sha256": "99bacf27e2b2d283c64e6c8411e4f4c3de1dede741c5fef3faaea17ca0da1561",
+   "verdict": "accept",
+   "verified": "2026-10-27"
+  },
   "test45_array_bifs.rpgle": {
    "codes": [],
    "rpgc": "accept",
@@ -7022,5 +7043,5 @@
    "verified": "2026-09-25"
   }
  },
- "generated": "2026-10-27T18:00:38+00:00"
+ "generated": "2026-10-27T18:27:47+00:00"
 }

@@ -8270,8 +8270,11 @@ void CodeGen::visit(ReadStmt& node) {
                     }
                 }
             }
-            emitIndent(); out_ << "for (int __i = 1; __i <= 24; ++__i) rpg_indicators[__i] = false;\n";
+            // The pressed key's indicator on; then what the runtime decided:
+            // the record's other key indicators off, and CHANGE/BLANKS and
+            // ERRMSG response indicators. No other indicator is touched.
             emitIndent(); out_ << "if (__dspf_key >= 1 && __dspf_key <= 99) rpg_indicators[__dspf_key] = true;\n";
+            emitIndent(); out_ << "{ bool __b[100]; rpg_ind_get(rpg_indicators, __b); dspf_apply_out_indicators(__b, 100); rpg_ind_put(rpg_indicators, __b); }\n";
             uses_indicators_ = true;
             indent_--; emitIndent(); out_ << "}\n";
             return;
@@ -8939,12 +8942,12 @@ void CodeGen::visit(ExfmtStmt& node) {
         }
     }
 
-    // Clear F-key indicators 01-24, then set the returned one
-    emitIndent(); out_ << "for (int __i = 1; __i <= 24; ++__i) rpg_indicators[__i] = false;\n";
+    // The pressed key's indicator on. Then what the runtime decided for the
+    // rest: the record's other key indicators off — only those, as IBM i
+    // does; this used to clear every indicator 01-24, whatever the program
+    // was using it for — and CHANGE/BLANKS and ERRMSG response indicators.
     emitIndent(); out_ << "if (__dspf_key >= 1 && __dspf_key <= 99) "
                        << "rpg_indicators[__dspf_key] = true;\n";
-    // CHANGE/BLANKS response indicators — can land anywhere in 1-99, so
-    // applied after the block above rather than folded into it.
     emitIndent(); out_ << "{ bool __b[100]; rpg_ind_get(rpg_indicators, __b); dspf_apply_out_indicators(__b, 100); rpg_ind_put(rpg_indicators, __b); }\n";
     uses_indicators_ = true;
 

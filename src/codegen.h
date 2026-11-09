@@ -44,6 +44,9 @@ struct DspfFileInfo {
 class CodeGen : public ASTVisitor {
 public:
     std::string generate(Program& program);
+    // Replaces each emitGeneratedLine() marker in generated code with
+    // "#line N \"cppPath\"", N being the line after it in that file.
+    static std::string resolveLineMarkers(const std::string& code, const std::string& cppPath);
     void setDebugMode(bool on, const std::string& src_file) {
         debug_mode_ = on;
         source_file_ = src_file;
@@ -217,6 +220,15 @@ private:
 
     void emitIndent();
     void emitLineDirective(int line);
+    // -g: marks that the code which follows is the compiler's own, not an
+    // RPG statement's (resolveLineMarkers turns it into a #line naming the
+    // generated .cpp), so a debugger does not credit it to the RPG line
+    // before it.
+    void emitGeneratedLine();
+    // -g: the code which follows, up to the next statement's #line, has no
+    // RPG line at all (DWARF line 0): a closing brace, "} else {", a loop's
+    // jump back. A debugger neither stops on it nor steps into it.
+    void emitNoLine();
     int cur_stmt_line_ = 0; // line of the statement being emitted, for diagnostics
     // IBM i rejects a qualified reference (ds.field) to a DS that is not
     // QUALIFIED; reports it once per DS/field pair.

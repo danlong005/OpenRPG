@@ -95,6 +95,11 @@ extern bool ctlopt_nolenchk;
 
 // Set line number on AST node
 #define SET_LINE(node) do { if (node) (node)->line = yylineno; } while(0)
+// A statement's line is the line it starts on: its first token's (@1). By
+// the time a compound statement (IF ... ENDIF, DCL-PROC ... END-PROC) is
+// reduced, yylineno is at its end, and the debugger and diagnostics both
+// put it there.
+#define SET_LINE_AT(node, loc) do { if (node) (node)->line = (loc).first_line; } while(0)
 
 // Each indicator's first reference as a value, and whether anything sets
 // it, across every parse of the source (the fixed-format reader parses its
@@ -460,6 +465,8 @@ static rpg::DclPR* make_overload_pr(char* name, int ret, std::vector<std::string
 
 %}
 
+%locations
+
 %union {
     int ival;
     double fval;
@@ -780,64 +787,64 @@ statement_list:
     ;
 
 statement:
-    dcl_f_stmt    { $$ = $1; SET_LINE($$); }
-    | dcl_s_stmt  { $$ = $1; SET_LINE($$); }
-    | dcl_c_stmt  { $$ = $1; SET_LINE($$); }
-    | eval_stmt   { $$ = $1; SET_LINE($$); }
-    | eval_corr_stmt { $$ = $1; SET_LINE($$); }
-    | dsply_stmt  { $$ = $1; SET_LINE($$); }
-    | return_stmt { $$ = $1; SET_LINE($$); }
-    | if_stmt     { $$ = $1; SET_LINE($$); }
-    | dow_stmt    { $$ = $1; SET_LINE($$); }
-    | dou_stmt    { $$ = $1; SET_LINE($$); }
-    | for_stmt    { $$ = $1; SET_LINE($$); }
-    | for_each_stmt { $$ = $1; SET_LINE($$); }
-    | select_stmt { $$ = $1; SET_LINE($$); }
-    | iter_stmt   { $$ = $1; SET_LINE($$); }
-    | leave_stmt  { $$ = $1; SET_LINE($$); }
-    | dcl_proc_stmt { $$ = $1; SET_LINE($$); }
-    | dcl_pr_stmt   { $$ = $1; if (!$$->line) SET_LINE($$); }
-    | dcl_ds_stmt   { $$ = $1; SET_LINE($$); }
-    | dcl_enum_stmt { $$ = $1; SET_LINE($$); }
-    | monitor_stmt  { $$ = $1; SET_LINE($$); }
-    | begsr_stmt    { $$ = $1; SET_LINE($$); }
-    | exsr_stmt     { $$ = $1; SET_LINE($$); }
-    | goto_stmt     { $$ = $1; SET_LINE($$); }
-    | tag_stmt      { $$ = $1; SET_LINE($$); }
-    | move_stmt     { $$ = $1; SET_LINE($$); }
-    | call_stmt     { $$ = $1; SET_LINE($$); }
-    | reset_stmt    { $$ = $1; SET_LINE($$); }
-    | clear_stmt    { $$ = $1; SET_LINE($$); }
-    | sorta_stmt    { $$ = $1; SET_LINE($$); }
-    | dump_stmt     { $$ = $1; SET_LINE($$); }
-    | evalr_stmt    { $$ = $1; SET_LINE($$); }
-    | callp_stmt    { $$ = $1; SET_LINE($$); }
-    | leavesr_stmt  { $$ = $1; SET_LINE($$); }
-    | dealloc_stmt  { $$ = $1; SET_LINE($$); }
-    | test_stmt     { $$ = $1; SET_LINE($$); }
-    | exec_sql_stmt { $$ = $1; SET_LINE($$); }
-    | xml_into_stmt  { $$ = $1; SET_LINE($$); }
-    | data_into_stmt { $$ = $1; SET_LINE($$); }
-    | data_gen_stmt  { $$ = $1; SET_LINE($$); }
-    | snd_msg_stmt   { $$ = $1; SET_LINE($$); }
-    | except_stmt    { $$ = $1; SET_LINE($$); }
-    | in_da_stmt    { $$ = $1; SET_LINE($$); }
-    | out_da_stmt   { $$ = $1; SET_LINE($$); }
-    | unlock_da_stmt { $$ = $1; SET_LINE($$); }
-    | open_close_stmt { $$ = $1; SET_LINE($$); }
-    | chain_stmt   { $$ = $1; SET_LINE($$); }
-    | read_stmt    { $$ = $1; SET_LINE($$); }
-    | readc_stmt   { $$ = $1; SET_LINE($$); }
-    | reade_stmt   { $$ = $1; SET_LINE($$); }
-    | readp_stmt   { $$ = $1; SET_LINE($$); }
-    | readpe_stmt  { $$ = $1; SET_LINE($$); }
-    | write_stmt   { $$ = $1; SET_LINE($$); }
-    | update_stmt  { $$ = $1; SET_LINE($$); }
-    | delete_stmt  { $$ = $1; SET_LINE($$); }
-    | setll_stmt   { $$ = $1; SET_LINE($$); }
-    | setgt_stmt   { $$ = $1; SET_LINE($$); }
-    | exfmt_stmt   { $$ = $1; SET_LINE($$); }
-    | expr_stmt   { $$ = $1; SET_LINE($$); }
+    dcl_f_stmt    { $$ = $1; SET_LINE_AT($$, @1); }
+    | dcl_s_stmt  { $$ = $1; SET_LINE_AT($$, @1); }
+    | dcl_c_stmt  { $$ = $1; SET_LINE_AT($$, @1); }
+    | eval_stmt   { $$ = $1; SET_LINE_AT($$, @1); }
+    | eval_corr_stmt { $$ = $1; SET_LINE_AT($$, @1); }
+    | dsply_stmt  { $$ = $1; SET_LINE_AT($$, @1); }
+    | return_stmt { $$ = $1; SET_LINE_AT($$, @1); }
+    | if_stmt     { $$ = $1; SET_LINE_AT($$, @1); }
+    | dow_stmt    { $$ = $1; SET_LINE_AT($$, @1); }
+    | dou_stmt    { $$ = $1; SET_LINE_AT($$, @1); }
+    | for_stmt    { $$ = $1; SET_LINE_AT($$, @1); }
+    | for_each_stmt { $$ = $1; SET_LINE_AT($$, @1); }
+    | select_stmt { $$ = $1; SET_LINE_AT($$, @1); }
+    | iter_stmt   { $$ = $1; SET_LINE_AT($$, @1); }
+    | leave_stmt  { $$ = $1; SET_LINE_AT($$, @1); }
+    | dcl_proc_stmt { $$ = $1; SET_LINE_AT($$, @1); }
+    | dcl_pr_stmt   { $$ = $1; if (!$$->line) SET_LINE_AT($$, @1); }
+    | dcl_ds_stmt   { $$ = $1; SET_LINE_AT($$, @1); }
+    | dcl_enum_stmt { $$ = $1; SET_LINE_AT($$, @1); }
+    | monitor_stmt  { $$ = $1; SET_LINE_AT($$, @1); }
+    | begsr_stmt    { $$ = $1; SET_LINE_AT($$, @1); }
+    | exsr_stmt     { $$ = $1; SET_LINE_AT($$, @1); }
+    | goto_stmt     { $$ = $1; SET_LINE_AT($$, @1); }
+    | tag_stmt      { $$ = $1; SET_LINE_AT($$, @1); }
+    | move_stmt     { $$ = $1; SET_LINE_AT($$, @1); }
+    | call_stmt     { $$ = $1; SET_LINE_AT($$, @1); }
+    | reset_stmt    { $$ = $1; SET_LINE_AT($$, @1); }
+    | clear_stmt    { $$ = $1; SET_LINE_AT($$, @1); }
+    | sorta_stmt    { $$ = $1; SET_LINE_AT($$, @1); }
+    | dump_stmt     { $$ = $1; SET_LINE_AT($$, @1); }
+    | evalr_stmt    { $$ = $1; SET_LINE_AT($$, @1); }
+    | callp_stmt    { $$ = $1; SET_LINE_AT($$, @1); }
+    | leavesr_stmt  { $$ = $1; SET_LINE_AT($$, @1); }
+    | dealloc_stmt  { $$ = $1; SET_LINE_AT($$, @1); }
+    | test_stmt     { $$ = $1; SET_LINE_AT($$, @1); }
+    | exec_sql_stmt { $$ = $1; SET_LINE_AT($$, @1); }
+    | xml_into_stmt  { $$ = $1; SET_LINE_AT($$, @1); }
+    | data_into_stmt { $$ = $1; SET_LINE_AT($$, @1); }
+    | data_gen_stmt  { $$ = $1; SET_LINE_AT($$, @1); }
+    | snd_msg_stmt   { $$ = $1; SET_LINE_AT($$, @1); }
+    | except_stmt    { $$ = $1; SET_LINE_AT($$, @1); }
+    | in_da_stmt    { $$ = $1; SET_LINE_AT($$, @1); }
+    | out_da_stmt   { $$ = $1; SET_LINE_AT($$, @1); }
+    | unlock_da_stmt { $$ = $1; SET_LINE_AT($$, @1); }
+    | open_close_stmt { $$ = $1; SET_LINE_AT($$, @1); }
+    | chain_stmt   { $$ = $1; SET_LINE_AT($$, @1); }
+    | read_stmt    { $$ = $1; SET_LINE_AT($$, @1); }
+    | readc_stmt   { $$ = $1; SET_LINE_AT($$, @1); }
+    | reade_stmt   { $$ = $1; SET_LINE_AT($$, @1); }
+    | readp_stmt   { $$ = $1; SET_LINE_AT($$, @1); }
+    | readpe_stmt  { $$ = $1; SET_LINE_AT($$, @1); }
+    | write_stmt   { $$ = $1; SET_LINE_AT($$, @1); }
+    | update_stmt  { $$ = $1; SET_LINE_AT($$, @1); }
+    | delete_stmt  { $$ = $1; SET_LINE_AT($$, @1); }
+    | setll_stmt   { $$ = $1; SET_LINE_AT($$, @1); }
+    | setgt_stmt   { $$ = $1; SET_LINE_AT($$, @1); }
+    | exfmt_stmt   { $$ = $1; SET_LINE_AT($$, @1); }
+    | expr_stmt   { $$ = $1; SET_LINE_AT($$, @1); }
     | error SEMICOLON { $$ = nullptr; yyerrok; }
     ;
 

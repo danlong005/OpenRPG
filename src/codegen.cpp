@@ -112,11 +112,56 @@ void CodeGen::emitLineDirective(int line) {
     }
 }
 
+static const char* const kGeneratedLineMarker = "#line __RPGC_GENERATED__";
+static const char* const kNoLineMarker = "#line __RPGC_NOLINE__";
+
+void CodeGen::emitGeneratedLine() {
+    if (debug_mode_ && !source_file_.empty()) out_ << kGeneratedLineMarker << "\n";
+}
+
+void CodeGen::emitNoLine() {
+    if (debug_mode_ && !source_file_.empty()) out_ << kNoLineMarker << "\n";
+}
+
+// "#line 0" numbers only the line after it (the next is line 1), so each
+// line of a no-line stretch gets its own. Line numbers in the .cpp count
+// the lines as written out, these included.
+std::string CodeGen::resolveLineMarkers(const std::string& code, const std::string& cppPath) {
+    const std::string generated = kGeneratedLineMarker, noLine = kNoLineMarker;
+    std::string out;
+    out.reserve(code.size() + code.size() / 4);
+    int line = 0;              // lines written to `out` so far
+    bool inNoLine = false;
+    auto put = [&](const std::string& text) { out += text; out += '\n'; line++; };
+    size_t pos = 0;
+    while (pos < code.size()) {
+        size_t nl = code.find('\n', pos);
+        size_t end = nl == std::string::npos ? code.size() : nl;
+        std::string text = code.substr(pos, end - pos);
+        pos = nl == std::string::npos ? code.size() : nl + 1;
+        if (text == generated) {
+            inNoLine = false;
+            // The directive names the number of the line after it.
+            put("#line " + std::to_string(line + 2) + " \"" + cppEscape(cppPath) + "\"");
+            continue;
+        }
+        if (text == noLine) { inNoLine = true; continue; }
+        if (text.rfind("#line ", 0) == 0) inNoLine = false;
+        else if (inNoLine) put("#line 0");
+        put(text);
+    }
+    if (!code.empty() && code.back() != '\n' && !out.empty()) out.pop_back();
+    return out;
+}
+
 void CodeGen::emitStatements(std::vector<std::unique_ptr<Statement>>& stmts) {
     for (auto& s : stmts) {
         emitLineDirective(s->line);
         s->accept(*this);
     }
+    // What closes the block (a brace, a loop's jump back) is not the last
+    // statement's.
+    if (!stmts.empty()) emitNoLine();
 }
 
 std::string CodeGen::typeToString(RPGType type, int /*length*/, int digits) {
@@ -1187,6 +1232,7 @@ void CodeGen::visit(Program& node) {
         emitLineDirective(s->line);
         s->accept(*this);
     }
+    emitGeneratedLine();
     // BASED data structures, after the fields their pointers may be.
     for (auto* s : ds_stmts) {
         auto* ds = dynamic_cast<DclDS*>(s);
@@ -1234,6 +1280,10 @@ void CodeGen::visit(Program& node) {
         out_ << "}\n";
     }
     at_file_scope_ = false;
+    // The mainline's header and set-up are the compiler's: credited to the
+    // last declaration, a breakpoint on the first statement's line or two
+    // stopped there before any statement had run.
+    emitGeneratedLine();
     out_ << "} // namespace\n\n";
 
     // Split the mainline's subroutines out of its executable statements.
@@ -1301,17 +1351,24 @@ void CodeGen::visit(Program& node) {
         if (dynamic_cast<DclPR*>(s) && !isOverload(s)) s->accept(*this);
     for (auto* s : proc_stmts)
         if (isOverload(s)) s->accept(*this);
+    // Each procedure starts at its DCL-PROC line: a breakpoint there stops
+    // on entry, as on IBM i. Its header used to be credited to whatever RPG
+    // line came before it.
     for (auto* s : proc_stmts)
-        if (!dynamic_cast<DclPR*>(s)) s->accept(*this);
+        if (!dynamic_cast<DclPR*>(s)) {
+            emitLineDirective(s->line);
+            s->accept(*this);
+            emitGeneratedLine();
+        }
 
     // Subroutine definitions, after the procedures so a subroutine may call
     // one, and after the globals it reads.
     if (!sr_stmts.empty() || pssr_stmt || inzsr_stmt) {
         sr_at_file_scope_ = true;
         indent_ = 0;
-        for (auto* st : sr_stmts) { emitLineDirective(st->line); st->accept(*this); }
-        if (pssr_stmt)  { emitLineDirective(pssr_stmt->line);  pssr_stmt->accept(*this); }
-        if (inzsr_stmt) { emitLineDirective(inzsr_stmt->line); inzsr_stmt->accept(*this); }
+        for (auto* st : sr_stmts) { emitLineDirective(st->line); st->accept(*this); emitGeneratedLine(); }
+        if (pssr_stmt)  { emitLineDirective(pssr_stmt->line);  pssr_stmt->accept(*this); emitGeneratedLine(); }
+        if (inzsr_stmt) { emitLineDirective(inzsr_stmt->line); inzsr_stmt->accept(*this); emitGeneratedLine(); }
         sr_at_file_scope_ = false;
         out_ << "\n";
     }
@@ -1478,6 +1535,7 @@ void CodeGen::visit(Program& node) {
         emitLineDirective(s->line);
         s->accept(*this);
     }
+    emitNoLine();
     if (cycle) { indent_--; emitIndent(); out_ << "} while (!rpg_inlr);\n"; }
     if (pssr_stmt) {
         indent_--; emitIndent(); out_ << "} catch (const RpgCallerEscape&) { throw; } catch (...) {\n";
@@ -1496,6 +1554,7 @@ void CodeGen::visit(Program& node) {
     // is on or the program set one.
     if (!void_return_) { emitIndent(); out_ << "return " << mainEnd() << ";\n"; }
     out_ << "}\n";
+    emitGeneratedLine();
     void_return_ = false;
     if (!shared_program_.empty()) emitProgramExport(node);
 }
@@ -1723,6 +1782,9 @@ void CodeGen::visit(DclProc& node) {
         out_ << ", int _rpg_parms";
     }
     out_ << (nested ? ") -> " + ret + " {\n" : ") {\n");
+    // Its set-up (parameter copies, the try) is the DCL-PROC line's too, so
+    // a breakpoint there stops on entry, before the first statement.
+    emitLineDirective(node.line);
     indent_ = base + 1;
     in_procedure_ = true;
     const DclProc* saved_proc_node = current_proc_node_;
@@ -1967,6 +2029,7 @@ void CodeGen::visit(DclProc& node) {
                     emitLineDirective(s->line);
                     s->accept(*this);
                 }
+            emitNoLine();
         }
     }
     in_procedure_ = false;
@@ -3252,6 +3315,8 @@ void CodeGen::visit(DouStmt& node) {
     indent_++;
     emitStatements(node.body);
     indent_--;
+    // The test comes after the body; it is the DOU's.
+    emitLineDirective(node.line);
     emitIndent();
     out_ << "} while (!(" << stripOuterParens(emitExpr(*node.condition)) << "));\n";
 }

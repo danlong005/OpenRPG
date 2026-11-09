@@ -207,6 +207,7 @@ uninstall-dspf:
 
 test: $(TARGET)
 	@bash tests/run_tests.sh
+	@bash tests/run_debug_tests.sh
 
 update-expected: $(TARGET)
 	@bash tests/run_tests.sh --update

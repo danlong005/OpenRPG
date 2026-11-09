@@ -29,7 +29,10 @@ static void check_one_statement_per_line() {
         "comment may follow the semicolon ending a statement (IBM: RNF5508)");
 }
 // Text inside a block comment is not checked: it is all comment.
-#define YY_USER_ACTION if (YY_START != BLOCKCMT) check_one_statement_per_line();
+// yylloc: the line each token is on, from which a statement takes the line
+// it starts on (parser.y, SET_LINE_AT).
+#define YY_USER_ACTION yylloc.first_line = yylloc.last_line = yylineno; \
+    if (YY_START != BLOCKCMT) check_one_statement_per_line();
 static int block_comment_line = 0;
 
 static char* process_rpg_string(const char* text) {

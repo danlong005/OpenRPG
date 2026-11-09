@@ -627,6 +627,16 @@ int main(int argc, char* argv[]) {
         else abs_source = input_file;
     }
 
+    // -g: the code the compiler adds around the RPG statements is credited
+    // to the generated .cpp (CodeGen::resolveLineMarkers), whose path is only
+    // known once it is written.
+    auto codeFor = [&](const std::string& cppPath, const std::string& code) {
+        if (!debug_mode) return code;
+        char buf[PATH_MAX];
+        std::string abs = rpgc_realpath(cppPath.c_str(), buf) ? std::string(buf) : cppPath;
+        return rpg::CodeGen::resolveLineMarkers(code, abs);
+    };
+
     bool has_rla = !ext_descs.empty();
 
     bool is_dspf = !dspf_descs.empty();
@@ -674,7 +684,7 @@ int main(int argc, char* argv[]) {
             delete program;
             return 1;
         }
-        out << cpp_code;
+        out << codeFor(cpp_path, cpp_code);
         delete program;
         return 0;
     }
@@ -742,7 +752,7 @@ int main(int argc, char* argv[]) {
                 delete program;
                 return 1;
             }
-            out << cpp_code;
+            out << codeFor(cpp_path, cpp_code);
         }
         std::string cmd = q(rpgc_resolve_cxx()) + " -std=c++17 -I" + q(runtime_dir) + " -I" + q(src_dir);
         // The include half of the library flags: the object still has to
@@ -760,7 +770,7 @@ int main(int argc, char* argv[]) {
         }
         cmd += " -c -o " + q(obj_path) + " " + q(cpp_path);
         int rc = rpgc_system(cmd);
-        std::remove(cpp_path.c_str());
+        if (!debug_mode) std::remove(cpp_path.c_str());
         delete program;
         return rc == 0 ? 0 : 1;
     }
@@ -790,7 +800,7 @@ int main(int argc, char* argv[]) {
             delete program;
             return 1;
         }
-        out << cpp_code;
+        out << codeFor(cpp_path, cpp_code);
     }
 
     std::string cmd = q(rpgc_resolve_cxx()) + " -std=c++17 -I" + q(runtime_dir) + " -I" + q(src_dir);
@@ -832,7 +842,9 @@ int main(int argc, char* argv[]) {
     cmd += libs;
     int rc = rpgc_system(cmd);
 
-    if (!keep_cpp) {
+    // Under -g the .cpp stays: the debug info points into it for the code
+    // the compiler adds around the RPG statements.
+    if (!keep_cpp && !debug_mode) {
         std::remove(cpp_path.c_str());
     }
 

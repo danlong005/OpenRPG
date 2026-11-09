@@ -2028,6 +2028,18 @@ void CodeGen::visit(DclF& node) {
             out_ << "bool " << rec.name << "_eof = false; "
                  << "// %EOF(" << rec.name << ") — meaningful after READC\n";
             for (const DspfFldInfo& f : rec.fields) {
+                // A numeric field has its DDS declaration, as a DISK file's
+                // fields do: 3S 0 is ZONED(3:0), so %CHAR gives "42", not the
+                // "42.000000" of an undeclared double, and an assignment is
+                // fitted to its digits and decimals.
+                if (f.dtype == 'S' || f.dtype == 'P' || f.dtype == 'F') {
+                    const std::string& vn = f.rpgName();
+                    var_types_[vn] = f.dtype == 'S' ? RPGType::ZONED
+                                   : f.dtype == 'P' ? RPGType::PACKED : RPGType::FLOAT8;
+                    var_lengths_[vn]  = f.len;
+                    var_digits_[vn]   = f.dtype == 'F' ? 0 : f.len;
+                    var_decimals_[vn] = f.dtype == 'F' ? 0 : f.dec;
+                }
                 // HIDDEN fields still get a flat variable — "hidden" only
                 // means not rendered, not "no data" (e.g. SFLRCDNBR HIDDEN
                 // needs to be readable after EXFMT to know which row was

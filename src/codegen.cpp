@@ -108,7 +108,9 @@ static std::string cppEscape(const std::string& s) {
 void CodeGen::emitLineDirective(int line) {
     if (line > 0) cur_stmt_line_ = line;
     if (debug_mode_ && line > 0 && !source_file_.empty()) {
-        out_ << "#line " << line << " \"" << source_file_ << "\"\n";
+        // Escaped: a Windows path's backslashes are escapes in a C string,
+        // and "C:\\Users\\..." failed to compile under -g.
+        out_ << "#line " << line << " \"" << cppEscape(source_file_) << "\"\n";
     }
 }
 

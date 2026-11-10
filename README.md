@@ -370,6 +370,13 @@ rpgc -g program.rpgle -o program
 
 Then open the folder in VS Code, set breakpoints in your `.rpgle` file, and press **F5**.
 
+What `-g` writes in the current folder's `.vscode`:
+
+- **`launch.json`**: a configuration named `Debug <program>` for each program you compile, next to any others, so several programs can be debugged from one folder. Compiling again only updates the program's path, so arguments or environment you add to its configuration are kept.
+- **`settings.json`**: `"debug.allowBreakpointsEverywhere": true`. VS Code only allows breakpoints in languages an extension declares, and none declares RPG. If you have set it to `false` yourself, rpgc keeps your value and warns.
+
+Both files are edited in place: comments and other settings in them are left as they are. A file rpgc can't read is not touched; rpgc warns and says what to add.
+
 ---
 
 ## Multi-Module Programs

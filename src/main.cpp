@@ -11,6 +11,7 @@
 #include <cstdlib>
 #include "ast.h"
 #include "codegen.h"
+#include "vscode_config.h"
 #include "conf.h"
 #include "extdesc.h"
 #include "fixed_reader.h"
@@ -873,32 +874,51 @@ int main(int argc, char* argv[]) {
         // Choose debugger type based on platform
 #if defined(_WIN32)
         std::string dbg_type = "cppvsdbg";
-        std::string dbg_ext  = "ms-vscode.cpptools";
         std::string dbg_ext_name = "C/C++ (ms-vscode.cpptools)";
 #else
         std::string dbg_type = "lldb";
-        std::string dbg_ext  = "vadimcn.vscode-lldb";
         std::string dbg_ext_name = "CodeLLDB (vadimcn.vscode-lldb)";
 #endif
 
-        std::ofstream launch(".vscode/launch.json");
-        if (launch) {
-            launch << "{\n";
-            launch << "    \"version\": \"0.2.0\",\n";
-            launch << "    \"configurations\": [\n";
-            launch << "        {\n";
-            launch << "            \"type\": \"" << dbg_type << "\",\n";
-            launch << "            \"request\": \"launch\",\n";
-            launch << "            \"name\": \"Debug " << base << "\",\n";
-            launch << "            \"program\": \"" << abs_exe << "\",\n";
-            launch << "            \"args\": [],\n";
-            launch << "            \"cwd\": \"${workspaceFolder}\"\n";
-            launch << "        }\n";
-            launch << "    ]\n";
-            launch << "}\n";
-            std::cerr << "Debug info written to .vscode/launch.json\n";
-            std::cerr << "Install the " << dbg_ext_name << " extension in VS Code, then press F5 to debug.\n";
+        // launch.json: this program's configuration is added, or brought up
+        // to date, next to any others -- it used to replace the whole file,
+        // so only the last program compiled could be debugged.
+        std::string cfgName = "Debug " + base;
+        switch (rpgc::upsertLaunchConfig(".vscode/launch.json", cfgName, dbg_type, abs_exe)) {
+            case rpgc::VscodeEdit::Created:
+            case rpgc::VscodeEdit::Updated:
+                std::cerr << "Debug configuration \"" << cfgName << "\" written to .vscode/launch.json\n";
+                break;
+            case rpgc::VscodeEdit::Unchanged:
+                break;
+            case rpgc::VscodeEdit::Unreadable:
+                std::cerr << "rpgc: warning: .vscode/launch.json is not JSON rpgc can read; left as it is. "
+                             "Add a \"" << dbg_type << "\" launch configuration for " << abs_exe << "\n";
+                break;
         }
+
+        // settings.json: VS Code sets breakpoints only in languages an
+        // extension declares can have them, and none declares RPG; this lets
+        // them be set in a .rpgle file. A value the user set is kept.
+        bool everywhere = true;
+        switch (rpgc::ensureBoolSetting(".vscode/settings.json", "debug.allowBreakpointsEverywhere",
+                                        true, &everywhere)) {
+            case rpgc::VscodeEdit::Created:
+            case rpgc::VscodeEdit::Updated:
+                std::cerr << "\"debug.allowBreakpointsEverywhere\": true added to .vscode/settings.json "
+                             "(lets VS Code set breakpoints in .rpgle files)\n";
+                break;
+            case rpgc::VscodeEdit::Unchanged:
+                if (!everywhere)
+                    std::cerr << "rpgc: warning: .vscode/settings.json sets \"debug.allowBreakpointsEverywhere\" "
+                                 "to false, so VS Code will not set breakpoints in .rpgle files\n";
+                break;
+            case rpgc::VscodeEdit::Unreadable:
+                std::cerr << "rpgc: warning: .vscode/settings.json is not JSON rpgc can read; left as it is. "
+                             "Add \"debug.allowBreakpointsEverywhere\": true to set breakpoints in .rpgle files\n";
+                break;
+        }
+        std::cerr << "Install the " << dbg_ext_name << " extension in VS Code, then press F5 to debug.\n";
     }
 
     delete program;

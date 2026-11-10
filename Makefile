@@ -56,6 +56,7 @@ SRCS := $(BUILDDIR)/lexer.cpp \
         $(SRCDIR)/keyword_list.cpp \
         $(SRCDIR)/fixed_reader.cpp \
         $(SRCDIR)/fixed_cspec.cpp \
+        $(SRCDIR)/vscode_config.cpp \
         $(SRCDIR)/main.cpp
 
 OBJS := $(BUILDDIR)/lexer.o \
@@ -68,6 +69,7 @@ OBJS := $(BUILDDIR)/lexer.o \
         $(BUILDDIR)/keyword_list.o \
         $(BUILDDIR)/fixed_reader.o \
         $(BUILDDIR)/fixed_cspec.o \
+        $(BUILDDIR)/vscode_config.o \
         $(BUILDDIR)/main.o
 
 VERSION ?= $(shell git describe --tags --always 2>/dev/null || echo "dev")
@@ -122,7 +124,10 @@ $(BUILDDIR)/conf.o: $(SRCDIR)/conf.cpp $(SRCDIR)/conf.h
 $(BUILDDIR)/extdesc.o: $(SRCDIR)/extdesc.cpp $(SRCDIR)/extdesc.h $(SRCDIR)/conf.h
 	$(CXX) $(CXXFLAGS) $(ODBC_CFLAGS) -I$(SRCDIR) -I$(BUILDDIR) -c -o $@ $<
 
-$(BUILDDIR)/main.o: $(SRCDIR)/main.cpp $(SRCDIR)/ast.h $(SRCDIR)/codegen.h $(SRCDIR)/conf.h $(SRCDIR)/extdesc.h $(SRCDIR)/fixed_reader.h
+$(BUILDDIR)/vscode_config.o: $(SRCDIR)/vscode_config.cpp $(SRCDIR)/vscode_config.h
+	$(CXX) $(CXXFLAGS) -I$(SRCDIR) -c -o $@ $<
+
+$(BUILDDIR)/main.o: $(SRCDIR)/main.cpp $(SRCDIR)/ast.h $(SRCDIR)/codegen.h $(SRCDIR)/conf.h $(SRCDIR)/extdesc.h $(SRCDIR)/fixed_reader.h $(SRCDIR)/vscode_config.h
 	$(CXX) $(CXXFLAGS) $(ODBC_CFLAGS) -I$(SRCDIR) -I$(BUILDDIR) -c -o $@ $<
 
 $(BUILDDIR)/parser.o: $(BUILDDIR)/parser.cpp $(SRCDIR)/ast.h $(SRCDIR)/free_bridge.h
@@ -208,6 +213,7 @@ uninstall-dspf:
 test: $(TARGET)
 	@bash tests/run_tests.sh
 	@bash tests/run_debug_tests.sh
+	@bash tests/run_vscode_tests.sh
 
 update-expected: $(TARGET)
 	@bash tests/run_tests.sh --update
